@@ -342,7 +342,10 @@ impl ServerHandle {
     let wait_for_start = {
       let mut inner = self.inner.lock().map_err(|_| CoreError::StateUnavailable)?;
       match inner.phase {
-        ServerPhase::Stopped => return Ok(()),
+        ServerPhase::Stopped => {
+          clear_stale_runtime(&mut inner);
+          return Ok(());
+        }
         ServerPhase::Starting => {
           inner.start_generation += 1;
           inner.start_in_progress
@@ -394,5 +397,55 @@ impl ServerHandle {
         last_error: Some("server state unavailable".into()),
       },
     }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use crate::config::{ProviderConfig, ProviderRequest, ProviderResponse, ServerConfig};
+
+  struct StubProvider;
+
+  impl ProviderBridge for StubProvider {
+    fn call_provider(&self, _request: ProviderRequest) -> ProviderResponse {
+      ProviderResponse {
+        ok: true,
+        payload_json: "{}".into(),
+        error_json: None,
+      }
+    }
+  }
+
+  fn test_config() -> ServerConfig {
+    ServerConfig {
+      host: "127.0.0.1".into(),
+      port: 18_080,
+      enabled_providers: vec![ProviderConfig {
+        name: "eventkit".into(),
+        enabled: true,
+      }],
+    }
+  }
+
+  fn inject_stale_runtime_after_serve_failure(handle: &ServerHandle) {
+    let mut inner = handle.inner.lock().expect("lock inner");
+    inner.phase = ServerPhase::Stopped;
+    inner.status = stopped_status_with_error(&inner.config, "simulated serve failure".into());
+    inner.shutdown_tx = None;
+    inner.server_task = None;
+    inner.runtime = Some(build_runtime().expect("build runtime"));
+  }
+
+  #[test]
+  fn stop_clears_stale_runtime_when_already_stopped() {
+    let handle = create_server(test_config(), Box::new(StubProvider)).expect("create_server");
+    inject_stale_runtime_after_serve_failure(&handle);
+
+    handle.stop().expect("stop on stale stopped server");
+
+    let inner = handle.inner.lock().expect("lock inner");
+    assert!(inner.runtime.is_none());
+    assert_eq!(inner.phase, ServerPhase::Stopped);
   }
 }
