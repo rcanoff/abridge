@@ -44,6 +44,7 @@ These supersede **rust-best-practices** and generic Rust advice. `docs/conventio
 - Prefer seam-level tests for routing, auth, lifecycle, and callback behavior over end-to-end runtime coupling.
 - Add focused tests for boundary behavior: error translation, callback ordering, graceful shutdown, and task cancellation where applicable.
 - Run `TZ=UTC just test-rust` and `just lint-rust` before claiming done.
+- Release builds (`just build-rust` / `build-macos.sh`) must **not** pass `--features test-sync`.
 
 ### Patterns (optional, not required)
 
