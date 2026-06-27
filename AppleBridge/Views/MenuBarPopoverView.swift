@@ -60,6 +60,19 @@ struct MenuBarPopoverView: View {
                     .foregroundStyle(.secondary)
             }
 
+            if let bearerToken = serverStore.bearerToken {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Bearer Token")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+
+                    Text(bearerToken)
+                        .font(.system(.caption, design: .monospaced))
+                        .textSelection(.enabled)
+                        .lineLimit(2)
+                }
+            }
+
             if let lastError = serverStore.lastError {
                 Text(lastError)
                     .font(.caption)

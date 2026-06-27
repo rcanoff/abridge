@@ -35,6 +35,7 @@ struct ServerStoreTests {
     func startServerSuccessUpdatesRunningState() async {
         let mock = MockServerService()
         await mock.setRefreshResult(.running)
+        await mock.setBearerTokenResult("started-token")
         let store = ServerStore(serverService: mock)
 
         await store.startServer()
@@ -42,6 +43,7 @@ struct ServerStoreTests {
         #expect(store.runState == .running)
         #expect(store.isStarting == false)
         #expect(store.lastError == nil)
+        #expect(store.bearerToken == "started-token")
         #expect(await mock.startCallCount == 1)
         #expect(await mock.lastStartHost == "127.0.0.1")
         #expect(await mock.lastStartPort == 3020)
@@ -74,6 +76,19 @@ struct ServerStoreTests {
         #expect(store.runState == .stopped)
         #expect(store.lastError == nil)
         #expect(await mock.stopCallCount == 1)
+    }
+
+    @Test
+    @MainActor
+    func refreshBearerTokenLoadsFromService() async {
+        let mock = MockServerService()
+        await mock.setBearerTokenResult("display-token")
+        let store = ServerStore(serverService: mock)
+
+        await store.refreshBearerToken()
+
+        #expect(store.bearerToken == "display-token")
+        #expect(store.lastError == nil)
     }
 
     @Test

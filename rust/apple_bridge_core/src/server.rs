@@ -305,7 +305,11 @@ impl ServerHandle {
       }
     };
 
-    let router = http::router();
+    let bearer_token = {
+      let inner = self.inner.lock().map_err(|_| CoreError::StateUnavailable)?;
+      inner.config.bearer_token.clone()
+    };
+    let router = http::router(bearer_token);
     let started = runtime.block_on(start_http_server(&addr, router, self.inner.clone()));
 
     let (shutdown_tx, server_task) = match started {
@@ -510,6 +514,7 @@ mod tests {
     ServerConfig {
       host: "127.0.0.1".into(),
       port: 18_080,
+      bearer_token: "test-token".into(),
       enabled_providers: vec![ProviderConfig {
         name: "eventkit".into(),
         enabled: true,

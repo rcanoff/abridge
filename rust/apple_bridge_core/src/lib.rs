@@ -1,10 +1,12 @@
 use std::sync::Arc;
 
+mod auth;
 mod config;
 mod diagnostics;
 mod error;
 mod http;
 mod logging;
+mod mcp;
 mod providers;
 mod server;
 

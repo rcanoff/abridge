@@ -10,6 +10,7 @@ pub struct ProviderConfig {
 pub struct ServerConfig {
   pub host: String,
   pub port: u16,
+  pub bearer_token: String,
   pub enabled_providers: Vec<ProviderConfig>,
 }
 
@@ -44,6 +45,12 @@ pub fn validate_config(config: &ServerConfig) -> Result<(), CoreError> {
   if config.port == 0 {
     return Err(CoreError::InvalidConfig {
       message: "port must not be 0".into(),
+    });
+  }
+
+  if config.bearer_token.trim().is_empty() {
+    return Err(CoreError::InvalidConfig {
+      message: "bearer token must not be empty".into(),
     });
   }
 

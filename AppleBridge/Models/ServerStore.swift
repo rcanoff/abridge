@@ -7,6 +7,7 @@ final class ServerStore {
     private(set) var runState: ServerRunState = .stopped
     private(set) var isStarting = false
     private(set) var lastError: String?
+    private(set) var bearerToken: String?
 
     let host = "127.0.0.1"
     let port: UInt16 = 3020
@@ -28,6 +29,21 @@ final class ServerStore {
         }
     }
 
+    func refreshBearerToken() async {
+        if runState == .running, let activeToken = await serverService.activeBearerToken() {
+            bearerToken = activeToken
+            return
+        }
+
+        do {
+            bearerToken = try await serverService.loadBearerToken()
+        } catch let error as ServerOperationError {
+            lastError = error.message
+        } catch {
+            lastError = error.localizedDescription
+        }
+    }
+
     func startServer() async {
         guard !isStarting, runState != .running, runState != .starting else { return }
 
@@ -39,6 +55,7 @@ final class ServerStore {
 
         do {
             try await serverService.start(host: host, port: port)
+            await refreshBearerToken()
             let state = await serverService.refreshStatus()
             runState = state
             if case .error(let message) = state {

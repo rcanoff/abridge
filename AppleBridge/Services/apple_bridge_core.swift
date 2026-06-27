@@ -874,13 +874,15 @@ public func FfiConverterTypeProviderStatus_lower(_ value: ProviderStatus) -> Rus
 public struct ServerConfig: Equatable, Hashable {
     public var host: String
     public var port: UInt16
+    public var bearerToken: String
     public var enabledProviders: [ProviderConfig]
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(host: String, port: UInt16, enabledProviders: [ProviderConfig]) {
+    public init(host: String, port: UInt16, bearerToken: String, enabledProviders: [ProviderConfig]) {
         self.host = host
         self.port = port
+        self.bearerToken = bearerToken
         self.enabledProviders = enabledProviders
     }
 
@@ -902,6 +904,7 @@ public struct FfiConverterTypeServerConfig: FfiConverterRustBuffer {
             try ServerConfig(
                 host: FfiConverterString.read(from: &buf), 
                 port: FfiConverterUInt16.read(from: &buf), 
+                bearerToken: FfiConverterString.read(from: &buf), 
                 enabledProviders: FfiConverterSequenceTypeProviderConfig.read(from: &buf)
         )
     }
@@ -909,6 +912,7 @@ public struct FfiConverterTypeServerConfig: FfiConverterRustBuffer {
     public static func write(_ value: ServerConfig, into buf: inout [UInt8]) {
         FfiConverterString.write(value.host, into: &buf)
         FfiConverterUInt16.write(value.port, into: &buf)
+        FfiConverterString.write(value.bearerToken, into: &buf)
         FfiConverterSequenceTypeProviderConfig.write(value.enabledProviders, into: &buf)
     }
 }
