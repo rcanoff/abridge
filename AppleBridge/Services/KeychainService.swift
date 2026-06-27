@@ -1,7 +1,7 @@
 import Foundation
 import Security
 
-struct KeychainError: Error, Equatable, Sendable {
+struct KeychainError: Error, Equatable {
     let message: String
 }
 

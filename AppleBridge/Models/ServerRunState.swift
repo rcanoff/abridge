@@ -1,6 +1,6 @@
 import Foundation
 
-enum ServerRunState: Equatable, Sendable {
+enum ServerRunState: Equatable {
     case stopped
     case starting
     case running
@@ -9,13 +9,13 @@ enum ServerRunState: Equatable, Sendable {
     var displayName: String {
         switch self {
         case .stopped:
-            return "Stopped"
+            "Stopped"
         case .starting:
-            return "Starting…"
+            "Starting…"
         case .running:
-            return "Running"
+            "Running"
         case .error:
-            return "Error"
+            "Error"
         }
     }
 }

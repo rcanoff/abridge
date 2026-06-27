@@ -136,9 +136,27 @@ just test-rust    # TZ=UTC cargo test
 
 ### Swift
 
-- Match existing file style (4-space indent in current codebase).
+- Config: `.swiftformat`, `.swiftlint.yml` at repo root
+- Exclude generated: `AppleBridge/Services/apple_bridge_core.swift`, `AppleBridgeCore/`
 - Enable strict concurrency in `project.yml`.
-- Run `just test-swift` before commit.
+- Run before commit:
+
+```sh
+just fmt-check-swift
+just lint-swift
+just test-swift
+```
+
+---
+
+## CI
+
+| Workflow | Runner | Path filter |
+|----------|--------|-------------|
+| Rust CI | `ubuntu-latest` | `rust/**` |
+| macOS CI | `macos-26` | `AppleBridge/**`, `AppleBridgeTests/**`, `project.yml`, `rust/**` |
+
+Local parity: `just ci`. Pre-push runs a fast subset (skips `build-rust`); install via `git config core.hooksPath .githooks`.
 
 ---
 

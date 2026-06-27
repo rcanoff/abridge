@@ -1,6 +1,6 @@
+@testable import AppleBridge
 import Foundation
 import Testing
-@testable import AppleBridge
 
 @Suite("AppleProviderBridge")
 struct AppleProviderBridgeTests {

@@ -1,6 +1,6 @@
 import Foundation
 
-struct ServerOperationError: Error, Equatable, Sendable {
+struct ServerOperationError: Error, Equatable {
     let message: String
 }
 
@@ -123,18 +123,18 @@ actor ServerService: ServerServing {
 extension ServerService {
     static func userMessage(for error: CoreError) -> String {
         switch error {
-        case .InvalidConfig(let message):
-            return "Invalid server configuration: \(message)"
+        case let .InvalidConfig(message):
+            "Invalid server configuration: \(message)"
         case .AlreadyRunning:
-            return "Server is already running."
+            "Server is already running."
         case .StateUnavailable:
-            return "Server state is unavailable."
-        case .BindFailed(let message):
-            return "Failed to bind server: \(message)"
-        case .RuntimeFailed(let message):
-            return "Server error: \(message)"
+            "Server state is unavailable."
+        case let .BindFailed(message):
+            "Failed to bind server: \(message)"
+        case let .RuntimeFailed(message):
+            "Server error: \(message)"
         case .StartCancelled:
-            return "Server start was cancelled."
+            "Server start was cancelled."
         }
     }
 }
