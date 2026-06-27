@@ -31,6 +31,18 @@ ci-rust: _rust-workspace
     just lint-rust
     just test-rust
 
+_swift-sources := "AppleBridge AppleBridgeTests"
+_swift-exclude := "--exclude AppleBridge/Services/apple_bridge_core.swift --exclude AppleBridgeCore"
+
+fmt-swift:
+    swiftformat {{_swift-sources}} {{_swift-exclude}}
+
+fmt-check-swift:
+    swiftformat {{_swift-sources}} {{_swift-exclude}} --lint
+
+lint-swift:
+    swiftlint lint --strict --quiet
+
 build-rust: _rust-workspace
     cd rust && ./build-macos.sh
 

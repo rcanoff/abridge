@@ -6,8 +6,8 @@ enum RemindersPermissionError: LocalizedError, Equatable {
 
     var errorDescription: String? {
         switch self {
-        case .requestFailed(let message):
-            return message
+        case let .requestFailed(message):
+            message
         }
     }
 }

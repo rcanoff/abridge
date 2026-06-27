@@ -1,5 +1,5 @@
-import Foundation
 @testable import AppleBridge
+import Foundation
 
 actor MockServerService: ServerServing {
     var refreshResult: ServerRunState = .stopped

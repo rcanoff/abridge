@@ -1,5 +1,5 @@
-import Foundation
 @testable import AppleBridge
+import Foundation
 
 @MainActor
 final class MockURLOpener: URLOpening {
