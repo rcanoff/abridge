@@ -1,0 +1,41 @@
+name: macOS CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "AppleBridge/**"
+      - "AppleBridgeTests/**"
+      - "project.yml"
+      - "rust/**"
+  pull_request:
+    paths:
+      - "AppleBridge/**"
+      - "AppleBridgeTests/**"
+      - "project.yml"
+      - "rust/**"
+
+concurrency:
+  group: macos-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.85"
+
+      - uses: extractions/setup-just@v2
+
+      - name: Install Swift hygiene tools
+        run: brew install swiftformat swiftlint
+
+      - name: macOS CI
+        run: just ci-macos
+        env:
+          TZ: UTC
