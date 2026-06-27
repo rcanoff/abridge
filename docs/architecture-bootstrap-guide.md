@@ -395,10 +395,7 @@ Validation guidance:
 
 - Default host: `127.0.0.1`
 - Default port: app-defined, but document one stable development default such as `3020`
-- Reject wildcard binds by default (`0.0.0.0`, `::`)
-- Require a non-empty bearer token
-- Reject duplicate provider names
-- Validate provider names before startup, not lazily on first request
+- Field validation rules: see **§5 Config model → Validation matrix** (canonical contract for `validate_config()`)
 
 ### Step 4 — Define the provider callback interface
 
@@ -862,14 +859,25 @@ Use one explicit runtime config record passed from Swift to Rust.
 | `bearer_token` | `String` | Swift Keychain | Non-empty, runtime only |
 | `enabled_providers` | `[ProviderConfig]` | Swift settings UI | Drives provider availability |
 
-### Validation rules in Rust
+### Validation matrix
 
-- Reject blank host
-- Reject non-loopback host by default
-- Reject port `0`
-- Reject empty bearer token
-- Reject duplicate provider names
-- Reject configs where every provider is disabled if your app requires at least one provider
+Canonical contract for `validate_config()` in `rust/apple_bridge_core/src/config.rs`. PR specs implement rows by PR column; naming philosophy for provider IDs lives in `docs/conventions.md` § Providers and operations.
+
+| Field | Rule | Error message | PR |
+|-------|------|---------------|-----|
+| `host` | Non-blank after trim | `host must not be blank` | 2a |
+| `host` | Loopback allowlist: `127.0.0.1`, `localhost`, `::1` | `host must be loopback` | 2a |
+| `port` | `> 0` | `port must not be 0` | 2a |
+| `enabled_providers[].name` | Non-blank after trim | `provider name must not be blank` | 2a |
+| `enabled_providers[].name` | Lowercase, no whitespace | `invalid provider name: {name}` | 2a |
+| `enabled_providers[].name` | Unique after trim | `duplicate provider name: {name}` | 2a |
+| `bearer_token` | Non-empty | `bearer token must not be empty` | 2d |
+| `enabled_providers` | At least one enabled (if app requires) | TBD | later |
+
+Notes:
+
+- Validation runs at `create_server()`, not lazily on first request.
+- `ProviderRequest.provider` / `.operation` shape checks are request-time (PR 2b+ routing), not config-time.
 
 ### Recommended defaults
 
