@@ -15,6 +15,9 @@ targets:
     platform: macOS
     sources:
       - path: AppleBridge
+    dependencies:
+      - framework: AppleBridgeCore/apple_bridge_core.xcframework
+        embed: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.applebridge.AppleBridge

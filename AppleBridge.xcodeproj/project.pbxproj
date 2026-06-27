@@ -8,12 +8,16 @@
 
 /* Begin PBXBuildFile section */
 		0FF39115817D3F4FDA50D54F /* RemindersPermissionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */; };
+		157B363DB733C91226C9B8DB /* AGENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = 4F3B36B22B98B81A320FF58A /* AGENTS.md */; };
+		1D62440B437C5B5D6DD2F200 /* apple_bridge_core.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = F14ACC25EBB3AA6729012771 /* apple_bridge_core.xcframework */; };
 		1E6CD3CB40F8C514854108E6 /* BlockingRemindersPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E28A832B6850DD201DF12F8 /* BlockingRemindersPermissionService.swift */; };
 		22A1A27010210BCA212E7589 /* MockRemindersPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */; };
 		42863111892B7945435D4B75 /* MenuBarPopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F44E65FBBCEB4E6825FCE03C /* MenuBarPopoverView.swift */; };
 		6051BD7549D7FF560C068E9E /* MockURLOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86823620FB198FFCB3167A11 /* MockURLOpener.swift */; };
+		60FD0A8FF20E78B4EB93D578 /* apple_bridge_core.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02B065B605C800213EF61640 /* apple_bridge_core.swift */; };
 		65F8730E6F95FE7B7F9D6BF0 /* RemindersPermissionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */; };
 		695314C514070291FDE34E03 /* AppleBridgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */; };
+		6BB4D6710F48AFBEDF082B8B /* AGENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = 92830963795BAD6609DEE2EC /* AGENTS.md */; };
 		A379FED46FA22BFE7EBA3232 /* RemindersPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A72D4B9CEB174F696205046 /* RemindersPermissionService.swift */; };
 		B093734CB3D64AC488A72A1C /* AppStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E67E426EFAB33A7A23E90338 /* AppStoreTests.swift */; };
 		D6C3FDC3CBF50531768A2F68 /* RemindersPermissionChecking.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92E78E13D38DCD36E0C4AAF /* RemindersPermissionChecking.swift */; };
@@ -33,20 +37,35 @@
 
 /* Begin PBXFileReference section */
 		0157FC066C71802B00A6F481 /* URLOpening.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLOpening.swift; sourceTree = "<group>"; };
+		02B065B605C800213EF61640 /* apple_bridge_core.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = apple_bridge_core.swift; sourceTree = "<group>"; };
 		081813B141909245E342F20A /* AppleBridgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AppleBridgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBridgeApp.swift; sourceTree = "<group>"; };
 		0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionStatusTests.swift; sourceTree = "<group>"; };
 		3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionStatus.swift; sourceTree = "<group>"; };
 		4A72D4B9CEB174F696205046 /* RemindersPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionService.swift; sourceTree = "<group>"; };
+		4F3B36B22B98B81A320FF58A /* AGENTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AGENTS.md; sourceTree = "<group>"; };
 		5E28A832B6850DD201DF12F8 /* BlockingRemindersPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockingRemindersPermissionService.swift; sourceTree = "<group>"; };
 		63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRemindersPermissionService.swift; sourceTree = "<group>"; };
 		86823620FB198FFCB3167A11 /* MockURLOpener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLOpener.swift; sourceTree = "<group>"; };
+		92830963795BAD6609DEE2EC /* AGENTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AGENTS.md; sourceTree = "<group>"; };
 		B1248AB2AF2E733A7DBF3FFF /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
 		CF8C2D151839110223826CC7 /* AppleBridge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppleBridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E67E426EFAB33A7A23E90338 /* AppStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreTests.swift; sourceTree = "<group>"; };
 		E92E78E13D38DCD36E0C4AAF /* RemindersPermissionChecking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionChecking.swift; sourceTree = "<group>"; };
+		F14ACC25EBB3AA6729012771 /* apple_bridge_core.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = apple_bridge_core.xcframework; path = AppleBridgeCore/apple_bridge_core.xcframework; sourceTree = "<group>"; };
 		F44E65FBBCEB4E6825FCE03C /* MenuBarPopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPopoverView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3CC7B226AB21A1F708F6CA2D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1D62440B437C5B5D6DD2F200 /* apple_bridge_core.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		204749CD19AA8AD4DCE0E157 /* Products */ = {
@@ -61,6 +80,7 @@
 		27D0722E33C2A713E104325F /* AppleBridgeTests */ = {
 			isa = PBXGroup;
 			children = (
+				92830963795BAD6609DEE2EC /* AGENTS.md */,
 				E67E426EFAB33A7A23E90338 /* AppStoreTests.swift */,
 				5E28A832B6850DD201DF12F8 /* BlockingRemindersPermissionService.swift */,
 				63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */,
@@ -73,6 +93,7 @@
 		343C8CBBD7B246AD442FE5A5 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				02B065B605C800213EF61640 /* apple_bridge_core.swift */,
 				E92E78E13D38DCD36E0C4AAF /* RemindersPermissionChecking.swift */,
 				4A72D4B9CEB174F696205046 /* RemindersPermissionService.swift */,
 				0157FC066C71802B00A6F481 /* URLOpening.swift */,
@@ -83,6 +104,7 @@
 		63ABDAABA163B13CA550021A /* AppleBridge */ = {
 			isa = PBXGroup;
 			children = (
+				4F3B36B22B98B81A320FF58A /* AGENTS.md */,
 				0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */,
 				B85F46CDAA3C988BFBBC89D3 /* Models */,
 				343C8CBBD7B246AD442FE5A5 /* Services */,
@@ -108,11 +130,20 @@
 			path = Models;
 			sourceTree = "<group>";
 		};
+		BFBC2E392EBA57308AC5F8A8 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F14ACC25EBB3AA6729012771 /* apple_bridge_core.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		C445D3CF93AA6A3A8FE7DA58 = {
 			isa = PBXGroup;
 			children = (
 				63ABDAABA163B13CA550021A /* AppleBridge */,
 				27D0722E33C2A713E104325F /* AppleBridgeTests */,
+				BFBC2E392EBA57308AC5F8A8 /* Frameworks */,
 				204749CD19AA8AD4DCE0E157 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -125,6 +156,8 @@
 			buildConfigurationList = 936AC568B359137E34DA637C /* Build configuration list for PBXNativeTarget "AppleBridge" */;
 			buildPhases = (
 				0E1945A6D9EF59FFC193D471 /* Sources */,
+				125C9D7A345204E4FD23420B /* Resources */,
+				3CC7B226AB21A1F708F6CA2D /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -142,6 +175,7 @@
 			buildConfigurationList = 165D66E0903446C388CA258B /* Build configuration list for PBXNativeTarget "AppleBridgeTests" */;
 			buildPhases = (
 				4475CCBC04D98C9251CD9209 /* Sources */,
+				E051CE23017C6484EAA68864 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -186,6 +220,25 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		125C9D7A345204E4FD23420B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				157B363DB733C91226C9B8DB /* AGENTS.md in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E051CE23017C6484EAA68864 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6BB4D6710F48AFBEDF082B8B /* AGENTS.md in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		0E1945A6D9EF59FFC193D471 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -198,6 +251,7 @@
 				A379FED46FA22BFE7EBA3232 /* RemindersPermissionService.swift in Sources */,
 				0FF39115817D3F4FDA50D54F /* RemindersPermissionStatus.swift in Sources */,
 				F2E3B333069A6A0F678C189C /* URLOpening.swift in Sources */,
+				60FD0A8FF20E78B4EB93D578 /* apple_bridge_core.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -384,6 +438,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"AppleBridgeCore\"",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Apple Bridge";
 				INFOPLIST_KEY_LSUIElement = YES;
@@ -402,6 +460,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"AppleBridgeCore\"",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Apple Bridge";
 				INFOPLIST_KEY_LSUIElement = YES;
