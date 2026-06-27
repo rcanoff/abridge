@@ -1,8 +1,7 @@
 import Foundation
 
-@MainActor
-protocol ServerServing: AnyObject {
-    func refreshStatus() -> ServerRunState
-    func start(host: String, port: UInt16) throws
-    func stop() throws
+protocol ServerServing: Sendable {
+    func refreshStatus() async -> ServerRunState
+    func start(host: String, port: UInt16) async throws
+    func stop() async throws
 }

@@ -1,11 +1,10 @@
 import Foundation
 
-struct ServerOperationError: Error, Equatable {
+struct ServerOperationError: Error, Equatable, Sendable {
     let message: String
 }
 
-@MainActor
-final class ServerService: ServerServing {
+actor ServerService: ServerServing {
     private var handle: ServerHandle?
     private var currentHost: String?
     private var currentPort: UInt16?
@@ -17,7 +16,7 @@ final class ServerService: ServerServing {
         self.providerBridge = providerBridge
     }
 
-    func refreshStatus() -> ServerRunState {
+    func refreshStatus() async -> ServerRunState {
         guard let handle else {
             return .stopped
         }
@@ -31,14 +30,14 @@ final class ServerService: ServerServing {
         return status.running ? .running : .stopped
     }
 
-    func start(host: String, port: UInt16) throws {
+    func start(host: String, port: UInt16) async throws {
         if !hasInitializedLogging {
             initLogging()
             hasInitializedLogging = true
         }
 
         if handle != nil, currentHost != host || currentPort != port {
-            try stop()
+            try await stop()
         }
 
         if handle == nil {
@@ -53,23 +52,23 @@ final class ServerService: ServerServing {
         }
 
         guard let handle else {
-            throw ServerOperationError(message: userMessage(for: .StateUnavailable))
+            throw ServerOperationError(message: ServerService.userMessage(for: .StateUnavailable))
         }
 
         do {
             try startServer(handle: handle)
         } catch let error as CoreError {
-            throw ServerOperationError(message: userMessage(for: error))
+            throw ServerOperationError(message: ServerService.userMessage(for: error))
         }
     }
 
-    func stop() throws {
+    func stop() async throws {
         guard let handle else { return }
 
         do {
             try stopServer(handle: handle)
         } catch let error as CoreError {
-            throw ServerOperationError(message: userMessage(for: error))
+            throw ServerOperationError(message: ServerService.userMessage(for: error))
         }
 
         self.handle = nil
@@ -94,9 +93,5 @@ extension ServerService {
         case .StartCancelled:
             return "Server start was cancelled."
         }
-    }
-
-    private func userMessage(for error: CoreError) -> String {
-        Self.userMessage(for: error)
     }
 }

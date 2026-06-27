@@ -11,13 +11,13 @@ struct AppleBridgeApp: App {
             MenuBarPopoverView(store: store, serverStore: serverStore)
                 .onAppear {
                     store.refreshStatus()
-                    serverStore.refreshStatus()
+                    Task { await serverStore.refreshStatus() }
                 }
                 .onReceive(NotificationCenter.default.publisher(
                     for: NSApplication.didBecomeActiveNotification
                 )) { _ in
                     store.refreshStatus()
-                    serverStore.refreshStatus()
+                    Task { await serverStore.refreshStatus() }
                 }
         }
         .menuBarExtraStyle(.window)

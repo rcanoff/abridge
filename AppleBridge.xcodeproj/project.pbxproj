@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		0FF39115817D3F4FDA50D54F /* RemindersPermissionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */; };
-		157B363DB733C91226C9B8DB /* AGENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = 4F3B36B22B98B81A320FF58A /* AGENTS.md */; };
 		1D62440B437C5B5D6DD2F200 /* apple_bridge_core.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = F14ACC25EBB3AA6729012771 /* apple_bridge_core.xcframework */; };
 		1E6CD3CB40F8C514854108E6 /* BlockingRemindersPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E28A832B6850DD201DF12F8 /* BlockingRemindersPermissionService.swift */; };
 		22A1A27010210BCA212E7589 /* MockRemindersPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */; };
@@ -19,7 +18,6 @@
 		60FD0A8FF20E78B4EB93D578 /* apple_bridge_core.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02B065B605C800213EF61640 /* apple_bridge_core.swift */; };
 		65F8730E6F95FE7B7F9D6BF0 /* RemindersPermissionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */; };
 		695314C514070291FDE34E03 /* AppleBridgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */; };
-		6BB4D6710F48AFBEDF082B8B /* AGENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = 92830963795BAD6609DEE2EC /* AGENTS.md */; };
 		6FD9E013BEB7C5CD1B98DC1E /* ServerServing.swift in Sources */ = {isa = PBXBuildFile; fileRef = B34332B87B622ABB41D06752 /* ServerServing.swift */; };
 		891B0C6B5072C0C698412478 /* ServerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34F173AAC105177E71E9A236 /* ServerService.swift */; };
 		9A4FBB19B2D1FD3D35609914 /* ServerRunState.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDFB66A9507777E0046175CD /* ServerRunState.swift */; };
@@ -54,12 +52,10 @@
 		34F173AAC105177E71E9A236 /* ServerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerService.swift; sourceTree = "<group>"; };
 		3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionStatus.swift; sourceTree = "<group>"; };
 		4A72D4B9CEB174F696205046 /* RemindersPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionService.swift; sourceTree = "<group>"; };
-		4F3B36B22B98B81A320FF58A /* AGENTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AGENTS.md; sourceTree = "<group>"; };
 		5E28A832B6850DD201DF12F8 /* BlockingRemindersPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockingRemindersPermissionService.swift; sourceTree = "<group>"; };
 		63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRemindersPermissionService.swift; sourceTree = "<group>"; };
 		840D41B480A50A2080E5AFAD /* ServerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStore.swift; sourceTree = "<group>"; };
 		86823620FB198FFCB3167A11 /* MockURLOpener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLOpener.swift; sourceTree = "<group>"; };
-		92830963795BAD6609DEE2EC /* AGENTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AGENTS.md; sourceTree = "<group>"; };
 		B1248AB2AF2E733A7DBF3FFF /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
 		B34332B87B622ABB41D06752 /* ServerServing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerServing.swift; sourceTree = "<group>"; };
 		BDFB66A9507777E0046175CD /* ServerRunState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerRunState.swift; sourceTree = "<group>"; };
@@ -96,7 +92,6 @@
 		27D0722E33C2A713E104325F /* AppleBridgeTests */ = {
 			isa = PBXGroup;
 			children = (
-				92830963795BAD6609DEE2EC /* AGENTS.md */,
 				061BA2725CA72D643E140494 /* AppleProviderBridgeTests.swift */,
 				E67E426EFAB33A7A23E90338 /* AppStoreTests.swift */,
 				5E28A832B6850DD201DF12F8 /* BlockingRemindersPermissionService.swift */,
@@ -125,7 +120,6 @@
 		63ABDAABA163B13CA550021A /* AppleBridge */ = {
 			isa = PBXGroup;
 			children = (
-				4F3B36B22B98B81A320FF58A /* AGENTS.md */,
 				0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */,
 				B85F46CDAA3C988BFBBC89D3 /* Models */,
 				82FE345540F8405EE8D7D776 /* Providers */,
@@ -188,7 +182,6 @@
 			buildConfigurationList = 936AC568B359137E34DA637C /* Build configuration list for PBXNativeTarget "AppleBridge" */;
 			buildPhases = (
 				0E1945A6D9EF59FFC193D471 /* Sources */,
-				125C9D7A345204E4FD23420B /* Resources */,
 				3CC7B226AB21A1F708F6CA2D /* Frameworks */,
 			);
 			buildRules = (
@@ -207,7 +200,6 @@
 			buildConfigurationList = 165D66E0903446C388CA258B /* Build configuration list for PBXNativeTarget "AppleBridgeTests" */;
 			buildPhases = (
 				4475CCBC04D98C9251CD9209 /* Sources */,
-				E051CE23017C6484EAA68864 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -251,25 +243,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXResourcesBuildPhase section */
-		125C9D7A345204E4FD23420B /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				157B363DB733C91226C9B8DB /* AGENTS.md in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E051CE23017C6484EAA68864 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				6BB4D6710F48AFBEDF082B8B /* AGENTS.md in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0E1945A6D9EF59FFC193D471 /* Sources */ = {

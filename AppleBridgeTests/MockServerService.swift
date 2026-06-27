@@ -1,8 +1,7 @@
 import Foundation
 @testable import AppleBridge
 
-@MainActor
-final class MockServerService: ServerServing {
+actor MockServerService: ServerServing {
     var refreshResult: ServerRunState = .stopped
     var startError: ServerOperationError?
     var stopError: ServerOperationError?
@@ -12,11 +11,11 @@ final class MockServerService: ServerServing {
     private(set) var lastStartHost: String?
     private(set) var lastStartPort: UInt16?
 
-    func refreshStatus() -> ServerRunState {
+    func refreshStatus() async -> ServerRunState {
         refreshResult
     }
 
-    func start(host: String, port: UInt16) throws {
+    func start(host: String, port: UInt16) async throws {
         startCallCount += 1
         lastStartHost = host
         lastStartPort = port
@@ -26,12 +25,20 @@ final class MockServerService: ServerServing {
         }
     }
 
-    func stop() throws {
+    func stop() async throws {
         stopCallCount += 1
         refreshResult = .stopped
 
         if let stopError {
             throw stopError
         }
+    }
+
+    func setRefreshResult(_ result: ServerRunState) {
+        refreshResult = result
+    }
+
+    func setStartError(_ error: ServerOperationError?) {
+        startError = error
     }
 }

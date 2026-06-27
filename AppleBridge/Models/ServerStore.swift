@@ -17,17 +17,18 @@ final class ServerStore {
         self.serverService = serverService
     }
 
-    func refreshStatus() {
-        runState = serverService.refreshStatus()
+    func refreshStatus() async {
+        let state = await serverService.refreshStatus()
+        runState = state
 
-        if case .error(let message) = runState {
+        if case .error(let message) = state {
             lastError = message
         } else {
             lastError = nil
         }
     }
 
-    func startServer() {
+    func startServer() async {
         guard !isStarting, runState != .running, runState != .starting else { return }
 
         isStarting = true
@@ -37,9 +38,10 @@ final class ServerStore {
         defer { isStarting = false }
 
         do {
-            try serverService.start(host: host, port: port)
-            runState = serverService.refreshStatus()
-            if case .error(let message) = runState {
+            try await serverService.start(host: host, port: port)
+            let state = await serverService.refreshStatus()
+            runState = state
+            if case .error(let message) = state {
                 lastError = message
             } else {
                 lastError = nil
@@ -53,10 +55,10 @@ final class ServerStore {
         }
     }
 
-    func stopServer() {
+    func stopServer() async {
         do {
-            try serverService.stop()
-            refreshStatus()
+            try await serverService.stop()
+            await refreshStatus()
         } catch let error as ServerOperationError {
             lastError = error.message
             runState = .error(error.message)

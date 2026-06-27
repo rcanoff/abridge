@@ -6,12 +6,12 @@ import Testing
 struct ServerStoreTests {
     @Test
     @MainActor
-    func refreshStatusMapsRunning() {
+    func refreshStatusMapsRunning() async {
         let mock = MockServerService()
-        mock.refreshResult = .running
+        await mock.setRefreshResult(.running)
         let store = ServerStore(serverService: mock)
 
-        store.refreshStatus()
+        await store.refreshStatus()
 
         #expect(store.runState == .running)
         #expect(store.lastError == nil)
@@ -19,12 +19,12 @@ struct ServerStoreTests {
 
     @Test
     @MainActor
-    func refreshStatusMapsStopped() {
+    func refreshStatusMapsStopped() async {
         let mock = MockServerService()
-        mock.refreshResult = .stopped
+        await mock.setRefreshResult(.stopped)
         let store = ServerStore(serverService: mock)
 
-        store.refreshStatus()
+        await store.refreshStatus()
 
         #expect(store.runState == .stopped)
         #expect(store.lastError == nil)
@@ -32,29 +32,29 @@ struct ServerStoreTests {
 
     @Test
     @MainActor
-    func startServerSuccessUpdatesRunningState() {
+    func startServerSuccessUpdatesRunningState() async {
         let mock = MockServerService()
-        mock.refreshResult = .running
+        await mock.setRefreshResult(.running)
         let store = ServerStore(serverService: mock)
 
-        store.startServer()
+        await store.startServer()
 
         #expect(store.runState == .running)
         #expect(store.isStarting == false)
         #expect(store.lastError == nil)
-        #expect(mock.startCallCount == 1)
-        #expect(mock.lastStartHost == "127.0.0.1")
-        #expect(mock.lastStartPort == 3020)
+        #expect(await mock.startCallCount == 1)
+        #expect(await mock.lastStartHost == "127.0.0.1")
+        #expect(await mock.lastStartPort == 3020)
     }
 
     @Test
     @MainActor
-    func startServerFailureSetsLastError() {
+    func startServerFailureSetsLastError() async {
         let mock = MockServerService()
-        mock.startError = ServerOperationError(message: "failed to bind server: port in use")
+        await mock.setStartError(ServerOperationError(message: "failed to bind server: port in use"))
         let store = ServerStore(serverService: mock)
 
-        store.startServer()
+        await store.startServer()
 
         #expect(store.lastError == "failed to bind server: port in use")
         #expect(store.isStarting == false)
@@ -63,30 +63,29 @@ struct ServerStoreTests {
 
     @Test
     @MainActor
-    func stopServerClearsRunningState() {
+    func stopServerClearsRunningState() async {
         let mock = MockServerService()
-        mock.refreshResult = .running
+        await mock.setRefreshResult(.running)
         let store = ServerStore(serverService: mock)
-        store.startServer()
+        await store.startServer()
 
-        store.stopServer()
+        await store.stopServer()
 
         #expect(store.runState == .stopped)
         #expect(store.lastError == nil)
-        #expect(mock.stopCallCount == 1)
+        #expect(await mock.stopCallCount == 1)
     }
 
     @Test
     @MainActor
-    func startServerGuardsDoubleStartWhileRunning() {
+    func startServerGuardsDoubleStartWhileRunning() async {
         let mock = MockServerService()
-        mock.refreshResult = .running
+        await mock.setRefreshResult(.running)
         let store = ServerStore(serverService: mock)
-        store.startServer()
+        await store.startServer()
 
-        store.startServer()
+        await store.startServer()
 
-        #expect(mock.startCallCount == 1)
+        #expect(await mock.startCallCount == 1)
     }
-
 }

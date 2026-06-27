@@ -83,12 +83,12 @@ struct MenuBarPopoverView: View {
         switch serverStore.runState {
         case .stopped, .error:
             Button("Start Server") {
-                Task { serverStore.startServer() }
+                Task { await serverStore.startServer() }
             }
             .disabled(serverStore.isStarting)
         case .running:
             Button("Stop Server") {
-                Task { serverStore.stopServer() }
+                Task { await serverStore.stopServer() }
             }
         case .starting:
             Button("Start Server") {}
