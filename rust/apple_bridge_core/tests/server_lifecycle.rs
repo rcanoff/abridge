@@ -9,8 +9,8 @@ use apple_bridge_core::{
 use support::mock_provider::MockProviderBridge;
 use support::port::allocate_test_port;
 
-/// `test_sync` uses process-global state; serialize tests that arm the pause seam.
-static TEST_SYNC_LOCK: Mutex<()> = Mutex::new(());
+/// Serialize lifecycle tests: `test_sync` pause state is process-global.
+static LIFECYCLE_TEST_LOCK: Mutex<()> = Mutex::new(());
 
 fn sample_config() -> ServerConfig {
   ServerConfig {
@@ -25,6 +25,7 @@ fn sample_config() -> ServerConfig {
 
 #[test]
 fn lifecycle_start_stop() {
+  let _guard = LIFECYCLE_TEST_LOCK.lock().expect("lifecycle test lock");
   let port = allocate_test_port();
   let config = ServerConfig {
     host: "127.0.0.1".into(),
@@ -54,6 +55,7 @@ fn lifecycle_start_stop() {
 
 #[test]
 fn start_twice_returns_already_running() {
+  let _guard = LIFECYCLE_TEST_LOCK.lock().expect("lifecycle test lock");
   let handle = create_server(sample_config(), Box::new(MockProviderBridge::new())).expect("create_server");
   start_server(handle.clone()).expect("first start");
   let err = start_server(handle).expect_err("second start");
@@ -62,7 +64,7 @@ fn start_twice_returns_already_running() {
 
 #[test]
 fn stop_during_start_releases_port_before_return() {
-  let _sync_guard = TEST_SYNC_LOCK.lock().expect("test_sync lock");
+  let _guard = LIFECYCLE_TEST_LOCK.lock().expect("lifecycle test lock");
   let port = allocate_test_port();
   let config = ServerConfig {
     host: "127.0.0.1".into(),
@@ -105,7 +107,7 @@ fn stop_during_start_releases_port_before_return() {
 
 #[test]
 fn concurrent_start_rejected_while_stop_awaits_start_completion() {
-  let _sync_guard = TEST_SYNC_LOCK.lock().expect("test_sync lock");
+  let _guard = LIFECYCLE_TEST_LOCK.lock().expect("lifecycle test lock");
   let port = allocate_test_port();
   let config = ServerConfig {
     host: "127.0.0.1".into(),

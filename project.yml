@@ -15,6 +15,11 @@ targets:
     platform: macOS
     sources:
       - path: AppleBridge
+        excludes:
+          - AGENTS.md
+    dependencies:
+      - framework: AppleBridgeCore/apple_bridge_core.xcframework
+        embed: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.applebridge.AppleBridge
@@ -27,6 +32,8 @@ targets:
     platform: macOS
     sources:
       - path: AppleBridgeTests
+        excludes:
+          - AGENTS.md
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
