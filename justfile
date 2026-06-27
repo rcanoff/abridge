@@ -43,6 +43,27 @@ fmt-check-swift:
 lint-swift:
     swiftlint lint --strict --quiet
 
+# macOS CI steps (no host guard — used by GitHub Actions macos runner)
+ci-macos-steps: _rust-workspace
+    just fmt-check-swift
+    just lint-swift
+    just test-swift
+    just build-rust
+
+# Local entry point; skips gracefully off-macOS
+ci-macos:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! uname | grep -qi darwin; then
+      echo "skipped: ci-macos requires macOS" >&2
+      exit 0
+    fi
+    just ci-macos-steps
+
+ci:
+    just ci-rust
+    @uname | grep -qi darwin && just ci-macos-steps || echo "skipped: ci-macos (not macOS)"
+
 build-rust: _rust-workspace
     cd rust && ./build-macos.sh
 
