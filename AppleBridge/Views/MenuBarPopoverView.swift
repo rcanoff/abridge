@@ -28,7 +28,7 @@ struct MenuBarPopoverView: View {
                     .textSelection(.enabled)
             }
 
-            if store.permissionStatus == .notDetermined {
+            if store.permissionStatus == .notDetermined || store.permissionStatus == .writeOnly {
                 Button("Grant Access") {
                     Task { await store.requestAccess() }
                 }
@@ -82,7 +82,7 @@ struct MenuBarPopoverView: View {
         switch store.permissionStatus {
         case .authorized:
             .green
-        case .notDetermined, .unknown:
+        case .notDetermined, .unknown, .writeOnly:
             .orange
         case .denied, .restricted:
             .red

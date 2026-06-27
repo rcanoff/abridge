@@ -174,7 +174,7 @@ final class PermissionsStore {
     }
 
     var remindersAuthorized: Bool {
-        permissionService.currentStatus() == .authorized
+        permissionService.currentStatus().grantsReadAccess
     }
 
     func enforcement(for capability: CapabilityDefinition) -> CapabilityEnforcement {
@@ -221,7 +221,7 @@ final class PermissionsStore {
         if needsAppleAccess(), !remindersAuthorized {
             do {
                 let status = try await permissionService.requestAccess()
-                guard status == .authorized else {
+                guard status.grantsReadAccess else {
                     lastError = "Reminders access was not granted."
                     return false
                 }

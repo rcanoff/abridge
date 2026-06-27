@@ -16,10 +16,15 @@ struct RemindersPermissionStatusTests {
         )
     }
 
-    @Test func mapsWriteOnlyToAuthorized() {
+    @Test func mapsWriteOnlyToWriteOnly() {
         #expect(
-            RemindersPermissionStatusMapper.map(.writeOnly) == .authorized
+            RemindersPermissionStatusMapper.map(.writeOnly) == .writeOnly
         )
+    }
+
+    @Test func writeOnlyDoesNotGrantReadAccess() {
+        #expect(RemindersPermissionStatus.writeOnly.grantsReadAccess == false)
+        #expect(RemindersPermissionStatus.authorized.grantsReadAccess == true)
     }
 
     @Test func mapsDenied() {

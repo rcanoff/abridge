@@ -109,6 +109,40 @@ struct ServerStoreTests {
 
     @Test
     @MainActor
+    func refreshStatusPreservesStartupErrorWhenServiceReportsStopped() async {
+        let mock = MockServerService()
+        await mock.setStartError(ServerOperationError(message: "failed to bind server: port in use"))
+        await mock.setRefreshResult(.stopped)
+        let store = ServerStore(serverService: mock)
+
+        await store.startServer(port: 3020, enabledCapabilities: [])
+
+        #expect(store.runState == .error("failed to bind server: port in use"))
+        #expect(store.lastError == "failed to bind server: port in use")
+
+        await store.refreshStatus()
+
+        #expect(store.runState == .error("failed to bind server: port in use"))
+        #expect(store.lastError == "failed to bind server: port in use")
+    }
+
+    @Test
+    @MainActor
+    func stopServerClearsStartupErrorState() async {
+        let mock = MockServerService()
+        await mock.setStartError(ServerOperationError(message: "failed to bind server: port in use"))
+        let store = ServerStore(serverService: mock)
+
+        await store.startServer(port: 3020, enabledCapabilities: [])
+
+        await store.stopServer()
+
+        #expect(store.runState == .stopped)
+        #expect(store.lastError == nil)
+    }
+
+    @Test
+    @MainActor
     func startServerGuardsDoubleStartWhileRunning() async {
         let mock = MockServerService()
         await mock.setRefreshResult(.running)

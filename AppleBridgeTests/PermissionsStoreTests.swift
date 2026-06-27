@@ -73,4 +73,80 @@ struct PermissionsStoreTests {
         let saved = PermissionsDerivation.savedIDsAfterSave(from: ["read", "create"])
         #expect(saved == ["read"])
     }
+
+    @Test
+    func readCapabilityShowsAppleNeededWhenWriteOnly() {
+        let read = CapabilityCatalog.remindersCapabilities[0]
+        let enforcement = PermissionsDerivation.computeEnforcement(
+            for: read,
+            checked: true,
+            saved: true,
+            remindersAuthorized: false
+        )
+
+        #expect(enforcement.apple == .needed)
+        #expect(enforcement.mcp == .active)
+    }
+}
+
+@Suite("PermissionsStore")
+struct PermissionsStoreIntegrationTests {
+    @Test
+    @MainActor
+    func writeOnlyStatusIsNotRemindersAuthorized() {
+        let suiteName = "PermissionsStoreTests.writeOnly"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let mock = MockRemindersPermissionService()
+        mock.status = .writeOnly
+        let store = PermissionsStore(
+            appSettings: AppSettings(defaults: defaults),
+            permissionService: mock
+        )
+
+        #expect(store.remindersAuthorized == false)
+    }
+
+    @Test
+    @MainActor
+    func writeOnlyReadEnforcementShowsAppleNeeded() {
+        let suiteName = "PermissionsStoreTests.writeOnlyEnforcement"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let mock = MockRemindersPermissionService()
+        mock.status = .writeOnly
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.saveCapabilityIDs(["read"])
+        let store = PermissionsStore(appSettings: appSettings, permissionService: mock)
+
+        let read = CapabilityCatalog.remindersCapabilities[0]
+        let enforcement = store.enforcement(for: read)
+
+        #expect(enforcement.apple == .needed)
+        #expect(enforcement.mcp == .active)
+    }
+
+    @Test
+    @MainActor
+    func saveRequestsAccessWhenWriteOnlyAndReadChecked() async {
+        let suiteName = "PermissionsStoreTests.writeOnlySave"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let mock = MockRemindersPermissionService()
+        mock.status = .writeOnly
+        mock.requestResult = .success(.authorized)
+        let store = PermissionsStore(
+            appSettings: AppSettings(defaults: defaults),
+            permissionService: mock
+        )
+        store.setChecked(true, for: "read")
+
+        let saved = await store.save()
+
+        #expect(saved == true)
+        #expect(mock.requestCallCount == 1)
+    }
 }

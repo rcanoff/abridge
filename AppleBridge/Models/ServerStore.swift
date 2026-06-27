@@ -19,6 +19,14 @@ final class ServerStore {
 
     func refreshStatus() async {
         let state = await serverService.refreshStatus()
+
+        // After a failed start there is no server handle, so the service reports
+        // `.stopped`. Do not overwrite a recent startup error from launch restore
+        // or manual start attempts.
+        if case .stopped = state, case .error = runState, lastError != nil {
+            return
+        }
+
         runState = state
 
         if case let .error(message) = state {
@@ -78,7 +86,8 @@ final class ServerStore {
     func stopServer() async {
         do {
             try await serverService.stop()
-            await refreshStatus()
+            runState = .stopped
+            lastError = nil
         } catch let error as ServerOperationError {
             lastError = error.message
             runState = .error(error.message)

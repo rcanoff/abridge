@@ -5,8 +5,13 @@ enum RemindersPermissionStatus: Equatable, CaseIterable {
     case unknown
     case notDetermined
     case authorized
+    case writeOnly
     case denied
     case restricted
+
+    var grantsReadAccess: Bool {
+        self == .authorized
+    }
 
     var displayName: String {
         switch self {
@@ -16,6 +21,8 @@ enum RemindersPermissionStatus: Equatable, CaseIterable {
             "Not Determined"
         case .authorized:
             "Authorized"
+        case .writeOnly:
+            "Write Only"
         case .denied:
             "Denied"
         case .restricted:
@@ -29,8 +36,10 @@ enum RemindersPermissionStatusMapper {
         switch status {
         case .notDetermined:
             return .notDetermined
-        case .fullAccess, .writeOnly:
+        case .fullAccess:
             return .authorized
+        case .writeOnly:
+            return .writeOnly
         case .denied:
             return .denied
         case .restricted:

@@ -8,12 +8,22 @@ on:
       - "AppleBridgeTests/**"
       - "project.yml"
       - "rust/**"
+      - "justfile"
+      - ".swiftformat"
+      - ".swiftlint.yml"
+      - "scripts/ci/**"
+      - ".github/workflows/ci-macos.yml"
   pull_request:
     paths:
       - "AppleBridge/**"
       - "AppleBridgeTests/**"
       - "project.yml"
       - "rust/**"
+      - "justfile"
+      - ".swiftformat"
+      - ".swiftlint.yml"
+      - "scripts/ci/**"
+      - ".github/workflows/ci-macos.yml"
 
 concurrency:
   group: macos-ci-${{ github.ref }}

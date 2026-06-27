@@ -91,6 +91,30 @@ struct SettingsStoreTests {
 
     @Test
     @MainActor
+    func launchRestoreFailureSurvivesPostRestoreRefresh() async {
+        let suiteName = "SettingsStoreTests.launchRestoreFailure"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = true
+
+        let mock = MockServerService()
+        await mock.setStartError(ServerOperationError(message: "failed to bind server: port in use"))
+        await mock.setRefreshResult(.stopped)
+        let serverStore = ServerStore(serverService: mock)
+        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+
+        // Mirror AppleBridgeApp.init() launch task ordering.
+        await settingsStore.performLaunchRestoreIfNeeded()
+        await serverStore.refreshBearerToken()
+        await serverStore.refreshStatus()
+
+        #expect(serverStore.runState == .error("failed to bind server: port in use"))
+        #expect(serverStore.lastError == "failed to bind server: port in use")
+    }
+
+    @Test
+    @MainActor
     func applyMCPEnabledChangeDoesNotDoubleStartAfterLaunchRestore() async {
         let suiteName = "SettingsStoreTests.launchRestoreNoDoubleStart"
         let defaults = UserDefaults(suiteName: suiteName)!
