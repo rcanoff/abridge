@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MenuBarPopoverView: View {
     @Bindable var store: AppStore
+    @Bindable var serverStore: ServerStore
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -15,7 +16,7 @@ struct MenuBarPopoverView: View {
 
                 Text(store.permissionStatus.displayName)
                     .font(.body)
-                    .foregroundStyle(statusColor)
+                    .foregroundStyle(permissionStatusColor)
             }
 
             if let lastError = store.lastError {
@@ -42,12 +43,60 @@ struct MenuBarPopoverView: View {
                 ProgressView()
                     .controlSize(.small)
             }
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Server")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                Text(serverStore.runState.displayName)
+                    .font(.body)
+                    .foregroundStyle(serverStatusColor)
+
+                Text("\(serverStore.host):\(serverStore.port)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if let lastError = serverStore.lastError {
+                Text(lastError)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .textSelection(.enabled)
+            }
+
+            serverControlButton
+
+            if isServerStarting {
+                ProgressView()
+                    .controlSize(.small)
+            }
         }
         .padding()
         .frame(width: 260)
     }
 
-    private var statusColor: Color {
+    @ViewBuilder
+    private var serverControlButton: some View {
+        switch serverStore.runState {
+        case .stopped, .error:
+            Button("Start Server") {
+                Task { serverStore.startServer() }
+            }
+            .disabled(serverStore.isStarting)
+        case .running:
+            Button("Stop Server") {
+                Task { serverStore.stopServer() }
+            }
+        case .starting:
+            Button("Start Server") {}
+                .disabled(true)
+        }
+    }
+
+    private var permissionStatusColor: Color {
         switch store.permissionStatus {
         case .authorized:
             return .green
@@ -58,4 +107,20 @@ struct MenuBarPopoverView: View {
         }
     }
 
+    private var serverStatusColor: Color {
+        switch serverStore.runState {
+        case .running:
+            return .green
+        case .starting:
+            return .orange
+        case .stopped:
+            return .secondary
+        case .error:
+            return .red
+        }
+    }
+
+    private var isServerStarting: Bool {
+        serverStore.runState == .starting || serverStore.isStarting
+    }
 }
