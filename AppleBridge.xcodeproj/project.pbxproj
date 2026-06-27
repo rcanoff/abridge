@@ -12,7 +12,6 @@
 		1D62440B437C5B5D6DD2F200 /* apple_bridge_core.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = F14ACC25EBB3AA6729012771 /* apple_bridge_core.xcframework */; };
 		1E6CD3CB40F8C514854108E6 /* BlockingRemindersPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E28A832B6850DD201DF12F8 /* BlockingRemindersPermissionService.swift */; };
 		22A1A27010210BCA212E7589 /* MockRemindersPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */; };
-		31ADD861440FBAB0B1B61F19 /* BlockingServerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0420B73061D9DD0E34A97A5 /* BlockingServerService.swift */; };
 		42863111892B7945435D4B75 /* MenuBarPopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F44E65FBBCEB4E6825FCE03C /* MenuBarPopoverView.swift */; };
 		443320E7C46B01BAAA95E468 /* AppleProviderBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC41FD68BF0BAD78C417BECE /* AppleProviderBridge.swift */; };
 		5BBE5DD0F85E3B370FACD2A8 /* MockServerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B39750CFA69109FBBE0899B /* MockServerService.swift */; };
@@ -65,7 +64,6 @@
 		B34332B87B622ABB41D06752 /* ServerServing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerServing.swift; sourceTree = "<group>"; };
 		BDFB66A9507777E0046175CD /* ServerRunState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerRunState.swift; sourceTree = "<group>"; };
 		CF8C2D151839110223826CC7 /* AppleBridge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppleBridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		E0420B73061D9DD0E34A97A5 /* BlockingServerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockingServerService.swift; sourceTree = "<group>"; };
 		E67E426EFAB33A7A23E90338 /* AppStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreTests.swift; sourceTree = "<group>"; };
 		E92E78E13D38DCD36E0C4AAF /* RemindersPermissionChecking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionChecking.swift; sourceTree = "<group>"; };
 		E9BE21E08C8A28A2970B8FAB /* ServerStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStoreTests.swift; sourceTree = "<group>"; };
@@ -102,7 +100,6 @@
 				061BA2725CA72D643E140494 /* AppleProviderBridgeTests.swift */,
 				E67E426EFAB33A7A23E90338 /* AppStoreTests.swift */,
 				5E28A832B6850DD201DF12F8 /* BlockingRemindersPermissionService.swift */,
-				E0420B73061D9DD0E34A97A5 /* BlockingServerService.swift */,
 				63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */,
 				0B39750CFA69109FBBE0899B /* MockServerService.swift */,
 				86823620FB198FFCB3167A11 /* MockURLOpener.swift */,
@@ -302,7 +299,6 @@
 				B093734CB3D64AC488A72A1C /* AppStoreTests.swift in Sources */,
 				DBEBE88FE028C1FF9AD723B4 /* AppleProviderBridgeTests.swift in Sources */,
 				1E6CD3CB40F8C514854108E6 /* BlockingRemindersPermissionService.swift in Sources */,
-				31ADD861440FBAB0B1B61F19 /* BlockingServerService.swift in Sources */,
 				22A1A27010210BCA212E7589 /* MockRemindersPermissionService.swift in Sources */,
 				5BBE5DD0F85E3B370FACD2A8 /* MockServerService.swift in Sources */,
 				6051BD7549D7FF560C068E9E /* MockURLOpener.swift in Sources */,
