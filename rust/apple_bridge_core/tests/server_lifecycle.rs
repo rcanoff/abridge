@@ -1,5 +1,6 @@
 mod support;
 
+use std::sync::Mutex;
 use std::thread;
 
 use apple_bridge_core::{
@@ -7,6 +8,9 @@ use apple_bridge_core::{
 };
 use support::mock_provider::MockProviderBridge;
 use support::port::allocate_test_port;
+
+/// `test_sync` uses process-global state; serialize tests that arm the pause seam.
+static TEST_SYNC_LOCK: Mutex<()> = Mutex::new(());
 
 fn sample_config() -> ServerConfig {
   ServerConfig {
@@ -58,6 +62,7 @@ fn start_twice_returns_already_running() {
 
 #[test]
 fn stop_during_start_releases_port_before_return() {
+  let _sync_guard = TEST_SYNC_LOCK.lock().expect("test_sync lock");
   let port = allocate_test_port();
   let config = ServerConfig {
     host: "127.0.0.1".into(),
@@ -100,6 +105,7 @@ fn stop_during_start_releases_port_before_return() {
 
 #[test]
 fn concurrent_start_rejected_while_stop_awaits_start_completion() {
+  let _sync_guard = TEST_SYNC_LOCK.lock().expect("test_sync lock");
   let port = allocate_test_port();
   let config = ServerConfig {
     host: "127.0.0.1".into(),
