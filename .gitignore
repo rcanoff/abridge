@@ -5,3 +5,6 @@ docs/*
 .DS_Store
 xcuserdata/
 *.xcuserstate
+rust/target/
+AppleBridgeCore/
+local/
