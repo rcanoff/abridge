@@ -133,12 +133,13 @@ enum PermissionsDerivation {
             }
         }
 
-        let blockedSelected = CapabilityCatalog.remindersCapabilities
-            .contains { !$0.shipped && checkedCapabilityIDs.contains($0.id) }
-        let wasBlockedSelected = CapabilityCatalog.remindersCapabilities
-            .contains { !$0.shipped && savedCapabilityIDs.contains($0.id) }
+        return false
+    }
 
-        return blockedSelected != wasBlockedSelected
+    static func requiresAppleAccess(for checkedCapabilityIDs: Set<String>) -> Bool {
+        checkedCapabilityIDs.contains { id in
+            CapabilityCatalog.remindersCapabilities.contains { $0.id == id && $0.shipped }
+        }
     }
 
     static func savedIDsAfterSave(from checkedCapabilityIDs: Set<String>) -> Set<String> {
@@ -240,6 +241,6 @@ final class PermissionsStore {
     }
 
     private func needsAppleAccess() -> Bool {
-        !checkedCapabilityIDs.isEmpty
+        PermissionsDerivation.requiresAppleAccess(for: checkedCapabilityIDs)
     }
 }

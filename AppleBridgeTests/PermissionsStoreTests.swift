@@ -43,6 +43,22 @@ struct PermissionsStoreTests {
     }
 
     @Test
+    func unshippedOnlySelectionHasNoPendingChanges() {
+        let hasChanges = PermissionsDerivation.hasPendingChanges(
+            checkedCapabilityIDs: ["create"],
+            savedCapabilityIDs: []
+        )
+
+        #expect(hasChanges == false)
+    }
+
+    @Test
+    func unshippedOnlySelectionDoesNotRequireAppleAccess() {
+        #expect(PermissionsDerivation.requiresAppleAccess(for: ["create"]) == false)
+        #expect(PermissionsDerivation.requiresAppleAccess(for: ["read"]) == true)
+    }
+
+    @Test
     func hasPendingChangesWhenClearingLastSavedCapability() {
         let hasChanges = PermissionsDerivation.hasPendingChanges(
             checkedCapabilityIDs: [],

@@ -86,4 +86,13 @@ final class SettingsStore {
             enabledCapabilities: appSettings.enabledMCPCapabilityIDs
         )
     }
+
+    func restoreServerOnLaunchIfNeeded() async {
+        guard appSettings.mcpEnabled else { return }
+
+        await serverStore.startServer(
+            port: appSettings.mcpPort,
+            enabledCapabilities: appSettings.enabledMCPCapabilityIDs
+        )
+    }
 }

@@ -113,7 +113,7 @@ final class EventKitProvider: @unchecked Sendable {
 
     private var isAuthorized: Bool {
         switch store.reminderAuthorizationStatus() {
-        case .fullAccess, .writeOnly:
+        case .fullAccess:
             return true
         default:
             return false

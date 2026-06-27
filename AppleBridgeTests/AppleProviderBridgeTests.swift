@@ -22,6 +22,24 @@ struct AppleProviderBridgeTests {
     }
 
     @Test
+    func writeOnlyAuthorizationIsInsufficientForRead() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .writeOnly
+        let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
+
+        let request = ProviderRequest(
+            provider: "eventkit",
+            operation: "list_lists",
+            payloadJson: "{}"
+        )
+
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("permission_denied") == true)
+    }
+
+    @Test
     func listRemindersRejectsInvalidListIDType() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess

@@ -25,6 +25,7 @@ struct AppleBridgeApp: App {
                 .onAppear {
                     store.refreshStatus()
                     Task {
+                        await settingsStore.restoreServerOnLaunchIfNeeded()
                         await serverStore.refreshBearerToken()
                         await serverStore.refreshStatus()
                     }
