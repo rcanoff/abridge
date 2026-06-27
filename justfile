@@ -1,5 +1,11 @@
 # Apple Bridge — task runner (see docs/conventions.md)
 
+review *FLAGS='':
+    docs/reviews/bin/review.sh {{FLAGS}}
+
+review-strict:
+    docs/reviews/bin/review.sh --strict
+
 test-swift:
     TZ=UTC xcodebuild test -project AppleBridge.xcodeproj -scheme AppleBridge \
         -only-testing:AppleBridgeTests -destination 'platform=macOS' -quiet
