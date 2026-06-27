@@ -27,5 +27,8 @@ targets:
     platform: macOS
     sources:
       - path: AppleBridgeTests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
     dependencies:
       - target: AppleBridge

@@ -7,7 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		09B5C9D2ADA86181713D8D70 /* PlaceholderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EF59D494CDF275E519F8D8A /* PlaceholderTests.swift */; };
+		0FF39115817D3F4FDA50D54F /* RemindersPermissionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */; };
+		65F8730E6F95FE7B7F9D6BF0 /* RemindersPermissionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */; };
 		695314C514070291FDE34E03 /* AppleBridgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */; };
 /* End PBXBuildFile section */
 
@@ -24,7 +25,8 @@
 /* Begin PBXFileReference section */
 		081813B141909245E342F20A /* AppleBridgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AppleBridgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBridgeApp.swift; sourceTree = "<group>"; };
-		3EF59D494CDF275E519F8D8A /* PlaceholderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderTests.swift; sourceTree = "<group>"; };
+		0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionStatusTests.swift; sourceTree = "<group>"; };
+		3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionStatus.swift; sourceTree = "<group>"; };
 		CF8C2D151839110223826CC7 /* AppleBridge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppleBridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -41,7 +43,7 @@
 		27D0722E33C2A713E104325F /* AppleBridgeTests */ = {
 			isa = PBXGroup;
 			children = (
-				3EF59D494CDF275E519F8D8A /* PlaceholderTests.swift */,
+				0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */,
 			);
 			path = AppleBridgeTests;
 			sourceTree = "<group>";
@@ -50,8 +52,17 @@
 			isa = PBXGroup;
 			children = (
 				0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */,
+				B85F46CDAA3C988BFBBC89D3 /* Models */,
 			);
 			path = AppleBridge;
+			sourceTree = "<group>";
+		};
+		B85F46CDAA3C988BFBBC89D3 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 		C445D3CF93AA6A3A8FE7DA58 = {
@@ -138,6 +149,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				695314C514070291FDE34E03 /* AppleBridgeApp.swift in Sources */,
+				0FF39115817D3F4FDA50D54F /* RemindersPermissionStatus.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -145,7 +157,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				09B5C9D2ADA86181713D8D70 /* PlaceholderTests.swift in Sources */,
+				65F8730E6F95FE7B7F9D6BF0 /* RemindersPermissionStatusTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -165,6 +177,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -245,6 +258,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
