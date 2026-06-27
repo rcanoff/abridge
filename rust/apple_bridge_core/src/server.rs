@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Condvar, Mutex};
 
 use axum::Router;
 use tokio::sync::oneshot;
@@ -23,6 +23,7 @@ enum ServerPhase {
 #[derive(uniffi::Object)]
 pub struct ServerHandle {
   inner: Arc<Mutex<ServerInner>>,
+  lifecycle: Arc<Condvar>,
 }
 
 struct ServerInner {
@@ -32,6 +33,7 @@ struct ServerInner {
   status: ServerStatus,
   phase: ServerPhase,
   start_generation: u64,
+  start_in_progress: bool,
   runtime: Option<tokio::runtime::Runtime>,
   shutdown_tx: Option<oneshot::Sender<()>>,
   server_task: Option<JoinHandle<()>>,
@@ -41,6 +43,20 @@ struct ShutdownParts {
   runtime: Option<tokio::runtime::Runtime>,
   shutdown_tx: Option<oneshot::Sender<()>>,
   server_task: Option<JoinHandle<()>>,
+}
+
+struct StartInProgressGuard {
+  inner: Arc<Mutex<ServerInner>>,
+  lifecycle: Arc<Condvar>,
+}
+
+impl Drop for StartInProgressGuard {
+  fn drop(&mut self) {
+    if let Ok(mut guard) = self.inner.lock() {
+      guard.start_in_progress = false;
+    }
+    self.lifecycle.notify_all();
+  }
 }
 
 fn bind_address(host: &str, port: u16) -> String {
@@ -80,7 +96,7 @@ fn running_status(config: &ServerConfig) -> ServerStatus {
       .map(|p| ProviderStatus {
         name: p.name.clone(),
         enabled: p.enabled,
-        healthy: p.enabled,
+        healthy: false,
       })
       .collect(),
     last_error: None,
@@ -138,11 +154,17 @@ fn run_shutdown(parts: ShutdownParts) {
     } => {
       let join = std::thread::spawn(move || {
         runtime.block_on(async {
-          let _ = shutdown_tx.send(());
-          let _ = server_task.await;
+          if shutdown_tx.send(()).is_err() {
+            tracing::warn!("shutdown signal channel closed before send");
+          }
+          if server_task.await.is_err() {
+            tracing::warn!("http server task join failed during shutdown");
+          }
         });
       });
-      let _ = join.join();
+      if join.join().is_err() {
+        tracing::error!("shutdown helper thread panicked");
+      }
     }
     ShutdownParts {
       runtime: Some(runtime),
@@ -193,6 +215,18 @@ fn abort_started_server(runtime: tokio::runtime::Runtime, shutdown_tx: oneshot::
   });
 }
 
+fn wait_for_start_completion(inner: &Arc<Mutex<ServerInner>>, lifecycle: &Arc<Condvar>) -> Result<(), CoreError> {
+  let mut guard = inner
+    .lock()
+    .map_err(|_| CoreError::StateUnavailable)?;
+  while guard.start_in_progress {
+    guard = lifecycle
+      .wait(guard)
+      .map_err(|_| CoreError::StateUnavailable)?;
+  }
+  Ok(())
+}
+
 pub fn create_server(
   config: ServerConfig,
   provider: Box<dyn ProviderBridge>,
@@ -206,19 +240,22 @@ pub fn create_server(
       provider: Arc::from(provider),
       phase: ServerPhase::Stopped,
       start_generation: 0,
+      start_in_progress: false,
       runtime: None,
       shutdown_tx: None,
       server_task: None,
     })),
+    lifecycle: Arc::new(Condvar::new()),
   }))
 }
 
 impl Drop for ServerHandle {
   fn drop(&mut self) {
-    let parts = match self.inner.lock() {
+    let (parts, last_error) = match self.inner.lock() {
       Ok(mut inner) => {
+        let last_error = inner.status.last_error.clone();
         inner.phase = ServerPhase::Stopped;
-        take_shutdown_parts(&mut inner)
+        (take_shutdown_parts(&mut inner), last_error)
       }
       Err(_) => return,
     };
@@ -226,6 +263,7 @@ impl Drop for ServerHandle {
 
     if let Ok(mut inner) = self.inner.lock() {
       inner.status = initial_status(&inner.config);
+      inner.status.last_error = last_error;
     }
   }
 }
@@ -233,6 +271,8 @@ impl Drop for ServerHandle {
 #[uniffi::export]
 impl ServerHandle {
   pub fn start(&self) -> Result<(), CoreError> {
+    let runtime = build_runtime()?;
+
     let (addr, generation) = {
       let mut inner = self
         .inner
@@ -247,11 +287,16 @@ impl ServerHandle {
       clear_stale_runtime(&mut inner);
       inner.phase = ServerPhase::Starting;
       inner.start_generation += 1;
+      inner.start_in_progress = true;
       let generation = inner.start_generation;
       (bind_address(&inner.config.host, inner.config.port), generation)
     };
 
-    let runtime = build_runtime()?;
+    let _start_guard = StartInProgressGuard {
+      inner: self.inner.clone(),
+      lifecycle: self.lifecycle.clone(),
+    };
+
     let router = http::router();
     let started = runtime.block_on(start_http_server(&addr, router, self.inner.clone()));
 
@@ -296,7 +341,7 @@ impl ServerHandle {
   }
 
   pub fn stop(&self) -> Result<(), CoreError> {
-    let parts = {
+    let wait_for_start = {
       let mut inner = self
         .inner
         .lock()
@@ -307,12 +352,33 @@ impl ServerHandle {
           inner.start_generation += 1;
           inner.phase = ServerPhase::Stopped;
           inner.status = initial_status(&inner.config);
-          return Ok(());
+          inner.start_in_progress
         }
         ServerPhase::Stopping => return Ok(()),
         ServerPhase::Running => {
           inner.phase = ServerPhase::Stopping;
-          take_shutdown_parts(&mut inner)
+          false
+        }
+      }
+    };
+
+    if wait_for_start {
+      wait_for_start_completion(&self.inner, &self.lifecycle)?;
+      return Ok(());
+    }
+
+    let parts = {
+      let mut inner = self
+        .inner
+        .lock()
+        .map_err(|_| CoreError::StateUnavailable)?;
+      if inner.phase == ServerPhase::Running || inner.phase == ServerPhase::Stopping {
+        take_shutdown_parts(&mut inner)
+      } else {
+        ShutdownParts {
+          runtime: None,
+          shutdown_tx: None,
+          server_task: None,
         }
       }
     };

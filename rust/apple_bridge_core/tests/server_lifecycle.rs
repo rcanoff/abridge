@@ -43,6 +43,7 @@ fn lifecycle_start_stop() {
   assert_eq!(running.bound_host, "127.0.0.1");
   assert_eq!(running.bound_port, port);
   assert_eq!(running.provider_statuses.len(), 1);
+  assert!(!running.provider_statuses[0].healthy);
 
   stop_server(handle.clone()).expect("stop");
   let stopped = server_status(handle);
@@ -59,20 +60,18 @@ fn start_twice_returns_already_running() {
 }
 
 #[test]
-fn stop_during_start_leaves_consistent_status() {
+fn stop_during_start_releases_port_before_return() {
   let port = allocate_test_port();
-  let handle = create_server(
-    ServerConfig {
-      host: "127.0.0.1".into(),
-      port,
-      enabled_providers: vec![ProviderConfig {
-        name: "eventkit".into(),
-        enabled: true,
-      }],
-    },
-    Box::new(MockProviderBridge::new()),
-  )
-  .expect("create_server");
+  let config = ServerConfig {
+    host: "127.0.0.1".into(),
+    port,
+    enabled_providers: vec![ProviderConfig {
+      name: "eventkit".into(),
+      enabled: true,
+    }],
+  };
+  let handle = create_server(config, Box::new(MockProviderBridge::new()))
+    .expect("create_server");
 
   let starter = {
     let handle = handle.clone();
@@ -80,7 +79,7 @@ fn stop_during_start_leaves_consistent_status() {
   };
 
   thread::sleep(Duration::from_millis(5));
-  let _ = stop_server(handle.clone());
+  stop_server(handle.clone()).expect("stop during start");
 
   let start_result = starter.join().expect("starter thread");
   assert!(matches!(
@@ -88,6 +87,8 @@ fn stop_during_start_leaves_consistent_status() {
     Ok(()) | Err(CoreError::StartCancelled)
   ));
 
-  let status = server_status(handle);
+  let status = server_status(handle.clone());
   assert!(!status.running);
+
+  start_server(handle).expect("restart after stop-during-start completed");
 }
