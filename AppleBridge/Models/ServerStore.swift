@@ -94,12 +94,17 @@ final class ServerStore {
     }
 
     func resetBearerToken(port: UInt16, enabledCapabilities: [String], restartIfRunning: Bool) async {
+        let shouldRestart = restartIfRunning && runState == .running
+
         do {
             bearerToken = try await serverService.resetBearerToken()
             lastError = nil
 
-            if restartIfRunning {
+            if shouldRestart {
+                runState = .stopped
                 await startServer(port: port, enabledCapabilities: enabledCapabilities)
+            } else {
+                await refreshStatus()
             }
         } catch let error as ServerOperationError {
             lastError = error.message

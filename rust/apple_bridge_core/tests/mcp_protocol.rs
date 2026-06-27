@@ -45,6 +45,17 @@ fn mcp_initialize_returns_protocol_version() {
 }
 
 #[test]
+fn mcp_initialize_returns_server_protocol_not_client_echo() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2099-01-01","capabilities":{},"clientInfo":{"name":"t","version":"0"}}}"#;
+  let (status, resp) = mcp_post(body, port, &mock);
+  assert_eq!(status, 200);
+  assert!(resp.contains(&format!(r#""protocolVersion":"{PROTOCOL_VERSION}""#)));
+  assert!(!resp.contains(r#""protocolVersion":"2099-01-01""#));
+}
+
+#[test]
 fn mcp_tools_list_filtered_by_capability() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();

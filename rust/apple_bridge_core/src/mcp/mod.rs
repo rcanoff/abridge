@@ -66,18 +66,13 @@ pub async fn handle_mcp(State(state): State<McpState>, body: axum::body::Bytes) 
   }
 }
 
-fn handle_initialize(id: Option<Value>, params: Value) -> Response {
+fn handle_initialize(id: Option<Value>, _params: Value) -> Response {
   let Some(id) = id else {
     return StatusCode::NO_CONTENT.into_response();
   };
 
-  let protocol_version = params
-    .get("protocolVersion")
-    .and_then(Value::as_str)
-    .unwrap_or(PROTOCOL_VERSION);
-
   let result = serde_json::json!({
-    "protocolVersion": protocol_version,
+    "protocolVersion": PROTOCOL_VERSION,
     "capabilities": { "tools": {} },
     "serverInfo": {
       "name": SERVER_NAME,

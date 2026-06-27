@@ -134,6 +134,10 @@ final class EventKitProvider: @unchecked Sendable {
             throw EventKitProviderError.invalidArguments("Arguments must be a JSON object")
         }
 
+        guard dictionary.keys.contains("list_id") else {
+            return nil
+        }
+
         if let listID = dictionary["list_id"] as? String {
             return listID
         }
@@ -142,7 +146,7 @@ final class EventKitProvider: @unchecked Sendable {
             return nil
         }
 
-        return nil
+        throw EventKitProviderError.invalidArguments("list_id must be a string or null")
     }
 
     private func reminderPredicate(listID: String?) throws -> NSPredicate {

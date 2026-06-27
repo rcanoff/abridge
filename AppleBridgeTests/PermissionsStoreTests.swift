@@ -43,6 +43,16 @@ struct PermissionsStoreTests {
     }
 
     @Test
+    func hasPendingChangesWhenClearingLastSavedCapability() {
+        let hasChanges = PermissionsDerivation.hasPendingChanges(
+            checkedCapabilityIDs: [],
+            savedCapabilityIDs: ["read"]
+        )
+
+        #expect(hasChanges == true)
+    }
+
+    @Test
     func savedIDsAfterSaveFiltersUnshipped() {
         let saved = PermissionsDerivation.savedIDsAfterSave(from: ["read", "create"])
         #expect(saved == ["read"])

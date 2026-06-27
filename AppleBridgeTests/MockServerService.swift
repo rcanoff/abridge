@@ -42,6 +42,7 @@ actor MockServerService: ServerServing {
         }
 
         activeBearerToken = bearerTokenResult
+        refreshResult = .running
     }
 
     func stop() async throws {
@@ -60,6 +61,7 @@ actor MockServerService: ServerServing {
 
         bearerTokenResult = "rotated-\(bearerTokenResult)"
         activeBearerToken = bearerTokenResult
+        refreshResult = .stopped
         return bearerTokenResult
     }
 

@@ -22,6 +22,24 @@ struct AppleProviderBridgeTests {
     }
 
     @Test
+    func listRemindersRejectsInvalidListIDType() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
+
+        let request = ProviderRequest(
+            provider: "eventkit",
+            operation: "list_reminders",
+            payloadJson: #"{"list_id":123}"#
+        )
+
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+    }
+
+    @Test
     func unknownProviderReturnsError() {
         let bridge = AppleProviderBridge()
         let request = ProviderRequest(

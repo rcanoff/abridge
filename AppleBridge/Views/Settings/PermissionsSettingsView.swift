@@ -59,7 +59,7 @@ struct PermissionsSettingsView: View {
                     Task { await savePermissions() }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(isSaving || permissionsStore.checkedCapabilityIDs.isEmpty)
+                .disabled(isSaving || !permissionsStore.hasPendingChanges)
                 .frame(maxWidth: .infinity)
 
                 if let lastError = permissionsStore.lastError {
