@@ -72,7 +72,7 @@ Before editing Swift files under `AppleBridge/` or `AppleBridgeTests/`:
 
 Do not write or review Swift code without loading these skills first.
 
-Before editing Rust files under `rust/`:
+Before editing Rust files under `rust/` (once `rust/Cargo.toml` exists — PR 2+):
 
 1. Read and follow **rust-best-practices**
 2. Read `rust/AGENTS.md` — project overrides supersede the skill where they conflict
@@ -100,22 +100,21 @@ Do not write or review Rust code without loading these first.
 | **swiftui-pro** | Reading, writing, or reviewing SwiftUI views and app structure |
 | **swift-testing-pro** | Swift Testing suites in `AppleBridgeTests/` |
 | **swift-concurrency-pro** | `@MainActor`, `@Observable`, `@concurrent`, async/await, FFI isolation |
-| **rust-best-practices** | Reading, writing, or reviewing Rust in `rust/` — apply `rust/AGENTS.md` overrides |
+| **rust-best-practices** | Rust in `rust/` once `rust/Cargo.toml` exists — apply `rust/AGENTS.md` overrides |
 
 No SwiftData in this project — do not invoke **swiftdata-pro**.
 
-### Workflow skills (on request)
+Only invoke skills named in the tables above. Do not reference skill names that are not installed in your environment.
+
+### Completion skills
 
 | Skill | When |
 |-------|------|
-| **implement** | User asks to implement, build, add a feature, or fix a bug with review loop |
-| **review** / **check-work** | User asks for code review or self-verification |
-| **design** | User asks for a design doc or architecture spec |
-| **execute-plan** | User asks to execute a design doc PR plan |
-| **pr-babysit** | User asks to monitor or fix PRs |
 | **finishing-a-development-branch** | Implementation complete; decide merge/PR/cleanup |
 | **requesting-code-review** | Major feature complete, before merge |
 | **receiving-code-review** | Acting on review feedback — verify before implementing |
+
+For implementation, review, and design work, use the process skills above (especially **test-driven-development**, **verification-before-completion**, and **requesting-code-review**). Do not assume optional bundled skills are available.
 
 ## Tooling
 
@@ -129,12 +128,19 @@ Use **XcodeBuildMCP** tools instead of raw `xcodebuild` shell commands when avai
 
 ### Shell commands
 
+Available on this branch:
+
+```sh
+just test-swift     # xcodebuild test (macOS)
+just test-all       # test-swift; adds test-rust when rust/Cargo.toml exists
+```
+
+After the Rust workspace lands (PR 2+, requires `rust/Cargo.toml`):
+
 ```sh
 just test-rust      # TZ=UTC cargo test
-just test-swift     # xcodebuild test (macOS)
-just test-all       # both
 just lint-rust      # clippy -D warnings
-just build-rust     # XCFramework + UniFFI bindings (once Rust lands)
+just build-rust     # XCFramework + UniFFI bindings
 ```
 
 Regenerate Xcode project after `project.yml` changes:
@@ -150,9 +156,9 @@ xcodegen generate
 | Swift model / mapper | Swift Testing unit tests |
 | SwiftUI / store | Build + unit tests; manual menu bar smoke when UX changes |
 | Permission flow | Unit tests with protocol mocks; manual smoke for system dialog |
-| Rust module | `just lint-rust && just test-rust` (once `rust/Cargo.toml` exists) |
-| UniFFI API change | `just build-rust`, fix Swift call sites, `just test-all` |
-| MCP / HTTP | Rust integration tests + manual `curl /health` smoke |
+| Rust module | PR 2+: `just lint-rust && just test-rust` |
+| UniFFI API change | PR 2+: `just build-rust`, fix Swift call sites, `just test-all` |
+| MCP / HTTP | PR 2+: Rust integration tests + manual `curl /health` smoke |
 
 Always run with `TZ=UTC`. EventKit permission dialogs and live framework calls are **manual only** — mock via protocols in CI.
 

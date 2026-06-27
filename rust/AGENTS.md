@@ -2,6 +2,8 @@
 
 Scoped rules for `apple_bridge_core`. Root `AGENTS.md` still applies.
 
+**Applies once `rust/Cargo.toml` exists (PR 2+).** Until then, this file is preparatory — do not run rust `just` recipes on branches without a Rust workspace.
+
 ## Required skills
 
 All Rust work in this directory requires **rust-best-practices** before writing or reviewing code.
