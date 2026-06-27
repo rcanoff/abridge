@@ -73,6 +73,10 @@ actor MockServerService: ServerServing {
         startError = error
     }
 
+    func setResetBearerTokenError(_ error: ServerOperationError?) {
+        resetBearerTokenError = error
+    }
+
     func setBearerTokenResult(_ token: String) {
         bearerTokenResult = token
     }

@@ -70,12 +70,14 @@ final class SettingsStore {
     }
 
     func resetBearerToken() async {
-        tokenResetNotice = "Server will restart with a new token. Update your MCP client."
+        tokenResetNotice = nil
         await serverStore.resetBearerToken(
             port: appSettings.mcpPort,
             enabledCapabilities: appSettings.enabledMCPCapabilityIDs,
             restartIfRunning: appSettings.mcpEnabled
         )
+        guard serverStore.lastError == nil else { return }
+        tokenResetNotice = "Server will restart with a new token. Update your MCP client."
     }
 
     func applySavedCapabilities() async {

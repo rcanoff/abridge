@@ -110,7 +110,7 @@ enum PermissionsDerivation {
         checkedCapabilityIDs: Set<String>,
         remindersAuthorized: Bool
     ) -> String {
-        if checkedCapabilityIDs.isEmpty {
+        if !requiresAppleAccess(for: checkedCapabilityIDs) {
             return "None"
         }
 

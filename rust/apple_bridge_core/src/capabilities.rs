@@ -3,12 +3,11 @@
 pub const EVENTKIT_REMINDERS_READ: &str = "eventkit.reminders.read";
 
 pub fn is_valid_capability_id(id: &str) -> bool {
-  let trimmed = id.trim();
-  !trimmed.is_empty()
-    && trimmed == trimmed.to_lowercase()
-    && !trimmed.chars().any(char::is_whitespace)
-    && trimmed.split('.').count() >= 3
-    && trimmed
+  !id.is_empty()
+    && id == id.to_lowercase()
+    && !id.chars().any(char::is_whitespace)
+    && id.split('.').count() >= 3
+    && id
       .split('.')
       .all(|segment| !segment.is_empty() && segment == segment.to_lowercase())
 }
@@ -29,6 +28,11 @@ mod tests {
   #[test]
   fn rejects_uppercase_capability() {
     assert!(!is_valid_capability_id("EventKit.Reminders.Read"));
+  }
+
+  #[test]
+  fn rejects_whitespace_padded_capability() {
+    assert!(!is_valid_capability_id(" eventkit.reminders.read "));
   }
 
   #[test]

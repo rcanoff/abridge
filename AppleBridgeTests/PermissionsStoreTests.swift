@@ -59,6 +59,36 @@ struct PermissionsStoreTests {
     }
 
     @Test
+    func unshippedOnlySelectionAppleSummaryIsNone() {
+        let summary = PermissionsDerivation.appleSummary(
+            checkedCapabilityIDs: ["create"],
+            remindersAuthorized: false
+        )
+
+        #expect(summary == "None")
+    }
+
+    @Test
+    func shippedSelectionAppleSummaryShowsNeededWhenUnauthorized() {
+        let summary = PermissionsDerivation.appleSummary(
+            checkedCapabilityIDs: ["read"],
+            remindersAuthorized: false
+        )
+
+        #expect(summary == "Reminders — needed")
+    }
+
+    @Test
+    func shippedSelectionAppleSummaryShowsFullAccessWhenAuthorized() {
+        let summary = PermissionsDerivation.appleSummary(
+            checkedCapabilityIDs: ["read"],
+            remindersAuthorized: true
+        )
+
+        #expect(summary == "Reminders — Full access")
+    }
+
+    @Test
     func hasPendingChangesWhenClearingLastSavedCapability() {
         let hasChanges = PermissionsDerivation.hasPendingChanges(
             checkedCapabilityIDs: [],

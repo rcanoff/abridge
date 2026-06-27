@@ -82,6 +82,13 @@ fn rejects_provider_name_with_spaces() {
 }
 
 #[test]
+fn rejects_whitespace_padded_provider_name() {
+  let mut config = sample_config();
+  config.enabled_providers[0].name = " eventkit ".into();
+  assert!(matches!(validate_config(&config), Err(CoreError::InvalidConfig { .. })));
+}
+
+#[test]
 fn accepts_read_capability() {
   let mut config = sample_config();
   config.enabled_capabilities = vec!["eventkit.reminders.read".into()];
@@ -99,6 +106,13 @@ fn rejects_unknown_capability() {
 fn rejects_uppercase_capability() {
   let mut config = sample_config();
   config.enabled_capabilities = vec!["EventKit.Reminders.Read".into()];
+  assert!(matches!(validate_config(&config), Err(CoreError::InvalidConfig { .. })));
+}
+
+#[test]
+fn rejects_whitespace_padded_capability() {
+  let mut config = sample_config();
+  config.enabled_capabilities = vec![" eventkit.reminders.read ".into()];
   assert!(matches!(validate_config(&config), Err(CoreError::InvalidConfig { .. })));
 }
 

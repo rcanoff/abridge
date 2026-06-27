@@ -115,6 +115,72 @@ struct SettingsStoreTests {
 
     @Test
     @MainActor
+    func resetBearerTokenShowsNoticeOnlyAfterSuccessfulReset() async {
+        let suiteName = "SettingsStoreTests.resetBearerTokenSuccess"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = false
+
+        let mock = MockServerService()
+        let serverStore = ServerStore(serverService: mock)
+        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+
+        await settingsStore.resetBearerToken()
+
+        #expect(settingsStore.tokenResetNotice == "Server will restart with a new token. Update your MCP client.")
+        #expect(serverStore.lastError == nil)
+    }
+
+    @Test
+    @MainActor
+    func resetBearerTokenClearsNoticeWhenResetFails() async {
+        let suiteName = "SettingsStoreTests.resetBearerTokenFailure"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = false
+
+        let mock = MockServerService()
+        let serverStore = ServerStore(serverService: mock)
+        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+
+        await settingsStore.resetBearerToken()
+        #expect(settingsStore.tokenResetNotice != nil)
+
+        await mock.setResetBearerTokenError(ServerOperationError(message: "failed to save bearer token"))
+        await settingsStore.resetBearerToken()
+
+        #expect(settingsStore.tokenResetNotice == nil)
+        #expect(serverStore.lastError == "failed to save bearer token")
+    }
+
+    @Test
+    @MainActor
+    func resetBearerTokenOmitsNoticeWhenRestartFailsAfterRotation() async {
+        let suiteName = "SettingsStoreTests.resetBearerTokenRestartFailure"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = true
+
+        let mock = MockServerService()
+        await mock.setRefreshResult(.running)
+        let serverStore = ServerStore(serverService: mock)
+        await serverStore.startServer(port: 3020, enabledCapabilities: [])
+        #expect(serverStore.runState == .running)
+
+        await mock.setStartError(ServerOperationError(message: "failed to bind server: port in use"))
+        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+
+        await settingsStore.resetBearerToken()
+
+        #expect(settingsStore.tokenResetNotice == nil)
+        #expect(serverStore.lastError == "failed to bind server: port in use")
+    }
+
+    @Test
+    @MainActor
     func applyMCPEnabledChangeDoesNotDoubleStartAfterLaunchRestore() async {
         let suiteName = "SettingsStoreTests.launchRestoreNoDoubleStart"
         let defaults = UserDefaults(suiteName: suiteName)!
