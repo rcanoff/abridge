@@ -100,6 +100,8 @@ Rust routes by `provider` + `operation` string pairs. Swift dispatches on the sa
 
 The `provider` / `operation` pair is the internal dispatch contract. MCP tool names are the external surface and should map to that pair without introducing a second vocabulary.
 
+Config field validation rules (host, port, provider names, bearer token): see `docs/architecture-bootstrap-guide.md` §5 validation matrix.
+
 ### Files and generated output
 
 | Path | Edit? |

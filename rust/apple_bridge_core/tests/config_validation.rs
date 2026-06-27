@@ -81,6 +81,26 @@ fn rejects_port_zero() {
 }
 
 #[test]
+fn rejects_uppercase_provider_name() {
+  let mut config = sample_config();
+  config.enabled_providers[0].name = "EventKit".into();
+  assert!(matches!(
+    validate_config(&config),
+    Err(CoreError::InvalidConfig { .. })
+  ));
+}
+
+#[test]
+fn rejects_provider_name_with_spaces() {
+  let mut config = sample_config();
+  config.enabled_providers[0].name = "event kit".into();
+  assert!(matches!(
+    validate_config(&config),
+    Err(CoreError::InvalidConfig { .. })
+  ));
+}
+
+#[test]
 fn rejects_duplicate_provider_names() {
   let mut config = sample_config();
   config.enabled_providers.push(ProviderConfig {

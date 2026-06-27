@@ -55,6 +55,11 @@ pub fn validate_config(config: &ServerConfig) -> Result<(), CoreError> {
         message: "provider name must not be blank".into(),
       });
     }
+    if !is_valid_provider_name(name) {
+      return Err(CoreError::InvalidConfig {
+        message: format!("invalid provider name: {name}"),
+      });
+    }
     if !seen.insert(name.to_string()) {
       return Err(CoreError::InvalidConfig {
         message: format!("duplicate provider name: {name}"),
@@ -67,4 +72,10 @@ pub fn validate_config(config: &ServerConfig) -> Result<(), CoreError> {
 
 fn is_loopback_host(host: &str) -> bool {
   matches!(host, "127.0.0.1" | "localhost" | "::1")
+}
+
+fn is_valid_provider_name(name: &str) -> bool {
+  !name.is_empty()
+    && name == name.to_lowercase()
+    && !name.chars().any(char::is_whitespace)
 }
