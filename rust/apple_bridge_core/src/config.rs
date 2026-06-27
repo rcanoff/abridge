@@ -75,7 +75,5 @@ fn is_loopback_host(host: &str) -> bool {
 }
 
 fn is_valid_provider_name(name: &str) -> bool {
-  !name.is_empty()
-    && name == name.to_lowercase()
-    && !name.chars().any(char::is_whitespace)
+  !name.is_empty() && name == name.to_lowercase() && !name.chars().any(char::is_whitespace)
 }

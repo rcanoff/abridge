@@ -116,6 +116,23 @@ Only invoke skills named in the tables above. Do not reference skill names that 
 
 For implementation, review, and design work, use the process skills above (especially **test-driven-development**, **verification-before-completion**, and **requesting-code-review**). Do not assume optional bundled skills are available.
 
+### Review triage (when asked to check a review)
+
+Keep the response short. The user can ask for code walkthroughs or examples separately.
+
+Use **one table** — no separate lists, no code blocks, no patch sketches unless asked.
+
+| # | Topic | Agree? | Note |
+|---|-------|--------|------|
+| 1 | One short phrase on what the comment is about | Yes / No | Only if No — why you disagree |
+
+- **#** — index matching the review (or sequential if unnumbered)
+- **Topic** — ~8–15 words; name the issue and where it bites, but keep each cell on one line
+- **Agree?** — `Yes` or `No` only
+- **Note** — **only when `No`**; omit the column value (leave empty) for `Yes`
+
+Do **not** include by default: long explanations, architecture essays, code citations, or re-stating the review verbatim. Add detail only when the user asks.
+
 ## Tooling
 
 ### XcodeBuildMCP (preferred for Apple platform work)
@@ -138,8 +155,10 @@ just test-all       # test-swift; adds test-rust when rust/Cargo.toml exists
 After the Rust workspace lands (PR 2+, requires `rust/Cargo.toml`):
 
 ```sh
+just fmt-rust       # cargo fmt --all
+just fmt-check-rust # cargo fmt --all --check (EOF newline + formatting)
 just test-rust      # TZ=UTC cargo test
-just lint-rust      # clippy -D warnings
+just lint-rust      # fmt-check + clippy -D warnings
 just build-rust     # XCFramework + UniFFI bindings
 ```
 
@@ -156,7 +175,7 @@ xcodegen generate
 | Swift model / mapper | Swift Testing unit tests |
 | SwiftUI / store | Build + unit tests; manual menu bar smoke when UX changes |
 | Permission flow | Unit tests with protocol mocks; manual smoke for system dialog |
-| Rust module | PR 2+: `just lint-rust && just test-rust` |
+| Rust module | PR 2+: `just lint-rust && just test-rust` (`lint-rust` includes `fmt-check-rust`) |
 | UniFFI API change | PR 2+: `just build-rust`, fix Swift call sites, `just test-all` |
 | MCP / HTTP | PR 2+: Rust integration tests + manual `curl /health` smoke |
 
