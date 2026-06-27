@@ -86,3 +86,39 @@ fn stop_during_start_releases_port_before_return() {
 
   start_server(handle).expect("restart after stop-during-start completed");
 }
+
+#[test]
+fn concurrent_start_rejected_while_stop_awaits_start_completion() {
+  let port = allocate_test_port();
+  let config = ServerConfig {
+    host: "127.0.0.1".into(),
+    port,
+    enabled_providers: vec![ProviderConfig {
+      name: "eventkit".into(),
+      enabled: true,
+    }],
+  };
+  let handle = create_server(config, Box::new(MockProviderBridge::new())).expect("create_server");
+
+  let starter = {
+    let handle = handle.clone();
+    thread::spawn(move || start_server(handle))
+  };
+
+  thread::sleep(Duration::from_millis(5));
+
+  let stopper = {
+    let handle = handle.clone();
+    thread::spawn(move || stop_server(handle))
+  };
+
+  let err = start_server(handle.clone()).expect_err("second start blocked during stop-during-start");
+  assert_eq!(err.to_string(), "server is already running");
+
+  let start_result = starter.join().expect("starter thread");
+  assert!(matches!(start_result, Ok(()) | Err(CoreError::StartCancelled)));
+  stopper.join().expect("stopper thread").expect("stop during start");
+
+  start_server(handle.clone()).expect("restart after stop-during-start");
+  stop_server(handle).expect("final stop");
+}

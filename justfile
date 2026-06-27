@@ -21,7 +21,7 @@ fmt-rust: _rust-workspace
     cd rust && cargo fmt --all
 
 fmt-check-rust: _rust-workspace
-    cd rust && cargo fmt --all -- --check
+    cd rust && cargo fmt --all --check
 
 lint-rust: _rust-workspace
     just fmt-check-rust

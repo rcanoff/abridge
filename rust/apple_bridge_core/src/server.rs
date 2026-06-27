@@ -331,8 +331,10 @@ impl ServerHandle {
     abort_started_server(runtime, shutdown_tx, server_task);
 
     let mut inner = self.inner.lock().map_err(|_| CoreError::StateUnavailable)?;
-    inner.phase = ServerPhase::Stopped;
-    inner.status = initial_status(&inner.config);
+    if inner.start_generation == generation {
+      inner.phase = ServerPhase::Stopped;
+      inner.status = initial_status(&inner.config);
+    }
     Err(CoreError::StartCancelled)
   }
 
@@ -343,8 +345,6 @@ impl ServerHandle {
         ServerPhase::Stopped => return Ok(()),
         ServerPhase::Starting => {
           inner.start_generation += 1;
-          inner.phase = ServerPhase::Stopped;
-          inner.status = initial_status(&inner.config);
           inner.start_in_progress
         }
         ServerPhase::Stopping => return Ok(()),
@@ -357,6 +357,9 @@ impl ServerHandle {
 
     if wait_for_start {
       wait_for_start_completion(&self.inner, &self.lifecycle)?;
+      let mut inner = self.inner.lock().map_err(|_| CoreError::StateUnavailable)?;
+      inner.phase = ServerPhase::Stopped;
+      inner.status = initial_status(&inner.config);
       return Ok(());
     }
 
