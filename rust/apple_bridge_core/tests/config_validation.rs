@@ -17,6 +17,20 @@ fn accepts_loopback_config() {
 }
 
 #[test]
+fn accepts_localhost_hostname() {
+  let mut config = sample_config();
+  config.host = "localhost".into();
+  assert!(validate_config(&config).is_ok());
+}
+
+#[test]
+fn accepts_ipv6_loopback() {
+  let mut config = sample_config();
+  config.host = "::1".into();
+  assert!(validate_config(&config).is_ok());
+}
+
+#[test]
 fn rejects_blank_host() {
   let mut config = sample_config();
   config.host = "  ".into();
@@ -30,6 +44,26 @@ fn rejects_blank_host() {
 fn rejects_wildcard_host() {
   let mut config = sample_config();
   config.host = "0.0.0.0".into();
+  assert!(matches!(
+    validate_config(&config),
+    Err(CoreError::InvalidConfig { .. })
+  ));
+}
+
+#[test]
+fn rejects_private_ip_host() {
+  let mut config = sample_config();
+  config.host = "192.168.1.10".into();
+  assert!(matches!(
+    validate_config(&config),
+    Err(CoreError::InvalidConfig { .. })
+  ));
+}
+
+#[test]
+fn rejects_public_hostname() {
+  let mut config = sample_config();
+  config.host = "example.com".into();
   assert!(matches!(
     validate_config(&config),
     Err(CoreError::InvalidConfig { .. })

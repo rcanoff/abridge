@@ -35,7 +35,7 @@ pub fn validate_config(config: &ServerConfig) -> Result<(), CoreError> {
     });
   }
 
-  if host == "0.0.0.0" || host == "::" {
+  if !is_loopback_host(host) {
     return Err(CoreError::InvalidConfig {
       message: "host must be loopback".into(),
     });
@@ -63,4 +63,8 @@ pub fn validate_config(config: &ServerConfig) -> Result<(), CoreError> {
   }
 
   Ok(())
+}
+
+fn is_loopback_host(host: &str) -> bool {
+  matches!(host, "127.0.0.1" | "localhost" | "::1")
 }
