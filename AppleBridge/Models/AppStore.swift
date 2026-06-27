@@ -10,9 +10,14 @@ final class AppStore {
     private(set) var lastError: String?
 
     private let permissionService: any RemindersPermissionChecking
+    private let urlOpener: any URLOpening
 
-    init(permissionService: any RemindersPermissionChecking = RemindersPermissionService()) {
+    init(
+        permissionService: any RemindersPermissionChecking = RemindersPermissionService(),
+        urlOpener: any URLOpening = NSWorkspace.shared
+    ) {
         self.permissionService = permissionService
+        self.urlOpener = urlOpener
     }
 
     func refreshStatus() {
@@ -44,7 +49,7 @@ final class AppStore {
             return
         }
 
-        guard NSWorkspace.shared.open(url) else {
+        guard urlOpener.open(url) else {
             lastError = "Unable to open Reminders privacy settings."
             return
         }

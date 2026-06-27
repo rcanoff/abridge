@@ -36,7 +36,7 @@ struct RemindersPermissionStatusTests {
 
     @Test func displayNameIsNonEmptyForAllCases() {
         for status in RemindersPermissionStatus.allCases {
-            #expect(!status.displayName.isEmpty)
+            #expect(status.displayName.isEmpty == false)
         }
     }
 }

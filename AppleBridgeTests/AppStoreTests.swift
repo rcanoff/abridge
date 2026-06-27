@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import AppleBridge
 
@@ -49,13 +50,42 @@ struct AppStoreTests {
     @Test
     @MainActor
     func requestAccessTogglesLoadingState() async {
-        let mock = MockRemindersPermissionService()
+        let mock = BlockingRemindersPermissionService()
         let store = AppStore(permissionService: mock)
 
         let task = Task { await store.requestAccess() }
         await Task.yield()
+
+        #expect(store.isRequestingPermission == true)
+
+        mock.resume(with: .success(.authorized))
         await task.value
 
         #expect(store.isRequestingPermission == false)
+    }
+
+    @Test
+    @MainActor
+    func openRemindersPrivacySettingsClearsErrorOnSuccess() {
+        let urlOpener = MockURLOpener()
+        urlOpener.shouldSucceed = true
+        let store = AppStore(urlOpener: urlOpener)
+
+        store.openRemindersPrivacySettings()
+
+        #expect(store.lastError == nil)
+        #expect(urlOpener.openedURL != nil)
+    }
+
+    @Test
+    @MainActor
+    func openRemindersPrivacySettingsSetsErrorOnFailure() {
+        let urlOpener = MockURLOpener()
+        urlOpener.shouldSucceed = false
+        let store = AppStore(urlOpener: urlOpener)
+
+        store.openRemindersPrivacySettings()
+
+        #expect(store.lastError == "Unable to open Reminders privacy settings.")
     }
 }
