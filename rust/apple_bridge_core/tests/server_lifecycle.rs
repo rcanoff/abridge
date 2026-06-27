@@ -16,6 +16,7 @@ fn sample_config() -> ServerConfig {
   ServerConfig {
     host: "127.0.0.1".into(),
     port: allocate_test_port(),
+    bearer_token: "test-token".into(),
     enabled_providers: vec![ProviderConfig {
       name: "eventkit".into(),
       enabled: true,
@@ -30,6 +31,7 @@ fn lifecycle_start_stop() {
   let config = ServerConfig {
     host: "127.0.0.1".into(),
     port,
+    bearer_token: "test-token".into(),
     enabled_providers: vec![ProviderConfig {
       name: "eventkit".into(),
       enabled: true,
@@ -69,6 +71,7 @@ fn stop_during_start_releases_port_before_return() {
   let config = ServerConfig {
     host: "127.0.0.1".into(),
     port,
+    bearer_token: "test-token".into(),
     enabled_providers: vec![ProviderConfig {
       name: "eventkit".into(),
       enabled: true,
@@ -112,6 +115,7 @@ fn concurrent_start_rejected_while_stop_awaits_start_completion() {
   let config = ServerConfig {
     host: "127.0.0.1".into(),
     port,
+    bearer_token: "test-token".into(),
     enabled_providers: vec![ProviderConfig {
       name: "eventkit".into(),
       enabled: true,

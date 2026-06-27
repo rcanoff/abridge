@@ -4,6 +4,7 @@ fn sample_config() -> ServerConfig {
   ServerConfig {
     host: "127.0.0.1".into(),
     port: 3020,
+    bearer_token: "test-token".into(),
     enabled_providers: vec![ProviderConfig {
       name: "eventkit".into(),
       enabled: true,
@@ -77,6 +78,28 @@ fn rejects_provider_name_with_spaces() {
   let mut config = sample_config();
   config.enabled_providers[0].name = "event kit".into();
   assert!(matches!(validate_config(&config), Err(CoreError::InvalidConfig { .. })));
+}
+
+#[test]
+fn rejects_empty_bearer_token() {
+  let mut config = sample_config();
+  config.bearer_token = String::new();
+  let err = validate_config(&config).expect_err("empty bearer token");
+  assert!(matches!(err, CoreError::InvalidConfig { .. }));
+  if let CoreError::InvalidConfig { message } = err {
+    assert_eq!(message, "bearer token must not be empty");
+  }
+}
+
+#[test]
+fn rejects_whitespace_only_bearer_token() {
+  let mut config = sample_config();
+  config.bearer_token = "   ".into();
+  let err = validate_config(&config).expect_err("whitespace bearer token");
+  assert!(matches!(err, CoreError::InvalidConfig { .. }));
+  if let CoreError::InvalidConfig { message } = err {
+    assert_eq!(message, "bearer token must not be empty");
+  }
 }
 
 #[test]

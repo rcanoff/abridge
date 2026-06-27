@@ -72,3 +72,37 @@ pub fn health_body_ok(body: &str) -> bool {
   let trimmed = body.trim();
   trimmed == r#"{"ok":true}"# || trimmed == r#"{"ok": true}"#
 }
+
+pub fn http_post_raw(path: &str, host: &str, port: u16, body: &str, bearer_token: Option<&str>) -> String {
+  let mut stream = TcpStream::connect(connect_addr(host, port)).expect("tcp connect");
+  let auth_header = bearer_token
+    .map(|token| format!("Authorization: Bearer {token}\r\n"))
+    .unwrap_or_default();
+  let request = format!(
+    "POST {path} HTTP/1.1\r\nHost: {host}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n{auth_header}\r\n{body}",
+    body.len()
+  );
+  stream.write_all(request.as_bytes()).expect("write request");
+  let mut response = String::new();
+  stream.read_to_string(&mut response).expect("read response");
+  response
+}
+
+pub fn http_post(path: &str, host: &str, port: u16, body: &str, bearer_token: Option<&str>) -> (u16, String) {
+  let response = http_post_raw(path, host, port, body, bearer_token);
+  let status_line = response.lines().next().unwrap_or("");
+  let status_code = status_line
+    .split_whitespace()
+    .nth(1)
+    .unwrap_or("0")
+    .parse()
+    .unwrap_or(0);
+  let response_body = response.split("\r\n\r\n").nth(1).unwrap_or("").trim().to_string();
+  (status_code, response_body)
+}
+
+pub fn response_includes_www_authenticate_bearer(response: &str) -> bool {
+  response
+    .lines()
+    .any(|line| line.eq_ignore_ascii_case("www-authenticate: Bearer"))
+}
