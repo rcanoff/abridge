@@ -12,7 +12,8 @@ enum RemindersPermissionError: LocalizedError, Equatable {
     }
 }
 
-final class RemindersPermissionService: RemindersPermissionChecking, @unchecked Sendable {
+@MainActor
+final class RemindersPermissionService: RemindersPermissionChecking {
     private let eventStore: EKEventStore
 
     init(eventStore: EKEventStore = EKEventStore()) {

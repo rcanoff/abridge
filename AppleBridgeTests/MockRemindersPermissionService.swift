@@ -1,7 +1,8 @@
 import Foundation
 @testable import AppleBridge
 
-final class MockRemindersPermissionService: RemindersPermissionChecking, @unchecked Sendable {
+@MainActor
+final class MockRemindersPermissionService: RemindersPermissionChecking {
     var status: RemindersPermissionStatus = .notDetermined
     var requestResult: Result<RemindersPermissionStatus, Error> = .success(.authorized)
     private(set) var requestCallCount = 0

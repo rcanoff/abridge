@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Observation
 
@@ -33,5 +34,21 @@ final class AppStore {
             refreshStatus()
             lastError = error.localizedDescription
         }
+    }
+
+    func openRemindersPrivacySettings() {
+        guard let url = URL(
+            string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Reminders"
+        ) else {
+            lastError = "Unable to open Reminders privacy settings."
+            return
+        }
+
+        guard NSWorkspace.shared.open(url) else {
+            lastError = "Unable to open Reminders privacy settings."
+            return
+        }
+
+        lastError = nil
     }
 }

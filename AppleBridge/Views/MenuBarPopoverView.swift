@@ -1,4 +1,3 @@
-import AppKit
 import SwiftUI
 
 struct MenuBarPopoverView: View {
@@ -35,7 +34,7 @@ struct MenuBarPopoverView: View {
 
             if store.permissionStatus == .denied {
                 Button("Open System Settings") {
-                    openRemindersPrivacySettings()
+                    store.openRemindersPrivacySettings()
                 }
             }
 
@@ -59,12 +58,4 @@ struct MenuBarPopoverView: View {
         }
     }
 
-    private func openRemindersPrivacySettings() {
-        guard let url = URL(
-            string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Reminders"
-        ) else {
-            return
-        }
-        NSWorkspace.shared.open(url)
-    }
 }
