@@ -8,9 +8,7 @@ mod logging;
 mod providers;
 mod server;
 
-pub use config::{
-  ProviderConfig, ProviderRequest, ProviderResponse, ServerConfig, validate_config,
-};
+pub use config::{ProviderConfig, ProviderRequest, ProviderResponse, ServerConfig, validate_config};
 pub use diagnostics::{ProviderStatus, ServerStatus};
 pub use error::CoreError;
 pub use providers::ProviderBridge;
@@ -22,10 +20,7 @@ pub fn init_logging() {
 }
 
 #[uniffi::export]
-pub fn create_server(
-  config: ServerConfig,
-  provider: Box<dyn ProviderBridge>,
-) -> Result<Arc<ServerHandle>, CoreError> {
+pub fn create_server(config: ServerConfig, provider: Box<dyn ProviderBridge>) -> Result<Arc<ServerHandle>, CoreError> {
   server::create_server(config, provider)
 }
 

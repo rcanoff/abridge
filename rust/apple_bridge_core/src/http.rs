@@ -2,8 +2,8 @@
 //!
 //! `GET /health` returns `{"ok": true}` as the liveness contract for PR 2b.
 
-use axum::{routing::get, Json, Router};
-use serde_json::{json, Value};
+use axum::{Json, Router, routing::get};
+use serde_json::{Value, json};
 
 async fn health() -> Json<Value> {
   Json(json!({ "ok": true }))

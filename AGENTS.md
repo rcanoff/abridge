@@ -155,8 +155,10 @@ just test-all       # test-swift; adds test-rust when rust/Cargo.toml exists
 After the Rust workspace lands (PR 2+, requires `rust/Cargo.toml`):
 
 ```sh
+just fmt-rust       # cargo fmt --all
+just fmt-check-rust # cargo fmt --all --check (EOF newline + formatting)
 just test-rust      # TZ=UTC cargo test
-just lint-rust      # clippy -D warnings
+just lint-rust      # fmt-check + clippy -D warnings
 just build-rust     # XCFramework + UniFFI bindings
 ```
 
@@ -173,7 +175,7 @@ xcodegen generate
 | Swift model / mapper | Swift Testing unit tests |
 | SwiftUI / store | Build + unit tests; manual menu bar smoke when UX changes |
 | Permission flow | Unit tests with protocol mocks; manual smoke for system dialog |
-| Rust module | PR 2+: `just lint-rust && just test-rust` |
+| Rust module | PR 2+: `just lint-rust && just test-rust` (`lint-rust` includes `fmt-check-rust`) |
 | UniFFI API change | PR 2+: `just build-rust`, fix Swift call sites, `just test-all` |
 | MCP / HTTP | PR 2+: Rust integration tests + manual `curl /health` smoke |
 

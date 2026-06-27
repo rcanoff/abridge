@@ -21,16 +21,21 @@ pub fn reserve_port() -> ReservedPort {
   }
 }
 
-/// Allocates a port verified free at selection time; retries on collision.
-pub fn allocate_test_port() -> u16 {
+/// Allocates a port verified free on `host` at selection time; retries on collision.
+pub fn allocate_test_port_for(host: &str) -> u16 {
   for _ in 0..100 {
     let port = NEXT_TEST_PORT.fetch_add(1, Ordering::Relaxed);
     let candidate = if port < 60_000 { port } else { port % 15_000 + 45_000 };
-    if TcpListener::bind(("127.0.0.1", candidate)).is_ok() {
+    if TcpListener::bind((host, candidate)).is_ok() {
       return candidate;
     }
   }
-  panic!("could not allocate test port");
+  panic!("could not allocate test port for {host}");
+}
+
+/// Allocates a port verified free on IPv4 loopback at selection time.
+pub fn allocate_test_port() -> u16 {
+  allocate_test_port_for("127.0.0.1")
 }
 
 fn connect_addr(host: &str, port: u16) -> String {
@@ -43,12 +48,8 @@ fn connect_addr(host: &str, port: u16) -> String {
 
 pub fn http_get(path: &str, host: &str, port: u16) -> (u16, String) {
   let mut stream = TcpStream::connect(connect_addr(host, port)).expect("tcp connect");
-  let request = format!(
-    "GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
-  );
-  stream
-    .write_all(request.as_bytes())
-    .expect("write request");
+  let request = format!("GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n");
+  stream.write_all(request.as_bytes()).expect("write request");
   let mut response = String::new();
   stream.read_to_string(&mut response).expect("read response");
   let status_line = response.lines().next().unwrap_or("");
@@ -63,12 +64,7 @@ pub fn http_get(path: &str, host: &str, port: u16) -> (u16, String) {
 
 pub fn http_get_body(path: &str, host: &str, port: u16) -> (u16, String) {
   let (status_code, response) = http_get(path, host, port);
-  let body = response
-    .split("\r\n\r\n")
-    .nth(1)
-    .unwrap_or("")
-    .trim()
-    .to_string();
+  let body = response.split("\r\n\r\n").nth(1).unwrap_or("").trim().to_string();
   (status_code, body)
 }
 
