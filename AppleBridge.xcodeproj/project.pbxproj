@@ -12,7 +12,9 @@
 		65F8730E6F95FE7B7F9D6BF0 /* RemindersPermissionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */; };
 		695314C514070291FDE34E03 /* AppleBridgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */; };
 		A379FED46FA22BFE7EBA3232 /* RemindersPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A72D4B9CEB174F696205046 /* RemindersPermissionService.swift */; };
+		B093734CB3D64AC488A72A1C /* AppStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E67E426EFAB33A7A23E90338 /* AppStoreTests.swift */; };
 		D6C3FDC3CBF50531768A2F68 /* RemindersPermissionChecking.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92E78E13D38DCD36E0C4AAF /* RemindersPermissionChecking.swift */; };
+		FBDCC9E111323867A97D6810 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1248AB2AF2E733A7DBF3FFF /* AppStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,7 +34,9 @@
 		3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionStatus.swift; sourceTree = "<group>"; };
 		4A72D4B9CEB174F696205046 /* RemindersPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionService.swift; sourceTree = "<group>"; };
 		63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRemindersPermissionService.swift; sourceTree = "<group>"; };
+		B1248AB2AF2E733A7DBF3FFF /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
 		CF8C2D151839110223826CC7 /* AppleBridge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppleBridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E67E426EFAB33A7A23E90338 /* AppStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreTests.swift; sourceTree = "<group>"; };
 		E92E78E13D38DCD36E0C4AAF /* RemindersPermissionChecking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionChecking.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -49,6 +53,7 @@
 		27D0722E33C2A713E104325F /* AppleBridgeTests */ = {
 			isa = PBXGroup;
 			children = (
+				E67E426EFAB33A7A23E90338 /* AppStoreTests.swift */,
 				63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */,
 				0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */,
 			);
@@ -77,6 +82,7 @@
 		B85F46CDAA3C988BFBBC89D3 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				B1248AB2AF2E733A7DBF3FFF /* AppStore.swift */,
 				3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */,
 			);
 			path = Models;
@@ -165,6 +171,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FBDCC9E111323867A97D6810 /* AppStore.swift in Sources */,
 				695314C514070291FDE34E03 /* AppleBridgeApp.swift in Sources */,
 				D6C3FDC3CBF50531768A2F68 /* RemindersPermissionChecking.swift in Sources */,
 				A379FED46FA22BFE7EBA3232 /* RemindersPermissionService.swift in Sources */,
@@ -176,6 +183,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B093734CB3D64AC488A72A1C /* AppStoreTests.swift in Sources */,
 				22A1A27010210BCA212E7589 /* MockRemindersPermissionService.swift in Sources */,
 				65F8730E6F95FE7B7F9D6BF0 /* RemindersPermissionStatusTests.swift in Sources */,
 			);
