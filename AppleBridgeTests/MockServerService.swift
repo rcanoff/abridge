@@ -7,11 +7,13 @@ actor MockServerService: ServerServing {
     var loadBearerTokenError: ServerOperationError?
     var startError: ServerOperationError?
     var stopError: ServerOperationError?
+    var resetBearerTokenError: ServerOperationError?
 
     private(set) var startCallCount = 0
     private(set) var stopCallCount = 0
     private(set) var lastStartHost: String?
     private(set) var lastStartPort: UInt16?
+    private(set) var lastEnabledCapabilities: [String]?
     private(set) var activeBearerToken: String?
 
     func refreshStatus() async -> ServerRunState {
@@ -29,10 +31,11 @@ actor MockServerService: ServerServing {
         activeBearerToken
     }
 
-    func start(host: String, port: UInt16) async throws {
+    func start(host: String, port: UInt16, enabledCapabilities: [String]) async throws {
         startCallCount += 1
         lastStartHost = host
         lastStartPort = port
+        lastEnabledCapabilities = enabledCapabilities
 
         if let startError {
             throw startError
@@ -48,6 +51,16 @@ actor MockServerService: ServerServing {
         if let stopError {
             throw stopError
         }
+    }
+
+    func resetBearerToken() async throws -> String {
+        if let resetBearerTokenError {
+            throw resetBearerTokenError
+        }
+
+        bearerTokenResult = "rotated-\(bearerTokenResult)"
+        activeBearerToken = bearerTokenResult
+        return bearerTokenResult
     }
 
     func setRefreshResult(_ result: ServerRunState) {

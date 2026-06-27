@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct MenuBarPopoverView: View {
+    @Environment(\.openWindow) private var openWindow
+
     @Bindable var store: AppStore
     @Bindable var serverStore: ServerStore
 
@@ -54,23 +56,6 @@ struct MenuBarPopoverView: View {
                 Text(serverStore.runState.displayName)
                     .font(.body)
                     .foregroundStyle(serverStatusColor)
-
-                Text("\(serverStore.host):\(serverStore.port)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            if let bearerToken = serverStore.bearerToken {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Bearer Token")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-
-                    Text(bearerToken)
-                        .font(.system(.caption, design: .monospaced))
-                        .textSelection(.enabled)
-                        .lineLimit(2)
-                }
             }
 
             if let lastError = serverStore.lastError {
@@ -80,7 +65,9 @@ struct MenuBarPopoverView: View {
                     .textSelection(.enabled)
             }
 
-            serverControlButton
+            Button("Settings…") {
+                openWindow(id: "settings")
+            }
 
             if isServerStarting {
                 ProgressView()
@@ -89,24 +76,6 @@ struct MenuBarPopoverView: View {
         }
         .padding()
         .frame(width: 260)
-    }
-
-    @ViewBuilder
-    private var serverControlButton: some View {
-        switch serverStore.runState {
-        case .stopped, .error:
-            Button("Start Server") {
-                Task { await serverStore.startServer() }
-            }
-            .disabled(serverStore.isStarting)
-        case .running:
-            Button("Stop Server") {
-                Task { await serverStore.stopServer() }
-            }
-        case .starting:
-            Button("Start Server") {}
-                .disabled(true)
-        }
     }
 
     private var permissionStatusColor: Color {

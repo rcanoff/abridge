@@ -7,6 +7,7 @@ struct KeychainError: Error, Equatable, Sendable {
 
 protocol BearerTokenStoring: Sendable {
     func loadOrCreateBearerToken() throws -> String
+    func rotateBearerToken() throws -> String
 }
 
 struct KeychainService: BearerTokenStoring {
@@ -29,6 +30,11 @@ struct KeychainService: BearerTokenStoring {
         let token = Self.generateToken()
         try saveBearerToken(token)
         return token
+    }
+
+    func rotateBearerToken() throws -> String {
+        try deleteBearerToken()
+        return try loadOrCreateBearerToken()
     }
 
     func loadBearerToken() throws -> String? {

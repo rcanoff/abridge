@@ -9,6 +9,7 @@ fn sample_config() -> ServerConfig {
       name: "eventkit".into(),
       enabled: true,
     }],
+    enabled_capabilities: vec![],
   }
 }
 
@@ -77,6 +78,27 @@ fn rejects_uppercase_provider_name() {
 fn rejects_provider_name_with_spaces() {
   let mut config = sample_config();
   config.enabled_providers[0].name = "event kit".into();
+  assert!(matches!(validate_config(&config), Err(CoreError::InvalidConfig { .. })));
+}
+
+#[test]
+fn accepts_read_capability() {
+  let mut config = sample_config();
+  config.enabled_capabilities = vec!["eventkit.reminders.read".into()];
+  assert!(validate_config(&config).is_ok());
+}
+
+#[test]
+fn rejects_unknown_capability() {
+  let mut config = sample_config();
+  config.enabled_capabilities = vec!["eventkit.foo.bar".into()];
+  assert!(matches!(validate_config(&config), Err(CoreError::InvalidConfig { .. })));
+}
+
+#[test]
+fn rejects_uppercase_capability() {
+  let mut config = sample_config();
+  config.enabled_capabilities = vec!["EventKit.Reminders.Read".into()];
   assert!(matches!(validate_config(&config), Err(CoreError::InvalidConfig { .. })));
 }
 

@@ -5,17 +5,34 @@ import Testing
 @Suite("AppleProviderBridge")
 struct AppleProviderBridgeTests {
     @Test
-    func callProviderReturnsNotImplemented() {
-        let bridge = AppleProviderBridge()
+    func routesEventKitListLists() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
+
         let request = ProviderRequest(
             provider: "eventkit",
-            operation: "list_reminders",
+            operation: "list_lists",
+            payloadJson: "{}"
+        )
+
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == true)
+    }
+
+    @Test
+    func unknownProviderReturnsError() {
+        let bridge = AppleProviderBridge()
+        let request = ProviderRequest(
+            provider: "unknown",
+            operation: "noop",
             payloadJson: "{}"
         )
 
         let response = bridge.callProvider(request: request)
 
         #expect(response.ok == false)
-        #expect(response.errorJson?.contains("not_implemented") == true)
+        #expect(response.errorJson?.contains("unknown_provider") == true)
     }
 }

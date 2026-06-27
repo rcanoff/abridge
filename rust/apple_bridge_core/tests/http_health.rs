@@ -15,6 +15,7 @@ fn config_on_port(host: &str, port: u16) -> ServerConfig {
       name: "eventkit".into(),
       enabled: true,
     }],
+    enabled_capabilities: vec![],
   }
 }
 

@@ -38,7 +38,7 @@ struct ServerStoreTests {
         await mock.setBearerTokenResult("started-token")
         let store = ServerStore(serverService: mock)
 
-        await store.startServer()
+        await store.startServer(port: 3020, enabledCapabilities: [])
 
         #expect(store.runState == .running)
         #expect(store.isStarting == false)
@@ -56,7 +56,7 @@ struct ServerStoreTests {
         await mock.setStartError(ServerOperationError(message: "failed to bind server: port in use"))
         let store = ServerStore(serverService: mock)
 
-        await store.startServer()
+        await store.startServer(port: 3020, enabledCapabilities: [])
 
         #expect(store.lastError == "failed to bind server: port in use")
         #expect(store.isStarting == false)
@@ -69,7 +69,7 @@ struct ServerStoreTests {
         let mock = MockServerService()
         await mock.setRefreshResult(.running)
         let store = ServerStore(serverService: mock)
-        await store.startServer()
+        await store.startServer(port: 3020, enabledCapabilities: [])
 
         await store.stopServer()
 
@@ -97,9 +97,9 @@ struct ServerStoreTests {
         let mock = MockServerService()
         await mock.setRefreshResult(.running)
         let store = ServerStore(serverService: mock)
-        await store.startServer()
+        await store.startServer(port: 3020, enabledCapabilities: [])
 
-        await store.startServer()
+        await store.startServer(port: 3020, enabledCapabilities: [])
 
         #expect(await mock.startCallCount == 1)
     }

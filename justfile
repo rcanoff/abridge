@@ -8,7 +8,8 @@ review-strict:
 
 test-swift:
     TZ=UTC xcodebuild test -project AppleBridge.xcodeproj -scheme AppleBridge \
-        -only-testing:AppleBridgeTests -destination 'platform=macOS' -quiet
+        -only-testing:AppleBridgeTests -destination 'platform=macOS' \
+        -parallel-testing-enabled NO -quiet
 
 # Guard: rust recipes require rust/Cargo.toml (lands with PR 2+)
 _rust-workspace:

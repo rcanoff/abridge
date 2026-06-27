@@ -101,6 +101,10 @@ pub fn http_post(path: &str, host: &str, port: u16, body: &str, bearer_token: Op
   (status_code, response_body)
 }
 
+pub fn http_post_json(path: &str, host: &str, port: u16, body: &str, bearer_token: &str) -> (u16, String) {
+  http_post(path, host, port, body, Some(bearer_token))
+}
+
 pub fn response_includes_www_authenticate_bearer(response: &str) -> bool {
   response
     .lines()

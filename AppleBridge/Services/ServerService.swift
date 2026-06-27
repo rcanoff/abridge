@@ -9,6 +9,7 @@ actor ServerService: ServerServing {
     private var currentHost: String?
     private var currentPort: UInt16?
     private var currentBearerToken: String?
+    private var currentCapabilities: [String]?
     private var hasInitializedLogging = false
 
     private let providerBridge: AppleProviderBridge
@@ -48,7 +49,7 @@ actor ServerService: ServerServing {
         currentBearerToken
     }
 
-    func start(host: String, port: UInt16) async throws {
+    func start(host: String, port: UInt16, enabledCapabilities: [String]) async throws {
         if !hasInitializedLogging {
             initLogging()
             hasInitializedLogging = true
@@ -58,6 +59,7 @@ actor ServerService: ServerServing {
 
         if handle != nil,
            currentHost != host || currentPort != port || currentBearerToken != token
+           || currentCapabilities != enabledCapabilities
         {
             try await stop()
         }
@@ -67,12 +69,14 @@ actor ServerService: ServerServing {
                 host: host,
                 port: port,
                 bearerToken: token,
-                enabledProviders: [ProviderConfig(name: "eventkit", enabled: true)]
+                enabledProviders: [ProviderConfig(name: "eventkit", enabled: true)],
+                enabledCapabilities: enabledCapabilities
             )
             handle = try createServer(config: config, provider: providerBridge)
             currentHost = host
             currentPort = port
             currentBearerToken = token
+            currentCapabilities = enabledCapabilities
         }
 
         guard let handle else {
@@ -99,6 +103,20 @@ actor ServerService: ServerServing {
         currentHost = nil
         currentPort = nil
         currentBearerToken = nil
+        currentCapabilities = nil
+    }
+
+    func resetBearerToken() async throws -> String {
+        do {
+            let token = try tokenStore.rotateBearerToken()
+            currentBearerToken = token
+            if handle != nil {
+                try await stop()
+            }
+            return token
+        } catch let error as KeychainError {
+            throw ServerOperationError(message: "Failed to reset bearer token: \(error.message)")
+        }
     }
 }
 

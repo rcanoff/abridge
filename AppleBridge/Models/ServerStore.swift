@@ -10,7 +10,6 @@ final class ServerStore {
     private(set) var bearerToken: String?
 
     let host = "127.0.0.1"
-    let port: UInt16 = 3020
 
     private let serverService: any ServerServing
 
@@ -44,7 +43,7 @@ final class ServerStore {
         }
     }
 
-    func startServer() async {
+    func startServer(port: UInt16, enabledCapabilities: [String]) async {
         guard !isStarting, runState != .running, runState != .starting else { return }
 
         isStarting = true
@@ -54,7 +53,11 @@ final class ServerStore {
         defer { isStarting = false }
 
         do {
-            try await serverService.start(host: host, port: port)
+            try await serverService.start(
+                host: host,
+                port: port,
+                enabledCapabilities: enabledCapabilities
+            )
             await refreshBearerToken()
             let state = await serverService.refreshStatus()
             runState = state
@@ -76,6 +79,28 @@ final class ServerStore {
         do {
             try await serverService.stop()
             await refreshStatus()
+        } catch let error as ServerOperationError {
+            lastError = error.message
+            runState = .error(error.message)
+        } catch {
+            lastError = error.localizedDescription
+            runState = .error(error.localizedDescription)
+        }
+    }
+
+    func restartServer(port: UInt16, enabledCapabilities: [String]) async {
+        await stopServer()
+        await startServer(port: port, enabledCapabilities: enabledCapabilities)
+    }
+
+    func resetBearerToken(port: UInt16, enabledCapabilities: [String], restartIfRunning: Bool) async {
+        do {
+            bearerToken = try await serverService.resetBearerToken()
+            lastError = nil
+
+            if restartIfRunning {
+                await startServer(port: port, enabledCapabilities: enabledCapabilities)
+            }
         } catch let error as ServerOperationError {
             lastError = error.message
             runState = .error(error.message)
