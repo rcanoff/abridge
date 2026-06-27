@@ -11,8 +11,8 @@ For product scope, see `docs/prd.md`. For architecture and bootstrap steps, see 
 | Tool | Version / setting |
 |------|-------------------|
 | macOS deployment target | 26.0+ |
-| Xcode | 26.4+ |
-| Swift | 6.3+, strict concurrency (`SWIFT_STRICT_CONCURRENCY: complete`) |
+| Xcode | 26+ |
+| Swift | 6.0+ (`project.yml` sets `SWIFT_VERSION: "6.0"`), strict concurrency (`SWIFT_STRICT_CONCURRENCY: complete`) |
 | Rust edition | 2024 |
 | Rust MSRV | 1.85 |
 | Task runner | `just` |
@@ -277,4 +277,4 @@ Always set `TZ=UTC` for deterministic timestamp assertions.
 - Small, focused PRs with reviewable diffs.
 - Run `just test-all` (or the relevant subset) before opening a PR.
 - Do not commit generated artifacts that are reproducible from `just build-rust` unless the repo already tracks them by policy.
-- Do not commit `docs/` to git unless explicitly requested — the repo `.gitignore` excludes it.
+- Tracked docs: `docs/conventions.md`, `docs/prd.md`, `docs/architecture-bootstrap-guide.md`. Other paths under `docs/` (plans, specs, reviews) stay local via `.gitignore`.

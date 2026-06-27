@@ -150,7 +150,7 @@ xcodegen generate
 | Swift model / mapper | Swift Testing unit tests |
 | SwiftUI / store | Build + unit tests; manual menu bar smoke when UX changes |
 | Permission flow | Unit tests with protocol mocks; manual smoke for system dialog |
-| Rust module | `just lint-rust && just test-rust` |
+| Rust module | `just lint-rust && just test-rust` (once `rust/Cargo.toml` exists) |
 | UniFFI API change | `just build-rust`, fix Swift call sites, `just test-all` |
 | MCP / HTTP | Rust integration tests + manual `curl /health` smoke |
 
