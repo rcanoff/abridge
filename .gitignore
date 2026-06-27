@@ -1,3 +1,7 @@
-docs/
+docs/*
+!docs/conventions.md
+!docs/prd.md
+!docs/architecture-bootstrap-guide.md
 .DS_Store
-*.xcuserdata/
+xcuserdata/
+*.xcuserstate
