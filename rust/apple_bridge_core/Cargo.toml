@@ -8,6 +8,10 @@ rust-version = "1.85"
 crate-type = ["lib", "staticlib"]
 name = "apple_bridge_core"
 
+[features]
+# Enables the start() pause seam for integration tests (library is built without `cfg(test)` for `tests/`).
+test-sync = []
+
 [dependencies]
 uniffi = { version = "0.31", features = ["cli"] }
 thiserror = "2"

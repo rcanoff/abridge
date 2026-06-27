@@ -39,4 +39,9 @@ pub fn server_status(handle: Arc<ServerHandle>) -> ServerStatus {
   handle.status()
 }
 
+#[cfg(any(test, feature = "test-sync"))]
+pub mod test_sync {
+  pub use crate::server::start_test_sync::*;
+}
+
 uniffi::setup_scaffolding!();

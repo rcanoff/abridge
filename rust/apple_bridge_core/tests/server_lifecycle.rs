@@ -1,10 +1,9 @@
 mod support;
 
 use std::thread;
-use std::time::Duration;
 
 use apple_bridge_core::{
-  CoreError, ProviderConfig, ServerConfig, create_server, server_status, start_server, stop_server,
+  CoreError, ProviderConfig, ServerConfig, create_server, server_status, start_server, stop_server, test_sync,
 };
 use support::mock_provider::MockProviderBridge;
 use support::port::allocate_test_port;
@@ -70,21 +69,33 @@ fn stop_during_start_releases_port_before_return() {
   };
   let handle = create_server(config, Box::new(MockProviderBridge::new())).expect("create_server");
 
+  test_sync::disarm();
+  test_sync::arm_pause_before_bind();
+
   let starter = {
     let handle = handle.clone();
     thread::spawn(move || start_server(handle))
   };
 
-  thread::sleep(Duration::from_millis(5));
-  stop_server(handle.clone()).expect("stop during start");
+  test_sync::wait_until_paused();
+
+  let stopper = {
+    let handle = handle.clone();
+    thread::spawn(move || stop_server(handle))
+  };
+
+  test_sync::continue_paused_start();
 
   let start_result = starter.join().expect("starter thread");
   assert!(matches!(start_result, Ok(()) | Err(CoreError::StartCancelled)));
+  stopper.join().expect("stopper thread").expect("stop during start");
 
   let status = server_status(handle.clone());
   assert!(!status.running);
 
   start_server(handle).expect("restart after stop-during-start completed");
+
+  test_sync::disarm();
 }
 
 #[test]
@@ -100,12 +111,15 @@ fn concurrent_start_rejected_while_stop_awaits_start_completion() {
   };
   let handle = create_server(config, Box::new(MockProviderBridge::new())).expect("create_server");
 
+  test_sync::disarm();
+  test_sync::arm_pause_before_bind();
+
   let starter = {
     let handle = handle.clone();
     thread::spawn(move || start_server(handle))
   };
 
-  thread::sleep(Duration::from_millis(5));
+  test_sync::wait_until_paused();
 
   let stopper = {
     let handle = handle.clone();
@@ -115,10 +129,14 @@ fn concurrent_start_rejected_while_stop_awaits_start_completion() {
   let err = start_server(handle.clone()).expect_err("second start blocked during stop-during-start");
   assert_eq!(err.to_string(), "server is already running");
 
+  test_sync::continue_paused_start();
+
   let start_result = starter.join().expect("starter thread");
   assert!(matches!(start_result, Ok(()) | Err(CoreError::StartCancelled)));
   stopper.join().expect("stopper thread").expect("stop during start");
 
   start_server(handle.clone()).expect("restart after stop-during-start");
   stop_server(handle).expect("final stop");
+
+  test_sync::disarm();
 }

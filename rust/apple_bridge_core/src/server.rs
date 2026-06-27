@@ -290,6 +290,9 @@ impl ServerHandle {
       lifecycle: self.lifecycle.clone(),
     };
 
+    #[cfg(any(test, feature = "test-sync"))]
+    start_test_sync::maybe_pause_for_test();
+
     let runtime = match build_runtime() {
       Ok(runtime) => runtime,
       Err(error) => {
@@ -397,6 +400,92 @@ impl ServerHandle {
         last_error: Some("server state unavailable".into()),
       },
     }
+  }
+}
+
+#[cfg(any(test, feature = "test-sync"))]
+pub mod start_test_sync {
+  use std::sync::{Condvar, Mutex};
+
+  #[derive(Debug, Default)]
+  struct SyncState {
+    armed: bool,
+    paused: bool,
+    continue_requested: bool,
+  }
+
+  static STATE: Mutex<SyncState> = Mutex::new(SyncState {
+    armed: false,
+    paused: false,
+    continue_requested: false,
+  });
+  static CV: Condvar = Condvar::new();
+
+  fn with_state<F, R>(f: F) -> R
+  where
+    F: FnOnce(&mut SyncState) -> R,
+  {
+    let mut guard = STATE.lock().expect("start_test_sync state lock");
+    f(&mut guard)
+  }
+
+  fn wait_while<F>(
+    mut guard: std::sync::MutexGuard<'_, SyncState>,
+    predicate: F,
+  ) -> std::sync::MutexGuard<'_, SyncState>
+  where
+    F: Fn(&SyncState) -> bool,
+  {
+    while predicate(&guard) {
+      guard = CV.wait(guard).expect("start_test_sync condvar wait");
+    }
+    guard
+  }
+
+  /// Arms the next `start()` to block after entering `Starting` + `start_in_progress`.
+  pub fn arm_pause_before_bind() {
+    with_state(|state| {
+      state.armed = true;
+      state.paused = false;
+      state.continue_requested = false;
+    });
+  }
+
+  /// Blocks until a paused `start()` reaches the bind pause point.
+  pub fn wait_until_paused() {
+    let _guard = wait_while(STATE.lock().expect("start_test_sync state lock"), |state| !state.paused);
+  }
+
+  /// Releases a paused `start()` so it can proceed with runtime creation and bind.
+  pub fn continue_paused_start() {
+    with_state(|state| {
+      state.continue_requested = true;
+    });
+    CV.notify_all();
+  }
+
+  /// Resets sync state and unblocks any paused `start()` for test isolation.
+  pub fn disarm() {
+    with_state(|state| {
+      state.armed = false;
+      state.paused = false;
+      state.continue_requested = true;
+    });
+    CV.notify_all();
+  }
+
+  pub(super) fn maybe_pause_for_test() {
+    let mut guard = STATE.lock().expect("start_test_sync state lock");
+    if !guard.armed {
+      return;
+    }
+
+    guard.paused = true;
+    CV.notify_all();
+    guard = wait_while(guard, |state| !state.continue_requested);
+    guard.armed = false;
+    guard.paused = false;
+    guard.continue_requested = false;
   }
 }
 
