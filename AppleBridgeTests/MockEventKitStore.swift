@@ -2,7 +2,8 @@ import EventKit
 import Foundation
 @testable import AppleBridge
 
-final class MockEventKitStore: EventKitStoreing, @unchecked Sendable {
+@MainActor
+final class MockEventKitStore: EventKitStoreing, Sendable {
     var authorizationStatus: EKAuthorizationStatus = .fullAccess
     var calendars: [EKCalendar] = []
     var reminders: [EKReminder] = []
@@ -16,7 +17,8 @@ final class MockEventKitStore: EventKitStoreing, @unchecked Sendable {
     }
 
     func predicateForReminders(in calendars: [EKCalendar]) -> NSPredicate {
-        NSPredicate(value: true)
+        _ = calendars
+        return NSPredicate(value: true)
     }
 
     func fetchReminders(matching predicate: NSPredicate) -> [EKReminder] {

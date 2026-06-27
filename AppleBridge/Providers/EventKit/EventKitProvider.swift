@@ -9,6 +9,7 @@ enum EventKitProviderError: Error, Equatable {
     case invalidArguments(String)
 }
 
+@MainActor
 protocol EventKitStoreing {
     func reminderAuthorizationStatus() -> EKAuthorizationStatus
     func reminderCalendars() -> [EKCalendar]
@@ -16,7 +17,8 @@ protocol EventKitStoreing {
     func fetchReminders(matching predicate: NSPredicate) -> [EKReminder]
 }
 
-final class LiveEventKitStore: EventKitStoreing, @unchecked Sendable {
+@MainActor
+final class LiveEventKitStore: EventKitStoreing, Sendable {
     private let eventStore: EKEventStore
 
     init(eventStore: EKEventStore = EKEventStore()) {
@@ -36,20 +38,32 @@ final class LiveEventKitStore: EventKitStoreing, @unchecked Sendable {
     }
 
     func fetchReminders(matching predicate: NSPredicate) -> [EKReminder] {
-        let semaphore = DispatchSemaphore(value: 0)
         var fetched: [EKReminder] = []
+        var done = false
 
         eventStore.fetchReminders(matching: predicate) { reminders in
             fetched = reminders ?? []
-            semaphore.signal()
+            done = true
         }
 
-        semaphore.wait()
+        // EventKit delivers the completion on the main run loop. Spin explicitly on `.main`
+        // (not `.current`) so this stays correct when called via `DispatchQueue.main.sync`.
+        let deadline = Date().addingTimeInterval(30)
+        while !done, Date() < deadline {
+            RunLoop.main.run(mode: .default, before: Date(timeIntervalSinceNow: 0.01))
+        }
+
         return fetched
     }
 }
 
-final class EventKitProvider: @unchecked Sendable {
+@MainActor
+enum LiveEventKitEnvironment {
+    static let sharedProvider = EventKitProvider()
+}
+
+@MainActor
+final class EventKitProvider: Sendable {
     private let store: any EventKitStoreing
 
     init(store: any EventKitStoreing = LiveEventKitStore()) {

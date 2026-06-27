@@ -26,6 +26,7 @@ final class SettingsStore {
     let appSettings: AppSettings
 
     private let serverStore: ServerStore
+    private var didPerformLaunchRestore = false
 
     init(appSettings: AppSettings, serverStore: ServerStore) {
         self.appSettings = appSettings
@@ -87,7 +88,12 @@ final class SettingsStore {
         )
     }
 
-    func restoreServerOnLaunchIfNeeded() async {
+    /// Restores the MCP server once per process launch when `mcpEnabled` was persisted.
+    /// Invoked from `AppleBridgeApp.init()` only — not from any SwiftUI view lifecycle.
+    func performLaunchRestoreIfNeeded() async {
+        guard !didPerformLaunchRestore else { return }
+        didPerformLaunchRestore = true
+
         guard appSettings.mcpEnabled else { return }
 
         await serverStore.startServer(
