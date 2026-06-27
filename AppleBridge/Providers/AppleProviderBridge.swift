@@ -1,7 +1,7 @@
 import Foundation
 
 final class AppleProviderBridge: ProviderBridge, @unchecked Sendable {
-    func callProvider(request: ProviderRequest) -> ProviderResponse {
+    func callProvider(request _: ProviderRequest) -> ProviderResponse {
         ProviderResponse(
             ok: false,
             payloadJson: "{}",
