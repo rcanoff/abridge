@@ -1,0 +1,31 @@
+name: AppleBridge
+options:
+  bundleIdPrefix: com.applebridge
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+targets:
+  AppleBridge:
+    type: application
+    platform: macOS
+    sources:
+      - path: AppleBridge
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.applebridge.AppleBridge
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_LSUIElement: YES
+        INFOPLIST_KEY_NSRemindersUsageDescription: "Apple Bridge needs access to your reminders to expose them through the local MCP bridge."
+        INFOPLIST_KEY_CFBundleDisplayName: Apple Bridge
+  AppleBridgeTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: AppleBridgeTests
+    dependencies:
+      - target: AppleBridge
