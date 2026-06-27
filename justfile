@@ -27,6 +27,10 @@ lint-rust: _rust-workspace
     just fmt-check-rust
     cd rust && cargo clippy --features test-sync -- -D warnings
 
+ci-rust: _rust-workspace
+    just lint-rust
+    just test-rust
+
 build-rust: _rust-workspace
     cd rust && ./build-macos.sh
 
