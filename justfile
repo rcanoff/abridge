@@ -64,6 +64,10 @@ ci:
     just ci-rust
     @uname | grep -qi darwin && just ci-macos-steps || echo "skipped: ci-macos (not macOS)"
 
+# Full local CI — run before pushing to avoid failed macOS runner minutes
+preflight:
+    just ci
+
 build-rust: _rust-workspace
     cd rust && ./build-macos.sh
 

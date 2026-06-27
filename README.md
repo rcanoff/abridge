@@ -81,7 +81,7 @@ Not automated in CI: EventKit permission dialogs, interactive Keychain, E2E MCP 
 ## Contributing
 
 - Branch naming: `feat/…`, `chore/…` (see `AGENTS.md`)
-- Before opening a PR: `just ci`
+- Before opening a PR: `just preflight` (alias for `just ci` — run locally to save macOS CI minutes)
 - Install hooks: `git config core.hooksPath .githooks`
 - Agent rules: `AGENTS.md`
 - Deep reference: `docs/conventions.md`, `docs/architecture-bootstrap-guide.md`, `docs/prd.md`
