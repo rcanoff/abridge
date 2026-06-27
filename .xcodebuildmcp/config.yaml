@@ -1,0 +1,14 @@
+schemaVersion: 1
+
+# macOS menu bar app — no simulator workflows needed
+enabledWorkflows:
+  - macos
+  - project-discovery
+  - session-management
+  - utilities
+  - doctor
+  - coverage
+
+sessionDefaults:
+  projectPath: "./AppleBridge.xcodeproj"
+  scheme: "AppleBridge"
