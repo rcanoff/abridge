@@ -1,3 +1,5 @@
-docs/
+docs/*
+!docs/conventions.md
 .DS_Store
-*.xcuserdata/
+xcuserdata/
+*.xcuserstate
