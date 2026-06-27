@@ -1,6 +1,6 @@
+@testable import AppleBridge
 import EventKit
 import Testing
-@testable import AppleBridge
 
 @Suite("RemindersPermissionStatusMapper")
 struct RemindersPermissionStatusTests {

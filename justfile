@@ -27,6 +27,47 @@ lint-rust: _rust-workspace
     just fmt-check-rust
     cd rust && cargo clippy --features test-sync -- -D warnings
 
+ci-rust: _rust-workspace
+    just lint-rust
+    just test-rust
+
+_swift-sources := "AppleBridge AppleBridgeTests"
+_swift-exclude := "--exclude AppleBridge/Services/apple_bridge_core.swift --exclude AppleBridgeCore"
+
+fmt-swift:
+    swiftformat {{_swift-sources}} {{_swift-exclude}}
+
+fmt-check-swift:
+    swiftformat {{_swift-sources}} {{_swift-exclude}} --lint
+
+lint-swift:
+    swiftlint lint --strict --quiet
+
+# macOS CI steps (no host guard — used by GitHub Actions macos runner)
+ci-macos-steps: _rust-workspace
+    just fmt-check-swift
+    just lint-swift
+    just build-rust
+    just test-swift
+
+# Local entry point; skips gracefully off-macOS
+ci-macos:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! uname | grep -qi darwin; then
+      echo "skipped: ci-macos requires macOS" >&2
+      exit 0
+    fi
+    just ci-macos-steps
+
+ci:
+    just ci-rust
+    @uname | grep -qi darwin && just ci-macos-steps || echo "skipped: ci-macos (not macOS)"
+
+# Full local CI — run before pushing to avoid failed macOS runner minutes
+preflight:
+    just ci
+
 build-rust: _rust-workspace
     cd rust && ./build-macos.sh
 

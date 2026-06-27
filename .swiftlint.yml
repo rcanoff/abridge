@@ -1,0 +1,21 @@
+included:
+  - AppleBridge
+  - AppleBridgeTests
+disabled_rules:
+  - opening_brace
+  - trailing_comma
+excluded:
+  - AppleBridgeCore
+  - AppleBridge/Services/apple_bridge_core.swift
+line_length:
+  warning: 120
+  error: 160
+  ignores_urls: true
+  ignores_function_declarations: true
+type_body_length:
+  warning: 300
+identifier_name:
+  min_length:
+    warning: 2
+  excluded:
+    - id

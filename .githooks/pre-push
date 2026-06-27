@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+# 1. Fast CI verify (path-aware)
+if [ -x "$REPO_ROOT/scripts/ci/pre-push-verify.sh" ]; then
+  "$REPO_ROOT/scripts/ci/pre-push-verify.sh" || exit $?
+fi
+
+# 2. Optional local agent review (if installed)
+REVIEW_SCRIPT="$REPO_ROOT/local/review/bin/review.sh"
+if [ -x "$REVIEW_SCRIPT" ]; then
+  if [ -n "${REVIEW_STRICT:-}" ]; then
+    exec "$REVIEW_SCRIPT" --hook --strict
+  fi
+  exec "$REVIEW_SCRIPT" --hook
+fi

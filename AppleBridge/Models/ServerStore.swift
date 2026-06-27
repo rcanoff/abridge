@@ -22,7 +22,7 @@ final class ServerStore {
         let state = await serverService.refreshStatus()
         runState = state
 
-        if case .error(let message) = state {
+        if case let .error(message) = state {
             lastError = message
         } else {
             lastError = nil
@@ -58,7 +58,7 @@ final class ServerStore {
             await refreshBearerToken()
             let state = await serverService.refreshStatus()
             runState = state
-            if case .error(let message) = state {
+            if case let .error(message) = state {
                 lastError = message
             } else {
                 lastError = nil

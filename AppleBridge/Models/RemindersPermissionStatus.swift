@@ -1,7 +1,7 @@
 import EventKit
 import Foundation
 
-enum RemindersPermissionStatus: Equatable, CaseIterable, Sendable {
+enum RemindersPermissionStatus: Equatable, CaseIterable {
     case unknown
     case notDetermined
     case authorized
@@ -11,15 +11,15 @@ enum RemindersPermissionStatus: Equatable, CaseIterable, Sendable {
     var displayName: String {
         switch self {
         case .unknown:
-            return "Unknown"
+            "Unknown"
         case .notDetermined:
-            return "Not Determined"
+            "Not Determined"
         case .authorized:
-            return "Authorized"
+            "Authorized"
         case .denied:
-            return "Denied"
+            "Denied"
         case .restricted:
-            return "Restricted"
+            "Restricted"
         }
     }
 }

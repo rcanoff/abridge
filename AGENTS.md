@@ -160,6 +160,11 @@ just fmt-check-rust # cargo fmt --all --check (EOF newline + formatting)
 just test-rust      # TZ=UTC cargo test
 just lint-rust      # fmt-check + clippy -D warnings
 just build-rust     # XCFramework + UniFFI bindings
+just fmt-check-swift  # SwiftFormat lint
+just lint-swift       # SwiftLint strict
+just ci-rust          # Rust CI subset
+just ci-macos         # macOS CI subset
+just ci               # Full local CI parity
 ```
 
 Regenerate Xcode project after `project.yml` changes:
@@ -172,6 +177,7 @@ xcodegen generate
 
 | Change type | Minimum validation |
 |-------------|-------------------|
+| Any PR | `just ci` (or equivalent GitHub workflow checks) |
 | Swift model / mapper | Swift Testing unit tests |
 | SwiftUI / store | Build + unit tests; manual menu bar smoke when UX changes |
 | Permission flow | Unit tests with protocol mocks; manual smoke for system dialog |

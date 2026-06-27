@@ -112,24 +112,24 @@ struct MenuBarPopoverView: View {
     private var permissionStatusColor: Color {
         switch store.permissionStatus {
         case .authorized:
-            return .green
+            .green
         case .notDetermined, .unknown:
-            return .orange
+            .orange
         case .denied, .restricted:
-            return .red
+            .red
         }
     }
 
     private var serverStatusColor: Color {
         switch serverStore.runState {
         case .running:
-            return .green
+            .green
         case .starting:
-            return .orange
+            .orange
         case .stopped:
-            return .secondary
+            .secondary
         case .error:
-            return .red
+            .red
         }
     }
 
