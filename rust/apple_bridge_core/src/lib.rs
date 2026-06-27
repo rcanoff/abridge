@@ -3,6 +3,7 @@ use std::sync::Arc;
 mod config;
 mod diagnostics;
 mod error;
+mod http;
 mod logging;
 mod providers;
 mod server;

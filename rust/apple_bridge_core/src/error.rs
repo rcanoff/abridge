@@ -8,4 +8,13 @@ pub enum CoreError {
 
   #[error("server state unavailable")]
   StateUnavailable,
+
+  #[error("failed to bind server: {message}")]
+  BindFailed { message: String },
+
+  #[error("failed to create runtime: {message}")]
+  RuntimeFailed { message: String },
+
+  #[error("server start was cancelled")]
+  StartCancelled,
 }
