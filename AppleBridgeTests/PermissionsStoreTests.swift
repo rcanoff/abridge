@@ -130,6 +130,30 @@ struct PermissionsStoreIntegrationTests {
 
     @Test
     @MainActor
+    func saveReconcilesCheckedIDsAfterFilteringUnshipped() async {
+        let suiteName = "PermissionsStoreTests.saveReconcile"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let mock = MockRemindersPermissionService()
+        mock.status = .authorized
+        let store = PermissionsStore(
+            appSettings: AppSettings(defaults: defaults),
+            permissionService: mock
+        )
+        store.setChecked(true, for: "read")
+        store.setChecked(true, for: "create")
+
+        let saved = await store.save()
+
+        #expect(saved == true)
+        #expect(store.checkedCapabilityIDs == ["read"])
+        #expect(store.savedCapabilityIDs == ["read"])
+        #expect(store.hasPendingChanges == false)
+    }
+
+    @Test
+    @MainActor
     func saveRequestsAccessWhenWriteOnlyAndReadChecked() async {
         let suiteName = "PermissionsStoreTests.writeOnlySave"
         let defaults = UserDefaults(suiteName: suiteName)!

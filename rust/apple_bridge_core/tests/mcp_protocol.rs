@@ -86,6 +86,36 @@ fn mcp_tools_list_filtered_by_capability() {
 }
 
 #[test]
+fn mcp_tools_list_excludes_disabled_provider() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    ServerConfig {
+      host: "127.0.0.1".into(),
+      port,
+      bearer_token: TEST_TOKEN.into(),
+      enabled_providers: vec![ProviderConfig {
+        name: "eventkit".into(),
+        enabled: false,
+      }],
+      enabled_capabilities: vec!["eventkit.reminders.read".into()],
+    },
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""tools":[]"#));
+  assert!(!resp.contains("eventkit.reminders.list_lists"));
+  assert!(!resp.contains("eventkit.reminders.list_reminders"));
+}
+
+#[test]
 fn tools_call_dispatches_to_provider() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();

@@ -7,6 +7,7 @@ enum EventKitProviderError: Error, Equatable {
     case eventKitError(String)
     case unknownOperation(String)
     case invalidArguments(String)
+    case reminderFetchTimedOut
 }
 
 @MainActor
@@ -14,7 +15,7 @@ protocol EventKitStoreing {
     func reminderAuthorizationStatus() -> EKAuthorizationStatus
     func reminderCalendars() -> [EKCalendar]
     func predicateForReminders(in calendars: [EKCalendar]) -> NSPredicate
-    func fetchReminders(matching predicate: NSPredicate) -> [EKReminder]
+    func fetchReminders(matching predicate: NSPredicate) throws -> [EKReminder]
 }
 
 @MainActor
@@ -37,23 +38,41 @@ final class LiveEventKitStore: EventKitStoreing, Sendable {
         eventStore.predicateForReminders(in: calendars)
     }
 
-    func fetchReminders(matching predicate: NSPredicate) -> [EKReminder] {
+    func fetchReminders(matching predicate: NSPredicate) throws -> [EKReminder] {
         var fetched: [EKReminder] = []
-        var done = false
+        try EventKitReminderFetch.waitForCompletion { complete in
+            eventStore.fetchReminders(matching: predicate) { reminders in
+                fetched = reminders ?? []
+                complete()
+            }
+        }
+        return fetched
+    }
+}
 
-        eventStore.fetchReminders(matching: predicate) { reminders in
-            fetched = reminders ?? []
+@MainActor
+enum EventKitReminderFetch {
+    static let defaultTimeout: TimeInterval = 30
+
+    static func waitForCompletion(
+        timeout: TimeInterval = defaultTimeout,
+        work: (@escaping () -> Void) -> Void
+    ) throws {
+        var done = false
+        work {
             done = true
         }
 
         // EventKit delivers the completion on the main run loop. Spin explicitly on `.main`
         // (not `.current`) so this stays correct when called via `DispatchQueue.main.sync`.
-        let deadline = Date().addingTimeInterval(30)
+        let deadline = Date().addingTimeInterval(timeout)
         while !done, Date() < deadline {
             RunLoop.main.run(mode: .default, before: Date(timeIntervalSinceNow: 0.01))
         }
 
-        return fetched
+        guard done else {
+            throw EventKitProviderError.reminderFetchTimedOut
+        }
     }
 }
 
@@ -103,7 +122,7 @@ final class EventKitProvider: Sendable {
         do {
             let listID = try parseArguments(payloadJson)
             let predicate = try reminderPredicate(listID: listID)
-            let reminders = store.fetchReminders(matching: predicate)
+            let reminders = try store.fetchReminders(matching: predicate)
             let payloadObjects = reminders.map(EventKitReminderMapping.reminderDictionary)
             let payload = try EventKitReminderMapping.jsonString(from: payloadObjects)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
@@ -119,6 +138,8 @@ final class EventKitProvider: Sendable {
                 return errorResponse(code: "eventkit_error", message: message)
             case .unknownOperation(let message):
                 return errorResponse(code: "unknown_operation", message: message)
+            case .reminderFetchTimedOut:
+                return errorResponse(code: "eventkit_error", message: "Reminder fetch timed out")
             }
         } catch {
             return providerError(from: error)

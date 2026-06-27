@@ -233,6 +233,7 @@ final class PermissionsStore {
 
         let persisted = PermissionsDerivation.savedIDsAfterSave(from: checkedCapabilityIDs)
         appSettings.saveCapabilityIDs(persisted)
+        checkedCapabilityIDs = persisted
         return true
     }
 

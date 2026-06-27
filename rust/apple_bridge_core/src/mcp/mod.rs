@@ -90,6 +90,7 @@ fn handle_tools_list(id: Option<Value>, state: &McpState) -> Response {
 
   let tools: Vec<Value> = tools::tools_for_capabilities(&state.enabled_capabilities)
     .into_iter()
+    .filter(|tool| provider_enabled(state, tool.provider))
     .map(tool_descriptor)
     .collect();
 
