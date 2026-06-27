@@ -8,8 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		0FF39115817D3F4FDA50D54F /* RemindersPermissionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */; };
+		22A1A27010210BCA212E7589 /* MockRemindersPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */; };
 		65F8730E6F95FE7B7F9D6BF0 /* RemindersPermissionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */; };
 		695314C514070291FDE34E03 /* AppleBridgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */; };
+		A379FED46FA22BFE7EBA3232 /* RemindersPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A72D4B9CEB174F696205046 /* RemindersPermissionService.swift */; };
+		D6C3FDC3CBF50531768A2F68 /* RemindersPermissionChecking.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92E78E13D38DCD36E0C4AAF /* RemindersPermissionChecking.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -27,7 +30,10 @@
 		0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBridgeApp.swift; sourceTree = "<group>"; };
 		0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionStatusTests.swift; sourceTree = "<group>"; };
 		3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionStatus.swift; sourceTree = "<group>"; };
+		4A72D4B9CEB174F696205046 /* RemindersPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionService.swift; sourceTree = "<group>"; };
+		63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRemindersPermissionService.swift; sourceTree = "<group>"; };
 		CF8C2D151839110223826CC7 /* AppleBridge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppleBridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E92E78E13D38DCD36E0C4AAF /* RemindersPermissionChecking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionChecking.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -43,9 +49,19 @@
 		27D0722E33C2A713E104325F /* AppleBridgeTests */ = {
 			isa = PBXGroup;
 			children = (
+				63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */,
 				0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */,
 			);
 			path = AppleBridgeTests;
+			sourceTree = "<group>";
+		};
+		343C8CBBD7B246AD442FE5A5 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				E92E78E13D38DCD36E0C4AAF /* RemindersPermissionChecking.swift */,
+				4A72D4B9CEB174F696205046 /* RemindersPermissionService.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 		63ABDAABA163B13CA550021A /* AppleBridge */ = {
@@ -53,6 +69,7 @@
 			children = (
 				0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */,
 				B85F46CDAA3C988BFBBC89D3 /* Models */,
+				343C8CBBD7B246AD442FE5A5 /* Services */,
 			);
 			path = AppleBridge;
 			sourceTree = "<group>";
@@ -149,6 +166,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				695314C514070291FDE34E03 /* AppleBridgeApp.swift in Sources */,
+				D6C3FDC3CBF50531768A2F68 /* RemindersPermissionChecking.swift in Sources */,
+				A379FED46FA22BFE7EBA3232 /* RemindersPermissionService.swift in Sources */,
 				0FF39115817D3F4FDA50D54F /* RemindersPermissionStatus.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -157,6 +176,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22A1A27010210BCA212E7589 /* MockRemindersPermissionService.swift in Sources */,
 				65F8730E6F95FE7B7F9D6BF0 /* RemindersPermissionStatusTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
