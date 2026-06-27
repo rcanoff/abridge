@@ -154,7 +154,7 @@ just test-swift
 | Workflow | Runner | Path filter |
 |----------|--------|-------------|
 | Rust CI | `ubuntu-latest` | `rust/**` |
-| macOS CI | `macos-15` | `AppleBridge/**`, `AppleBridgeTests/**`, `project.yml`, `rust/**` |
+| macOS CI | `macos-26` | `AppleBridge/**`, `AppleBridgeTests/**`, `project.yml`, `rust/**` |
 
 Local parity: `just ci`. Pre-push runs a fast subset (skips `build-rust`); install via `git config core.hooksPath .githooks`.
 
