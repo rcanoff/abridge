@@ -47,8 +47,8 @@ lint-swift:
 ci-macos-steps: _rust-workspace
     just fmt-check-swift
     just lint-swift
-    just test-swift
     just build-rust
+    just test-swift
 
 # Local entry point; skips gracefully off-macOS
 ci-macos:

@@ -9,7 +9,7 @@ Native macOS app exposing Apple platform capabilities through a local, authentic
 [![Rust CI](https://github.com/rcanoff/apple-bridge/actions/workflows/ci-rust.yml/badge.svg)](https://github.com/rcanoff/apple-bridge/actions/workflows/ci-rust.yml)
 [![macOS CI](https://github.com/rcanoff/apple-bridge/actions/workflows/ci-macos.yml/badge.svg)](https://github.com/rcanoff/apple-bridge/actions/workflows/ci-macos.yml)
 
-Rust CI runs on Linux when `rust/` changes (fmt, clippy, tests). macOS CI runs when Swift, Xcode project, or Rust bindings change (SwiftFormat, SwiftLint, tests, UniFFI build).
+Rust CI runs on Linux when `rust/` changes (fmt, clippy, tests). macOS CI runs when Swift, Xcode project, or Rust bindings change (SwiftFormat, SwiftLint, UniFFI build, tests).
 
 ## What it does
 
