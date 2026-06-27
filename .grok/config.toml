@@ -1,0 +1,10 @@
+[mcp_servers.XcodeBuildMCP]
+command = "npx"
+args = [
+    "-y",
+    "xcodebuildmcp@latest",
+    "mcp",
+]
+enabled = true
+startup_timeout_sec = 60
+tool_timeout_sec = 600
