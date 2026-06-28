@@ -90,3 +90,5 @@ rebuild: clean-rust build-rust
 # Orchestration gate checks for pr3b–pr3k reminder features (docs + PR history)
 verify-orchestration:
     @scripts/verify-orchestration-gates.sh
+
+# CI billing probe (chore/ci-probe-billing) — no-op comment to trigger workflow path filters
