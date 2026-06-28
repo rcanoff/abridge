@@ -1,3 +1,4 @@
+import CoreFoundation
 @preconcurrency import EventKit
 import Foundation
 
@@ -14,8 +15,14 @@ enum EventKitDeserialization {
     static func optionalInt(_ value: Any?) throws -> Int? {
         guard let value else { return nil }
         if value is NSNull { return nil }
+        if value is Bool { throw EventKitProviderError.invalidArguments("Expected integer or null") }
         if let int = value as? Int { return int }
-        if let number = value as? NSNumber { return number.intValue }
+        if let number = value as? NSNumber {
+            if CFGetTypeID(number) == CFBooleanGetTypeID() {
+                throw EventKitProviderError.invalidArguments("Expected integer or null")
+            }
+            return number.intValue
+        }
         throw EventKitProviderError.invalidArguments("Expected integer or null")
     }
 
@@ -71,7 +78,10 @@ enum EventKitDeserialization {
             if timeZoneValue is NSNull {
                 components.timeZone = nil
             } else if let identifier = timeZoneValue as? String {
-                components.timeZone = TimeZone(identifier: identifier)
+                guard let timeZone = TimeZone(identifier: identifier) else {
+                    throw EventKitProviderError.invalidArguments("time_zone must be a valid timezone identifier")
+                }
+                components.timeZone = timeZone
             } else {
                 throw EventKitProviderError.invalidArguments("time_zone must be a string or null")
             }
@@ -92,16 +102,25 @@ enum EventKitDeserialization {
 
     static func foundationCalendar(from dictionary: [String: Any]) throws -> Calendar {
         var calendar = Calendar.current
-        if let identifierString = dictionary["identifier"] as? String,
-           let identifier = calendarIdentifier(from: identifierString)
-        {
+        if dictionary.keys.contains("identifier") {
+            if dictionary["identifier"] is NSNull {
+                throw EventKitProviderError.invalidArguments("calendar identifier must be a string or null")
+            }
+            guard let identifierString = dictionary["identifier"] as? String,
+                  let identifier = calendarIdentifier(from: identifierString)
+            else {
+                throw EventKitProviderError.invalidArguments("calendar identifier must be a valid calendar identifier")
+            }
             calendar = Calendar(identifier: identifier)
         }
         if let localeIdentifier = try optionalString(dictionary["locale"]) {
             calendar.locale = Locale(identifier: localeIdentifier)
         }
         if let timeZoneIdentifier = try optionalString(dictionary["time_zone"]) {
-            calendar.timeZone = TimeZone(identifier: timeZoneIdentifier) ?? calendar.timeZone
+            guard let timeZone = TimeZone(identifier: timeZoneIdentifier) else {
+                throw EventKitProviderError.invalidArguments("calendar time_zone must be a valid timezone identifier")
+            }
+            calendar.timeZone = timeZone
         }
         if let firstWeekday = try optionalInt(dictionary["first_weekday"]) {
             calendar.firstWeekday = firstWeekday

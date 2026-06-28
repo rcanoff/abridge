@@ -130,8 +130,15 @@ extension EventKitProvider {
             throw EventKitProviderError.invalidArguments("title must not be empty")
         }
 
-        let timeZoneIdentifier = try EventKitDeserialization.optionalString(dictionary["time_zone"])
-        let timeZone = timeZoneIdentifier.flatMap(TimeZone.init(identifier:))
+        let timeZone: TimeZone?
+        if let timeZoneIdentifier = try EventKitDeserialization.optionalString(dictionary["time_zone"]) {
+            guard let resolved = TimeZone(identifier: timeZoneIdentifier) else {
+                throw EventKitProviderError.invalidArguments("time_zone must be a valid timezone identifier")
+            }
+            timeZone = resolved
+        } else {
+            timeZone = nil
+        }
 
         return try CreateReminderArguments(
             calendarIdentifier: trimmedCalendarID,

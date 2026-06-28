@@ -115,6 +115,83 @@ struct EventKitProviderCreateTests {
 
     @Test
     @MainActor
+    func createReminderRejectsBooleanPriority() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-create-5")]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_reminder",
+            payloadJson: #"{"calendar_identifier":"list-create-5","title":"Bool priority","priority":true}"#
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+    }
+
+    @Test
+    @MainActor
+    func createReminderRejectsInvalidTimeZone() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-create-6")]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_reminder",
+            payloadJson: #"{"calendar_identifier":"list-create-6","title":"Bad tz","time_zone":"Not/A/Zone"}"#
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("time_zone must be a valid timezone identifier") == true)
+    }
+
+    @Test
+    @MainActor
+    func createReminderRejectsInvalidDueDateComponentsTimeZone() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-create-7")]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_reminder",
+            payloadJson: """
+            {"calendar_identifier":"list-create-7","title":"Bad nested tz",\
+            "due_date_components":{"year":2026,"time_zone":"Not/A/Zone"}}
+            """
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("time_zone must be a valid timezone identifier") == true)
+    }
+
+    @Test
+    @MainActor
+    func createReminderRejectsInvalidDueDateComponentsCalendarIdentifier() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-create-8")]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_reminder",
+            payloadJson: """
+            {"calendar_identifier":"list-create-8","title":"Bad calendar id",\
+            "due_date_components":{"year":2026,"calendar":{"identifier":"not_a_calendar"}}}
+            """
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("calendar identifier must be a valid calendar identifier") == true)
+    }
+
+    @Test
+    @MainActor
     func createReminderRejectsInvalidPriority() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
