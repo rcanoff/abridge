@@ -6,98 +6,119 @@ struct MCPSettingsView: View {
     @Bindable var serverStore: ServerStore
 
     @State private var portText = ""
+    @State private var showResetConfirmation = false
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text("MCP")
-                    .font(.title2)
-                    .fontWeight(.bold)
-
-                GroupBox {
-                    Toggle("Enable server", isOn: mcpEnabledBinding)
-                    LabeledContent("Status") {
-                        HStack(spacing: 6) {
-                            Circle()
-                                .fill(statusColor)
-                                .frame(width: 8, height: 8)
-                            Text(serverStore.runState.displayName)
-                        }
-                    }
-                }
-
-                GroupBox {
-                    LabeledContent("Host", value: serverStore.host)
-                    HStack {
-                        Text("Port")
-                        Spacer()
-                        TextField("3020", text: $portText)
-                            .frame(width: 80)
-                            .multilineTextAlignment(.trailing)
-                            .onSubmit(applyPortChange)
-                    }
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Endpoint")
-                            .foregroundStyle(.secondary)
-                        Text(settingsStore.endpointURL)
-                            .font(.system(.body, design: .monospaced))
-                            .textSelection(.enabled)
-                    }
-                }
-
-                GroupBox {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Bearer token")
-                            .foregroundStyle(.secondary)
-
-                        if let token = serverStore.bearerToken {
-                            Text(token)
-                                .font(.system(.caption, design: .monospaced))
-                                .textSelection(.enabled)
-                                .lineLimit(3)
-                        } else {
-                            Text("Not loaded")
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Text("Used by MCP clients. Never share outside this machine.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-
-                        HStack {
-                            Button("Copy") {
-                                copyToken()
-                            }
-                            .disabled(serverStore.bearerToken == nil)
-
-                            Button("Reset token", role: .destructive) {
-                                Task { await settingsStore.resetBearerToken() }
-                            }
-                        }
-
-                        if let notice = settingsStore.tokenResetNotice {
-                            Text(notice)
-                                .font(.caption)
-                                .foregroundStyle(.orange)
-                        }
-                    }
-                }
-
-                if let lastError = serverStore.lastError {
-                    Text(lastError)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .textSelection(.enabled)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+        Form {
+            serverSection
+            connectionSection
+            authenticationSection
         }
+        .formStyle(.grouped)
+        .navigationTitle("MCP")
         .onAppear {
             portText = String(settingsStore.appSettings.mcpPort)
             Task { await serverStore.refreshBearerToken() }
         }
         .onChange(of: settingsStore.appSettings.mcpPort) { _, newValue in
             portText = String(newValue)
+        }
+        .confirmationDialog(
+            "Reset bearer token?",
+            isPresented: $showResetConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Reset token", role: .destructive) {
+                Task { await settingsStore.resetBearerToken() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The server will restart with a new token. Update your MCP client.")
+        }
+        .safeAreaInset(edge: .bottom) {
+            if let lastError = serverStore.lastError {
+                Text(lastError)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+            }
+        }
+    }
+
+    private var serverSection: some View {
+        Section("Server") {
+            Toggle("Enable server", isOn: mcpEnabledBinding)
+            LabeledContent("Status") {
+                ServerStatusIndicator(state: serverStore.runState)
+            }
+        }
+    }
+
+    private var connectionSection: some View {
+        Section {
+            LabeledContent("Host", value: serverStore.host)
+            LabeledContent("Port") {
+                TextField("", text: $portText, prompt: Text("3020"))
+                    .frame(width: 80)
+                    .multilineTextAlignment(.trailing)
+                    .onSubmit(applyPortChange)
+            }
+            endpointRow
+        } header: {
+            Text("Connection")
+        } footer: {
+            Text("MCP clients connect to the endpoint above on this machine.")
+        }
+    }
+
+    private var endpointRow: some View {
+        LabeledContent("Endpoint") {
+            Text(settingsStore.endpointURL)
+                .font(.system(.body, design: .monospaced))
+                .textSelection(.enabled)
+        }
+    }
+
+    private var authenticationSection: some View {
+        Section {
+            authenticationContent
+        } header: {
+            Text("Authentication")
+        } footer: {
+            Text("Used by MCP clients. Never share outside this machine.")
+        }
+    }
+
+    private var authenticationContent: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let token = serverStore.bearerToken {
+                Text(token)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+                    .lineLimit(3)
+            } else {
+                Text("Not loaded")
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack {
+                Button("Copy") {
+                    copyToken()
+                }
+                .disabled(serverStore.bearerToken == nil)
+
+                Button("Reset token", role: .destructive) {
+                    showResetConfirmation = true
+                }
+            }
+
+            if let notice = settingsStore.tokenResetNotice {
+                Text(notice)
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
         }
     }
 
@@ -108,19 +129,6 @@ struct MCPSettingsView: View {
                 Task { await settingsStore.applyMCPEnabledChange(newValue) }
             }
         )
-    }
-
-    private var statusColor: Color {
-        switch serverStore.runState {
-        case .running:
-            .green
-        case .starting:
-            .orange
-        case .stopped:
-            .secondary
-        case .error:
-            .red
-        }
     }
 
     private func applyPortChange() {
