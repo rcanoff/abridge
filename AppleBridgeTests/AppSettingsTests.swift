@@ -85,4 +85,32 @@ struct AppSettingsTests {
 
         #expect(appSettings.mcpPort == 65535)
     }
+
+    @Test
+    @MainActor
+    func launchAtLoginDefaultsToFalseOnFreshInstall() throws {
+        let suiteName = "AppSettingsTests.launchAtLoginDefault"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+
+        #expect(appSettings.launchAtLogin == false)
+    }
+
+    @Test
+    @MainActor
+    func launchAtLoginPersistsAcrossInstances() throws {
+        let suiteName = "AppSettingsTests.launchAtLoginPersist"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.launchAtLogin = true
+
+        let reloaded = AppSettings(defaults: defaults)
+
+        #expect(reloaded.launchAtLogin == true)
+        #expect(defaults.bool(forKey: "launchAtLogin"))
+    }
 }
