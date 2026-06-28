@@ -131,13 +131,6 @@ fn accepts_alarms_capability() {
 }
 
 #[test]
-fn accepts_recurrence_capability() {
-  let mut config = sample_config();
-  config.enabled_capabilities = vec!["eventkit.reminders.recurrence".into()];
-  assert!(validate_config(&config).is_ok());
-}
-
-#[test]
 fn rejects_unknown_capability() {
   let mut config = sample_config();
   config.enabled_capabilities = vec!["eventkit.foo.bar".into()];
