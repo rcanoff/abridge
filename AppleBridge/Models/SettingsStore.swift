@@ -24,21 +24,26 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 final class SettingsStore {
     var selectedTab: SettingsTab = .mcp
     private(set) var tokenResetNotice: String?
+    private(set) var launchAtLoginError: String?
 
     let appSettings: AppSettings
 
     private let serverStore: ServerStore
     private let permissionService: any RemindersPermissionChecking
+    private let launchAtLoginService: any LaunchAtLoginManaging
     private var didPerformLaunchRestore = false
+    private var didPerformLaunchAtLoginReconcile = false
 
     init(
         appSettings: AppSettings,
         serverStore: ServerStore,
-        permissionService: any RemindersPermissionChecking = RemindersPermissionService()
+        permissionService: any RemindersPermissionChecking = RemindersPermissionService(),
+        launchAtLoginService: any LaunchAtLoginManaging = SMAppLaunchAtLoginService()
     ) {
         self.appSettings = appSettings
         self.serverStore = serverStore
         self.permissionService = permissionService
+        self.launchAtLoginService = launchAtLoginService
     }
 
     var endpointURL: String {
@@ -116,6 +121,34 @@ final class SettingsStore {
         } else {
             "Bearer token reset. Update your MCP client with the new token."
         }
+    }
+
+    func applyLaunchAtLoginChange(_ enabled: Bool) async {
+        launchAtLoginError = nil
+        do {
+            if enabled {
+                try launchAtLoginService.register()
+                appSettings.launchAtLogin = true
+            } else {
+                try launchAtLoginService.unregister()
+                appSettings.launchAtLogin = false
+            }
+        } catch {
+            launchAtLoginError = (error as? LocalizedError)?.errorDescription
+                ?? error.localizedDescription
+        }
+    }
+
+    /// Reconciles persisted launch-at-login preference with system registration status.
+    /// Invoked from `AppleBridgeApp.init()` only — not from SwiftUI view lifecycle.
+    func performLaunchAtLoginReconcileIfNeeded() async {
+        guard !didPerformLaunchAtLoginReconcile else { return }
+        didPerformLaunchAtLoginReconcile = true
+        let systemRegistered = launchAtLoginService.isRegistered
+        if appSettings.launchAtLogin != systemRegistered {
+            appSettings.launchAtLogin = systemRegistered
+        }
+        launchAtLoginError = nil
     }
 
     /// Restores the MCP server once per process launch when `mcpEnabled` was persisted.
