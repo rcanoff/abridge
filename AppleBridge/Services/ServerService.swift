@@ -107,11 +107,12 @@ actor ServerService: ServerServing {
     }
 
     func resetBearerToken() async throws -> String {
+        if handle != nil {
+            try await stop()
+        }
+
         do {
             let token = try tokenStore.rotateBearerToken()
-            if handle != nil {
-                try await stop()
-            }
             currentBearerToken = token
             return token
         } catch let error as KeychainError {

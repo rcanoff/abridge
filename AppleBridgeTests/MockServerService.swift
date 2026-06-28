@@ -60,10 +60,10 @@ actor MockServerService: ServerServing {
             throw resetBearerTokenError
         }
 
-        bearerTokenResult = "rotated-\(bearerTokenResult)"
         if refreshResult == .running {
             try await stop()
         }
+        bearerTokenResult = "rotated-\(bearerTokenResult)"
         activeBearerToken = bearerTokenResult
         return bearerTokenResult
     }
