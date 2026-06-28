@@ -13,6 +13,7 @@
 | 1 | 2026-06-28 | 95bd06b | 2 | 0 | 2 |
 | 2 | 2026-06-28 | 6550bc6 | 1 | 1 | 0 |
 | 3 | 2026-06-28 | 3e8d67d | 0 | 2 | 0 |
+| 4 | 2026-06-28 | 4b1e223 | 0 | 0 | 0 |
 
 ## Thread 1 — New Swift files are added under the wrong repository path
 
@@ -58,8 +59,13 @@
 - **Branch:** `feat/fix-delete-fidelity` (8ed7bf9)
 - **Fix:** `EventKitProviderDelete.swift` now returns only `calendar_item_identifier` from `EKReminder.calendarItemIdentifier` before removal; `deleted` and `reminder_id` removed. Tests updated in `EventKitProviderDeleteTests.swift` and `AppleProviderBridgeDeleteTests.swift`. Spec updated at `docs/superpowers/specs/2026-06-28-pr3j-delete-reminder.md`.
 
+### Reply · implementer — 2026-06-28
+- **Disposition:** fixed
+- **Branch:** `feat/fix-reminder-id-exact-lookup` (4b1e223, PR #29)
+- **Fix:** `parseReminderIDArguments` in `EventKitProvider.swift` now returns the original `reminder_id` for lookup (trim used only for empty validation). `delete_reminder` uses this shared parser via `EventKitProviderDelete.swift`. Added `deleteReminderDoesNotTrimReminderIDForLookup` in `EventKitProviderDeleteTests.swift`.
+
 ## Summary
-No open findings. Thread 2 (custom delete payload shape) resolved in PR #28 (`feat/fix-delete-fidelity`).
+All resolved. Thread 1 (wrong file paths) resolved in run 2. Thread 2 (custom delete payload shape) resolved in PR #28; `reminder_id` exact-lookup for `delete_reminder` resolved in PR #29 (`feat/fix-reminder-id-exact-lookup`).
 
 ## Verification Note
 I reviewed only the provided diff, inventory, existing context, and inlined skills. I did not run tests, builds, linters, shell commands, or inspect repository files.
