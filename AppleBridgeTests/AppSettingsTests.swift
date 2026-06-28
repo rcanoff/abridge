@@ -58,6 +58,19 @@ struct AppSettingsTests {
 
     @Test
     @MainActor
+    func enabledMCPCapabilityIDsIncludesCheckedEventsSearchCapability() throws {
+        let suiteName = "AppSettingsTests.eventsSearchCapability"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.saveCapabilityIDs(["events-search"])
+
+        #expect(appSettings.enabledEventsCapabilityIDs == ["eventkit.events.search"])
+    }
+
+    @Test
+    @MainActor
     func enabledMCPCapabilityIDsIncludesCheckedEventsReadCapability() throws {
         let suiteName = "AppSettingsTests.eventsReadCapability"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
