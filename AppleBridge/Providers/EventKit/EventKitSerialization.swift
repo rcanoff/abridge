@@ -11,8 +11,8 @@ enum EventKitSerialization {
         payload["priority"] = reminder.priority
         payload["due_date_components"] = dateComponentsJSONObject(from: reminder.dueDateComponents)
         payload["start_date_components"] = dateComponentsJSONObject(from: reminder.startDateComponents)
-        payload["alarms"] = (reminder.alarms ?? []).map(alarmJSONObject)
-        payload["recurrence_rules"] = (reminder.recurrenceRules ?? []).map(recurrenceRuleJSONObject)
+        payload["alarms"] = optionalArrayJSONObject(from: reminder.alarms, map: alarmJSONObject)
+        payload["recurrence_rules"] = optionalArrayJSONObject(from: reminder.recurrenceRules, map: recurrenceRuleJSONObject)
         return payload
     }
 
@@ -62,7 +62,7 @@ enum EventKitSerialization {
             "has_notes": item.hasNotes,
             "has_attendees": item.hasAttendees,
             "time_zone": jsonValue(item.timeZone?.identifier),
-            "attendees": (item.attendees ?? []).map(participantJSONObject),
+            "attendees": optionalArrayJSONObject(from: item.attendees, map: participantJSONObject),
         ]
 
         if let calendar = item.calendar {
@@ -202,6 +202,14 @@ enum EventKitSerialization {
     }
 
     // MARK: - Encoding helpers
+
+    private static func optionalArrayJSONObject<Element>(
+        from array: [Element]?,
+        map: (Element) -> [String: Any]
+    ) -> Any {
+        guard let array else { return NSNull() }
+        return array.map(map)
+    }
 
     private static func jsonValue(_ string: String?) -> Any {
         string ?? NSNull()
