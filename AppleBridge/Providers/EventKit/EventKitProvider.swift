@@ -192,8 +192,6 @@ final class EventKitProvider {
             createReminder(payloadJson: payloadJson)
         case "create_list":
             createList(payloadJson: payloadJson)
-        case "update_reminder":
-            updateReminder(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }
@@ -303,7 +301,7 @@ final class EventKitProvider {
         throw EventKitProviderError.invalidArguments("list_id must be a string or null")
     }
 
-    func parseReminderIDArguments(_ payloadJson: String) throws -> String {
+    private func parseReminderIDArguments(_ payloadJson: String) throws -> String {
         guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw EventKitProviderError.invalidArguments("reminder_id is required")
         }
