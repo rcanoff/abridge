@@ -5,7 +5,8 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
 BASE_REF="${CI_BASE_REF:-origin/main}"
-STRICT="${CI_STRICT:-}"
+# Block on fmt/lint/test failures by default. Set CI_STRICT=0 for advisory mode.
+STRICT="${CI_STRICT:-1}"
 
 run_verify() {
   local label="$1"
@@ -14,11 +15,11 @@ run_verify() {
   if "$@"; then
     return 0
   fi
-  if [[ -n "$STRICT" ]]; then
-    echo "pre-push verify: FAILED (CI_STRICT=1 — blocking push)" >&2
+  if [[ "$STRICT" == "1" ]]; then
+    echo "pre-push verify: FAILED (blocking push; set CI_STRICT=0 for advisory)" >&2
     return 1
   fi
-  echo "pre-push verify: FAILED (advisory — push will continue; set CI_STRICT=1 to block)" >&2
+  echo "pre-push verify: FAILED (advisory — push will continue)" >&2
   return 0
 }
 
