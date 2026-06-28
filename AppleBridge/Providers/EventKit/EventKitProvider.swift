@@ -29,6 +29,10 @@ protocol EventKitStoreing {
     func fetchReminder(withIdentifier id: String) throws -> EKReminder?
     func makeReminder() -> EKReminder
     func saveReminder(_ reminder: EKReminder, commit: Bool) throws
+    func sources() -> [EKSource]
+    func defaultReminderSource() -> EKSource?
+    func makeReminderCalendar() -> EKCalendar
+    func saveCalendar(_ calendar: EKCalendar, commit: Bool) throws
 }
 
 @MainActor
@@ -103,6 +107,22 @@ final class LiveEventKitStore: EventKitStoreing {
     func saveReminder(_ reminder: EKReminder, commit: Bool) throws {
         try eventStore.save(reminder, commit: commit)
     }
+
+    func sources() -> [EKSource] {
+        eventStore.sources
+    }
+
+    func defaultReminderSource() -> EKSource? {
+        eventStore.defaultCalendarForNewReminders()?.source ?? eventStore.sources.first
+    }
+
+    func makeReminderCalendar() -> EKCalendar {
+        EKCalendar(for: .reminder, eventStore: eventStore)
+    }
+
+    func saveCalendar(_ calendar: EKCalendar, commit: Bool) throws {
+        try eventStore.saveCalendar(calendar, commit: commit)
+    }
 }
 
 @MainActor
@@ -170,6 +190,8 @@ final class EventKitProvider {
             searchReminders(payloadJson: payloadJson)
         case "create_reminder":
             createReminder(payloadJson: payloadJson)
+        case "create_list":
+            createList(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }
