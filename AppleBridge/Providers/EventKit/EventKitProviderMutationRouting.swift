@@ -5,8 +5,8 @@ extension EventKitProvider {
         switch operation {
         case "create_reminder", "create_list", "create_calendar":
             handleCreateMutation(operation: operation, payloadJson: payloadJson)
-        case "update_reminder":
-            updateReminder(payloadJson: payloadJson)
+        case "update_reminder", "update_calendar":
+            handleUpdateMutation(operation: operation, payloadJson: payloadJson)
         case "move_reminder":
             moveReminder(payloadJson: payloadJson)
         case "delete_reminder", "delete_list":
@@ -32,6 +32,17 @@ extension EventKitProvider {
             createList(payloadJson: payloadJson)
         case "create_calendar":
             createCalendar(payloadJson: payloadJson)
+        default:
+            errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
+        }
+    }
+
+    private func handleUpdateMutation(operation: String, payloadJson: String) -> ProviderResponse {
+        switch operation {
+        case "update_reminder":
+            updateReminder(payloadJson: payloadJson)
+        case "update_calendar":
+            updateCalendar(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }
