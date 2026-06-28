@@ -876,14 +876,16 @@ public struct ServerConfig: Equatable, Hashable {
     public var port: UInt16
     public var bearerToken: String
     public var enabledProviders: [ProviderConfig]
+    public var enabledCapabilities: [String]
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(host: String, port: UInt16, bearerToken: String, enabledProviders: [ProviderConfig]) {
+    public init(host: String, port: UInt16, bearerToken: String, enabledProviders: [ProviderConfig], enabledCapabilities: [String]) {
         self.host = host
         self.port = port
         self.bearerToken = bearerToken
         self.enabledProviders = enabledProviders
+        self.enabledCapabilities = enabledCapabilities
     }
 
     
@@ -905,7 +907,8 @@ public struct FfiConverterTypeServerConfig: FfiConverterRustBuffer {
                 host: FfiConverterString.read(from: &buf), 
                 port: FfiConverterUInt16.read(from: &buf), 
                 bearerToken: FfiConverterString.read(from: &buf), 
-                enabledProviders: FfiConverterSequenceTypeProviderConfig.read(from: &buf)
+                enabledProviders: FfiConverterSequenceTypeProviderConfig.read(from: &buf), 
+                enabledCapabilities: FfiConverterSequenceString.read(from: &buf)
         )
     }
 
@@ -914,6 +917,7 @@ public struct FfiConverterTypeServerConfig: FfiConverterRustBuffer {
         FfiConverterUInt16.write(value.port, into: &buf)
         FfiConverterString.write(value.bearerToken, into: &buf)
         FfiConverterSequenceTypeProviderConfig.write(value.enabledProviders, into: &buf)
+        FfiConverterSequenceString.write(value.enabledCapabilities, into: &buf)
     }
 }
 
@@ -1266,6 +1270,31 @@ fileprivate struct FfiConverterOptionString: FfiConverterRustBuffer {
         case 1: return try FfiConverterString.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceString: FfiConverterRustBuffer {
+    typealias SwiftType = [String]
+
+    public static func write(_ value: [String], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterString.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [String] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [String]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterString.read(from: &buf))
+        }
+        return seq
     }
 }
 

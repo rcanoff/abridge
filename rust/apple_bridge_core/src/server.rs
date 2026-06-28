@@ -9,6 +9,7 @@ use crate::{
   diagnostics::{ProviderStatus, ServerStatus},
   error::CoreError,
   http,
+  mcp::McpState,
   providers::ProviderBridge,
 };
 
@@ -305,11 +306,16 @@ impl ServerHandle {
       }
     };
 
-    let bearer_token = {
+    let mcp_state = {
       let inner = self.inner.lock().map_err(|_| CoreError::StateUnavailable)?;
-      inner.config.bearer_token.clone()
+      McpState {
+        bearer_token: inner.config.bearer_token.clone(),
+        enabled_capabilities: inner.config.enabled_capabilities.clone(),
+        enabled_providers: inner.config.enabled_providers.clone(),
+        provider: inner.provider.clone(),
+      }
     };
-    let router = http::router(bearer_token);
+    let router = http::router(mcp_state);
     let started = runtime.block_on(start_http_server(&addr, router, self.inner.clone()));
 
     let (shutdown_tx, server_task) = match started {
@@ -519,6 +525,7 @@ mod tests {
         name: "eventkit".into(),
         enabled: true,
       }],
+      enabled_capabilities: vec![],
     }
   }
 

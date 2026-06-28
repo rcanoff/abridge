@@ -5,9 +5,15 @@ on:
     branches: [main]
     paths:
       - "rust/**"
+      - "justfile"
+      - "scripts/ci/**"
+      - ".github/workflows/ci-rust.yml"
   pull_request:
     paths:
       - "rust/**"
+      - "justfile"
+      - "scripts/ci/**"
+      - ".github/workflows/ci-rust.yml"
 
 concurrency:
   group: rust-ci-${{ github.ref }}

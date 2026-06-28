@@ -9,21 +9,20 @@ use axum::{
   routing::{get, post},
 };
 
-use crate::{auth, mcp};
+use crate::{auth, mcp::McpState};
 
 async fn health() -> axum::Json<serde_json::Value> {
   axum::Json(serde_json::json!({ "ok": true }))
 }
 
-pub fn router(bearer_token: String) -> Router {
+pub fn router(state: McpState) -> Router {
+  let bearer_token = Arc::new(state.bearer_token.clone());
   let public = Router::new().route("/health", get(health));
 
   let protected = Router::new()
-    .route("/mcp", post(mcp::handle_mcp))
-    .layer(middleware::from_fn_with_state(
-      Arc::new(bearer_token),
-      auth::require_bearer,
-    ));
+    .route("/mcp", post(crate::mcp::handle_mcp))
+    .with_state(state)
+    .layer(middleware::from_fn_with_state(bearer_token, auth::require_bearer));
 
   public.merge(protected)
 }

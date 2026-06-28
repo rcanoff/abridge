@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 mod auth;
+mod capabilities;
 mod config;
 mod diagnostics;
 mod error;
@@ -9,6 +10,7 @@ mod logging;
 mod mcp;
 mod providers;
 mod server;
+mod tools;
 
 pub use config::{ProviderConfig, ProviderRequest, ProviderResponse, ServerConfig, validate_config};
 pub use diagnostics::{ProviderStatus, ServerStatus};
