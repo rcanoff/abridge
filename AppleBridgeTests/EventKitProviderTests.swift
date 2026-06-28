@@ -126,6 +126,32 @@ struct EventKitProviderTests {
 
     @Test
     @MainActor
+    func listRemindersRejectsMalformedJSON() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(operation: "list_reminders", payloadJson: "{")
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+    }
+
+    @Test
+    @MainActor
+    func getReminderRejectsMalformedJSON() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(operation: "get_reminder", payloadJson: "{")
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+    }
+
+    @Test
+    @MainActor
     func getReminderEmptyPayloadReturnsInvalidArguments() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess

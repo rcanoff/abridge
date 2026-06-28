@@ -190,6 +190,21 @@ final class EventKitProvider {
         }
     }
 
+    private func parseJSONObject(from data: Data) throws -> [String: Any] {
+        let object: Any
+        do {
+            object = try JSONSerialization.jsonObject(with: data)
+        } catch {
+            throw EventKitProviderError.invalidArguments("Arguments must be valid JSON object")
+        }
+
+        guard let dictionary = object as? [String: Any] else {
+            throw EventKitProviderError.invalidArguments("Arguments must be a JSON object")
+        }
+
+        return dictionary
+    }
+
     private func parseListIDArguments(_ payloadJson: String) throws -> String? {
         guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return nil
@@ -199,10 +214,7 @@ final class EventKitProvider {
             throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
 
-        let object = try JSONSerialization.jsonObject(with: data)
-        guard let dictionary = object as? [String: Any] else {
-            throw EventKitProviderError.invalidArguments("Arguments must be a JSON object")
-        }
+        let dictionary = try parseJSONObject(from: data)
 
         guard dictionary.keys.contains("list_id") else {
             return nil
@@ -228,10 +240,7 @@ final class EventKitProvider {
             throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
 
-        let object = try JSONSerialization.jsonObject(with: data)
-        guard let dictionary = object as? [String: Any] else {
-            throw EventKitProviderError.invalidArguments("Arguments must be a JSON object")
-        }
+        let dictionary = try parseJSONObject(from: data)
 
         guard let reminderID = dictionary["reminder_id"] as? String else {
             throw EventKitProviderError.invalidArguments("reminder_id is required")
