@@ -22,6 +22,28 @@ final class StalledEventKitStore: EventKitStoreing {
         return NSPredicate(value: true)
     }
 
+    func predicateForIncompleteReminders(
+        withDueDateStarting startDate: Date?,
+        ending endDate: Date?,
+        calendars: [EKCalendar]
+    ) -> NSPredicate {
+        _ = startDate
+        _ = endDate
+        _ = calendars
+        return NSPredicate(value: true)
+    }
+
+    func predicateForCompletedReminders(
+        withCompletionDateStarting startDate: Date?,
+        ending endDate: Date?,
+        calendars: [EKCalendar]
+    ) -> NSPredicate {
+        _ = startDate
+        _ = endDate
+        _ = calendars
+        return NSPredicate(value: true)
+    }
+
     func fetchReminders(matching predicate: NSPredicate) throws -> [EKReminder] {
         _ = predicate
         try EventKitReminderFetch.waitForCompletion(timeout: fetchTimeout) { _ in

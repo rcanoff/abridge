@@ -15,6 +15,16 @@ protocol EventKitStoreing {
     func reminderAuthorizationStatus() -> EKAuthorizationStatus
     func reminderCalendars() -> [EKCalendar]
     func predicateForReminders(in calendars: [EKCalendar]) -> NSPredicate
+    func predicateForIncompleteReminders(
+        withDueDateStarting startDate: Date?,
+        ending endDate: Date?,
+        calendars: [EKCalendar]
+    ) -> NSPredicate
+    func predicateForCompletedReminders(
+        withCompletionDateStarting startDate: Date?,
+        ending endDate: Date?,
+        calendars: [EKCalendar]
+    ) -> NSPredicate
     func fetchReminders(matching predicate: NSPredicate) throws -> [EKReminder]
     func fetchReminder(withIdentifier id: String) throws -> EKReminder?
 }
@@ -37,6 +47,30 @@ final class LiveEventKitStore: EventKitStoreing {
 
     func predicateForReminders(in calendars: [EKCalendar]) -> NSPredicate {
         eventStore.predicateForReminders(in: calendars)
+    }
+
+    func predicateForIncompleteReminders(
+        withDueDateStarting startDate: Date?,
+        ending endDate: Date?,
+        calendars: [EKCalendar]
+    ) -> NSPredicate {
+        eventStore.predicateForIncompleteReminders(
+            withDueDateStarting: startDate,
+            ending: endDate,
+            calendars: calendars
+        )
+    }
+
+    func predicateForCompletedReminders(
+        withCompletionDateStarting startDate: Date?,
+        ending endDate: Date?,
+        calendars: [EKCalendar]
+    ) -> NSPredicate {
+        eventStore.predicateForCompletedReminders(
+            withCompletionDateStarting: startDate,
+            ending: endDate,
+            calendars: calendars
+        )
     }
 
     func fetchReminders(matching predicate: NSPredicate) throws -> [EKReminder] {
@@ -108,7 +142,7 @@ enum LiveEventKitEnvironment {
 
 @MainActor
 final class EventKitProvider {
-    private let store: any EventKitStoreing
+    let store: any EventKitStoreing
 
     init(store: any EventKitStoreing = LiveEventKitStore()) {
         self.store = store
@@ -122,6 +156,8 @@ final class EventKitProvider {
             listReminders(payloadJson: payloadJson)
         case "get_reminder":
             getReminder(payloadJson: payloadJson)
+        case "search_reminders":
+            searchReminders(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }
@@ -181,7 +217,7 @@ final class EventKitProvider {
         }
     }
 
-    private var isAuthorized: Bool {
+    var isAuthorized: Bool {
         switch store.reminderAuthorizationStatus() {
         case .fullAccess:
             true
@@ -190,7 +226,7 @@ final class EventKitProvider {
         }
     }
 
-    private func parseJSONObject(from data: Data) throws -> [String: Any] {
+    func parseJSONObject(from data: Data) throws -> [String: Any] {
         let object: Any
         do {
             object = try JSONSerialization.jsonObject(with: data)
@@ -255,18 +291,11 @@ final class EventKitProvider {
     }
 
     private func reminderPredicate(listID: String?) throws -> NSPredicate {
-        if let listID {
-            let calendars = store.reminderCalendars()
-            guard let calendar = calendars.first(where: { $0.calendarIdentifier == listID }) else {
-                throw EventKitProviderError.invalidArguments("Unknown list_id: \(listID)")
-            }
-            return store.predicateForReminders(in: [calendar])
-        }
-
-        return store.predicateForReminders(in: store.reminderCalendars())
+        let calendars = try reminderCalendars(calendarIdentifier: listID)
+        return store.predicateForReminders(in: calendars)
     }
 
-    private func providerErrorResponse(from error: EventKitProviderError) -> ProviderResponse {
+    func providerErrorResponse(from error: EventKitProviderError) -> ProviderResponse {
         switch error {
         case .permissionDenied:
             errorResponse(code: "permission_denied", message: "Reminders access not granted")
@@ -283,13 +312,13 @@ final class EventKitProvider {
         }
     }
 
-    private func errorResponse(code: String, message: String) -> ProviderResponse {
+    func errorResponse(code: String, message: String) -> ProviderResponse {
         let payload: [String: String] = ["code": code, "message": message]
         let errorJson = (try? EventKitSerialization.jsonString(from: payload)) ?? #"{"code":"provider_error"}"#
         return ProviderResponse(ok: false, payloadJson: "{}", errorJson: errorJson)
     }
 
-    private func providerError(from error: Error) -> ProviderResponse {
+    func providerError(from error: Error) -> ProviderResponse {
         errorResponse(code: "eventkit_error", message: error.localizedDescription)
     }
 }
