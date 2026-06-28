@@ -340,7 +340,7 @@ final class EventKitProvider {
             throw EventKitProviderError.invalidArguments("reminder_id must not be empty")
         }
 
-        return reminderID
+        return trimmed
     }
 
     private func reminderPredicate(listID: String?) throws -> NSPredicate {
