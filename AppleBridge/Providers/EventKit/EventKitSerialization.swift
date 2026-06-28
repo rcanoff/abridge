@@ -12,7 +12,10 @@ enum EventKitSerialization {
         payload["due_date_components"] = dateComponentsJSONObject(from: reminder.dueDateComponents)
         payload["start_date_components"] = dateComponentsJSONObject(from: reminder.startDateComponents)
         payload["alarms"] = optionalArrayJSONObject(from: reminder.alarms, map: alarmJSONObject)
-        payload["recurrence_rules"] = optionalArrayJSONObject(from: reminder.recurrenceRules, map: recurrenceRuleJSONObject)
+        payload["recurrence_rules"] = optionalArrayJSONObject(
+            from: reminder.recurrenceRules,
+            map: recurrenceRuleJSONObject
+        )
         return payload
     }
 
@@ -273,143 +276,5 @@ enum EventKitSerialization {
         if mask.contains(.event) { types.append("event") }
         if mask.contains(.reminder) { types.append("reminder") }
         return types
-    }
-
-    // MARK: - Enum strings (mechanical)
-
-    private static func calendarIdentifierString(_ identifier: Calendar.Identifier) -> String {
-        switch identifier {
-        case .gregorian: "gregorian"
-        case .buddhist: "buddhist"
-        case .chinese: "chinese"
-        case .coptic: "coptic"
-        case .ethiopicAmeteMihret: "ethiopic_amete_mihret"
-        case .ethiopicAmeteAlem: "ethiopic_amete_alem"
-        case .hebrew: "hebrew"
-        case .iso8601: "iso8601"
-        case .indian: "indian"
-        case .islamic: "islamic"
-        case .islamicCivil: "islamic_civil"
-        case .islamicTabular: "islamic_tabular"
-        case .islamicUmmAlQura: "islamic_umm_al_qura"
-        case .japanese: "japanese"
-        case .persian: "persian"
-        case .republicOfChina: "republic_of_china"
-        case .bangla: "bangla"
-        case .gujarati: "gujarati"
-        case .kannada: "kannada"
-        case .malayalam: "malayalam"
-        case .marathi: "marathi"
-        case .odia: "odia"
-        case .tamil: "tamil"
-        case .telugu: "telugu"
-        case .vikram: "vikram"
-        case .dangi: "dangi"
-        case .vietnamese: "vietnamese"
-        @unknown default: "unknown"
-        }
-    }
-
-    private static func colorSpaceModelString(_ model: CGColorSpaceModel) -> String {
-        switch model {
-        case .unknown: "unknown"
-        case .monochrome: "monochrome"
-        case .rgb: "rgb"
-        case .cmyk: "cmyk"
-        case .lab: "lab"
-        case .deviceN: "device_n"
-        case .indexed: "indexed"
-        case .pattern: "pattern"
-        case .XYZ: "xyz"
-        @unknown default: "unknown"
-        }
-    }
-
-    private static func calendarTypeString(_ type: EKCalendarType) -> String {
-        switch type {
-        case .local: "local"
-        case .calDAV: "cal_dav"
-        case .exchange: "exchange"
-        case .subscription: "subscription"
-        case .birthday: "birthday"
-        @unknown default: "unknown"
-        }
-    }
-
-    private static func sourceTypeString(_ type: EKSourceType) -> String {
-        switch type {
-        case .local: "local"
-        case .exchange: "exchange"
-        case .calDAV: "cal_dav"
-        case .mobileMe: "mobile_me"
-        case .subscribed: "subscribed"
-        case .birthdays: "birthdays"
-        @unknown default: "unknown"
-        }
-    }
-
-    private static func alarmProximityString(_ proximity: EKAlarmProximity) -> String {
-        switch proximity {
-        case .none: "none"
-        case .enter: "enter"
-        case .leave: "leave"
-        @unknown default: "unknown"
-        }
-    }
-
-    private static func alarmTypeString(_ type: EKAlarmType) -> String {
-        switch type {
-        case .display: "display"
-        case .audio: "audio"
-        case .procedure: "procedure"
-        case .email: "email"
-        @unknown default: "unknown"
-        }
-    }
-
-    private static func recurrenceFrequencyString(_ frequency: EKRecurrenceFrequency) -> String {
-        switch frequency {
-        case .daily: "daily"
-        case .weekly: "weekly"
-        case .monthly: "monthly"
-        case .yearly: "yearly"
-        @unknown default: "unknown"
-        }
-    }
-
-    private static func participantStatusString(_ status: EKParticipantStatus) -> String {
-        switch status {
-        case .unknown: "unknown"
-        case .pending: "pending"
-        case .accepted: "accepted"
-        case .declined: "declined"
-        case .tentative: "tentative"
-        case .delegated: "delegated"
-        case .completed: "completed"
-        case .inProcess: "in_process"
-        @unknown default: "unknown"
-        }
-    }
-
-    private static func participantRoleString(_ role: EKParticipantRole) -> String {
-        switch role {
-        case .unknown: "unknown"
-        case .required: "required"
-        case .optional: "optional"
-        case .chair: "chair"
-        case .nonParticipant: "non_participant"
-        @unknown default: "unknown"
-        }
-    }
-
-    private static func participantTypeString(_ type: EKParticipantType) -> String {
-        switch type {
-        case .unknown: "unknown"
-        case .person: "person"
-        case .room: "room"
-        case .resource: "resource"
-        case .group: "group"
-        @unknown default: "unknown"
-        }
     }
 }

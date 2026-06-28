@@ -43,6 +43,7 @@
 		B66E1BBBCDCB37A806C439A6 /* Arm64OnlyBuildConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EBE8594105150B6E2239FFF /* Arm64OnlyBuildConfigurationTests.swift */; };
 		B7C032A7A55F0B43103E2D11 /* EventKitProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2B9116F294A471D608AE114 /* EventKitProvider.swift */; };
 		BA971967C55DE01A0123591B /* SettingsWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C453F98EBE5CA0E0631FE443 /* SettingsWindowView.swift */; };
+		BE9B9023B523C56F5D03387C /* EventKitSerializationEnumStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE88F5FCA6B9B2EE73A19B25 /* EventKitSerializationEnumStrings.swift */; };
 		CE5FEA5F341DF203272C1953 /* StatusIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C0185B2328E52AB5EBDD1D /* StatusIndicator.swift */; };
 		D0627B3BB609AB3D217E0361 /* PermissionsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146F0FCF53C1EC00B261451 /* PermissionsSettingsView.swift */; };
 		D6C3FDC3CBF50531768A2F68 /* RemindersPermissionChecking.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92E78E13D38DCD36E0C4AAF /* RemindersPermissionChecking.swift */; };
@@ -100,6 +101,7 @@
 		B34332B87B622ABB41D06752 /* ServerServing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerServing.swift; sourceTree = "<group>"; };
 		BA6F7802E2EB5A93A94519D5 /* CapabilityCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapabilityCatalog.swift; sourceTree = "<group>"; };
 		BDFB66A9507777E0046175CD /* ServerRunState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerRunState.swift; sourceTree = "<group>"; };
+		BE88F5FCA6B9B2EE73A19B25 /* EventKitSerializationEnumStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitSerializationEnumStrings.swift; sourceTree = "<group>"; };
 		C453F98EBE5CA0E0631FE443 /* SettingsWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowView.swift; sourceTree = "<group>"; };
 		C723EF9225492B1A29DD1228 /* EventKitTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitTestSupport.swift; sourceTree = "<group>"; };
 		CF8C2D151839110223826CC7 /* AppleBridge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppleBridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -225,6 +227,7 @@
 			children = (
 				D2B9116F294A471D608AE114 /* EventKitProvider.swift */,
 				5CD184989F652AAD52E9C87E /* EventKitSerialization.swift */,
+				BE88F5FCA6B9B2EE73A19B25 /* EventKitSerializationEnumStrings.swift */,
 			);
 			path = EventKit;
 			sourceTree = "<group>";
@@ -355,6 +358,7 @@
 				F66991A94B9311BEADDAAAAA /* CapabilityCatalog.swift in Sources */,
 				B7C032A7A55F0B43103E2D11 /* EventKitProvider.swift in Sources */,
 				FF2FF22DF4DBCF348B3E9B14 /* EventKitSerialization.swift in Sources */,
+				BE9B9023B523C56F5D03387C /* EventKitSerializationEnumStrings.swift in Sources */,
 				0697F960B91CDBE3A38D4F06 /* KeychainService.swift in Sources */,
 				166364FE12D879C775551542 /* MCPSettingsView.swift in Sources */,
 				42863111892B7945435D4B75 /* MenuBarPopoverView.swift in Sources */,

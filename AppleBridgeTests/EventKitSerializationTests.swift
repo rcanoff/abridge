@@ -111,7 +111,7 @@ struct EventKitSerializationTests {
         if reminder.recurrenceRules == nil {
             #expect(object["recurrence_rules"] is NSNull)
         } else {
-            #expect(object["recurrence_rules"] as? [Any] != nil)
+            #expect(object["recurrence_rules"] is [Any])
         }
     }
 
@@ -209,7 +209,7 @@ struct EventKitSerializationTests {
         if reminder.dueDateComponents?.calendar == nil {
             #expect(dateComponents["calendar"] is NSNull)
         } else {
-            #expect(dateComponents["calendar"] as? [String: Any] != nil)
+            #expect(dateComponents["calendar"] is [String: Any])
         }
     }
 
