@@ -1,4 +1,3 @@
-import EventKit
 import Foundation
 import Observation
 
@@ -35,6 +34,7 @@ final class SettingsStore {
 
     private let serverStore: ServerStore
     private let permissionService: any RemindersPermissionChecking
+    private let eventsPermissionService: any EventsPermissionChecking
     private let launchAtLoginService: any LaunchAtLoginManaging
     private var didPerformLaunchRestore = false
     private var didPerformLaunchAtLoginReconcile = false
@@ -43,11 +43,13 @@ final class SettingsStore {
         appSettings: AppSettings,
         serverStore: ServerStore,
         permissionService: any RemindersPermissionChecking = RemindersPermissionService(),
+        eventsPermissionService: any EventsPermissionChecking = EventsPermissionService(),
         launchAtLoginService: any LaunchAtLoginManaging = SMAppLaunchAtLoginService()
     ) {
         self.appSettings = appSettings
         self.serverStore = serverStore
         self.permissionService = permissionService
+        self.eventsPermissionService = eventsPermissionService
         self.launchAtLoginService = launchAtLoginService
     }
 
@@ -136,12 +138,8 @@ final class SettingsStore {
     private var serverEnabledCapabilities: [String] {
         appSettings.serverEnabledMCPCapabilityIDs(
             remindersAuthorized: permissionService.currentStatus().grantsReadAccess,
-            eventsAuthorized: Self.eventsReadAuthorized
+            eventsAuthorized: eventsPermissionService.grantsReadAccess()
         )
-    }
-
-    private static var eventsReadAuthorized: Bool {
-        EKEventStore.authorizationStatus(for: .event) == .fullAccess
     }
 
     private func tokenResetNoticeMessage(mcpEnabled: Bool, wasRunning: Bool) -> String {
