@@ -498,6 +498,33 @@ struct SettingsStoreTests {
 
     @Test
     @MainActor
+    func launchReconcileRunsBeforeMCPRestore() async throws {
+        let suiteName = "SettingsStoreTests.launchOrdering"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.launchAtLogin = true
+        appSettings.mcpEnabled = true
+
+        let launchAtLoginMock = MockLaunchAtLoginService()
+        launchAtLoginMock.isRegistered = false
+        let mock = MockServerService()
+        let serverStore = ServerStore(serverService: mock)
+        let settingsStore = SettingsStore(
+            appSettings: appSettings,
+            serverStore: serverStore,
+            launchAtLoginService: launchAtLoginMock
+        )
+
+        await settingsStore.performLaunchAtLoginReconcileIfNeeded()
+        await settingsStore.performLaunchRestoreIfNeeded()
+
+        #expect(!appSettings.launchAtLogin)
+        #expect(await mock.startCallCount == 1)
+    }
+
+    @Test
+    @MainActor
     func launchAtLoginOnDoesNotForceMCPStartWhenDisabled() async throws {
         let suiteName = "SettingsStoreTests.launchAtLoginMCPIndependent"
         let defaults = try #require(UserDefaults(suiteName: suiteName))

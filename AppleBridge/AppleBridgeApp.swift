@@ -36,6 +36,7 @@ struct AppleBridgeApp: App {
         // Restore persisted MCP server at process launch. MenuBarExtra content is not
         // mounted until the popover opens, so this must not live in view onAppear.
         Task(priority: .userInitiated) { @MainActor in
+            await settingsStore.performLaunchAtLoginReconcileIfNeeded()
             await settingsStore.performLaunchRestoreIfNeeded()
             await serverStore.refreshBearerToken()
             await serverStore.refreshStatus()
