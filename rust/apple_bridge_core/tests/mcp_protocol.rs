@@ -282,7 +282,6 @@ fn mcp_tools_list_includes_create_reminder_when_create_capability_enabled() {
 
   assert_eq!(status, 200);
   assert!(resp.contains("eventkit.reminders.create_reminder"));
-  assert!(resp.contains("eventkit.reminders.create_list"));
   assert!(!resp.contains("eventkit.reminders.list_reminders"));
 }
 
@@ -309,30 +308,6 @@ fn tools_call_dispatches_create_reminder() {
   assert!(recorded.payload_json.contains("list-1"));
   assert!(recorded.payload_json.contains("Buy milk"));
   assert!(recorded.payload_json.contains("notes"));
-}
-
-#[test]
-fn tools_call_dispatches_create_list() {
-  let port = allocate_test_port();
-  let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":17,"method":"tools/call","params":{"name":"eventkit.reminders.create_list","arguments":{"title":"Shopping","source_identifier":"src-local"}}}"#;
-
-  let handle = create_server(
-    config_on_port(port, vec!["eventkit.reminders.create".into()]),
-    Box::new(mock.clone_for_server()),
-  )
-  .expect("create_server");
-  start_server(handle.clone()).expect("start");
-  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
-  stop_server(handle).expect("stop");
-
-  assert_eq!(status, 200);
-  assert!(resp.contains(r#""isError":false"#));
-  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
-  assert_eq!(recorded.provider, "eventkit");
-  assert_eq!(recorded.operation, "create_list");
-  assert!(recorded.payload_json.contains("Shopping"));
-  assert!(recorded.payload_json.contains("source_identifier"));
 }
 
 #[test]

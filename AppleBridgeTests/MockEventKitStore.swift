@@ -6,8 +6,6 @@ import Foundation
 final class MockEventKitStore: EventKitStoreing {
     private let eventStore = EKEventStore()
     private var nextReminderID = 1
-    private var nextCalendarID = 1
-    private lazy var stubReminderSource: EKSource = Self.makeStubReminderSource()
 
     enum PredicateKind: Equatable {
         case all(calendars: [EKCalendar])
@@ -132,41 +130,6 @@ final class MockEventKitStore: EventKitStoreing {
         }
     }
 
-    func sources() -> [EKSource] {
-        let liveSources = eventStore.sources
-        return liveSources.isEmpty ? [stubReminderSource] : liveSources
-    }
-
-    func defaultReminderSource() -> EKSource? {
-        eventStore.defaultCalendarForNewReminders()?.source
-            ?? eventStore.sources.first
-            ?? stubReminderSource
-    }
-
-    func makeReminderCalendar() -> EKCalendar {
-        EKCalendar(for: .reminder, eventStore: eventStore)
-    }
-
-    func saveCalendar(_ calendar: EKCalendar, commit: Bool) throws {
-        guard commit else { return }
-
-        let existingID = calendar.calendarIdentifier
-        if existingID.isEmpty {
-            calendar.setValue("mock-cal-\(nextCalendarID)", forKey: "calendarIdentifier")
-            nextCalendarID += 1
-        }
-
-        if calendar.source == nil {
-            calendar.source = defaultReminderSource()
-        }
-
-        if let index = calendars.firstIndex(where: { $0.calendarIdentifier == calendar.calendarIdentifier }) {
-            calendars[index] = calendar
-        } else {
-            calendars.append(calendar)
-        }
-    }
-
     func makeTestCalendar(calendarIdentifier: String, title: String = "Test List") -> EKCalendar {
         EventKitTestSupport.makeCalendar(
             eventStore: eventStore,
@@ -210,12 +173,5 @@ final class MockEventKitStore: EventKitStoreing {
             return nil
         }
         return Calendar.current.date(from: components)
-    }
-
-    private static func makeStubReminderSource() -> EKSource {
-        let source = EKSource()
-        source.setValue("mock-source-local", forKey: "sourceIdentifier")
-        source.setValue("Local", forKey: "title")
-        return source
     }
 }

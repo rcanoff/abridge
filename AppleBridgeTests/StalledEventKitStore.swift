@@ -65,28 +65,4 @@ final class StalledEventKitStore: EventKitStoreing {
         _ = reminder
         _ = commit
     }
-
-    func sources() -> [EKSource] {
-        [Self.stubReminderSource]
-    }
-
-    func defaultReminderSource() -> EKSource? {
-        Self.stubReminderSource
-    }
-
-    func makeReminderCalendar() -> EKCalendar {
-        EKCalendar(for: .reminder, eventStore: EKEventStore())
-    }
-
-    func saveCalendar(_ calendar: EKCalendar, commit: Bool) throws {
-        _ = calendar
-        _ = commit
-    }
-
-    private static let stubReminderSource: EKSource = {
-        let source = EKSource()
-        source.setValue("mock-source-local", forKey: "sourceIdentifier")
-        source.setValue("Local", forKey: "title")
-        return source
-    }()
 }
