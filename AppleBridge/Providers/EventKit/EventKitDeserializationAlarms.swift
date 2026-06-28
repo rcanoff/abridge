@@ -49,10 +49,8 @@ extension EventKitDeserialization {
     private static func structuredLocation(from dictionary: [String: Any]) throws -> EKStructuredLocation {
         let title = try optionalString(dictionary["title"]) ?? ""
         let location = EKStructuredLocation(title: title)
-        if let radius = dictionary["radius"] as? Double {
-            location.radius = radius
-        } else if let radius = dictionary["radius"] as? NSNumber {
-            location.radius = radius.doubleValue
+        if dictionary.keys.contains("radius") {
+            location.radius = try radius(from: dictionary["radius"])
         }
 
         if let geoValue = dictionary["geo_location"] {
@@ -70,6 +68,28 @@ extension EventKitDeserialization {
         }
 
         return location
+    }
+
+    private static func radius(from value: Any?) throws -> Double {
+        guard let value else {
+            throw EventKitProviderError.invalidArguments("radius must be a number or null")
+        }
+        if value is NSNull {
+            throw EventKitProviderError.invalidArguments("radius must be a number or null")
+        }
+        if value is Bool {
+            throw EventKitProviderError.invalidArguments("radius must be a number")
+        }
+        if let radius = value as? Double {
+            return radius
+        }
+        if let number = value as? NSNumber {
+            if CFGetTypeID(number) == CFBooleanGetTypeID() {
+                throw EventKitProviderError.invalidArguments("radius must be a number")
+            }
+            return number.doubleValue
+        }
+        throw EventKitProviderError.invalidArguments("radius must be a number")
     }
 
     private static func relativeOffset(from dictionary: [String: Any]) throws -> Double {

@@ -289,6 +289,69 @@ struct EventKitProviderCreateTests {
 
     @Test
     @MainActor
+    func createReminderRejectsInvalidStructuredLocationRadius() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-create-14")]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_reminder",
+            payloadJson: """
+            {"calendar_identifier":"list-create-14","title":"Radius test",\
+            "alarms":[{"structured_location":{"title":"Home","radius":true}}]}
+            """
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("radius must be a number") == true)
+    }
+
+    @Test
+    @MainActor
+    func createReminderRejectsNonPositiveRecurrenceOccurrenceCount() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-create-15")]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_reminder",
+            payloadJson: """
+            {"calendar_identifier":"list-create-15","title":"Recurrence end",\
+            "recurrence_rules":[{"frequency":"daily","recurrence_end":{"occurrence_count":0}}]}
+            """
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("occurrence_count must be greater than 0") == true)
+    }
+
+    @Test
+    @MainActor
+    func createReminderRejectsConflictingRecurrenceEndFields() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-create-16")]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_reminder",
+            payloadJson: """
+            {"calendar_identifier":"list-create-16","title":"Recurrence conflict",\
+            "recurrence_rules":[{"frequency":"daily","recurrence_end":{"end_date":"2026-12-31T00:00:00Z","occurrence_count":5}}]}
+            """
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("either end_date or occurrence_count") == true)
+    }
+
+    @Test
+    @MainActor
     func createReminderRejectsInvalidPriority() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess

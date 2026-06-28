@@ -51,11 +51,29 @@ extension EventKitDeserialization {
             throw EventKitProviderError.invalidArguments("recurrence_end must be an object or null")
         }
 
-        if let endDate = try optionalISO8601Date(dictionary["end_date"]) {
+        let hasEndDate = dictionary.keys.contains("end_date") && !(dictionary["end_date"] is NSNull)
+        let hasOccurrenceCount = dictionary.keys.contains("occurrence_count") && !(dictionary["occurrence_count"] is NSNull)
+
+        if hasEndDate, hasOccurrenceCount {
+            throw EventKitProviderError.invalidArguments(
+                "recurrence_end must provide either end_date or occurrence_count, not both"
+            )
+        }
+
+        if hasEndDate {
+            guard let endDate = try optionalISO8601Date(dictionary["end_date"]) else {
+                throw EventKitProviderError.invalidArguments("recurrence_end end_date must be a valid ISO8601 date-time")
+            }
             return EKRecurrenceEnd(end: endDate)
         }
 
-        if let occurrenceCount = try optionalInt(dictionary["occurrence_count"]), occurrenceCount > 0 {
+        if hasOccurrenceCount {
+            guard let occurrenceCount = try optionalInt(dictionary["occurrence_count"]) else {
+                throw EventKitProviderError.invalidArguments("recurrence_end occurrence_count must be an integer")
+            }
+            guard occurrenceCount > 0 else {
+                throw EventKitProviderError.invalidArguments("recurrence_end occurrence_count must be greater than 0")
+            }
             return EKRecurrenceEnd(occurrenceCount: occurrenceCount)
         }
 
