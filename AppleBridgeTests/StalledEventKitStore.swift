@@ -6,15 +6,25 @@ import Foundation
 @MainActor
 final class StalledEventKitStore: EventKitStoreing {
     var authorizationStatus: EKAuthorizationStatus = .fullAccess
+    var eventAuthorizationStatusValue: EKAuthorizationStatus = .fullAccess
     var calendars: [EKCalendar] = []
+    var eventCalendarsList: [EKCalendar] = []
     var fetchTimeout: TimeInterval = 0.05
 
     func reminderAuthorizationStatus() -> EKAuthorizationStatus {
         authorizationStatus
     }
 
+    func eventAuthorizationStatus() -> EKAuthorizationStatus {
+        eventAuthorizationStatusValue
+    }
+
     func reminderCalendars() -> [EKCalendar] {
         calendars
+    }
+
+    func eventCalendars() -> [EKCalendar] {
+        eventCalendarsList
     }
 
     func predicateForReminders(in calendars: [EKCalendar]) -> NSPredicate {

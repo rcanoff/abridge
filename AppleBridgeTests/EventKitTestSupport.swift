@@ -51,4 +51,17 @@ enum EventKitTestSupport {
             ?? eventStore.sources.first
         return calendar
     }
+
+    static func makeEventCalendar(
+        eventStore: EKEventStore = EKEventStore(),
+        calendarIdentifier: String,
+        title: String = "Test Calendar"
+    ) -> EKCalendar {
+        let calendar = EKCalendar(for: .event, eventStore: eventStore)
+        calendar.setValue(calendarIdentifier, forKey: "calendarIdentifier")
+        calendar.title = title
+        calendar.source = eventStore.defaultCalendarForNewEvents?.source
+            ?? eventStore.sources.first
+        return calendar
+    }
 }
