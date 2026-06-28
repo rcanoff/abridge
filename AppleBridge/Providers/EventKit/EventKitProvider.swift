@@ -29,6 +29,7 @@ protocol EventKitStoreing {
     func fetchReminder(withIdentifier id: String) throws -> EKReminder?
     func makeReminder() -> EKReminder
     func saveReminder(_ reminder: EKReminder, commit: Bool) throws
+    func removeReminder(_ reminder: EKReminder, commit: Bool) throws
     func sources() -> [EKSource]
     func defaultReminderSource() -> EKSource?
     func makeReminderCalendar() -> EKCalendar
@@ -108,6 +109,10 @@ final class LiveEventKitStore: EventKitStoreing {
         try eventStore.save(reminder, commit: commit)
     }
 
+    func removeReminder(_ reminder: EKReminder, commit: Bool) throws {
+        try eventStore.remove(reminder, commit: commit)
+    }
+
     func sources() -> [EKSource] {
         eventStore.sources
     }
@@ -184,8 +189,8 @@ final class EventKitProvider {
             listLists()
         case "list_reminders", "get_reminder", "search_reminders":
             handleReadOperation(operation: operation, payloadJson: payloadJson)
-        case "create_reminder", "create_list", "update_reminder", "move_reminder", "complete_reminder",
-             "uncomplete_reminder", "set_reminder_alarms", "set_reminder_recurrence":
+        case "create_reminder", "create_list", "update_reminder", "move_reminder", "delete_reminder",
+             "complete_reminder", "uncomplete_reminder", "set_reminder_alarms", "set_reminder_recurrence":
             handleMutationOperation(operation: operation, payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
@@ -215,6 +220,8 @@ final class EventKitProvider {
             updateReminder(payloadJson: payloadJson)
         case "move_reminder":
             moveReminder(payloadJson: payloadJson)
+        case "delete_reminder":
+            deleteReminder(payloadJson: payloadJson)
         case "complete_reminder":
             completeReminder(payloadJson: payloadJson)
         case "uncomplete_reminder":

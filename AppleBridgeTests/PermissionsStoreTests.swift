@@ -42,9 +42,22 @@ struct PermissionsStoreIntegrationTests {
         defaults.removePersistentDomain(forName: suiteName)
 
         let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
-        store.setChecked(true, for: "delete")
+        store.setChecked(true, for: "not-in-catalog")
 
         #expect(store.requiresAppleRemindersAccess == false)
+    }
+
+    @Test
+    @MainActor
+    func requiresAppleRemindersAccessWhenDeleteCapabilityEnabled() throws {
+        let suiteName = "PermissionsStoreTests.deleteShipped"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+        store.setChecked(true, for: "delete")
+
+        #expect(store.requiresAppleRemindersAccess == true)
     }
 
     @Test
