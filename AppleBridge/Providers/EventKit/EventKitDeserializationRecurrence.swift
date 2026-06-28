@@ -96,6 +96,9 @@ extension EventKitDeserialization {
                 if CFGetTypeID(number) == CFBooleanGetTypeID() {
                     throw EventKitProviderError.invalidArguments("Expected integer in number array")
                 }
+                guard EventKitDeserialization.isIntegralNumber(number) else {
+                    throw EventKitProviderError.invalidArguments("Expected integer in number array")
+                }
                 return number
             }
             throw EventKitProviderError.invalidArguments("Expected integer in number array")

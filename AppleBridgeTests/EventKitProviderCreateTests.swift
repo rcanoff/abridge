@@ -213,6 +213,44 @@ struct EventKitProviderCreateTests {
 
     @Test
     @MainActor
+    func createReminderRejectsFractionalPriority() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-create-10")]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_reminder",
+            payloadJson: #"{"calendar_identifier":"list-create-10","title":"Frac priority","priority":5.7}"#
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+    }
+
+    @Test
+    @MainActor
+    func createReminderRejectsFractionalRecurrenceNumberArray() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-create-11")]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_reminder",
+            payloadJson: """
+            {"calendar_identifier":"list-create-11","title":"Frac recurrence",\
+            "recurrence_rules":[{"frequency":"daily","days_of_the_month":[5.7]}]}
+            """
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("Expected integer in number array") == true)
+    }
+
+    @Test
+    @MainActor
     func createReminderRejectsInvalidPriority() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess

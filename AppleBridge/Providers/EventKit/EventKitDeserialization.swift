@@ -21,6 +21,9 @@ enum EventKitDeserialization {
             if CFGetTypeID(number) == CFBooleanGetTypeID() {
                 throw EventKitProviderError.invalidArguments("Expected integer or null")
             }
+            guard isIntegralNumber(number) else {
+                throw EventKitProviderError.invalidArguments("Expected integer or null")
+            }
             return number.intValue
         }
         throw EventKitProviderError.invalidArguments("Expected integer or null")
@@ -129,6 +132,11 @@ enum EventKitDeserialization {
             calendar.minimumDaysInFirstWeek = minimumDays
         }
         return calendar
+    }
+
+    static func isIntegralNumber(_ number: NSNumber) -> Bool {
+        let double = number.doubleValue
+        return double.rounded() == double
     }
 
     static func parseISO8601Date(_ value: String) -> Date? {
