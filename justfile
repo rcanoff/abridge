@@ -1,4 +1,5 @@
 # Apple Bridge — task runner (see docs/conventions.md)
+# CI billing check trigger (revert after verification)
 
 review *FLAGS='':
     @local/review/bin/review.sh {{FLAGS}}
