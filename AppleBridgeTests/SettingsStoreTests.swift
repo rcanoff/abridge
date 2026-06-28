@@ -128,7 +128,28 @@ struct SettingsStoreTests {
 
         await settingsStore.resetBearerToken()
 
-        #expect(settingsStore.tokenResetNotice == "Server will restart with a new token. Update your MCP client.")
+        #expect(settingsStore.tokenResetNotice == "Bearer token reset. Update your MCP client with the new token.")
+        #expect(serverStore.lastError == nil)
+    }
+
+    @Test
+    @MainActor
+    func resetBearerTokenShowsRestartNoticeWhenServerWasRunning() async throws {
+        let suiteName = "SettingsStoreTests.resetBearerTokenRestartNotice"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = true
+
+        let mock = MockServerService()
+        await mock.setRefreshResult(.running)
+        let serverStore = ServerStore(serverService: mock)
+        await serverStore.startServer(port: 3020, enabledCapabilities: [])
+        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+
+        await settingsStore.resetBearerToken()
+
+        #expect(settingsStore.tokenResetNotice == "Server restarted with a new token. Update your MCP client.")
         #expect(serverStore.lastError == nil)
     }
 
