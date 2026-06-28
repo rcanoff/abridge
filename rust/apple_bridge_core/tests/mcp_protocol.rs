@@ -266,6 +266,51 @@ fn mcp_tools_list_includes_get_reminder() {
 }
 
 #[test]
+fn mcp_tools_list_includes_create_reminder_when_create_capability_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":15,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.reminders.create".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("eventkit.reminders.create_reminder"));
+  assert!(!resp.contains("eventkit.reminders.list_reminders"));
+}
+
+#[test]
+fn tools_call_dispatches_create_reminder() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"eventkit.reminders.create_reminder","arguments":{"calendar_identifier":"list-1","title":"Buy milk","notes":"2%","priority":5}}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.reminders.create".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "eventkit");
+  assert_eq!(recorded.operation, "create_reminder");
+  assert!(recorded.payload_json.contains("list-1"));
+  assert!(recorded.payload_json.contains("Buy milk"));
+  assert!(recorded.payload_json.contains("notes"));
+}
+
+#[test]
 fn tools_call_unknown_tool() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();

@@ -4,6 +4,9 @@ import Foundation
 
 @MainActor
 final class MockEventKitStore: EventKitStoreing {
+    private let eventStore = EKEventStore()
+    private var nextReminderID = 1
+
     enum PredicateKind: Equatable {
         case all(calendars: [EKCalendar])
         case incomplete(start: Date?, end: Date?, calendars: [EKCalendar])
@@ -105,6 +108,34 @@ final class MockEventKitStore: EventKitStoreing {
 
     func fetchReminder(withIdentifier id: String) throws -> EKReminder? {
         reminders.first { $0.calendarItemIdentifier == id }
+    }
+
+    func makeReminder() -> EKReminder {
+        EKReminder(eventStore: eventStore)
+    }
+
+    func saveReminder(_ reminder: EKReminder, commit: Bool) throws {
+        guard commit else { return }
+
+        let existingID = reminder.calendarItemIdentifier
+        if existingID.isEmpty {
+            reminder.setValue("mock-rem-\(nextReminderID)", forKey: "calendarItemIdentifier")
+            nextReminderID += 1
+        }
+
+        if let index = reminders.firstIndex(where: { $0.calendarItemIdentifier == reminder.calendarItemIdentifier }) {
+            reminders[index] = reminder
+        } else {
+            reminders.append(reminder)
+        }
+    }
+
+    func makeTestCalendar(calendarIdentifier: String, title: String = "Test List") -> EKCalendar {
+        EventKitTestSupport.makeCalendar(
+            eventStore: eventStore,
+            calendarIdentifier: calendarIdentifier,
+            title: title
+        )
     }
 
     private func calendarIdentifiers(for kind: PredicateKind) -> Set<String> {
