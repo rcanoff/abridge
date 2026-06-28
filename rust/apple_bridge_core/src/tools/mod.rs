@@ -11,7 +11,6 @@ pub const TOOL_CREATE_LIST: &str = "eventkit.reminders.create_list";
 pub const TOOL_UPDATE_REMINDER: &str = "eventkit.reminders.update_reminder";
 pub const TOOL_MOVE_REMINDER: &str = "eventkit.reminders.move_reminder";
 pub const TOOL_DELETE_REMINDER: &str = "eventkit.reminders.delete_reminder";
-pub const TOOL_DELETE_LIST: &str = "eventkit.reminders.delete_list";
 pub const TOOL_COMPLETE_REMINDER: &str = "eventkit.reminders.complete_reminder";
 pub const TOOL_UNCOMPLETE_REMINDER: &str = "eventkit.reminders.uncomplete_reminder";
 pub const TOOL_SET_REMINDER_ALARMS: &str = "eventkit.reminders.set_reminder_alarms";
@@ -26,7 +25,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 14] = [
+const ALL_TOOLS: [ToolDefinition; 13] = [
   ToolDefinition {
     name: TOOL_LIST_LISTS,
     capability: capabilities::EVENTKIT_REMINDERS_READ,
@@ -89,13 +88,6 @@ const ALL_TOOLS: [ToolDefinition; 14] = [
     provider: "eventkit",
     operation: "delete_reminder",
     description: "Delete a reminder by reminder_id",
-  },
-  ToolDefinition {
-    name: TOOL_DELETE_LIST,
-    capability: capabilities::EVENTKIT_REMINDERS_DELETE,
-    provider: "eventkit",
-    operation: "delete_list",
-    description: "Delete a reminder list by calendar_identifier",
   },
   ToolDefinition {
     name: TOOL_COMPLETE_REMINDER,
@@ -236,13 +228,6 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["reminder_id"]
     }),
-    TOOL_DELETE_LIST => serde_json::json!({
-      "type": "object",
-      "properties": {
-        "calendar_identifier": { "type": "string" }
-      },
-      "required": ["calendar_identifier"]
-    }),
     TOOL_COMPLETE_REMINDER | TOOL_UNCOMPLETE_REMINDER => serde_json::json!({
       "type": "object",
       "properties": {
@@ -273,10 +258,9 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
 #[cfg(test)]
 mod tests {
   use super::{
-    TOOL_COMPLETE_REMINDER, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER,
-    TOOL_GET_REMINDER, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_REMINDER, TOOL_SEARCH_REMINDERS,
-    TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_UNCOMPLETE_REMINDER, TOOL_UPDATE_REMINDER,
-    tools_for_capabilities,
+    TOOL_COMPLETE_REMINDER, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DELETE_REMINDER, TOOL_GET_REMINDER,
+    TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_REMINDER, TOOL_SEARCH_REMINDERS, TOOL_SET_REMINDER_ALARMS,
+    TOOL_SET_REMINDER_RECURRENCE, TOOL_UNCOMPLETE_REMINDER, TOOL_UPDATE_REMINDER, tools_for_capabilities,
   };
 
   #[test]
@@ -313,10 +297,10 @@ mod tests {
   }
 
   #[test]
-  fn lists_delete_tools_when_delete_capability_enabled() {
+  fn lists_delete_tool_when_delete_capability_enabled() {
     let tools = tools_for_capabilities(&["eventkit.reminders.delete".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_DELETE_REMINDER, TOOL_DELETE_LIST]);
+    assert_eq!(names, vec![TOOL_DELETE_REMINDER]);
   }
 
   #[test]
