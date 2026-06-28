@@ -39,6 +39,8 @@ protocol EventKitStoreing {
     func makeEventCalendar() -> EKCalendar
     func saveCalendar(_ calendar: EKCalendar, commit: Bool) throws
     func removeCalendar(_ calendar: EKCalendar, commit: Bool) throws
+    func predicateForEvents(withStart startDate: Date, end endDate: Date, calendars: [EKCalendar]) -> NSPredicate
+    func fetchEvents(matching predicate: NSPredicate) throws -> [EKEvent]
 }
 
 @MainActor
@@ -153,6 +155,14 @@ final class LiveEventKitStore: EventKitStoreing {
     func removeCalendar(_ calendar: EKCalendar, commit: Bool) throws {
         try eventStore.removeCalendar(calendar, commit: commit)
     }
+
+    func predicateForEvents(withStart startDate: Date, end endDate: Date, calendars: [EKCalendar]) -> NSPredicate {
+        eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: calendars)
+    }
+
+    func fetchEvents(matching predicate: NSPredicate) throws -> [EKEvent] {
+        eventStore.events(matching: predicate)
+    }
 }
 
 @MainActor
@@ -214,26 +224,13 @@ final class EventKitProvider {
             listLists()
         case "list_calendars":
             listCalendars()
-        case "list_reminders", "get_reminder", "search_reminders":
+        case "list_reminders", "get_reminder", "search_reminders", "list_events":
             handleReadOperation(operation: operation, payloadJson: payloadJson)
         case "create_reminder", "create_list", "create_calendar", "update_reminder", "update_calendar", "move_reminder",
              "delete_reminder",
              "delete_list", "delete_calendar", "complete_reminder", "uncomplete_reminder", "set_reminder_alarms",
              "set_reminder_recurrence":
             handleMutationOperation(operation: operation, payloadJson: payloadJson)
-        default:
-            errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
-        }
-    }
-
-    private func handleReadOperation(operation: String, payloadJson: String) -> ProviderResponse {
-        switch operation {
-        case "list_reminders":
-            listReminders(payloadJson: payloadJson)
-        case "get_reminder":
-            getReminder(payloadJson: payloadJson)
-        case "search_reminders":
-            searchReminders(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }
@@ -253,7 +250,7 @@ final class EventKitProvider {
         }
     }
 
-    private func listReminders(payloadJson: String) -> ProviderResponse {
+    func listReminders(payloadJson: String) -> ProviderResponse {
         guard isAuthorized else {
             return errorResponse(code: "permission_denied", message: "Reminders access not granted")
         }
@@ -272,7 +269,7 @@ final class EventKitProvider {
         }
     }
 
-    private func getReminder(payloadJson: String) -> ProviderResponse {
+    func getReminder(payloadJson: String) -> ProviderResponse {
         guard isAuthorized else {
             return errorResponse(code: "permission_denied", message: "Reminders access not granted")
         }

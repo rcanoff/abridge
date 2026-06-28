@@ -19,8 +19,16 @@ final class MockEventKitStore: EventKitStoreing {
     var eventAuthorizationStatusValue: EKAuthorizationStatus = .fullAccess
     var calendars: [EKCalendar] = []
     var eventCalendarsList: [EKCalendar] = []
+    var events: [EKEvent] = []
     var reminders: [EKReminder] = []
     private(set) var lastPredicateKind: PredicateKind?
+    struct EventQuery: Equatable {
+        let start: Date
+        let end: Date
+        let calendars: [EKCalendar]
+    }
+
+    private(set) var lastEventQuery: EventQuery?
 
     func reminderAuthorizationStatus() -> EKAuthorizationStatus {
         authorizationStatus
@@ -195,6 +203,26 @@ final class MockEventKitStore: EventKitStoreing {
             eventCalendarsList = storage
         } else {
             calendars = storage
+        }
+    }
+
+    func predicateForEvents(withStart startDate: Date, end endDate: Date, calendars: [EKCalendar]) -> NSPredicate {
+        lastEventQuery = EventQuery(start: startDate, end: endDate, calendars: calendars)
+        return NSPredicate(value: true)
+    }
+
+    func fetchEvents(matching predicate: NSPredicate) throws -> [EKEvent] {
+        _ = predicate
+        guard let lastEventQuery else {
+            return events
+        }
+
+        let calendarIDs = Set(lastEventQuery.calendars.map(\.calendarIdentifier))
+        return events.filter { event in
+            guard let calendarID = event.calendar?.calendarIdentifier, calendarIDs.contains(calendarID) else {
+                return false
+            }
+            return event.startDate >= lastEventQuery.start && event.endDate <= lastEventQuery.end
         }
     }
 
