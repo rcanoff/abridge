@@ -9,14 +9,14 @@ struct APIKeyFormattingTests {
     )
 
     @Test
-    func generateAPIKeyUsesLivePrefix() {
-        let key = APIKeyFormatting.generateAPIKey()
+    func generateAPIKeyUsesLivePrefix() throws {
+        let key = try APIKeyFormatting.generateAPIKey()
         #expect(key.hasPrefix(APIKeyFormatting.livePrefix))
     }
 
     @Test
-    func generateAPIKeyHas43CharUnpaddedBase64URLSegment() {
-        let key = APIKeyFormatting.generateAPIKey()
+    func generateAPIKeyHas43CharUnpaddedBase64URLSegment() throws {
+        let key = try APIKeyFormatting.generateAPIKey()
         let segment = String(key.dropFirst(APIKeyFormatting.livePrefix.count))
 
         #expect(segment.count == 43)
@@ -27,8 +27,8 @@ struct APIKeyFormattingTests {
     }
 
     @Test
-    func generateAPIKeyProducesDistinctValues() {
-        let keys = (0 ..< 10).map { _ in APIKeyFormatting.generateAPIKey() }
+    func generateAPIKeyProducesDistinctValues() throws {
+        let keys = try (0 ..< 10).map { _ in try APIKeyFormatting.generateAPIKey() }
         #expect(Set(keys).count == keys.count)
     }
 
@@ -40,8 +40,8 @@ struct APIKeyFormattingTests {
     }
 
     @Test
-    func isLegacyKeyReturnsFalseWithLivePrefix() {
-        let key = APIKeyFormatting.generateAPIKey()
+    func isLegacyKeyReturnsFalseWithLivePrefix() throws {
+        let key = try APIKeyFormatting.generateAPIKey()
         #expect(!APIKeyFormatting.isLegacyKey(key))
     }
 

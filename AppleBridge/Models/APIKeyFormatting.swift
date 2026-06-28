@@ -6,10 +6,12 @@ enum APIKeyFormatting {
 
     private static let randomByteCount = 32
 
-    static func generateAPIKey() -> String {
+    static func generateAPIKey() throws -> String {
         var bytes = [UInt8](repeating: 0, count: randomByteCount)
         let status = SecRandomCopyBytes(kSecRandomDefault, randomByteCount, &bytes)
-        precondition(status == errSecSuccess, "SecRandomCopyBytes failed (status \(status))")
+        guard status == errSecSuccess else {
+            throw KeychainError(message: "failed to generate random bytes (status \(status))")
+        }
         return livePrefix + base64URLEncode(bytes)
     }
 

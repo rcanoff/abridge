@@ -16,7 +16,7 @@ final class MockBearerTokenStore: BearerTokenStoring, @unchecked Sendable {
         if let storedToken, !storedToken.isEmpty {
             return storedToken
         }
-        let token = Self.generateToken()
+        let token = try Self.generateToken()
         storedToken = token
         return token
     }
@@ -28,7 +28,7 @@ final class MockBearerTokenStore: BearerTokenStoring, @unchecked Sendable {
         return try loadOrCreateBearerToken()
     }
 
-    private static func generateToken() -> String {
-        APIKeyFormatting.generateAPIKey()
+    private static func generateToken() throws -> String {
+        try APIKeyFormatting.generateAPIKey()
     }
 }
