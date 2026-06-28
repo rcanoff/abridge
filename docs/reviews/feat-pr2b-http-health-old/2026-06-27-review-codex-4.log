@@ -1,0 +1,3399 @@
+OpenAI Codex v0.142.3
+--------
+workdir: /Users/rcanoff/Projects/apple-bridge
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: medium
+reasoning summaries: none
+session id: 019f0935-23be-7b41-8724-39f5f78c9b08
+--------
+user
+changes against 'main'
+exec
+/bin/zsh -lc 'cat /Users/rcanoff/.codex/plugins/cache/openai-curated/superpowers/3fdeeb49/skills/using-superpowers/SKILL.md' in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 0ms:
+---
+name: using-superpowers
+description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+---
+
+<SUBAGENT-STOP>
+If you were dispatched as a subagent to execute a specific task, skip this skill.
+</SUBAGENT-STOP>
+
+<EXTREMELY-IMPORTANT>
+If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
+
+IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+
+This is not negotiable. This is not optional. You cannot rationalize your way out of this.
+</EXTREMELY-IMPORTANT>
+
+## Instruction Priority
+
+Superpowers skills override default system prompt behavior, but **user instructions always take precedence**:
+
+1. **User's explicit instructions** (CLAUDE.md, GEMINI.md, AGENTS.md, direct requests) — highest priority
+2. **Superpowers skills** — override default system behavior where they conflict
+3. **Default system prompt** — lowest priority
+
+If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
+
+## How to Access Skills
+
+**In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
+
+**In Copilot CLI:** Use the `skill` tool. Skills are auto-discovered from installed plugins. The `skill` tool works the same as Claude Code's `Skill` tool.
+
+**In Gemini CLI:** Skills activate via the `activate_skill` tool. Gemini loads skill metadata at session start and activates the full content on demand.
+
+**In other environments:** Check your platform's documentation for how skills are loaded.
+
+## Platform Adaptation
+
+Skills use Claude Code tool names. Non-CC platforms: see `references/copilot-tools.md` (Copilot CLI), `references/codex-tools.md` (Codex) for tool equivalents. Gemini CLI users get the tool mapping loaded automatically via GEMINI.md.
+
+# Using Skills
+
+## The Rule
+
+**Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
+
+```dot
+digraph skill_flow {
+    "User message received" [shape=doublecircle];
+    "About to EnterPlanMode?" [shape=doublecircle];
+    "Already brainstormed?" [shape=diamond];
+    "Invoke brainstorming skill" [shape=box];
+    "Might any skill apply?" [shape=diamond];
+    "Invoke Skill tool" [shape=box];
+    "Announce: 'Using [skill] to [purpose]'" [shape=box];
+    "Has checklist?" [shape=diamond];
+    "Create TodoWrite todo per item" [shape=box];
+    "Follow skill exactly" [shape=box];
+    "Respond (including clarifications)" [shape=doublecircle];
+
+    "About to EnterPlanMode?" -> "Already brainstormed?";
+    "Already brainstormed?" -> "Invoke brainstorming skill" [label="no"];
+    "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
+    "Invoke brainstorming skill" -> "Might any skill apply?";
+
+    "User message received" -> "Might any skill apply?";
+    "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
+    "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
+    "Invoke Skill tool" -> "Announce: 'Using [skill] to [purpose]'";
+    "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
+    "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
+    "Has checklist?" -> "Follow skill exactly" [label="no"];
+    "Create TodoWrite todo per item" -> "Follow skill exactly";
+}
+```
+
+## Red Flags
+
+These thoughts mean STOP—you're rationalizing:
+
+| Thought | Reality |
+|---------|---------|
+| "This is just a simple question" | Questions are tasks. Check for skills. |
+| "I need more context first" | Skill check comes BEFORE clarifying questions. |
+| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
+| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
+| "Let me gather information first" | Skills tell you HOW to gather information. |
+| "This doesn't need a formal skill" | If a skill exists, use it. |
+| "I remember this skill" | Skills evolve. Read current version. |
+| "This doesn't count as a task" | Action = task. Check for skills. |
+| "The skill is overkill" | Simple things become complex. Use it. |
+| "I'll just do this one thing first" | Check BEFORE doing anything. |
+| "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
+| "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
+
+## Skill Priority
+
+When multiple skills could apply, use this order:
+
+1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
+2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
+
+"Let's build X" → brainstorming first, then implementation skills.
+"Fix this bug" → debugging first, then domain-specific skills.
+
+## Skill Types
+
+**Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
+
+**Flexible** (patterns): Adapt principles to context.
+
+The skill itself tells you which.
+
+## User Instructions
+
+Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+
+exec
+/bin/zsh -lc 'git diff --name-only 7f2eac04d25a4949a2797d3d4f5f8d0fa6c3345a' in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 0ms:
+AGENTS.md
+justfile
+rust/apple_bridge_core/src/error.rs
+rust/apple_bridge_core/src/lib.rs
+rust/apple_bridge_core/src/server.rs
+rust/apple_bridge_core/tests/error_display.rs
+rust/apple_bridge_core/tests/server_lifecycle.rs
+rust/apple_bridge_core/tests/support/mod.rs
+
+exec
+/bin/zsh -lc 'cat rust/AGENTS.md' in /Users/rcanoff/Projects/apple-bridge
+exec
+/bin/zsh -lc 'cat /Users/rcanoff/.agents/skills/rust-best-practices/SKILL.md' in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 0ms:
+---
+name: rust-best-practices
+description: >
+  Guide for writing idiomatic Rust code based on Apollo GraphQL's best practices handbook. Use this skill when:
+  (1) writing new Rust code or functions,
+  (2) reviewing or refactoring existing Rust code,
+  (3) deciding between borrowing vs cloning or ownership patterns,
+  (4) implementing error handling with Result types,
+  (5) optimizing Rust code for performance,
+  (6) writing tests or documentation for Rust projects.
+license: MIT
+compatibility: Rust 1.70+, Cargo
+metadata:
+  author: apollographql
+  version: "1.1.0"
+allowed-tools: Bash(cargo:*) Bash(rustc:*) Bash(rustfmt:*) Bash(clippy:*) Read Write Edit Glob Grep
+---
+
+# Rust Best Practices
+
+Apply these guidelines when writing or reviewing Rust code. Based on Apollo GraphQL's [Rust Best Practices Handbook](https://github.com/apollographql/rust-best-practices).
+
+## Best Practices Reference
+
+Before reviewing, familiarize yourself with Apollo's Rust best practices. Read ALL relevant chapters in the same turn in parallel. Reference these files when providing feedback:
+
+- [Chapter 1 - Coding Styles and Idioms](references/chapter_01.md): Borrowing vs cloning, Copy trait, Option/Result handling, iterators, comments
+- [Chapter 2 - Clippy and Linting](references/chapter_02.md): Clippy configuration, important lints, workspace lint setup
+- [Chapter 3 - Performance Mindset](references/chapter_03.md): Profiling, avoiding redundant clones, stack vs heap, zero-cost abstractions
+- [Chapter 4 - Error Handling](references/chapter_04.md): Result vs panic, thiserror vs anyhow, error hierarchies
+- [Chapter 5 - Automated Testing](references/chapter_05.md): Test naming, one assertion per test, snapshot testing
+- [Chapter 6 - Generics and Dispatch](references/chapter_06.md): Static vs dynamic dispatch, trait objects
+- [Chapter 7 - Type State Pattern](references/chapter_07.md): Compile-time state safety, when to use it
+- [Chapter 8 - Comments vs Documentation](references/chapter_08.md): When to comment, doc comments, rustdoc
+- [Chapter 9 - Understanding Pointers](references/chapter_09.md): Thread safety, Send/Sync, pointer types
+
+## Quick Reference
+
+### Borrowing & Ownership
+- Prefer `&T` over `.clone()` unless ownership transfer is required
+- Use `&str` over `String`, `&[T]` over `Vec<T>` in function parameters
+- Small `Copy` types (≤24 bytes) can be passed by value
+- Use `Cow<'_, T>` when ownership is ambiguous
+
+### Error Handling
+- Return `Result<T, E>` for fallible operations; avoid `panic!` in production
+- Never use `unwrap()`/`expect()` outside tests
+- Use `thiserror` for library errors, `anyhow` for binaries only
+- Prefer `?` operator over match chains for error propagation
+
+### Performance
+- Always benchmark with `--release` flag
+- Run `cargo clippy -- -D clippy::perf` for performance hints
+- Avoid cloning in loops; use `.iter()` instead of `.into_iter()` for Copy types
+- Prefer iterators over manual loops; avoid intermediate `.collect()` calls
+
+### Linting
+Run regularly: `cargo clippy --all-targets --all-features --locked -- -D warnings`
+
+Key lints to watch:
+- `redundant_clone` - unnecessary cloning
+- `large_enum_variant` - oversized variants (consider boxing)
+- `needless_collect` - premature collection
+
+Use `#[expect(clippy::lint)]` over `#[allow(...)]` with justification comment.
+
+### Testing
+- Name tests descriptively: `process_should_return_error_when_input_empty()`
+- One assertion per test when possible
+- Use doc tests (`///`) for public API examples
+- Consider `cargo insta` for snapshot testing generated output
+
+### Generics & Dispatch
+- Prefer generics (static dispatch) for performance-critical code
+- Use `dyn Trait` only when heterogeneous collections are needed
+- Box at API boundaries, not internally
+
+### Type State Pattern
+Encode valid states in the type system to catch invalid operations at compile time:
+```rust
+struct Connection<State> { /* ... */ _state: PhantomData<State> }
+struct Disconnected;
+struct Connected;
+
+impl Connection<Connected> {
+    fn send(&self, data: &[u8]) { /* only connected can send */ }
+}
+```
+
+### Documentation
+- `//` comments explain *why* (safety, workarounds, design rationale)
+- `///` doc comments explain *what* and *how* for public APIs
+- Every `TODO` needs a linked issue: `// TODO(#42): ...`
+- Enable `#![deny(missing_docs)]` for libraries
+
+ succeeded in 0ms:
+# AGENTS.md — rust/
+
+Scoped rules for `apple_bridge_core`. Root `AGENTS.md` still applies.
+
+**Applies once `rust/Cargo.toml` exists (PR 2+).** Until then, this file is preparatory — do not run rust `just` recipes on branches without a Rust workspace.
+
+## Required skills
+
+All Rust work in this directory requires **rust-best-practices** before writing or reviewing code.
+
+## Overrides (mandatory)
+
+These supersede **rust-best-practices** and generic Rust advice. `docs/conventions.md` is canonical when this file and the skill disagree.
+
+### Errors
+
+- Use **`thiserror` only** — do not add `anyhow` (this crate is a `staticlib` exposed via UniFFI, not a standalone binary).
+- Expose errors as **`CoreError`** with `#[derive(uniffi::Error)]`.
+- Return `Result<T, CoreError>` on all user-input and external-data paths.
+- Never `unwrap()` / `expect()` on UniFFI-reachable paths — panics abort the app.
+
+### UniFFI
+
+- Proc-macro mode only — no UDL files.
+- Re-export the public FFI surface from `lib.rs`.
+- `ProviderBridge: Send + Sync` via `#[uniffi::export(callback_interface)]`.
+- Follow `docs/conventions.md` for Record/Enum/Object attributes.
+- Treat `lib.rs` exports as a stable cross-language contract; prefer additive changes and review removals or signature changes as FFI/API breaks.
+- Keep the FFI surface small and explicit; do not expose Rust-internal abstractions or clever type machinery across UniFFI boundaries.
+- Prefer owned values at FFI edges and async/callback boundaries; do not rely on borrowed data surviving across Swift callbacks or spawned tasks.
+
+### Dependencies
+
+- Use only crates listed in `docs/conventions.md`.
+- Do not add `anyhow`, `cargo-insta`, or alternative HTTP/MCP crates without an architecture change.
+- Prefer narrow dependencies and stable crate boundaries over convenience crates that increase API or runtime surface area.
+- Do not introduce abstractions that assume `apple_bridge_core` is a standalone backend service; embedded HTTP remains host-app controlled.
+
+### Testing
+
+- `#[cfg(test)]` modules and `tests/` integration tests only — no snapshot testing (`insta`).
+- Primary test seam: **`MockProviderBridge`** implementing `ProviderBridge`.
+- Test names: short and descriptive (`rejects_empty_token`) — not long Apollo-style sentences.
+- Prefer seam-level tests for routing, auth, lifecycle, and callback behavior over end-to-end runtime coupling.
+- Add focused tests for boundary behavior: error translation, callback ordering, graceful shutdown, and task cancellation where applicable.
+- Run `TZ=UTC just test-rust` and `just lint-rust` before claiming done.
+
+### Patterns (optional, not required)
+
+- **Type state** — optional for `ServerHandle`; the architecture guide's explicit lifecycle state machine is sufficient.
+- **`#![deny(missing_docs)]`** — do not enable workspace-wide; document public UniFFI surface only when helpful.
+
+### Public API design
+
+- Favor explicit, stable public APIs over internal cleverness.
+- FFI-visible structs, enums, and method signatures should model durable concepts, not incidental implementation details.
+- Adding or changing FFI-visible fields, enum variants, error variants, or callback methods is an API review point, not a casual refactor.
+
+### Panic and callback safety
+
+- Any panic on a UniFFI-reachable path or callback-reachable path is a correctness bug; panics can abort the host app.
+- Convert recoverable boundary failures into typed `CoreError` variants instead of crashing.
+- Never hold locks while invoking Swift callbacks.
+- Be conservative with spawned tasks, shared handles, and trait objects: reason explicitly about `Send + Sync`, ownership transfer, and shutdown behavior.
+
+### Logging
+
+- `tracing` only — no `log` crate. Disable ANSI in FFI contexts.
+
+exec
+/bin/zsh -lc 'cat docs/conventions.md' in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 0ms:
+# Apple Bridge — Development Conventions
+
+Coding standards for this project: naming, libraries, formatting, error handling, concurrency, and testing.
+
+For product scope, see `docs/prd.md`. For architecture and bootstrap steps, see `docs/architecture-bootstrap-guide.md`.
+
+---
+
+## Toolchain
+
+| Tool | Version / setting |
+|------|-------------------|
+| macOS deployment target | 26.0+ |
+| Xcode | 26+ |
+| Swift | 6.0+ (`project.yml` sets `SWIFT_VERSION: "6.0"`), strict concurrency (`SWIFT_STRICT_CONCURRENCY: complete`) |
+| Rust edition | 2024 |
+| Rust MSRV | 1.85 |
+| Task runner | `just` |
+| Project generation | `xcodegen` (`project.yml`) |
+
+Rust targets: `aarch64-apple-darwin`, `x86_64-apple-darwin`.
+
+---
+
+## Approved libraries
+
+Pin these versions unless a PR explicitly upgrades them.
+
+### Rust (`apple_bridge_core`)
+
+| Crate | Version | Purpose |
+|-------|---------|---------|
+| `uniffi` | 0.31 | Swift ↔ Rust FFI (proc-macro mode only; no UDL) |
+| `thiserror` | 2 | Typed error enums |
+| `serde` | 1 | Serialization |
+| `serde_json` | 1 | JSON encode/decode |
+| `tokio` | 1 | Async runtime (`rt-multi-thread`, `macros`, `sync`, `net`) |
+| `axum` | 0.8 | HTTP server |
+| `http` | 1 | HTTP types |
+| `tracing` | 0.1 | Structured logging |
+| `tracing-subscriber` | 0.3 | Log filtering (`env-filter`) |
+
+Release profile: `lto = true`, `codegen-units = 1`, `opt-level = "z"`, `strip = true`.
+
+Do not add alternative HTTP or MCP transport crates without an architecture change. MCP is served over the embedded axum server defined in the architecture guide.
+
+### Swift
+
+| Framework | Purpose |
+|-----------|---------|
+| SwiftUI | UI |
+| Observation (`@Observable`) | UI state |
+| Swift Testing (`import Testing`) | Unit tests |
+| Security | Keychain |
+| Foundation | Core types |
+| Apple frameworks | Provider adapters only (EventKit, MapKit, etc.) |
+
+No third-party Swift dependencies unless a PR justifies them.
+
+---
+
+## Naming
+
+### Rust
+
+| Item | Convention | Example |
+|------|------------|---------|
+| Crate | `snake_case` | `apple_bridge_core` |
+| Module files | `snake_case.rs` | `providers.rs`, `error.rs` |
+| Types (structs, enums, traits) | `PascalCase` | `ServerConfig`, `CoreError`, `ProviderBridge` |
+| Functions | `snake_case` | `create_server`, `init_logging` |
+| Constants | `SCREAMING_SNAKE_CASE` | — |
+| JSON / config fields | `snake_case` | `payload_json`, `bearer_token` |
+
+Keep modules focused; split when a file grows past ~150 lines.
+
+### Swift
+
+| Item | Convention | Example |
+|------|------------|---------|
+| Types | `PascalCase` | `AppStore`, `ServerService` |
+| Properties and methods | `camelCase` | `permissionStatus`, `refreshStatus()` |
+| Protocol seams (testability) | `PascalCase` + role suffix | `RemindersPermissionChecking`, `URLOpening` |
+| Platform wrappers | `PascalCase` + `Service` | `RemindersPermissionService`, `KeychainService` |
+| Provider types | `PascalCase` + `Provider` | `EventKitProvider` |
+| Generated UniFFI bindings | Follow generated names | `payloadJson` (camelCase from UniFFI) |
+
+Do not rename generated binding symbols. Wrap them in hand-written `Services/` types instead.
+
+### Providers and operations
+
+Rust routes by `provider` + `operation` string pairs. Swift dispatches on the same values.
+
+| Item | Convention | Example |
+|------|------------|---------|
+| Provider ID | lowercase, no spaces | `"eventkit"`, `"mapkit"`, `"contacts"` |
+| Operation | `snake_case` | `"list_calendars"`, `"create_event"`, `"request_access"` |
+| Error codes (JSON) | `snake_case` | `"unknown_provider"`, `"unknown_operation"` |
+| MCP tool names (when exposed) | `<provider>.<domain>.<operation>` | `eventkit.reminders.list_calendars`, `eventkit.calendar.create_event` |
+
+The `provider` / `operation` pair is the internal dispatch contract. MCP tool names are the external surface and should map to that pair without introducing a second vocabulary.
+
+Config field validation rules (host, port, provider names, bearer token): see `docs/architecture-bootstrap-guide.md` §5 validation matrix.
+
+### Files and generated output
+
+| Path | Edit? |
+|------|-------|
+| `rust/apple_bridge_core/src/` | Yes — source of truth |
+| `AppleBridgeCore/` | Never — regenerated by `just build-rust` (PR 2+) |
+| `AppleBridge/Services/apple_bridge_core.swift` | Never — copied from build output |
+| `AppleBridge/Services/*Service.swift` | Yes — hand-written wrappers |
+| `AppleBridge/Providers/` | Yes — thin Apple adapters |
+
+---
+
+## Formatting and lint
+
+### Rust
+
+Requires `rust/Cargo.toml` (PR 2+). Until the workspace lands, skip this section.
+
+`rust/rustfmt.toml`:
+
+```toml
+max_width = 120
+tab_spaces = 2
+```
+
+Run before commit (PR 2+):
+
+```sh
+just lint-rust    # cargo clippy -- -D warnings
+just test-rust    # TZ=UTC cargo test
+```
+
+### Swift
+
+- Match existing file style (4-space indent in current codebase).
+- Enable strict concurrency in `project.yml`.
+- Run `just test-swift` before commit.
+
+---
+
+## UniFFI rules
+
+- Proc-macro mode only. No UDL files.
+- Re-export the public FFI surface from `lib.rs`.
+- Use `#[derive(uniffi::Record)]` for structs passed by value.
+- Use `#[derive(uniffi::Enum)]` for simple enums.
+- Use `#[derive(uniffi::Error)]` + `thiserror` for FFI-exposed errors.
+- Use `#[derive(uniffi::Object)]` for stateful handles (`ServerHandle`).
+- Use `#[uniffi::export(callback_interface)]` for Swift-implemented traits (`ProviderBridge`).
+- Never `unwrap()` or `expect()` on paths reachable from UniFFI. Panics abort the app.
+
+Changing the FFI API (PR 2+, requires `rust/Cargo.toml`):
+
+1. Edit Rust types in `apple_bridge_core`
+2. `just lint-rust && just test-rust`
+3. `just build-rust`
+4. Fix Swift call sites in hand-written services
+5. Never patch `apple_bridge_core.swift` manually
+
+---
+
+## Error handling
+
+### Rust
+
+When using the **rust-best-practices** skill, these project rules override it:
+
+- **`thiserror` only** — no `anyhow` (library crate behind UniFFI, not a CLI binary).
+- No `cargo-insta` or snapshot tests — use `MockProviderBridge` instead.
+- No workspace-wide `#![deny(missing_docs)]`.
+- Type state pattern is optional; prefer the architecture guide's `ServerHandle` lifecycle.
+
+- Return `Result<T, CoreError>` on all user-input and external-data paths.
+- Classify errors precisely; avoid generic catch-all buckets when a specific variant exists.
+- Validate config, auth, provider names, and operations in Rust — not in Swift providers.
+- Log auth failures and server lifecycle events; never log bearer tokens.
+
+### Swift
+
+- Translate generated `CoreError` into app-level errors in one place (e.g. `AppError` or the relevant store).
+- User-visible errors: human-readable string, red styling, `.textSelection(.enabled)`.
+- Never crash on permission, Keychain, or server startup paths.
+- Never silently swallow errors.
+
+### Provider errors
+
+Return structured JSON via `ProviderResponse`:
+
+```json
+{ "code": "unknown_operation" }
+```
+
+Set `ok: false` and populate `error_json`. Do not panic or return unstructured strings.
+
+---
+
+## Concurrency
+
+### Swift
+
+- UI stores: `@Observable` + `@MainActor`.
+- Inject dependencies via protocols for testability.
+- Wrap blocking UniFFI calls with `@concurrent` when they must not run on the main actor.
+- Avoid `Task.detached` unless there is a concrete isolation reason.
+
+### Rust
+
+- The embedded server owns its Tokio runtime explicitly.
+- `start()` fails cleanly if the port cannot be bound.
+- `stop()` performs graceful shutdown with explicit signaling.
+- Prefer stop-and-recreate over hot-mutating a live server handle.
+
+---
+
+## Logging
+
+- Rust: `tracing` only. Export `init_logging()`; call once from Swift at startup.
+- Disable ANSI color in FFI/logging contexts.
+- Swift: no custom logging framework in v1; surface operational state through UI and Rust diagnostics.
+
+---
+
+## Testing
+
+### Commands
+
+```sh
+just test-swift    # available now
+just test-all      # test-swift; includes test-rust when rust/Cargo.toml exists
+```
+
+PR 2+ (requires `rust/Cargo.toml`):
+
+```sh
+just test-rust     # TZ=UTC cargo test
+just lint-rust     # clippy -D warnings
+just build-rust    # XCFramework + bindings
+```
+
+Always set `TZ=UTC` for deterministic timestamp assertions.
+
+### Rust
+
+- Unit tests: `#[cfg(test)]` modules in source files.
+- Integration tests: `rust/apple_bridge_core/tests/`.
+- Use `MockProviderBridge` as the primary seam for server, routing, and auth tests.
+- Test config validation, auth enforcement, provider dispatch, and lifecycle without real Apple APIs.
+
+### Swift
+
+- Framework: Swift Testing (`@Suite`, `@Test`, `#expect`).
+- Mock platform dependencies via protocols (`RemindersPermissionChecking`, etc.).
+- Test stores, mappers, and error translation — not live EventKit permission dialogs.
+- Live Apple framework and permission-dialog tests are manual smoke tests only.
+
+### What not to automate in CI
+
+- EventKit permission prompts
+- Keychain access requiring user interaction
+- End-to-end MCP client sessions (manual smoke until a harness exists)
+
+---
+
+## Auth conventions
+
+- Header format: `Authorization: Bearer <token>`
+- Missing or malformed auth: reject with an HTTP auth error (do not fall through to handlers).
+- Invalid token: reject; do not log the token value.
+- Token storage: Swift Keychain only. Rust receives the token at runtime via `ServerConfig`.
+
+---
+
+## JSON and payloads
+
+- Provider request/response bodies travel as JSON strings (`payload_json`, `error_json`).
+- Serialize and deserialize at the provider boundary in Swift.
+- Validate payload size in Rust before parsing.
+- Prefer faithful Apple API shapes over custom domain models unless MCP schema requirements force a mapping layer.
+
+---
+
+## Commit and PR hygiene
+
+- Small, focused PRs with reviewable diffs.
+- Run `just test-swift` or `just test-all` before opening a PR. Use rust recipes only when `rust/Cargo.toml` exists.
+- Do not commit generated artifacts that are reproducible from `just build-rust` (PR 2+) unless the repo already tracks them by policy.
+- Tracked docs: `docs/conventions.md`, `docs/prd.md`, `docs/architecture-bootstrap-guide.md`. Other paths under `docs/` (plans, specs, reviews) stay local via `.gitignore`.
+exec
+/bin/zsh -lc 'cat /Users/rcanoff/.agents/skills/rust-best-practices/references/chapter_01.md' in /Users/rcanoff/Projects/apple-bridge
+exec
+/bin/zsh -lc 'cat /Users/rcanoff/.agents/skills/rust-best-practices/references/chapter_04.md' in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 0ms:
+# Chapter 4 - Errors Handling
+
+Rust enforces a strict error handling approach, but *how* you handle them defines where your code feels ergonomic, consistent and safe - as opposing cryptic and painful. This chapter dives into best practices for modeling and managing fallible operations across libraries and binaries.
+
+> Even if you decide to crash you application with `unwrap` or `expect`, Rust forces you to declare that intentionally.
+
+## 4.1 Prefer `Result`, avoid panic 🫨
+
+Rust has a powerful type that wraps fallible data, [`Result<T, E>`](https://doc.rust-lang.org/std/result/), this allows us to handle Error cases according to our needs and manage the state of the application based on that.
+
+* If your function can fail, prefer to return a `Result`:
+```rust
+fn divide(x: f64, y: f64) -> Result<f64, DivisionError> {
+    if y == 0.0 {
+        Err(DivisionError::DividedByZero)
+    } else {
+        Ok(x / y)
+    }
+}
+```
+
+* Use `panic!` only in unrecoverable conditions - typically tests, assertions, bugs or a need to crash the application for some explicit reason.
+* There are 3 relevant macros that can replace `panic!` in appropriate conditions:
+    * `todo!`, similar to panic, but alerts the compiler that you are aware that there is code missing.
+    * `unreachable!`, you have reasoned about the code block and are sure that condition `xyz` is not possible and if ever becomes possible you want to be alerted.
+    * `unimplemented!`, specially useful for alerting that a block is not yet implement with a reason.
+
+## 4.2 Avoid `unwrap`/`expect` in Production
+
+Although `expect` is preferred to `unwrap`, as it can have context, they should be avoided in production code as there are smarter alternatives to them. Considering that, they should be used in the following scenarios:
+- In tests, assertions or test helper functions.
+- When failure is impossible.
+- When the smarter options can't handle the specific case.
+
+### 🚨 Alternative ways of handling `unwrap`/`expect`:
+
+* If your `Result` (or `Option`) can have a predefined early return value in case of `Result::Err`, that doesn't need to know the `Err` value, use `let Ok(..) = else { return ... }` pattern, as it helps with flatten functions:
+```rust
+let Ok(json) = serde_json::from_str(&input) else {
+    return Err(MyError::InvalidJson);
+}
+```
+* If your `Result` (or `Option`) needs error recovery in case of `Result::Err`, that doesn't need to know the `Err` value, use `if let Ok(..) else { ... }` pattern:
+```rust
+if let Ok(json) = serde_json::from_str(&input) else {
+    ...
+} else {
+    Err(do_something_with_input(&input))
+}
+```
+* Functions that can have to handle `Option::None` values are recommended to return `Result<T, E>`, where `E` is a crate or module level error, like the examples above.
+* Lastly `unwrap_or`, `unwrap_or_else` or `unwrap_or_default`, these functions help you create alternative exits to unwrap that manage the uninitialized values.
+
+## 4.3 `thiserror` for Crate level errors
+
+Deriving Error manually is verbose and error prone, the rust ecosystem has a really good crate to help with this, `thiserror`. It allows you to create error types that easily implement `From` trait as well as easy error message (`Display`), improving developer experience while working seamlessly with `?` and integrating with `std::error::Error`:
+
+```rust
+#[derive(Debug, thiserror::Error)]
+pub enum MyError {
+    #[error("Network Timeout")]
+    Timeout,
+    #[error("Invalid data: {0}")]
+    InvalidData(String),
+    #[error(transparent)]
+    Serialization(#[from] serde_json::Error),
+    #[error("Invalid request information. Header: {headers}, Metadata: {metadata}")]
+    InvalidRequest {
+        headers: Headers,
+        metadata: Metadata
+    }
+}
+```
+
+### Error Hierarchies and Wrapping
+
+For layered systems the best practice is to use nested `enum/struct` errors with `#[from]`:
+
+```rust
+use crate::database::DbError;
+use crate::external_services::ExternalHttpError;
+
+#[derive(Debug, thiserror::Error)]
+pub enum ServiceError {
+    #[error("Database handler error: {0}")]
+    Db(#[from] DbError),
+    #[error("External services error: {0}")]
+    ExternalServices(#[from] ExternalHttpError)
+}
+```
+
+## 4.4 Reserve `anyhow` for Binaries
+
+`anyhow` is an amazing crate, and quite useful for projects that are beginning and need accelerated speed. However, there is a turning point where it just painfully propagates through your code, considering this, `anyhow` is recommended only for **binaries**, where ergonomic error handling is needed and there is no need for precise error types:
+
+```rust
+use anyhow::{Context, Result, anyhow};
+
+fn main() -> Result<()> {
+    let content = std::fs::read_to_string("config.json")
+        .context("Failed to read config file")?;
+    Config::from_str(&content)
+        .map_err(|err| anyhow!("Config parsing error: {err}"))
+}
+```
+
+### 🚨 `Anyhow` Gotchas
+
+* Keeping the `context` and `anyhow` strings up-to-date in all code base is harder than keeping `thiserror` messages as you don't have a single point of entry.
+* `anyhow::Result` erases context that a caller might need, so avoid using it in a library.
+* test helper functions can use `anyhow` with little to no issues.
+
+## 4.5 Use `?` to Bubble Errors
+
+Prefer using `?` over verbose alternatives like `match` chains:
+```rust
+fn handle_request(req: &Request) -> Result<ValidatedRequest, MyError> {
+    validate_headers(req)?;
+    validate_body_format(req)?;
+    validate_credentials(req)?;
+    let body = Body::try_from(req)?;
+
+    Ok(ValidatedRequest::try_from((req, body))?)
+}
+```
+
+> In case error recovery is needed, use `or_else`, `map_err`, `if let Ok(..) else`. To **inspect or log your error**, use `inspect_err`.
+
+## 4.6 Unit Test should exercise errors
+
+While many errors don't implement PartialEq and Eq, making it hard to do direct assertions between them, it is possible to check the error messages with `format!` or `to_string()`, making the errors meaningful and test validated:
+
+```rust
+#[test]
+fn error_does_not_implement_partial_eq() {
+    let err = divide(10., 0.0).unwrap_err();
+    assert_eq!(err.to_string(), "division by zero");
+}
+
+#[test]
+fn error_implements_partial_eq() {
+    let err = process(my_value).unwrap_err();
+
+    assert_eq!(
+        err,
+        MyError {
+            ..
+        }
+    )
+}
+```
+
+## 4.7 Important Topics
+
+### Custom Error Structs
+
+Sometimes you don't need an enum to handle your errors, as there is only one type of error that your module can have. This can be solved with `struct Errors`:
+
+```rust
+#[derive(Debug, thiserror::Error, PartialEq)]
+#[error("Request failed with code `{code}`: {message}")]
+struct HttpError {
+    code: u16,
+    message: String
+}
+```
+
+### Async Errors
+
+When using async runtimes, like Tokio, make sure that your errors implement `Send + Sync + 'static` where needed, specially in tasks or across `.await` boundaries:
+
+```rust
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ...
+    Ok(())
+}
+```
+
+> Avoid `Box<dyn std::error::Error>` in libraries unless it is really needed
+
+ succeeded in 0ms:
+# Chapter 1 - Coding Styles and Idioms
+
+## 1.1 Borrowing Over Cloning
+
+Rust's ownership system encourages **borrow** (`&T`) instead of **cloning** (`T.clone()`). 
+> ❗ Performance recommendation
+
+### ✅ When to `Clone`:
+
+* You need to change the object AND preserve the original object (immutable snapshots).
+* When you have `Arc` or `Rc` pointers.
+* When data is shared across threads, usually `Arc`.
+* Avoid massive refactoring of non performance critical code.
+* When caching results (dummy example below):
+```rust
+fn get_config(&self) -> Config {
+    self.cached_config.clone()
+}
+```
+* When the underlying API expects Owned Data.
+
+### 🚨 `Clone` traps to avoid:
+
+* Auto-cloning inside loops `.map(|x| x.clone)`, prefer to call `.cloned()` or `.copied()` at the end of the iterator.
+* Cloning large data structures like `Vec<T>` or `HashMap<K, V>`.
+* Clone because of bad API design instead of adjusting lifetimes.
+* Prefer `&[T]` instead of `Vec<T>` or `&Vec<T>`.
+* Prefer `&str` or `&String` instead of `String`.
+* Prefer `&T` instead of `T`.
+* Clone a reference argument, if you need ownership, make it explicit in the arguments for the caller. Example:
+```rust
+fn take_a_borrow(thing: &Thing) {
+    let thing_cloned = thing.clone(); // the caller should have passed ownership instead
+}
+```
+
+### ✅ Prefer borrowing:
+```rust
+fn process(name: &str) {
+    println!("Hello {name}");
+}
+
+let user = String::from("foo");
+process(&user);
+```
+
+### ❌ Avoid redundant cloning:
+```rust
+fn process_string(name: String) {
+    println!("Hello {name}");
+}
+
+let user = String::from("foo");
+process(user.clone()); // Unnecessary clone
+```
+
+## 1.2 When to pass by value? (Copy trait)
+
+Not all types should be passed by reference (`&T`). If a type is **small** and it is **cheap to copy**, it is often better to **pass it by value**. Rust makes it explicit via the `Copy` trait.
+
+### ✅ When to pass by value, `Copy`:
+* The type **implements** `Copy` (`u32`, `bool`, `f32`, small structs).
+* The cost of moving the value is negligible.
+
+```rust
+fn increment(x: u32) -> u32 {
+    x + 1
+}
+
+let num = 1;
+let new_num = increment(num); // `num` still usable after this point
+```
+
+### ❓ Which structs should be `Copy`?
+* When to consider declaring `Copy` on your own types:
+* All fields are `Copy` themselves.
+* The struct is `small`, up to 2 (maybe 3) words of memory or 24 bytes (each word is 64 bits/8bytes).
+* The struct **represents a "plain data object"**, without resourcing to ownership (no heap allocations. Example: `Vec` and `Strings`).
+
+❗**Rust Arrays are stack allocated.** Which means they can be copied if their underlying type is `Copy`, but this will be allocated in the program stack which can easily become a stack overflow. More on [Chapter 3 - Stack vs Heap](./chapter_03.md#33-stack-vs-heap-be-size-smart)
+
+For reference, each primitive type size in bytes:
+
+#### Integers:
+
+| Type | Size |
+|------------- |---------- |
+| i8 u8 | 1 byte |
+| i16 u16 | 2 bytes |
+| i32 u32 | 4 bytes |
+| i64 u64 | 8 bytes |
+| isize usize | Arch |
+| i128 u128 | 16 bytes |
+
+#### Floating Point:
+
+| Type | Size |
+|---------- |---------- |
+| f32 | 4 bytes |
+| f64 | 8 bytes |
+
+
+#### Other:
+
+| Type | Size |
+|---------- |---------- |
+| bool | 1 byte |
+| char | 4 bytes |
+
+
+### ✅ Good struct to derive `Copy`:
+```rust
+#[derive(Debug, Copy, Clone)]
+struct Point {
+    x: f32,
+    y: f32,
+    z: f32
+}
+```
+
+### ❌ Bad struct to derive `Copy`:
+```rust
+#[derive(Debug, Clone)]
+struct BadIdea {
+    age: i32,
+    name: String, // String is not `Copy`
+}
+```
+
+### ❓Which Enums should be `Copy`?
+* If your enum acts like tags and atoms.
+* The enum payloads are all `Copy`.
+* **❗Enums size are based on their largest element.**
+
+### ✅ Good Enum to derive
+```rust
+#[derive(Debug, Copy, Clone)]
+enum Direction {
+    North,
+    South,
+    East,
+    West,
+}
+```
+
+## 1.3 Handling `Option<T>` and `Result<T, E>`
+Rust 1.65 introduced a better way to safely unpack Option and Result types with the `let Some(x) = … else { … }` or `let Ok(x) = … else { … }` when you have a default `return` value, `continue` or `break` default else case. It allows early returns when the missing case is **expected and normal**, not exceptional.
+
+### ✅ Cases to use each pattern matching for Option and Return
+* Use `match` when you want to pattern match against the inner types `T` and `E`
+```rust
+match self {
+    Ok(Direction::South) => { … },
+    Ok(Direction::North) => { … },
+    Ok(Direction::East) => { … },
+    Ok(Direction::West) => { … },
+    Err(E::One) => { … },
+    Err(E::Two) => { … },
+}
+
+match self {
+    Some(3|5) => { … }
+    Some(x) if x > 10 => { … }
+    Some(x) => { … }
+    None => { … }
+}
+```
+
+* Use `match` when your type is transformed into something more complex Like `Result<T, E>` becoming `Result<Option<T>, E>`.
+```rust
+match self {
+    Ok(t) => Ok(Some(t)),
+    Err(E::Empty) => Ok(None),
+    Err(err) => Err(err),
+}
+```
+
+* Use `let PATTERN = EXPRESSION else { DIVERGING_CODE; }` when the divergent code doesn't need to know about the failed pattern matches or doesn't need extra computation:
+```rust
+let Some(&Direction::North) = self.direction.as_ref() else {
+    return Err(DirectionNotAvailable(self.direction));
+}
+```
+
+* Use `let PATTERN = EXPRESSION else { DIVERGING_CODE; }` when you want to break or continue a pattern match
+```rust
+for x in self {
+    let Some(x) = x else {
+        continue;
+    }
+}
+```
+
+* Use `if let PATTERN = EXPRESSION else { DIVERGING_CODE; }` when `DIVERGING_CODE` needs extra computation:
+```rust
+if let Some(x) = self.next() {
+    // computation
+} else {
+    // computation when `None/Err` or not matched
+}
+```
+
+❗**If you don't care about the value of the `Err` case, please use `?` to propagate the `Err` to the caller.**
+
+### ❌ Bad Option/Return pattern matching:
+
+* Conversion between Result and Option (prefer `.ok()`,`.ok_or()`, and `ok_or_else()`)
+```rust
+match self {
+    Ok(t) => Some(t),
+    Err(_) => None
+}
+```
+
+* `if let PATTERN = EXPRESSION else { DIVERGING_CODE; }` when divergent code is a default or pre-computed value (prefer `let PATTERN = EXPRESSION else { DIVERGING_CODE; }`):
+```rust
+if let Some(values) = self.next() {
+    // computation
+    (Some(..), values)
+} else {
+    (None, Vec::new())
+}
+```
+
+* Using `unwrap` or `expect` outside tests:
+```rust
+let port = config.port.unwrap();
+```
+
+## 1.4 Prevent Early Allocation
+
+When dealing with functions like `or`, `map_or`, `unwrap_or`, `ok_or`, consider that they have special cases for when memory allocation is required, like creating a new string, creating a collection or even calling functions that manage some state, so they can be replaced with their `_else` counter-part:
+
+### ✅ Good cases
+
+```rust
+let x = None;
+assert_eq!(x.ok_or(ParseError::ValueAbsent), Err(ParseError::ValueAbsent));
+
+let x = None;
+assert_eq!(x.ok_or_else(|| ParseError::ValueAbsent(format!("this is a value {x}"))), Err(ParseError::ValueAbsent));
+
+
+let x: Result<_, &str> = Ok("foo");
+assert_eq!(x.map_or(42, |v| v.len()), 3);
+
+
+let x : Result<_, String> = Ok("foo");
+assert_eq!(x.map_or_else(|e|format!("Error: {e}"), |v| v.len()), 3);
+
+let x = "1,2,3,4";
+assert_eq!(x.parse_to_option_vec.unwrap_or_else(Vec::new), Ok(vec![1, 2, 3, 4]));
+```
+
+### ❌ Bad cases
+
+```rust
+let x : Result<_, String> = Ok("foo");
+assert_eq!(x.map_or(format!("Error with uninformed content"), |v| v.len()), 3);
+
+let x = "1,2,3,4";
+assert_eq!(x.parse_to_option_vec.unwrap_or(Vec::new()), Ok(vec![1, 2, 3, 4])); // could be replaced with `.unwrap_or_default`
+
+let x = None;
+assert_eq!(x.ok_or(ParseError::ValueAbsent(format!("this is a value {x}"))), Err(ParseError::ValueAbsent));
+```
+
+### Mapping Err
+
+When dealing with Result::Err, sometimes is necessary to log and transform the Err into a more abstract or more detailed error, this can be done with `inspect_err` and `map_err`:
+
+```rust
+let x = Err(ParseError::InvalidContent(...));
+
+x
+    .inspect_err(|err| tracing::error!("function_name: {err}"))
+    .map_err(|err| GeneralError::from(("function_name", err)))?;
+```
+
+## 1.5 Iterator, `.iter` vs `for`
+
+First we need to understand a basic loop with each one of them. Let's consider the following problem, we need to sum all even numbers between 0 and 10 incremented by 1:
+
+* `for`:
+```rust
+let mut sum = 0;
+for x in 0..=10 {
+    if x % 2 == 0 {
+        sum += x + 1;
+    }
+}
+```
+
+* `iter`:
+```rust
+let sum: i32 = (0..=10)
+    .filter(|x| x % 2 == 0)
+    .map(|x| x + 1)
+    .sum();
+```
+
+> Both versions do the same thing and are correct and idiomatic, but each shines in different contexts.
+
+### When to prefer `for` loops
+* When you need **early exits** (`break`, `continue`, `return`).
+* **Simple iteration** with side-effects (e.g., logging, IO)
+    * logging can be done correctly in `Iterators` using `inspect` and `inspect_err` functions.
+* When readability matters more than simplicity or chaining.
+
+#### Example:
+```rust
+for value in &mut value {
+    if *value == 0 {
+        break;
+    }
+    *value += fancy_equation();
+}
+```
+
+### When to prefer `iterators` loops (`.iter()` and `.into_iter()`)
+* When you are `transforming collections` or `Option/Results`.
+* You can **compose multiple steps** elegantly.
+* No need for early exits.
+* You need support for indexed values with `.enumerate`.
+```rust
+let values: Vec<_> = vec.into_iter()
+    .enumerate()
+    .filter(|(_index, value)| value % 2 == 0)
+    .map(|(index, value)| value % index)
+    .collect()
+```
+* You need to use collections functions like `.windows` or `chunks`.
+* You need to combine data from multiple sources and don't want to allocate multiple collections.
+* Iterators can be combined with `for` loops:
+```rust
+for value in vec.iter().enumerate()
+    .filter(|(index, value)| value % index == 0) {
+    // ...
+}
+```
+
+> #### ❗REMEMBER: Iterators are Lazy
+>
+> * `.iter`, `.map`, `.filter` don't do anything until you call its consumer, e.g. `.collect`, `.sum`, `.for_each`.
+> * **Lazy Evaluation** means that iterator chains are fused into one loop at compile time.
+
+### 🚨 Anti-patterns to AVOID
+
+* Don't chain without formatting. Prefer each chained function on its own line with the correct indentation (`rustfmt` should take care of this).
+* Don't chain if it makes the code unreadable.
+* Avoid needlessly collect/allocate of a collection (e.g. vector) just to throw it away later by some larger operation or by another iteration.
+* Prefer `iter` over `into_iter` unless you don't need the ownership of the collection.
+* Prefer `iter` over `into_iter` for collections that inner type implements `Copy`, e.g. `Vec<i32>`.
+* For summing numbers prefer `.sum` over `.fold`. `.sum` is specialized for summing values, so the compiler knows it can make optimizations on that front, while fold has a blackbox closure that needs to be applied at every step. If you need to sum by an initial value, just added in the expression `let my_sum = [1, 2, 3].sum() + 3`.
+
+## 1.6 Comments: Context, not Clutter
+
+> "Context are for why, not what or how"
+
+Well-written Rust code, with expressive types and good naming, often speaks for itself. Many high-quality codebases thrive on **few or no comments**. And that's a good thing.
+
+Still, there are **moments where code alone isn't enough** - when there are performance quirks, external constraints, or non-obvious tradeoffs that require a nudge to the reader. In those cases, a concise comment can prevent hours of head-scratching or searching git history.
+
+### ✅ Good comments 
+
+* Safety concerns:
+```rust
+// SAFETY: We have checked that the pointer is valid and non-null. @Function xyz.
+unsafe { std::ptr::copy_nonoverlapping(src, dst, len); }
+```
+
+* Performance quirks:
+```rust
+// This algorithm is a fast square root approximation
+const THREE_HALVES: f32 = 1.5;
+fn q_rsqrt(number: f32 ) -> f32 {
+    let mut i: i32 = number.to_bits() as i32;
+    i = 0x5F375A86_i32.wrapping_sub(i >> 1);
+    let y = f32::from_bits(i as u32);
+    y * (THREE_HALVES - (number * 0.5 * y * y))
+}
+```
+
+* Clear code beats comments. However, when the why isn't obvious, say it plainly - or link to where:
+```rust
+// PERF: Generating the root store per subgraph caused high TLS startup latency on MacOS
+// This works as a caching alternative. See: [ADR-123](link/to/adr-123)
+let subgraph_tls_root_store: RootCertStore = configuration
+    .tls
+    .subgraph
+    .all
+    .create_certificate_store()
+    .transpose()?
+    .unwrap_or_else(crate::services::http::HttpClientService::native_roots_store);
+```
+
+### ❌ Bad comments
+
+* Wall-of-text explanations: long comments and multiline comments
+```rust
+// Lorem Ipsum is simply dummy text of the printing and typesetting industry. 
+// Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, 
+// when an unknown printer took a galley
+fn do_something_odd() {
+    …
+}
+```
+> Prefer `/// doc` comment if it's describing the function.
+
+* Comments that could be better represented as functions or are plain obvious
+```rust
+fn computation() {
+    // increment i by 1
+    i += 1;
+}
+```
+
+### ✅ Breaking up long functions over commenting them
+
+If you find yourself writing a long comment explaining "what", "how" or "each step" in a function, it might be time to split it. So the suggestion is to refactor. This can be beneficial not only for readability, but testability:
+
+#### ❌ Instead of:
+```rust
+fn process_request(request: T) {
+    // We first need to validate request, because of corner case x, y, z
+    // As the payload can only be decoded when they are valid
+    // Then we can perform authorization on the payload
+    // lastly with the authorized payload we can dispatch to handler
+}
+```
+
+#### ✅ Prefer
+```rust
+fn process_request(request: T) -> Result<(), Error> {
+    validate_request_headers(&request)?;
+    let payload = decode_payload(&request);
+    authorize(&payload)?;
+    dispatch_to_handler(payload)
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn validate_request_happy_path() { ... }
+
+    #[test]
+    fn validate_request_fails_on_x() { ... }
+
+    #[test]
+    fn validate_request_fails_on_y() { ... }
+
+    #[test]
+    fn decode_validated_request() { ... }
+
+    #[test]
+    fn authorize_payload_xyz() { ... }
+}
+```
+
+Let **structure** and **naming** replace commentary, and enhance its documentation with **tests as living documentation**.
+
+### 📝 TODOs are not comments - track them properly
+
+Avoid leaving lingering `// TODO: Lorem Ipsum` comments in the code. Instead:
+* Turn them into Jira or Github Issues.
+* If needed, to avoid future confusion, reference the issue in the code and the code in the issue.
+
+```rust
+// See issue #123: support hyper 2.0
+```
+
+This helps keeping the code clean and making sure tasks are not forgotten.
+
+### Comments as Living Documentation
+
+There are a few gotchas when calling comments "living documentation":
+* Code evolves.
+* Context changes.
+* Comments get stale.
+* Many large comments make people avoid reading them.
+* Team becomes fearful of delete irrelevant comments.
+
+If you find a comment, **don't trust it blindly**. Read it in context. If it's wrong or outdated, fix or remove it. A misleading comment is worse than no comments at all. 
+
+> Comments should bother you - they demand re-verification, just like stale tests.
+
+When deeper justification is needed, prefer to:
+* **Link to a Design Doc or an ADR**, business logic lives well in design docs while performance tradeoffs live well in ADRs.
+* Move runtime example and usage docs into Rust Docs, `/// doc comment`, where they can be tested and kept up-to-date by tools like `cargo doc`.
+
+> Doc-comments and Doc-testing, `///` and `//!` in [Chapter 8 - Comments vs Documentation](./chapter_08.md)
+
+## 1.7 Use Declarations - "imports"
+
+Different languages have different ways of sorting their imports, in the Rust ecosystem the [standard way](https://github.com/rust-lang/rustfmt/issues/4107) is:
+
+- `std` (`core`, `alloc` would also fit here).
+- External crates (what is in your Cargo.toml `[dependencies]`).
+- Workspace crates (workspace member crates).
+- This module `super::`.
+- This module `crate::`.
+
+```rust
+// std
+use std::sync::Arc;
+
+// external crates
+use chrono::Utc;
+use juniper::{FieldError, FieldResult};
+use uuid::Uuid;
+
+// crate code lives in workspace
+use broker::database::PooledConnection;
+
+// super:: / crate::
+use super::schema::{Context, Payload};
+use super::update::convert_publish_payload;
+use crate::models::Event;
+```
+
+Some enterprise solutions opt to include their core packages after `std`, so all external packages that start with enterprise name are located before the others:
+
+```rust
+// std
+use std::sync::Arc;
+
+// enterprise external crates
+use enterprise_crate_name::some_module::SomeThing;
+
+// external crates
+use chrono::Utc;
+use juniper::{FieldError, FieldResult};
+use uuid::Uuid;
+
+// crate code lives in workspace
+use broker::database::PooledConnection;
+
+// super:: / crate::
+use super::schema::{Context, Payload};
+use super::update::convert_publish_payload;
+use crate::models::Event;
+```
+
+One way of not having to manually control this is using the following arguments in your `rustfmt.toml`:
+
+```toml
+reorder_imports = true
+imports_granularity = "Crate"
+group_imports = "StdExternalCrate"
+```
+
+> As of Rust version 1.88, it is necessary to execute rustfmt in nightly to correctly reorder code `cargo +nightly fmt`.
+
+exec
+/bin/zsh -lc 'cat /Users/rcanoff/.agents/skills/rust-best-practices/references/chapter_05.md' in /Users/rcanoff/Projects/apple-bridge
+exec
+/bin/zsh -lc 'cat /Users/rcanoff/.agents/skills/rust-best-practices/references/chapter_09.md' in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 0ms:
+# Chapter 9 - Understanding Pointers
+
+Many higher level languages hide memory management, typically **passing by value** (copy data) or **passing by reference** (reference to shared data) without worrying about allocation, heap, stack, ownership and lifetimes, it is all delegated to the garbage collector or VM. Here is a comparison on this topic between a few languages:
+
+### 📌 Language Comparison 
+
+| Language | Value Types | Reference/Pointer Types | Async Model & Types | Manual Memory |
+|------------ |------------------------------------- |----------------------------------------------------------- |---------------------------------------------------------------------------- |------------------------------ |
+| Python | None | Everything is a reference | async def, await, Task, coroutines and asyncio.Future | ❌ Not Allowed |
+| Javascript | Primitives | Objects | `async/await`, `Promise`, `setTimeout`. single threaded event loop | ❌ Not Allowed |
+| Java | Primitives | Objects | `Future<T>`, threads, Loom (green threads) | ❌ Almost none & not recommended |
+| Go | Values are copied unless using `&T` | Pointers (`*T`, `&T`), escape analysis | goroutines, `channels`, `sync.Mutex`, `context.Context` | ⚠️ Limited |
+| C | Primitives and structs supported | Raw pointers `T*` and `*void` | Threads, event loops (`libuv`, `libevent`) | ✅ Fully |
+| C++ | Primitives and references | Raw `T*` and smart pointers `shared_ptr` and `unique_ptr` | threads, `std::future`, `std::async`, (since c++ 20 `co_await/coroutines`) | ✅ Mostly |
+| Rust | Primitives, Arrays, `impl Copy` | `&T`, `&mut T`, `Box<T>`, `Arc<T>` | `async/await`, `tokio`, `Future`, `JoinHandle`, `Send + Sync` | ✅🔒 Safe and Explicit |
+
+## 9.1 Thread Safety
+
+Rust tracks pointers using `Send` and `Sync` traits:
+- `Send` means data can move across threads.
+- `Sync` means data can be referenced from multiple threads.
+
+> A pointer is thread-safe only if the data behind it is.
+
+| Pointer Type | Short Description | Send + Sync? | Main Use |
+|---------------- |--------------------------------------------------------------------------- |-------------------------------------- |------------ |
+| `&T` | Shared reference | Yes | Shared access |
+| `&mut T` | Exclusive mutable reference | No, not Send | Exclusive mutation |
+| `Box<T>` | Heap-allocated owning pointer | Yes, if T: Send + Sync | Heap allocation |
+| `Rc<T>` | Single-threaded ref counted pointer | No, neither | Multiple owners (single-thread) |
+| `Arc<T>` | Atomic ref counter pointer | Yes | Multiple owners (multi-thread) |
+| `Cell<T>` | Interior mutability for copy types | No, not Sync | Shared mutable, non-threaded |
+| `RefCell<T>` | Interior mutability (dynamic borrow checker) | No, not Sync | Shared mutable, non-threaded |
+| `Mutex<T>` | Thread-safe interior mutability with exclusive access | Yes | Shared mutable, threaded |
+| `RwLock<T>` | Thread-safe shared readonly access OR exclusive mutable access | Yes | Shared mutable, threaded |
+| `OnceCell<T>` | Single-thread one-time initialization container (interior mutability ONCE) | No, not Sync | Simple lazy value initialization |
+| `LazyCell<T>` | A lazy version of `OnceCell<T>` that calls function closure to initialize | No, not Sync | Complex lazy value initialization |
+| `OnceLock<T>` | Thread-safe version of `OnceCell<T>` | Yes | Multi-thread single init |
+| `LazyLock<T>` | Thread-safe version of `LazyCell<T>` | Yes | Multi-thread complex init |
+| `*const T/*mut T` | Raw Pointers | No, user must ensure safety manually | Raw memory / FFI |
+
+## 9.2 When to use pointers:
+
+### `&T` - Shared Borrow:
+
+Probably the most common type in a Rust code base, it is **Safe, with no mutation** and allows **multiple readers**.
+
+```rust
+let data: String = String::from_str("this a string").unwrap();
+
+print_len(&data);
+print_capacity(&data);
+print_bytes(&data);
+
+fn print_len(s: &str) {
+    println!("{}", s.len())
+}
+
+fn print_capacity(s: &String) {
+    println!("{}", s.capacity())
+}
+
+fn print_bytes(s: &String) {
+    println!("{:?}", s.as_bytes())
+}
+```
+### `&mut T` - Exclusive Borrow:
+
+Probably the most common *mutable* type in a Rust code base, it is **Safe, but only allows one mutable borrow at a time**.
+
+```rust
+let mut data: String = String::from_str("this a string").unwrap();
+mark_update(&mut data);
+
+fn mark_update(s: &mut String) {
+    s.push_str("_update");
+}
+```
+
+### [`Box<T>`](https://doc.rust-lang.org/std/boxed/struct.Box.html) - Heap Allocated
+
+Single-owner heap-allocated data, great for recursive types and large structs.
+
+```rust
+pub enum MySubBoxedEnum<T> {
+    Single(T),
+    Double(Box<MySubBoxedEnum<T>>, Box<MySubBoxedEnum<T>>),
+    Multi(Vec<T>), // Note that Vec is already a boxed value
+}
+```
+
+### [`Rc<T>`](https://doc.rust-lang.org/std/rc/struct.Rc.html) - Reference Counter (single-thread)
+
+You need multiple references to data in a single thread. Most common example is linked-list implementation.
+
+### [`Arc<T>`](https://doc.rust-lang.org/std/sync/struct.Arc.html) - Atomic Reference Counter (multi-thread)
+
+You need multiple references to data in multiple threads. Most common use cases is sharing readonly Vec across thread with `Arc<[T]>` and wrapping a `Mutex` so it can be easily shared across threads, `Arc<Mutex<T>>`.
+
+### [`RefCell<T>`](https://doc.rust-lang.org/std/cell/struct.RefCell.html) - Runtime checked interior mutability
+
+Used when you need shared access and the ability to mutate date, borrow rules are enforced at runtime. **It may panic!**.
+
+```rust
+use std::cell::RefCell;
+let x = RefCell::new(42);
+*x.borrow_mut() += 1;
+
+assert_eq!(&*x.borrow(), 42, "Not meaning of life");
+```
+
+Panic example:
+```rust
+use std::cell::RefCell;
+let x = RefCell::new(42);
+
+let borrow = x.borrow();
+
+let mutable = x.borrow_mut();
+```
+
+### [`Cell<T>`](https://doc.rust-lang.org/std/cell/struct.Cell.html) - Copy-only interior mutability
+
+Somewhat the fast and safe version of `RefCell`, but it is limited to types that implement the `Copy` trait:
+
+```rust
+use std::cell::Cell;
+
+struct SomeStruct {
+    regular_field: u8,
+    special_field: Cell<u8>,
+}
+
+let my_struct = SomeStruct {
+    regular_field: 0,
+    special_field: Cell::new(1),
+};
+
+let new_value = 100;
+
+// ERROR: `my_struct` is immutable
+// my_struct.regular_field = new_value;
+
+// WORKS: although `my_struct` is immutable, `special_field` is a `Cell`,
+// which can always be mutated with copy values
+my_struct.special_field.set(new_value);
+assert_eq!(my_struct.special_field.get(), new_value);
+```
+
+### [`Mutex<T>`](https://doc.rust-lang.org/std/sync/struct.Mutex.html) - Thread-safe mutability
+
+An exclusive access pointer that allows a thread to read/write the data contained inside. It is usually wrapped in an `Arc` to allow shared access to the Mutex.
+
+### [`RwLock<T>`](https://doc.rust-lang.org/std/sync/struct.RwLock.html) - Thread-safe mutability
+
+Similar to a `Mutex`, but it allows multiple threads to read it OR a single thread to write. It is usually wrapped in an `Arc` to allow shared access to the RwLock.
+
+
+### [`*const T/*mut T`](https://doc.rust-lang.org/std/primitive.pointer.html) - Raw pointers
+
+Inherently **unsafe** and necessary for FFI. Rust makes their usage explicit to avoid accidental misuse and unwilling manual memory management.
+
+```rust
+let x = 5;
+let ptr = &x as *const i32;
+unsafe {
+    println!("PTR is {}", *ptr)
+}
+```
+
+### [`OnceCell`](https://doc.rust-lang.org/std/cell/struct.OnceCell.html) - Single-thread single initialization container
+
+Most useful when you need to share a configuration between multiple data structures.
+
+```rust
+use std::{cell::OnceCell, rc::Rc};
+
+#[derive(Debug, Default)]
+struct MyStruct {
+    distance: usize,
+    root: Option<Rc<OnceCell<MyStruct>>>, 
+}
+
+fn main() {
+    let root = MyStruct::default();
+    let root_cell = Rc::new(OnceCell::new());
+    if let Err(previous) = root_cell.set(root) {
+        eprintln!("Previous Root {previous:?}");
+    }
+    let child_1 = MyStruct{
+        distance: 1,
+        root: Some(root_cell.clone())
+    };
+
+    let child_2 = MyStruct{
+        distance: 2,
+        root: Some(root_cell.clone())
+    };
+
+
+    println!("Child 1: {child_1:?}");
+    println!("Child 2: {child_2:?}");
+}
+```
+
+### [`LazyCell`](https://doc.rust-lang.org/std/cell/struct.LazyCell.html) - Lazy initialization of `OnceCell`
+
+Useful when the initialized data can be delayed to when it is actually being called.
+
+### [`OnceLock`](https://doc.rust-lang.org/std/sync/struct.OnceLock.html) - thread-safe `OnceCell`
+
+Useful when you need a `static` value.
+
+```rust
+use std::sync::OnceLock;
+
+static CELL: OnceLock<u32> = OnceLock::new();
+
+// `OnceLock` has not been written to yet.
+assert!(CELL.get().is_none());
+
+// Spawn a thread and write to `OnceLock`.
+std::thread::spawn(|| {
+    let value = CELL.get_or_init(|| 12345);
+    assert_eq!(value, &12345);
+})
+.join()
+.unwrap();
+
+// `OnceLock` now contains the value.
+assert_eq!(
+    CELL.get(),
+    Some(&12345),
+);
+```
+
+### [`LazyLock`](https://doc.rust-lang.org/std/sync/struct.LazyLock.html) - thread-safe `LazyCell`
+
+Similar to `OnceLock`, but the static value is a bit more complex to initialize.
+
+```rust
+use std::sync::LazyLock;
+
+static CONFIG: LazyLock<HashMap<&str, T>> = LazyLock::new(|| {
+    let data = read_config();
+    let mut config: HashMap<&str, T> = data.into();
+    config.insert("special_case", T::default());
+    config
+});
+
+let _ = &*CONFIG;
+```
+
+## References
+- [Mara Bos - Rust Atomics and Locks](https://marabos.nl/atomics/)
+- [Semicolon video on pointers](https://www.youtube.com/watch?v=Ag_6Q44PBNs)
+
+ succeeded in 0ms:
+# Chapter 5 - Automated Testing
+
+> Tests are not just for correctness. They are the first place people look to understand how your code works.
+
+* Tests in rust are declared with the attribute macro `#[test]`. Most code editors can compile and run the functions declared under the macro individually or blocks of them.
+* Test can have special compilation flags with `#[cfg(test)]`. Also executable in code editors if it contained `#[test]`, it is a good way to mock complicated functions or override traits.
+
+## 5.1 Tests as Living Documentation
+
+In Rust, as in many other languages, tests often show how the functions are meant to be used. If a test is clear and targeted, it's often more helpful than reading the function body, when combined with other tests, they serve as living documentation.
+
+### Use descriptive names
+
+> In the unit test name we should see the following:
+> * `unit_of_work`: which *function* we are calling. The **action** that will be executed. This is often be the name of the the test `mod` where the function is being tested.
+```rust
+#[cfg(test)] 
+mod test { 
+    mod function_name { 
+        #[test] 
+        fn returns_y_when_x() { ... } 
+    } 
+}
+```
+> * `expected_behavior`: the set of **assertions** that we need to verify that the test works.
+> * `state_that_the_test_will_check`: the general **arrangement**, or setup, of the specific test case.
+
+#### ❌ Don't use a generic name for a test
+```rust
+#[test]
+fn test_add_happy_path() {
+    assert_eq!(add(2, 2), 4);
+}
+```
+#### ✅ Use a name which reads like a sentence, describing the desired behavior
+> Alternatively, if you function has too many tests, you can blob them together in a `mod`, it makes it easier to read and navigate.
+
+```rust
+// OPTION 1
+#[test]
+fn process_should_return_blob_when_larger_than_b() {
+    let a = setup_a_to_be_xyz();
+    let b = Some(2);
+    let expected = MyExpectedStruct { ... };
+
+    let result = process(a, b).unwrap();
+
+    assert_eq!(result, expected);
+}
+
+// OPTION 2
+mod process {
+    #[test]
+    fn should_return_blob_when_larger_than_b() {
+        let a = setup_a_to_be_xyz();
+        let b = Some(2);
+        let expected = MyExpectedStruct { ... };
+
+        let result = process(a, b).unwrap();
+
+        assert_eq!(result, expected);
+    }
+}
+```
+
+> When executing `cargo test` the test output for each option will look like:
+> Option 1: `process_should_return_blob_when_larger_than_b`.
+> Option 2: `process::should_return_blob_when_larger_than_b`.
+
+### Use modules for organization
+
+Most IDEs can run a single module of tests all together.
+The test name in the output will also contain the name of the module.
+Together, that means you can use the module name to group related tests together:
+
+```rust
+#[cfg(test)]
+mod test { // IDEs will provide a ▶️ button here
+
+    mod process {
+        #[test] // IDEs will provide a ▶️ button here
+        fn returns_error_xyz_when_b_is_negative() {
+            let a = setup_a_to_be_xyz();
+            let b = Some(-5);
+            let expected = MyError::Xyz;
+            
+            let result = process(a, b).unwrap_err();
+            
+            assert_eq!(result, expected);
+        }
+
+        #[test] // IDEs will provide a ▶️ button here
+        fn returns_invalid_input_error_when_a_and_b_not_present() {
+            let a = None;
+            let b = None;
+            let expected = MyError::InvalidInput;
+
+            let result = process(a, b).unwrap_err();
+
+            assert_eq!(result, expected);
+        }
+    }
+}
+```
+
+### Only test one behavior per function
+
+To keep tests clear, they should describe _one_ thing that the unit does.
+This makes it easier to understand why a test is failing.
+
+#### ❌ Don't test multiple things in the same test
+```rust
+fn test_thing_parser(...) {
+    assert!(Thing::parse("abcd").is_ok());
+    assert!(Thing::parse("ABCD").is_err());
+}
+```
+
+#### ✅ Test one thing per test
+```rust
+#[cfg(test)]
+mod test_thing_parser {
+    #[test]
+    fn lowercase_letters_are_valid() {
+        assert!(
+            Thing::parse("abcd").is_ok(),
+            // Works like `eprintln`, `format` and `println` macros
+            "Thing parse error: {:?}", 
+            Thing::parse("abcd").unwrap_err()
+        );
+    }
+
+    #[test]
+    fn capital_letters_are_invalid() {
+        assert!(Thing::parse("ABCD").is_err());
+    }
+}
+```
+
+> `Ok` scenarios should have an `eprintln` of the `Err` case.
+
+### Use very few, ideally one, assertion per test
+
+When there are multiple assertions per test, it's both harder to understand the intended behavior and 
+often requires many iterations to fix a broken test, as you work through assertions one by one.
+
+❌ Don't include many assertions in one test:
+
+```rust
+#[test]
+fn test_valid_inputs() {
+    assert!(the_function("a").is_ok());
+    assert!(the_function("ab").is_ok());
+    assert!(the_function("ba").is_ok());
+    assert!(the_function("bab").is_ok());
+}
+```
+
+If you are testing separate behaviors, make multiple tests each with descriptive names.
+To avoid boilerplate, either use a shared setup function or [rstest](https://crates.io/crates/rstest) cases *with descriptive test names*:
+```rust
+#[rstest]
+#[case::single("a")]
+#[case::first_letter("ab")]
+#[case::last_letter("ba")]
+#[case::in_the_middle("bab")]
+fn the_function_accepts_all_strings_with_a(#[case] input: &str) {
+    assert!(the_function(input).is_ok());
+}
+```
+
+> Considerations when using `rstest`
+>
+> * It's harder for both IDEs and humans to run/locate specific tests.
+> * Expectation vs condition naming is now visually inverted (expectation first).
+
+## 5.2 Add Test Examples to your Docs
+
+We will deep dive into docs at a later stage, so in this section we will just briefly go over how to add tests to you docs. Rustdoc can turn examples into executable tests using `///` with a few advantages:
+
+* These tests run with `cargo test` **BUT NOT** `cargo nextest run`. If using `nextest`, make sure to run `cargo t --doc` separately.
+* They serve both as documentation and correctness checks, and are kept up to date by changes, due to the fact that the compiler checks them.
+* No extra testing boilerplate. You can easily hide test sections by prefixing the line with `#`.
+* ❗ There is no issue if you have test duplication between doc-tests and other non-public facing tests.
+
+```rust
+/// Helper function that adds any two numeric values together.
+/// This function reasons about which would be the correct type to parse based on the type
+/// and the size of the numeric value.
+/// 
+/// # Examples
+/// 
+/// ```rust
+/// # use crate_name::generic_add;
+/// use num::numeric;
+/// 
+/// # assert_eq!(
+/// generic_add(5.2, 4) // => 9.2
+/// # , 9.2)
+/// 
+/// # assert_eq!(
+/// generic_add(2, 2.0) // => 4
+/// # , 4)
+/// ```
+```
+
+This documentation code would look like:
+```rust
+use num::numeric;
+
+generic_add(5.2, 4) // => 9.2
+generic_add(2, 2.0) // => 4
+```
+
+## 5.3 Unit Test vs Integration Tests vs Doc tests
+
+As a general rule, without delving into *test pyramid naming*, rust has 3 sets of tests:
+
+### Unit Test
+
+Tests that go in the **same module** as the **tested unit** was declared, this allows the test runner to have visibility over private functions and parent `use` declarations. They can also consume `pub(crate)` functions from other modules if needed. Unit tests can be more focused on **implementation and edge-cases checks**.
+
+* They should be as simple as possible, testing one state and one behavior of the unit. KISS.
+* They should test for errors and edge cases.
+* Different tests of the same unit can be combined under a single `#[cfg(test)] mod test_unit_of_work {...}`, allowing multiple submodules for different `units_of_work`.
+* Try to keep external states/side effects to your API to minimum and focus those tests on the `mod.rs` files.
+* Tests that are not yet fully implemented can be ignored with the `#[ignore = "optional message"]` attribute.
+* Tests that intentionally panic should be annotated with the attribute `#[should_panic]`.
+
+```rust
+#[cfg(test)]
+mod unit_of_work_tests {
+    use super::*;
+
+    #[test]
+    fn unit_state_behavior() {
+        let expected = ...;
+        let result = ...;
+        assert_eq!(result, expected, "Failed because {}", result - expected);
+    }
+}
+```
+
+### Integration Tests
+
+Tests that go under the `tests/` directory, they are entirely external to your library and use the same code as any other code would use, not have access to private and crate level functions, which means they can **only test** functions on your **public API**. 
+
+> Their purpose is to test whether many parts of the code work together correctly, units of code that work correctly on their own could have problems when integrated.
+
+* Test for happy paths and common use cases.
+* Allow external states and side effects, [testcontainers](https://rust.testcontainers.org/) might help.
+* if testing binaries, try to break **executable** and **functions** into `src/main.rs` and `src/lib.rs`, respectively.
+
+```
+├── Cargo.lock 
+├── Cargo.toml 
+├── src 
+│   └── lib.rs 
+└── tests 
+    ├── mod.rs 
+    ├── common 
+    │   └── mod.rs 
+    └── integration_test.rs
+```
+
+### Doc Testing
+
+As mentioned in section [5.2](#52-add-test-examples-to-your-docs), doc tests should have happy paths, general public API usage and more powerful attributes that improve documentation, like custom CSS for the code blocks.
+
+### Attributes:
+
+* `ignore`: tells rust to ignore the code, usually not recommended, if you want just a code formatted text, use `text`.
+* `should_panic`: tells the rust compiler that this example block will panic.
+* `no_run`: compiles but doesn't execute the code, similar to `cargo check`. Very useful when dealing with side-effects for documentation.
+* `compile_fail`: Test rustdoc that this block should cause a compilation fail, important when you want to demonstrate wrong use cases.
+
+## 5.4 How to `assert!`
+
+Rust comes with 2 macros to make assertions:
+* `assert!` for asserting boolean values like `assert!(value.is_ok(), "'value' is not Ok: {value:?}")`
+* `assert_eq!` for checking equality between two different values, `assert_eq!(result, expected, "'result' differs from 'expected': {}", result.diff(expected))`.
+
+### 🚨 `assert!` reminders
+* Rust asserts support formatted strings, like the previous examples, those strings will be printed in case of failure, so it is a good practice to add what the actual state was and how it differs from the expected.
+* If you don't care about the exact pattern matching value, using `matches!` combined with `assert!` might be a good alternative.
+```rust
+assert!(matches!(error, MyError::BadInput(_), "Expected `BadInput`, found {error}"));
+```
+* Use `#[should_panic]` wisely. It should only be used when panic is the desired behavior, prefer result instead of panic.
+* There are some other that can enhance your testing experience like:
+    * [`rstest`](https://crates.io/crates/rstest): fixture based test framework with procedural macros.
+    * [`pretty_assertions`](https://crates.io/crates/pretty_assertions): overrides `assert_eq` and `assert_ne`, and creates colorful diffs between them.
+
+## 5.5 Snapshot Testing with `cargo insta`
+
+> When correctness is visual or structural, snapshots tell the story better than asserts.
+
+1. Add to your dependencies:
+```toml
+insta = { version = "1.42.2", features = ["yaml"] }
+```
+> For most real world applications the recommendation is to use YAML snapshots of serializable values. This is because they look best under version control and the diff viewer and support redaction. To use this enable the yaml feature of insta.
+
+2. For a better review experience, add the CLI `cargo install cargo-insta`.
+
+3. Writing a simple test:
+```rust
+fn split_words(s: &str) -> Vec<&str> {
+    s.split_whitespace().collect()
+}
+
+#[test]
+fn test_split_words() {
+    let words = split_words("hello from the other side");
+    insta::assert_yaml_snapshot!(words);
+}
+```
+
+4. Run `cargo insta test` to execute, and `cargo insta review` to review conflicts.
+
+To learn more about `cargo insta` check out its [documentation](https://insta.rs/docs/quickstart/) as it is a very complete and well documented tool.
+
+### What is snapshot testing?
+
+Snapshot testing compares your output (text, Json, HTML, YAML, etc) against a saved "golden" version. On future runs, the test fails if the output changes, unless humanly approved. It is perfect for:
+* Generate code.
+* Serializing complex data.
+* Rendered HTML.
+* CLI output.
+
+#### ❌ What not to test with snapshot
+* Very stable, numeric-only or small structured data associated logic (prefer `assert_eq!`).
+* Critical path logic (prefer precise unit tests).
+* Flaky tests, randomly generated output, unless redacted.
+* Snapshots of external resources, use mocks and stubs.
+
+## 5.6 ✅ Snapshot Best Practices
+
+* Named snapshots, it gives meaningful snapshot files names, e.g. `snapshots/this_is_a_named_snapshot.snap`
+```rust
+assert_snapshot!("this_is_a_named_snapshot", output);
+```
+
+* Keep snapshots small and clear. 
+```rust
+// ✅ Best case:
+assert_snapshot!("app_config/http", whole_app_config.http);
+
+// ❌ Worst case:
+assert_snapshot!("app_config", whole_app_config); // Huge object
+```
+
+> #### 🚨 Avoid snapshotting huge objects 
+> Huge objects become hard to review and reason about.
+
+* Avoid snapshotting simple types (primitives, flat enums, small structs):
+```rust
+// ✅ Better:
+assert_eq!(meaning_of_life, 42);
+
+// ❌ OVERKILL:
+assert_snapshot!("the_meaning_of_life", meaning_of_life); // meaning_of_life == 42
+```
+
+* Use [redactions](https://insta.rs/docs/redactions/) for unstable fields (randomly generated, timestamps, uuid, etc):
+```rust
+use insta::assert_json_snapshot;
+
+#[test]
+fn endpoint_get_user_data() {
+    let data = http::client.get_user_data();
+    assert_json_snapshot!(
+        "endpoints/subroute/get_user_data",
+        data,
+        ".created_at" => "[timestamp]",
+        ".id" => "[uuid]"
+    );
+}
+```
+* Commit your snapshots into git. They will be stored in `snapshots/` alongside your tests.
+* Review changes carefully before accepting.
+
+exec
+/bin/zsh -lc 'git diff 7f2eac04d25a4949a2797d3d4f5f8d0fa6c3345a -- rust/apple_bridge_core/src/error.rs rust/apple_bridge_core/src/lib.rs rust/apple_bridge_core/src/server.rs rust/apple_bridge_core/tests/error_display.rs rust/apple_bridge_core/tests/server_lifecycle.rs rust/apple_bridge_core/tests/support/mod.rs AGENTS.md justfile' in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 0ms:
+diff --git a/AGENTS.md b/AGENTS.md
+index 2015d90..1106295 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -116,6 +116,23 @@ Only invoke skills named in the tables above. Do not reference skill names that
+ 
+ For implementation, review, and design work, use the process skills above (especially **test-driven-development**, **verification-before-completion**, and **requesting-code-review**). Do not assume optional bundled skills are available.
+ 
++### Review triage (when asked to check a review)
++
++Keep the response short. The user can ask for code walkthroughs or examples separately.
++
++Use **one table** — no separate lists, no code blocks, no patch sketches unless asked.
++
++| # | Topic | Agree? | Note |
++|---|-------|--------|------|
++| 1 | One short phrase on what the comment is about | Yes / No | Only if No — why you disagree |
++
++- **#** — index matching the review (or sequential if unnumbered)
++- **Topic** — ~8–15 words; name the issue and where it bites, but keep each cell on one line
++- **Agree?** — `Yes` or `No` only
++- **Note** — **only when `No`**; omit the column value (leave empty) for `Yes`
++
++Do **not** include by default: long explanations, architecture essays, code citations, or re-stating the review verbatim. Add detail only when the user asks.
++
+ ## Tooling
+ 
+ ### XcodeBuildMCP (preferred for Apple platform work)
+diff --git a/justfile b/justfile
+index 7f7f508..58635ce 100644
+--- a/justfile
++++ b/justfile
+@@ -1,10 +1,10 @@
+ # Apple Bridge — task runner (see docs/conventions.md)
+ 
+ review *FLAGS='':
+-    local/review/bin/review.sh {{FLAGS}}
++    @local/review/bin/review.sh {{FLAGS}}
+ 
+ review-strict:
+-    local/review/bin/review.sh --strict
++    @local/review/bin/review.sh --strict
+ 
+ test-swift:
+     TZ=UTC xcodebuild test -project AppleBridge.xcodeproj -scheme AppleBridge \
+diff --git a/rust/apple_bridge_core/src/error.rs b/rust/apple_bridge_core/src/error.rs
+index 0c880c3..22e1470 100644
+--- a/rust/apple_bridge_core/src/error.rs
++++ b/rust/apple_bridge_core/src/error.rs
+@@ -8,4 +8,10 @@ pub enum CoreError {
+ 
+   #[error("server state unavailable")]
+   StateUnavailable,
++
++  #[error("failed to bind server: {message}")]
++  BindFailed { message: String },
++
++  #[error("failed to create runtime: {message}")]
++  RuntimeFailed { message: String },
+ }
+\ No newline at end of file
+diff --git a/rust/apple_bridge_core/src/lib.rs b/rust/apple_bridge_core/src/lib.rs
+index 08d676d..0c96453 100644
+--- a/rust/apple_bridge_core/src/lib.rs
++++ b/rust/apple_bridge_core/src/lib.rs
+@@ -3,6 +3,7 @@ use std::sync::Arc;
+ mod config;
+ mod diagnostics;
+ mod error;
++mod http;
+ mod logging;
+ mod providers;
+ mod server;
+diff --git a/rust/apple_bridge_core/src/server.rs b/rust/apple_bridge_core/src/server.rs
+index 66cb964..677b344 100644
+--- a/rust/apple_bridge_core/src/server.rs
++++ b/rust/apple_bridge_core/src/server.rs
+@@ -1,15 +1,28 @@
+ use std::sync::{Arc, Mutex};
+ 
++use axum::Router;
++use tokio::sync::oneshot;
++use tokio::task::JoinHandle;
++
+ use crate::{
+   config::{validate_config, ServerConfig},
+   diagnostics::{ProviderStatus, ServerStatus},
+   error::CoreError,
++  http,
+   providers::ProviderBridge,
+ };
+ 
++#[derive(Debug, Clone, Copy, PartialEq, Eq)]
++enum ServerPhase {
++  Stopped,
++  Starting,
++  Running,
++  Stopping,
++}
++
+ #[derive(uniffi::Object)]
+ pub struct ServerHandle {
+-  inner: Mutex<ServerInner>,
++  inner: Arc<Mutex<ServerInner>>,
+ }
+ 
+ struct ServerInner {
+@@ -17,6 +30,25 @@ struct ServerInner {
+   #[allow(dead_code)]
+   provider: Arc<dyn ProviderBridge>,
+   status: ServerStatus,
++  phase: ServerPhase,
++  start_generation: u64,
++  runtime: Option<tokio::runtime::Runtime>,
++  shutdown_tx: Option<oneshot::Sender<()>>,
++  server_task: Option<JoinHandle<()>>,
++}
++
++struct ShutdownParts {
++  runtime: Option<tokio::runtime::Runtime>,
++  shutdown_tx: Option<oneshot::Sender<()>>,
++  server_task: Option<JoinHandle<()>>,
++}
++
++fn bind_address(host: &str, port: u16) -> String {
++  if host.contains(':') {
++    format!("[{host}]:{port}")
++  } else {
++    format!("{host}:{port}")
++  }
+ }
+ 
+ fn initial_status(config: &ServerConfig) -> ServerStatus {
+@@ -55,6 +87,112 @@ fn running_status(config: &ServerConfig) -> ServerStatus {
+   }
+ }
+ 
++fn stopped_status_with_error(config: &ServerConfig, message: String) -> ServerStatus {
++  ServerStatus {
++    running: false,
++    bound_host: config.host.clone(),
++    bound_port: config.port,
++    provider_statuses: config
++      .enabled_providers
++      .iter()
++      .map(|p| ProviderStatus {
++        name: p.name.clone(),
++        enabled: p.enabled,
++        healthy: false,
++      })
++      .collect(),
++    last_error: Some(message),
++  }
++}
++
++fn build_runtime() -> Result<tokio::runtime::Runtime, CoreError> {
++  tokio::runtime::Builder::new_multi_thread()
++    .enable_all()
++    .build()
++    .map_err(|error| CoreError::RuntimeFailed {
++      message: error.to_string(),
++    })
++}
++
++fn clear_stale_runtime(inner: &mut ServerInner) {
++  if inner.server_task.is_none() {
++    inner.runtime.take();
++    inner.shutdown_tx.take();
++  }
++}
++
++fn take_shutdown_parts(inner: &mut ServerInner) -> ShutdownParts {
++  ShutdownParts {
++    runtime: inner.runtime.take(),
++    shutdown_tx: inner.shutdown_tx.take(),
++    server_task: inner.server_task.take(),
++  }
++}
++
++fn run_shutdown(parts: ShutdownParts) {
++  match parts {
++    ShutdownParts {
++      runtime: Some(runtime),
++      shutdown_tx: Some(shutdown_tx),
++      server_task: Some(server_task),
++    } => {
++      let join = std::thread::spawn(move || {
++        runtime.block_on(async {
++          let _ = shutdown_tx.send(());
++          let _ = server_task.await;
++        });
++      });
++      let _ = join.join();
++    }
++    ShutdownParts {
++      runtime: Some(runtime),
++      ..
++    } => drop(runtime),
++    ShutdownParts { .. } => {}
++  }
++}
++
++async fn start_http_server(
++  addr: &str,
++  router: Router,
++  inner: Arc<Mutex<ServerInner>>,
++) -> Result<(oneshot::Sender<()>, JoinHandle<()>), CoreError> {
++  let listener = tokio::net::TcpListener::bind(addr).await.map_err(|error| CoreError::BindFailed {
++    message: error.to_string(),
++  })?;
++  let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
++  let task_inner = inner.clone();
++  let task = tokio::spawn(async move {
++    let result = axum::serve(listener, router)
++      .with_graceful_shutdown(async {
++        let _ = shutdown_rx.await;
++      })
++      .await;
++
++    if let Err(error) = result {
++      tracing::error!(%error, "http server exited with error");
++      if let Ok(mut guard) = task_inner.lock() {
++        if guard.phase == ServerPhase::Running {
++          guard.phase = ServerPhase::Stopped;
++          guard.status = stopped_status_with_error(&guard.config, error.to_string());
++          guard.shutdown_tx = None;
++          guard.server_task = None;
++        }
++      }
++    }
++  });
++
++  Ok((shutdown_tx, task))
++}
++
++fn abort_started_server(runtime: tokio::runtime::Runtime, shutdown_tx: oneshot::Sender<()>, server_task: JoinHandle<()>) {
++  run_shutdown(ShutdownParts {
++    runtime: Some(runtime),
++    shutdown_tx: Some(shutdown_tx),
++    server_task: Some(server_task),
++  });
++}
++
+ pub fn create_server(
+   config: ServerConfig,
+   provider: Box<dyn ProviderBridge>,
+@@ -62,36 +200,129 @@ pub fn create_server(
+   validate_config(&config)?;
+ 
+   Ok(Arc::new(ServerHandle {
+-    inner: Mutex::new(ServerInner {
++    inner: Arc::new(Mutex::new(ServerInner {
+       status: initial_status(&config),
+       config,
+       provider: Arc::from(provider),
+-    }),
++      phase: ServerPhase::Stopped,
++      start_generation: 0,
++      runtime: None,
++      shutdown_tx: None,
++      server_task: None,
++    })),
+   }))
+ }
+ 
++impl Drop for ServerHandle {
++  fn drop(&mut self) {
++    let parts = match self.inner.lock() {
++      Ok(mut inner) => {
++        inner.phase = ServerPhase::Stopped;
++        take_shutdown_parts(&mut inner)
++      }
++      Err(_) => return,
++    };
++    run_shutdown(parts);
++
++    if let Ok(mut inner) = self.inner.lock() {
++      inner.status = initial_status(&inner.config);
++    }
++  }
++}
++
+ #[uniffi::export]
+ impl ServerHandle {
+   pub fn start(&self) -> Result<(), CoreError> {
++    let (addr, generation) = {
++      let mut inner = self
++        .inner
++        .lock()
++        .map_err(|_| CoreError::StateUnavailable)?;
++      if inner.phase == ServerPhase::Running || inner.phase == ServerPhase::Starting {
++        return Err(CoreError::AlreadyRunning);
++      }
++      if inner.phase == ServerPhase::Stopping {
++        return Err(CoreError::StateUnavailable);
++      }
++      clear_stale_runtime(&mut inner);
++      inner.phase = ServerPhase::Starting;
++      inner.start_generation += 1;
++      let generation = inner.start_generation;
++      (bind_address(&inner.config.host, inner.config.port), generation)
++    };
++
++    let runtime = build_runtime()?;
++    let router = http::router();
++    let started = runtime.block_on(start_http_server(&addr, router, self.inner.clone()));
++
++    let (shutdown_tx, server_task) = match started {
++      Ok(parts) => parts,
++      Err(error) => {
++        let mut inner = self
++          .inner
++          .lock()
++          .map_err(|_| CoreError::StateUnavailable)?;
++        if inner.phase == ServerPhase::Starting && inner.start_generation == generation {
++          inner.phase = ServerPhase::Stopped;
++          inner.status = stopped_status_with_error(&inner.config, error.to_string());
++        }
++        return Err(error);
++      }
++    };
++
+     let mut inner = self
+       .inner
+       .lock()
+       .map_err(|_| CoreError::StateUnavailable)?;
+-
+-    if inner.status.running {
+-      return Err(CoreError::AlreadyRunning);
++    if inner.phase == ServerPhase::Starting && inner.start_generation == generation {
++      inner.runtime = Some(runtime);
++      inner.shutdown_tx = Some(shutdown_tx);
++      inner.server_task = Some(server_task);
++      inner.phase = ServerPhase::Running;
++      inner.status = running_status(&inner.config);
++      return Ok(());
+     }
+ 
+-    inner.status = running_status(&inner.config);
++    drop(inner);
++    abort_started_server(runtime, shutdown_tx, server_task);
++
++    let mut inner = self
++      .inner
++      .lock()
++      .map_err(|_| CoreError::StateUnavailable)?;
++    inner.phase = ServerPhase::Stopped;
++    inner.status = initial_status(&inner.config);
+     Ok(())
+   }
+ 
+   pub fn stop(&self) -> Result<(), CoreError> {
++    let parts = {
++      let mut inner = self
++        .inner
++        .lock()
++        .map_err(|_| CoreError::StateUnavailable)?;
++      match inner.phase {
++        ServerPhase::Stopped => return Ok(()),
++        ServerPhase::Starting => {
++          inner.start_generation += 1;
++          inner.phase = ServerPhase::Stopped;
++          inner.status = initial_status(&inner.config);
++          return Ok(());
++        }
++        ServerPhase::Stopping => return Ok(()),
++        ServerPhase::Running => {
++          inner.phase = ServerPhase::Stopping;
++          take_shutdown_parts(&mut inner)
++        }
++      }
++    };
++    run_shutdown(parts);
++
+     let mut inner = self
+       .inner
+       .lock()
+       .map_err(|_| CoreError::StateUnavailable)?;
+-
++    inner.phase = ServerPhase::Stopped;
+     inner.status = initial_status(&inner.config);
+     Ok(())
+   }
+diff --git a/rust/apple_bridge_core/tests/error_display.rs b/rust/apple_bridge_core/tests/error_display.rs
+index 1a810ce..5989a8e 100644
+--- a/rust/apple_bridge_core/tests/error_display.rs
++++ b/rust/apple_bridge_core/tests/error_display.rs
+@@ -9,4 +9,26 @@ fn invalid_config_display() {
+     err.to_string(),
+     "invalid configuration: port must not be 0"
+   );
++}
++
++#[test]
++fn bind_failed_display() {
++  let err = CoreError::BindFailed {
++    message: "address already in use".into(),
++  };
++  assert_eq!(
++    err.to_string(),
++    "failed to bind server: address already in use"
++  );
++}
++
++#[test]
++fn runtime_failed_display() {
++  let err = CoreError::RuntimeFailed {
++    message: "worker threads unavailable".into(),
++  };
++  assert_eq!(
++    err.to_string(),
++    "failed to create runtime: worker threads unavailable"
++  );
+ }
+\ No newline at end of file
+diff --git a/rust/apple_bridge_core/tests/server_lifecycle.rs b/rust/apple_bridge_core/tests/server_lifecycle.rs
+index 4354579..4996dfa 100644
+--- a/rust/apple_bridge_core/tests/server_lifecycle.rs
++++ b/rust/apple_bridge_core/tests/server_lifecycle.rs
+@@ -4,11 +4,12 @@ use apple_bridge_core::{
+   create_server, server_status, start_server, stop_server, ProviderConfig, ServerConfig,
+ };
+ use support::mock_provider::MockProviderBridge;
++use support::port::ephemeral_port;
+ 
+ fn sample_config() -> ServerConfig {
+   ServerConfig {
+     host: "127.0.0.1".into(),
+-    port: 3020,
++    port: ephemeral_port(),
+     enabled_providers: vec![ProviderConfig {
+       name: "eventkit".into(),
+       enabled: true,
+@@ -18,7 +19,16 @@ fn sample_config() -> ServerConfig {
+ 
+ #[test]
+ fn lifecycle_start_stop() {
+-  let handle = create_server(sample_config(), Box::new(MockProviderBridge::new()))
++  let port = ephemeral_port();
++  let config = ServerConfig {
++    host: "127.0.0.1".into(),
++    port,
++    enabled_providers: vec![ProviderConfig {
++      name: "eventkit".into(),
++      enabled: true,
++    }],
++  };
++  let handle = create_server(config, Box::new(MockProviderBridge::new()))
+     .expect("create_server");
+ 
+   let before = server_status(handle.clone());
+@@ -28,7 +38,7 @@ fn lifecycle_start_stop() {
+   let running = server_status(handle.clone());
+   assert!(running.running);
+   assert_eq!(running.bound_host, "127.0.0.1");
+-  assert_eq!(running.bound_port, 3020);
++  assert_eq!(running.bound_port, port);
+   assert_eq!(running.provider_statuses.len(), 1);
+ 
+   stop_server(handle.clone()).expect("stop");
+diff --git a/rust/apple_bridge_core/tests/support/mod.rs b/rust/apple_bridge_core/tests/support/mod.rs
+index 1f17656..7a251ce 100644
+--- a/rust/apple_bridge_core/tests/support/mod.rs
++++ b/rust/apple_bridge_core/tests/support/mod.rs
+@@ -1 +1,2 @@
+-pub mod mock_provider;
+\ No newline at end of file
++pub mod mock_provider;
++pub mod port;
+\ No newline at end of file
+
+exec
+/bin/zsh -lc "sed -n '1,260p' rust/apple_bridge_core/src/server.rs" in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 0ms:
+use std::sync::{Arc, Mutex};
+
+use axum::Router;
+use tokio::sync::oneshot;
+use tokio::task::JoinHandle;
+
+use crate::{
+  config::{validate_config, ServerConfig},
+  diagnostics::{ProviderStatus, ServerStatus},
+  error::CoreError,
+  http,
+  providers::ProviderBridge,
+};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ServerPhase {
+  Stopped,
+  Starting,
+  Running,
+  Stopping,
+}
+
+#[derive(uniffi::Object)]
+pub struct ServerHandle {
+  inner: Arc<Mutex<ServerInner>>,
+}
+
+struct ServerInner {
+  config: ServerConfig,
+  #[allow(dead_code)]
+  provider: Arc<dyn ProviderBridge>,
+  status: ServerStatus,
+  phase: ServerPhase,
+  start_generation: u64,
+  runtime: Option<tokio::runtime::Runtime>,
+  shutdown_tx: Option<oneshot::Sender<()>>,
+  server_task: Option<JoinHandle<()>>,
+}
+
+struct ShutdownParts {
+  runtime: Option<tokio::runtime::Runtime>,
+  shutdown_tx: Option<oneshot::Sender<()>>,
+  server_task: Option<JoinHandle<()>>,
+}
+
+fn bind_address(host: &str, port: u16) -> String {
+  if host.contains(':') {
+    format!("[{host}]:{port}")
+  } else {
+    format!("{host}:{port}")
+  }
+}
+
+fn initial_status(config: &ServerConfig) -> ServerStatus {
+  ServerStatus {
+    running: false,
+    bound_host: config.host.clone(),
+    bound_port: config.port,
+    provider_statuses: config
+      .enabled_providers
+      .iter()
+      .map(|p| ProviderStatus {
+        name: p.name.clone(),
+        enabled: p.enabled,
+        healthy: false,
+      })
+      .collect(),
+    last_error: None,
+  }
+}
+
+fn running_status(config: &ServerConfig) -> ServerStatus {
+  ServerStatus {
+    running: true,
+    bound_host: config.host.clone(),
+    bound_port: config.port,
+    provider_statuses: config
+      .enabled_providers
+      .iter()
+      .map(|p| ProviderStatus {
+        name: p.name.clone(),
+        enabled: p.enabled,
+        healthy: p.enabled,
+      })
+      .collect(),
+    last_error: None,
+  }
+}
+
+fn stopped_status_with_error(config: &ServerConfig, message: String) -> ServerStatus {
+  ServerStatus {
+    running: false,
+    bound_host: config.host.clone(),
+    bound_port: config.port,
+    provider_statuses: config
+      .enabled_providers
+      .iter()
+      .map(|p| ProviderStatus {
+        name: p.name.clone(),
+        enabled: p.enabled,
+        healthy: false,
+      })
+      .collect(),
+    last_error: Some(message),
+  }
+}
+
+fn build_runtime() -> Result<tokio::runtime::Runtime, CoreError> {
+  tokio::runtime::Builder::new_multi_thread()
+    .enable_all()
+    .build()
+    .map_err(|error| CoreError::RuntimeFailed {
+      message: error.to_string(),
+    })
+}
+
+fn clear_stale_runtime(inner: &mut ServerInner) {
+  if inner.server_task.is_none() {
+    inner.runtime.take();
+    inner.shutdown_tx.take();
+  }
+}
+
+fn take_shutdown_parts(inner: &mut ServerInner) -> ShutdownParts {
+  ShutdownParts {
+    runtime: inner.runtime.take(),
+    shutdown_tx: inner.shutdown_tx.take(),
+    server_task: inner.server_task.take(),
+  }
+}
+
+fn run_shutdown(parts: ShutdownParts) {
+  match parts {
+    ShutdownParts {
+      runtime: Some(runtime),
+      shutdown_tx: Some(shutdown_tx),
+      server_task: Some(server_task),
+    } => {
+      let join = std::thread::spawn(move || {
+        runtime.block_on(async {
+          let _ = shutdown_tx.send(());
+          let _ = server_task.await;
+        });
+      });
+      let _ = join.join();
+    }
+    ShutdownParts {
+      runtime: Some(runtime),
+      ..
+    } => drop(runtime),
+    ShutdownParts { .. } => {}
+  }
+}
+
+async fn start_http_server(
+  addr: &str,
+  router: Router,
+  inner: Arc<Mutex<ServerInner>>,
+) -> Result<(oneshot::Sender<()>, JoinHandle<()>), CoreError> {
+  let listener = tokio::net::TcpListener::bind(addr).await.map_err(|error| CoreError::BindFailed {
+    message: error.to_string(),
+  })?;
+  let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
+  let task_inner = inner.clone();
+  let task = tokio::spawn(async move {
+    let result = axum::serve(listener, router)
+      .with_graceful_shutdown(async {
+        let _ = shutdown_rx.await;
+      })
+      .await;
+
+    if let Err(error) = result {
+      tracing::error!(%error, "http server exited with error");
+      if let Ok(mut guard) = task_inner.lock() {
+        if guard.phase == ServerPhase::Running {
+          guard.phase = ServerPhase::Stopped;
+          guard.status = stopped_status_with_error(&guard.config, error.to_string());
+          guard.shutdown_tx = None;
+          guard.server_task = None;
+        }
+      }
+    }
+  });
+
+  Ok((shutdown_tx, task))
+}
+
+fn abort_started_server(runtime: tokio::runtime::Runtime, shutdown_tx: oneshot::Sender<()>, server_task: JoinHandle<()>) {
+  run_shutdown(ShutdownParts {
+    runtime: Some(runtime),
+    shutdown_tx: Some(shutdown_tx),
+    server_task: Some(server_task),
+  });
+}
+
+pub fn create_server(
+  config: ServerConfig,
+  provider: Box<dyn ProviderBridge>,
+) -> Result<Arc<ServerHandle>, CoreError> {
+  validate_config(&config)?;
+
+  Ok(Arc::new(ServerHandle {
+    inner: Arc::new(Mutex::new(ServerInner {
+      status: initial_status(&config),
+      config,
+      provider: Arc::from(provider),
+      phase: ServerPhase::Stopped,
+      start_generation: 0,
+      runtime: None,
+      shutdown_tx: None,
+      server_task: None,
+    })),
+  }))
+}
+
+impl Drop for ServerHandle {
+  fn drop(&mut self) {
+    let parts = match self.inner.lock() {
+      Ok(mut inner) => {
+        inner.phase = ServerPhase::Stopped;
+        take_shutdown_parts(&mut inner)
+      }
+      Err(_) => return,
+    };
+    run_shutdown(parts);
+
+    if let Ok(mut inner) = self.inner.lock() {
+      inner.status = initial_status(&inner.config);
+    }
+  }
+}
+
+#[uniffi::export]
+impl ServerHandle {
+  pub fn start(&self) -> Result<(), CoreError> {
+    let (addr, generation) = {
+      let mut inner = self
+        .inner
+        .lock()
+        .map_err(|_| CoreError::StateUnavailable)?;
+      if inner.phase == ServerPhase::Running || inner.phase == ServerPhase::Starting {
+        return Err(CoreError::AlreadyRunning);
+      }
+      if inner.phase == ServerPhase::Stopping {
+        return Err(CoreError::StateUnavailable);
+      }
+      clear_stale_runtime(&mut inner);
+      inner.phase = ServerPhase::Starting;
+      inner.start_generation += 1;
+      let generation = inner.start_generation;
+      (bind_address(&inner.config.host, inner.config.port), generation)
+    };
+
+    let runtime = build_runtime()?;
+    let router = http::router();
+    let started = runtime.block_on(start_http_server(&addr, router, self.inner.clone()));
+
+    let (shutdown_tx, server_task) = match started {
+      Ok(parts) => parts,
+      Err(error) => {
+
+exec
+/bin/zsh -lc 'git status --short' in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 0ms:
+ M AGENTS.md
+ M justfile
+ M rust/apple_bridge_core/src/error.rs
+ M rust/apple_bridge_core/src/lib.rs
+ M rust/apple_bridge_core/src/server.rs
+ M rust/apple_bridge_core/tests/error_display.rs
+ M rust/apple_bridge_core/tests/server_lifecycle.rs
+ M rust/apple_bridge_core/tests/support/mod.rs
+?? rust/apple_bridge_core/src/http.rs
+?? rust/apple_bridge_core/tests/http_health.rs
+?? rust/apple_bridge_core/tests/support/port.rs
+
+exec
+/bin/zsh -lc "sed -n '1,200p' rust/apple_bridge_core/src/http.rs" in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 0ms:
+use axum::{routing::get, Json, Router};
+use serde_json::{json, Value};
+
+async fn health() -> Json<Value> {
+  Json(json!({ "ok": true }))
+}
+
+pub fn router() -> Router {
+  Router::new().route("/health", get(health))
+}
+exec
+/bin/zsh -lc "sed -n '260,520p' rust/apple_bridge_core/src/server.rs && printf '\\n---\\n' && sed -n '1,220p' rust/apple_bridge_core/tests/http_health.rs && printf '\\n---\\n' && sed -n '1,220p' rust/apple_bridge_core/tests/support/port.rs" in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 0ms:
+      Err(error) => {
+        let mut inner = self
+          .inner
+          .lock()
+          .map_err(|_| CoreError::StateUnavailable)?;
+        if inner.phase == ServerPhase::Starting && inner.start_generation == generation {
+          inner.phase = ServerPhase::Stopped;
+          inner.status = stopped_status_with_error(&inner.config, error.to_string());
+        }
+        return Err(error);
+      }
+    };
+
+    let mut inner = self
+      .inner
+      .lock()
+      .map_err(|_| CoreError::StateUnavailable)?;
+    if inner.phase == ServerPhase::Starting && inner.start_generation == generation {
+      inner.runtime = Some(runtime);
+      inner.shutdown_tx = Some(shutdown_tx);
+      inner.server_task = Some(server_task);
+      inner.phase = ServerPhase::Running;
+      inner.status = running_status(&inner.config);
+      return Ok(());
+    }
+
+    drop(inner);
+    abort_started_server(runtime, shutdown_tx, server_task);
+
+    let mut inner = self
+      .inner
+      .lock()
+      .map_err(|_| CoreError::StateUnavailable)?;
+    inner.phase = ServerPhase::Stopped;
+    inner.status = initial_status(&inner.config);
+    Ok(())
+  }
+
+  pub fn stop(&self) -> Result<(), CoreError> {
+    let parts = {
+      let mut inner = self
+        .inner
+        .lock()
+        .map_err(|_| CoreError::StateUnavailable)?;
+      match inner.phase {
+        ServerPhase::Stopped => return Ok(()),
+        ServerPhase::Starting => {
+          inner.start_generation += 1;
+          inner.phase = ServerPhase::Stopped;
+          inner.status = initial_status(&inner.config);
+          return Ok(());
+        }
+        ServerPhase::Stopping => return Ok(()),
+        ServerPhase::Running => {
+          inner.phase = ServerPhase::Stopping;
+          take_shutdown_parts(&mut inner)
+        }
+      }
+    };
+    run_shutdown(parts);
+
+    let mut inner = self
+      .inner
+      .lock()
+      .map_err(|_| CoreError::StateUnavailable)?;
+    inner.phase = ServerPhase::Stopped;
+    inner.status = initial_status(&inner.config);
+    Ok(())
+  }
+
+  pub fn status(&self) -> ServerStatus {
+    match self.inner.lock() {
+      Ok(inner) => inner.status.clone(),
+      Err(_) => ServerStatus {
+        running: false,
+        bound_host: String::new(),
+        bound_port: 0,
+        provider_statuses: Vec::new(),
+        last_error: Some("server state unavailable".into()),
+      },
+    }
+  }
+}
+---
+mod support;
+
+use apple_bridge_core::{
+  create_server, server_status, start_server, stop_server, CoreError, ProviderConfig, ServerConfig,
+};
+use support::mock_provider::MockProviderBridge;
+use support::port::{ephemeral_port, health_body_ok, http_get_body, reserve_port};
+
+fn config_on_port(host: &str, port: u16) -> ServerConfig {
+  ServerConfig {
+    host: host.into(),
+    port,
+    enabled_providers: vec![ProviderConfig {
+      name: "eventkit".into(),
+      enabled: true,
+    }],
+  }
+}
+
+#[test]
+fn health_returns_ok_json() {
+  let port = ephemeral_port();
+  let handle = create_server(config_on_port("127.0.0.1", port), Box::new(MockProviderBridge::new()))
+    .expect("create_server");
+  start_server(handle.clone()).expect("start");
+
+  let (status_code, body) = http_get_body("/health", "127.0.0.1", port);
+  assert_eq!(status_code, 200);
+  assert!(health_body_ok(&body));
+
+  stop_server(handle).expect("stop");
+}
+
+#[test]
+fn health_on_ipv6_loopback() {
+  let port = ephemeral_port();
+  let handle = create_server(config_on_port("::1", port), Box::new(MockProviderBridge::new()))
+    .expect("create_server");
+  start_server(handle.clone()).expect("start");
+
+  let (status_code, body) = http_get_body("/health", "::1", port);
+  assert_eq!(status_code, 200);
+  assert!(health_body_ok(&body));
+
+  stop_server(handle).expect("stop");
+}
+
+#[test]
+fn stop_releases_port_for_rebind() {
+  let port = ephemeral_port();
+  let handle = create_server(config_on_port("127.0.0.1", port), Box::new(MockProviderBridge::new()))
+    .expect("create_server");
+  start_server(handle.clone()).expect("first start");
+  stop_server(handle.clone()).expect("stop");
+  start_server(handle).expect("second start after stop");
+}
+
+#[test]
+fn bind_failure_when_port_in_use() {
+  let reserved = reserve_port();
+  let port = reserved.port;
+  let first = create_server(config_on_port("127.0.0.1", port), Box::new(MockProviderBridge::new()))
+    .expect("first server");
+  start_server(first.clone()).expect_err("bind fails while port reserved");
+
+  drop(reserved);
+  start_server(first.clone()).expect("first start after release");
+
+  let second = create_server(config_on_port("127.0.0.1", port), Box::new(MockProviderBridge::new()))
+    .expect("second server");
+  let err = start_server(second.clone()).expect_err("second bind");
+  assert!(matches!(err, CoreError::BindFailed { .. }));
+
+  let status = server_status(second);
+  assert!(!status.running);
+  assert!(status.last_error.is_some());
+
+  stop_server(first).expect("stop first server");
+}
+---
+#![allow(dead_code)]
+
+use std::io::{Read, Write};
+use std::net::TcpListener;
+use std::net::TcpStream;
+
+pub struct ReservedPort {
+  _listener: TcpListener,
+  pub port: u16,
+}
+
+pub fn reserve_port() -> ReservedPort {
+  let listener = TcpListener::bind("127.0.0.1:0").expect("reserve port");
+  let port = listener.local_addr().expect("local addr").port();
+  ReservedPort {
+    _listener: listener,
+    port,
+  }
+}
+
+/// Returns a port from the OS, releasing the reservation immediately before bind.
+pub fn ephemeral_port() -> u16 {
+  reserve_port().port
+}
+
+fn connect_addr(host: &str, port: u16) -> String {
+  if host.contains(':') {
+    format!("[{host}]:{port}")
+  } else {
+    format!("{host}:{port}")
+  }
+}
+
+pub fn http_get(path: &str, host: &str, port: u16) -> (u16, String) {
+  let mut stream = TcpStream::connect(connect_addr(host, port)).expect("tcp connect");
+  let request = format!(
+    "GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
+  );
+  stream
+    .write_all(request.as_bytes())
+    .expect("write request");
+  let mut response = String::new();
+  stream.read_to_string(&mut response).expect("read response");
+  let status_line = response.lines().next().unwrap_or("");
+  let status_code = status_line
+    .split_whitespace()
+    .nth(1)
+    .unwrap_or("0")
+    .parse()
+    .unwrap_or(0);
+  (status_code, response)
+}
+
+pub fn http_get_body(path: &str, host: &str, port: u16) -> (u16, String) {
+  let (status_code, response) = http_get(path, host, port);
+  let body = response
+    .split("\r\n\r\n")
+    .nth(1)
+    .unwrap_or("")
+    .trim()
+    .to_string();
+  (status_code, body)
+}
+
+pub fn health_body_ok(body: &str) -> bool {
+  let trimmed = body.trim();
+  trimmed == r#"{"ok":true}"# || trimmed == r#"{"ok": true}"#
+}
+exec
+/bin/zsh -lc 'cargo test' in /Users/rcanoff/Projects/apple-bridge/rust/apple_bridge_core
+ exited 101 in 386ms:
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.34s
+     Running unittests src/lib.rs (/Users/rcanoff/Projects/apple-bridge/rust/target/debug/deps/apple_bridge_core-af9a99d5bb4b84f7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../uniffi-bindgen.rs (/Users/rcanoff/Projects/apple-bridge/rust/target/debug/deps/uniffi_bindgen-aca1dd48d1bfa8cf)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/config_validation.rs (/Users/rcanoff/Projects/apple-bridge/rust/target/debug/deps/config_validation-fbacdc8d6b16bccc)
+
+running 11 tests
+test rejects_blank_host ... ok
+test rejects_provider_name_with_spaces ... ok
+test accepts_ipv6_loopback ... ok
+test accepts_loopback_config ... ok
+test rejects_port_zero ... ok
+test rejects_private_ip_host ... ok
+test rejects_public_hostname ... ok
+test accepts_localhost_hostname ... ok
+test rejects_duplicate_provider_names ... ok
+test rejects_uppercase_provider_name ... ok
+test rejects_wildcard_host ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/error_display.rs (/Users/rcanoff/Projects/apple-bridge/rust/target/debug/deps/error_display-07f2c7d103adc6ad)
+
+running 3 tests
+test invalid_config_display ... ok
+test runtime_failed_display ... ok
+test bind_failed_display ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/http_health.rs (/Users/rcanoff/Projects/apple-bridge/rust/target/debug/deps/http_health-963926759856874f)
+
+running 4 tests
+test health_on_ipv6_loopback ... FAILED
+test stop_releases_port_for_rebind ... FAILED
+test health_returns_ok_json ... FAILED
+test bind_failure_when_port_in_use ... FAILED
+
+failures:
+
+---- health_on_ipv6_loopback stdout ----
+
+thread 'health_on_ipv6_loopback' panicked at apple_bridge_core/tests/support/port.rs:13:51:
+reserve port: Os { code: 1, kind: PermissionDenied, message: "Operation not permitted" }
+
+---- stop_releases_port_for_rebind stdout ----
+
+thread 'stop_releases_port_for_rebind' panicked at apple_bridge_core/tests/support/port.rs:13:51:
+reserve port: Os { code: 1, kind: PermissionDenied, message: "Operation not permitted" }
+
+---- health_returns_ok_json stdout ----
+
+thread 'health_returns_ok_json' panicked at apple_bridge_core/tests/support/port.rs:13:51:
+reserve port: Os { code: 1, kind: PermissionDenied, message: "Operation not permitted" }
+
+---- bind_failure_when_port_in_use stdout ----
+
+thread 'bind_failure_when_port_in_use' panicked at apple_bridge_core/tests/support/port.rs:13:51:
+reserve port: Os { code: 1, kind: PermissionDenied, message: "Operation not permitted" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    bind_failure_when_port_in_use
+    health_on_ipv6_loopback
+    health_returns_ok_json
+    stop_releases_port_for_rebind
+
+test result: FAILED. 0 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test http_health`
+
+exec
+/bin/zsh -lc "sed -n '1,220p' rust/apple_bridge_core/src/lib.rs" in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 0ms:
+use std::sync::Arc;
+
+mod config;
+mod diagnostics;
+mod error;
+mod http;
+mod logging;
+mod providers;
+mod server;
+
+pub use config::{
+  ProviderConfig, ProviderRequest, ProviderResponse, ServerConfig, validate_config,
+};
+pub use diagnostics::{ProviderStatus, ServerStatus};
+pub use error::CoreError;
+pub use providers::ProviderBridge;
+pub use server::ServerHandle;
+
+#[uniffi::export]
+pub fn init_logging() {
+  logging::init_logging();
+}
+
+#[uniffi::export]
+pub fn create_server(
+  config: ServerConfig,
+  provider: Box<dyn ProviderBridge>,
+) -> Result<Arc<ServerHandle>, CoreError> {
+  server::create_server(config, provider)
+}
+
+#[uniffi::export]
+pub fn start_server(handle: Arc<ServerHandle>) -> Result<(), CoreError> {
+  handle.start()
+}
+
+#[uniffi::export]
+pub fn stop_server(handle: Arc<ServerHandle>) -> Result<(), CoreError> {
+  handle.stop()
+}
+
+#[uniffi::export]
+pub fn server_status(handle: Arc<ServerHandle>) -> ServerStatus {
+  handle.status()
+}
+
+uniffi::setup_scaffolding!();
+exec
+/bin/zsh -lc "git show 7f2eac04d25a4949a2797d3d4f5f8d0fa6c3345a:rust/apple_bridge_core/src/server.rs | sed -n '1,240p'" in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 0ms:
+use std::sync::{Arc, Mutex};
+
+use crate::{
+  config::{validate_config, ServerConfig},
+  diagnostics::{ProviderStatus, ServerStatus},
+  error::CoreError,
+  providers::ProviderBridge,
+};
+
+#[derive(uniffi::Object)]
+pub struct ServerHandle {
+  inner: Mutex<ServerInner>,
+}
+
+struct ServerInner {
+  config: ServerConfig,
+  #[allow(dead_code)]
+  provider: Arc<dyn ProviderBridge>,
+  status: ServerStatus,
+}
+
+fn initial_status(config: &ServerConfig) -> ServerStatus {
+  ServerStatus {
+    running: false,
+    bound_host: config.host.clone(),
+    bound_port: config.port,
+    provider_statuses: config
+      .enabled_providers
+      .iter()
+      .map(|p| ProviderStatus {
+        name: p.name.clone(),
+        enabled: p.enabled,
+        healthy: false,
+      })
+      .collect(),
+    last_error: None,
+  }
+}
+
+fn running_status(config: &ServerConfig) -> ServerStatus {
+  ServerStatus {
+    running: true,
+    bound_host: config.host.clone(),
+    bound_port: config.port,
+    provider_statuses: config
+      .enabled_providers
+      .iter()
+      .map(|p| ProviderStatus {
+        name: p.name.clone(),
+        enabled: p.enabled,
+        healthy: p.enabled,
+      })
+      .collect(),
+    last_error: None,
+  }
+}
+
+pub fn create_server(
+  config: ServerConfig,
+  provider: Box<dyn ProviderBridge>,
+) -> Result<Arc<ServerHandle>, CoreError> {
+  validate_config(&config)?;
+
+  Ok(Arc::new(ServerHandle {
+    inner: Mutex::new(ServerInner {
+      status: initial_status(&config),
+      config,
+      provider: Arc::from(provider),
+    }),
+  }))
+}
+
+#[uniffi::export]
+impl ServerHandle {
+  pub fn start(&self) -> Result<(), CoreError> {
+    let mut inner = self
+      .inner
+      .lock()
+      .map_err(|_| CoreError::StateUnavailable)?;
+
+    if inner.status.running {
+      return Err(CoreError::AlreadyRunning);
+    }
+
+    inner.status = running_status(&inner.config);
+    Ok(())
+  }
+
+  pub fn stop(&self) -> Result<(), CoreError> {
+    let mut inner = self
+      .inner
+      .lock()
+      .map_err(|_| CoreError::StateUnavailable)?;
+
+    inner.status = initial_status(&inner.config);
+    Ok(())
+  }
+
+  pub fn status(&self) -> ServerStatus {
+    match self.inner.lock() {
+      Ok(inner) => inner.status.clone(),
+      Err(_) => ServerStatus {
+        running: false,
+        bound_host: String::new(),
+        bound_port: 0,
+        provider_statuses: Vec::new(),
+        last_error: Some("server state unavailable".into()),
+      },
+    }
+  }
+}
+exec
+/bin/zsh -lc "rg -n \"start_server|stop_server|server_status|ServerHandle|create_server\" rust/apple_bridge_core/src/lib.rs rust/apple_bridge_core/src -g '"'!target'"'" in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 0ms:
+rust/apple_bridge_core/src/lib.rs:17:pub use server::ServerHandle;
+rust/apple_bridge_core/src/lib.rs:25:pub fn create_server(
+rust/apple_bridge_core/src/lib.rs:28:) -> Result<Arc<ServerHandle>, CoreError> {
+rust/apple_bridge_core/src/lib.rs:29:  server::create_server(config, provider)
+rust/apple_bridge_core/src/lib.rs:33:pub fn start_server(handle: Arc<ServerHandle>) -> Result<(), CoreError> {
+rust/apple_bridge_core/src/lib.rs:38:pub fn stop_server(handle: Arc<ServerHandle>) -> Result<(), CoreError> {
+rust/apple_bridge_core/src/lib.rs:43:pub fn server_status(handle: Arc<ServerHandle>) -> ServerStatus {
+rust/apple_bridge_core/src/server.rs:24:pub struct ServerHandle {
+rust/apple_bridge_core/src/server.rs:196:pub fn create_server(
+rust/apple_bridge_core/src/server.rs:199:) -> Result<Arc<ServerHandle>, CoreError> {
+rust/apple_bridge_core/src/server.rs:202:  Ok(Arc::new(ServerHandle {
+rust/apple_bridge_core/src/server.rs:216:impl Drop for ServerHandle {
+rust/apple_bridge_core/src/server.rs:234:impl ServerHandle {
+rust/apple_bridge_core/src/lib.rs:17:pub use server::ServerHandle;
+rust/apple_bridge_core/src/lib.rs:25:pub fn create_server(
+rust/apple_bridge_core/src/lib.rs:28:) -> Result<Arc<ServerHandle>, CoreError> {
+rust/apple_bridge_core/src/lib.rs:29:  server::create_server(config, provider)
+rust/apple_bridge_core/src/lib.rs:33:pub fn start_server(handle: Arc<ServerHandle>) -> Result<(), CoreError> {
+rust/apple_bridge_core/src/lib.rs:38:pub fn stop_server(handle: Arc<ServerHandle>) -> Result<(), CoreError> {
+rust/apple_bridge_core/src/lib.rs:43:pub fn server_status(handle: Arc<ServerHandle>) -> ServerStatus {
+
+exec
+/bin/zsh -lc 'tmpdir=$(mktemp -d /private/tmp/apple-bridge-review-XXXXXX) && git archive 7f2eac04d25a4949a2797d3d4f5f8d0fa6c3345a | tar -x -C "$tmpdir" && git diff 7f2eac04d25a4949a2797d3d4f5f8d0fa6c3345a > "$tmpdir/patch.diff" && (cd "$tmpdir" && git init -q && git apply patch.diff && cargo test --manifest-path rust/apple_bridge_core/Cargo.toml 2>&1 | sed -n '"'1,120p'); rm -rf \""'$tmpdir"' in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 41841ms:
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.46
+   Compiling unicode-ident v1.0.24
+   Compiling serde_core v1.0.228
+   Compiling libc v0.2.186
+   Compiling once_cell v1.21.4
+   Compiling itoa v1.0.18
+   Compiling cfg-if v1.0.4
+   Compiling getrandom v0.4.3
+   Compiling serde v1.0.228
+   Compiling rustix v1.1.4
+   Compiling anyhow v1.0.103
+   Compiling bitflags v2.13.0
+   Compiling memchr v2.8.2
+   Compiling pin-project-lite v0.2.17
+   Compiling fastrand v2.4.1
+   Compiling heck v0.5.0
+   Compiling equivalent v1.0.2
+   Compiling hashbrown v0.17.1
+   Compiling log v0.4.33
+   Compiling bytes v1.12.0
+   Compiling futures-core v0.3.32
+   Compiling zmij v1.0.21
+   Compiling winnow v0.7.15
+   Compiling http v1.4.2
+   Compiling tracing-core v0.1.36
+   Compiling syn v2.0.118
+   Compiling camino v1.2.3
+   Compiling indexmap v2.14.0
+   Compiling autocfg v1.5.1
+   Compiling winnow v1.0.3
+   Compiling serde_json v1.0.150
+   Compiling siphasher v1.0.3
+   Compiling fs-err v2.11.0
+   Compiling toml_parser v1.1.2+spec-1.1.0
+   Compiling toml_datetime v0.7.5+spec-1.1.0
+   Compiling serde_spanned v1.1.1
+   Compiling http-body v1.0.1
+   Compiling httparse v1.10.1
+   Compiling thiserror v2.0.18
+   Compiling errno v0.3.14
+   Compiling mio v1.2.1
+   Compiling socket2 v0.6.4
+   Compiling minimal-lexical v0.2.1
+   Compiling toml_writer v1.1.1+spec-1.1.0
+   Compiling nom v7.1.3
+   Compiling smallvec v1.15.2
+   Compiling rustc-hash v2.1.2
+   Compiling smawk v0.3.3
+   Compiling tower-service v0.3.3
+   Compiling semver v1.0.28
+   Compiling tempfile v3.27.0
+   Compiling textwrap v0.16.2
+   Compiling futures-channel v0.3.32
+   Compiling anstyle v1.0.14
+   Compiling strsim v0.11.1
+   Compiling slab v0.4.12
+   Compiling futures-task v0.3.32
+   Compiling clap_lex v1.1.0
+   Compiling sync_wrapper v1.0.2
+   Compiling regex-syntax v0.8.11
+   Compiling httpdate v1.0.3
+   Compiling atomic-waker v1.1.2
+   Compiling plain v0.2.3
+   Compiling weedle2 v5.0.0
+   Compiling tower-layer v0.3.3
+   Compiling percent-encoding v2.3.2
+   Compiling clap_builder v4.6.0
+   Compiling futures-util v0.3.32
+   Compiling toml v0.9.12+spec-1.1.0
+   Compiling http-body-util v0.1.3
+   Compiling form_urlencoded v1.2.2
+   Compiling lazy_static v1.5.0
+   Compiling mime v0.3.17
+   Compiling static_assertions v1.1.0
+   Compiling ryu v1.0.23
+   Compiling glob v0.3.3
+   Compiling uniffi_core v0.31.2
+   Compiling sharded-slab v0.1.7
+   Compiling serde_path_to_error v0.1.20
+   Compiling tracing-log v0.2.0
+   Compiling thread_local v1.1.9
+   Compiling regex-automata v0.4.14
+   Compiling matchit v0.8.4
+   Compiling nu-ansi-term v0.50.3
+   Compiling serde_derive v1.0.228
+   Compiling uniffi_internal_macros v0.31.2
+   Compiling tracing-attributes v0.1.31
+   Compiling tokio-macros v2.7.0
+   Compiling thiserror-impl v2.0.18
+   Compiling scroll_derive v0.12.1
+   Compiling tokio v1.52.3
+   Compiling uniffi_pipeline v0.31.2
+   Compiling scroll v0.12.0
+   Compiling tracing v0.1.44
+   Compiling uniffi_meta v0.31.2
+   Compiling clap_derive v4.6.1
+   Compiling goblin v0.8.2
+   Compiling uniffi_udl v0.31.2
+   Compiling axum-core v0.5.6
+   Compiling matchers v0.2.0
+   Compiling tracing-subscriber v0.3.23
+   Compiling clap v4.6.1
+   Compiling askama_parser v0.14.0
+   Compiling basic-toml v0.1.10
+   Compiling cargo-platform v0.1.9
+   Compiling serde_urlencoded v0.7.1
+   Compiling uniffi_macros v0.31.2
+   Compiling cargo_metadata v0.19.2
+   Compiling hyper v1.10.1
+   Compiling tower v0.5.3
+   Compiling hyper-util v0.1.20
+   Compiling axum v0.8.9
+   Compiling askama_derive v0.14.0
+   Compiling askama v0.14.0
+   Compiling uniffi_bindgen v0.31.2
+   Compiling uniffi v0.31.2
+   Compiling apple_bridge_core v0.1.0 (/private/tmp/apple-bridge-review-SQaHvP/rust/apple_bridge_core)
+error[E0583]: file not found for module `http`
+ --> apple_bridge_core/src/lib.rs:6:1
+
+exec
+/bin/zsh -lc 'tmpdir=$(mktemp -d /private/tmp/apple-bridge-review-XXXXXX) && git archive 7f2eac04d25a4949a2797d3d4f5f8d0fa6c3345a | tar -x -C "$tmpdir" && git diff 7f2eac04d25a4949a2797d3d4f5f8d0fa6c3345a > "$tmpdir/patch.diff" && (cd "$tmpdir" && git init -q && git apply patch.diff && cargo test --manifest-path rust/apple_bridge_core/Cargo.toml 2>&1 | rg -n "file not found|error'"\\[E0583\\]\" -n -C 1); rm -rf \""'$tmpdir"' in /Users/rcanoff/Projects/apple-bridge
+ succeeded in 42449ms:
+118-   Compiling apple_bridge_core v0.1.0 (/private/tmp/apple-bridge-review-xKtN6c/rust/apple_bridge_core)
+119:error[E0583]: file not found for module `http`
+120- --> apple_bridge_core/src/lib.rs:6:1
+

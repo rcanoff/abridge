@@ -52,7 +52,7 @@
 - **Fix:** `EventKitProviderDeleteList.swift` returns original `calendarIdentifier` for lookup/response; trim used only for empty validation. Response is only `calendar_identifier` (no `deleted`). Added `deleteListDoesNotTrimCalendarIdentifierForLookup` test. Spec updated at `docs/superpowers/specs/2026-06-28-pr3k-delete-reminder-list.md`.
 
 ## Summary
-No open findings. Thread 2 (calendar identifier trimming) resolved in PR #28 (`feat/fix-delete-fidelity`).
+All resolved. Thread 2 (calendar identifier trimming) resolved in PR #28 (`feat/fix-delete-fidelity`). Related: PR #29 fixed the shared `parseReminderIDArguments` helper (exact `reminder_id` for lookup, trim only for empty validation) used by `delete_reminder` and other mutation tools — parallel framework-fidelity fix to the `calendar_identifier` exact-lookup change in PR #28.
 
 ## Verification Note
 I reviewed only the provided diff, inventory, existing code context, and inlined skills. I did not run tests, builds, linters, shell commands, or inspect repository files.

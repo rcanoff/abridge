@@ -1,0 +1,3 @@
+[2m2026-06-27T21:10:40.950983Z[0m [31mERROR[0m tool_error: parse_failure [3msession_id[0m[2m=[0m019f0aeb-7930-7bf3-8482-36c813d4dff1 [3mtool_name[0m[2m=[0m"Read" [3mmodel_id[0m[2m=[0m"grok-composer-2.5-fast" [3merror_kind[0m[2m=[0m"parse_failure" [3merror_message[0m[2m=[0mTool not found: Read
+Max turns reached
+Error: max turns reached
