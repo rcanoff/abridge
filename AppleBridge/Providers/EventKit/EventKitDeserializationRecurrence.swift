@@ -1,3 +1,4 @@
+import CoreFoundation
 @preconcurrency import EventKit
 import Foundation
 
@@ -87,8 +88,16 @@ extension EventKitDeserialization {
             throw EventKitProviderError.invalidArguments("Expected number array or null")
         }
         return try array.map { element in
+            if element is Bool {
+                throw EventKitProviderError.invalidArguments("Expected integer in number array")
+            }
             if let int = element as? Int { return NSNumber(value: int) }
-            if let number = element as? NSNumber { return number }
+            if let number = element as? NSNumber {
+                if CFGetTypeID(number) == CFBooleanGetTypeID() {
+                    throw EventKitProviderError.invalidArguments("Expected integer in number array")
+                }
+                return number
+            }
             throw EventKitProviderError.invalidArguments("Expected integer in number array")
         }
     }

@@ -192,6 +192,27 @@ struct EventKitProviderCreateTests {
 
     @Test
     @MainActor
+    func createReminderRejectsBooleanInRecurrenceNumberArray() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-create-9")]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_reminder",
+            payloadJson: """
+            {"calendar_identifier":"list-create-9","title":"Bad recurrence",\
+            "recurrence_rules":[{"frequency":"daily","days_of_the_month":[true]}]}
+            """
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("Expected integer in number array") == true)
+    }
+
+    @Test
+    @MainActor
     func createReminderRejectsInvalidPriority() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
