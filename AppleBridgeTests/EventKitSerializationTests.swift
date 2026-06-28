@@ -1,4 +1,5 @@
 @testable import AppleBridge
+import CoreGraphics
 import EventKit
 import Foundation
 import Testing
@@ -40,6 +41,14 @@ struct EventKitSerializationTests {
         "allows_content_modifications",
         "is_immutable",
         "is_subscribed",
+    ]
+
+    private static let cgColorReadKeys: Set<String> = [
+        "color_space_name",
+        "color_space_model",
+        "number_of_components",
+        "components",
+        "alpha",
     ]
 
     @Test
@@ -100,6 +109,31 @@ struct EventKitSerializationTests {
         let keys = Set(EventKitSerialization.calendarJSONObject(from: calendar).keys)
 
         #expect(keys == Self.calendarReadKeys)
+    }
+
+    @Test
+    @MainActor
+    func calendarJSONObjectSerializesCGColorFaithfully() {
+        let calendar = EventKitTestSupport.makeCalendar(calendarIdentifier: "cal-color", title: "Colored")
+        calendar.cgColor = CGColor(red: 0.25, green: 0.5, blue: 0.75, alpha: 0.8)
+
+        let object = EventKitSerialization.calendarJSONObject(from: calendar)
+        guard let cgColor = object["cg_color"] as? [String: Any] else {
+            Issue.record("Expected structured cg_color object")
+            return
+        }
+
+        #expect(Set(cgColor.keys) == Self.cgColorReadKeys)
+        #expect(cgColor["number_of_components"] as? Int == 4)
+        #expect(cgColor["alpha"] as? CGFloat == 0.8)
+
+        let components = cgColor["components"] as? [CGFloat]
+        #expect(components?.count == 4)
+        #expect(components?[0] == 0.25)
+        #expect(components?[1] == 0.5)
+        #expect(components?[2] == 0.75)
+        #expect(components?[3] == 0.8)
+        #expect(cgColor["color_space_model"] as? String == "rgb")
     }
 
     @Test

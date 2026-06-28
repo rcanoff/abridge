@@ -21,7 +21,7 @@ enum EventKitSerialization {
             "calendar_identifier": calendar.calendarIdentifier,
             "title": jsonValue(calendar.title),
             "type": calendarTypeString(calendar.type),
-            "cg_color": cgColorHexString(from: calendar.cgColor),
+            "cg_color": cgColorJSONObject(from: calendar.cgColor),
             "allowed_entity_types": entityTypesArray(from: calendar.allowedEntityTypes),
             "allows_content_modifications": calendar.allowsContentModifications,
             "is_immutable": calendar.isImmutable,
@@ -210,15 +210,24 @@ enum EventKitSerialization {
         url?.absoluteString ?? NSNull()
     }
 
-    private static func cgColorHexString(from color: CGColor?) -> Any {
-        guard let color, let components = color.components, components.count >= 3 else {
-            return NSNull()
+    private static func cgColorJSONObject(from color: CGColor?) -> Any {
+        guard let color else { return NSNull() }
+
+        var payload: [String: Any] = [
+            "number_of_components": color.numberOfComponents,
+            "components": color.components ?? [],
+            "alpha": color.alpha,
+        ]
+
+        if let colorSpace = color.colorSpace {
+            payload["color_space_name"] = jsonValue(colorSpace.name as String?)
+            payload["color_space_model"] = colorSpaceModelString(colorSpace.model)
+        } else {
+            payload["color_space_name"] = NSNull()
+            payload["color_space_model"] = NSNull()
         }
 
-        let red = Int((components[0] * 255).rounded())
-        let green = Int((components[1] * 255).rounded())
-        let blue = Int((components[2] * 255).rounded())
-        return String(format: "#%02X%02X%02X", red, green, blue)
+        return payload
     }
 
     private static func numberArray(from numbers: [NSNumber]?) -> [Int] {
@@ -243,6 +252,21 @@ enum EventKitSerialization {
     }
 
     // MARK: - Enum strings (mechanical)
+
+    private static func colorSpaceModelString(_ model: CGColorSpaceModel) -> String {
+        switch model {
+        case .unknown: "unknown"
+        case .monochrome: "monochrome"
+        case .rgb: "rgb"
+        case .cmyk: "cmyk"
+        case .lab: "lab"
+        case .deviceN: "device_n"
+        case .indexed: "indexed"
+        case .pattern: "pattern"
+        case .XYZ: "xyz"
+        @unknown default: "unknown"
+        }
+    }
 
     private static func calendarTypeString(_ type: EKCalendarType) -> String {
         switch type {
