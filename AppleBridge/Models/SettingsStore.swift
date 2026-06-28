@@ -4,6 +4,7 @@ import Observation
 enum SettingsTab: String, CaseIterable, Identifiable {
     case mcp
     case permissions
+    case diagnostics
 
     var id: String {
         rawValue
@@ -15,6 +16,8 @@ enum SettingsTab: String, CaseIterable, Identifiable {
             "MCP"
         case .permissions:
             "Permissions"
+        case .diagnostics:
+            "Diagnostics"
         }
     }
 }
@@ -25,6 +28,7 @@ final class SettingsStore {
     var selectedTab: SettingsTab = .mcp
     private(set) var tokenResetNotice: String?
     private(set) var launchAtLoginError: String?
+    private(set) var usageAuditEntries: [UsageAuditEntry] = []
 
     let appSettings: AppSettings
 
@@ -53,6 +57,15 @@ final class SettingsStore {
     func applyUsageLoggingChange(_ enabled: Bool) async {
         appSettings.usageLoggingEnabled = enabled
         await serverStore.setUsageLoggingEnabled(enabled)
+    }
+
+    func refreshUsageAuditEntries() async {
+        let entries = await serverStore.usageAuditEntries()
+        usageAuditEntries = entries.reversed()
+    }
+
+    func usageAuditExportJSON() -> String {
+        UsageAuditExport.jsonString(from: usageAuditEntries.reversed())
     }
 
     func applyMCPEnabledChange(_ enabled: Bool) async {

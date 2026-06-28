@@ -136,6 +136,11 @@ actor ServerService: ServerServing {
         guard let handle else { return true }
         return handle.usageLoggingEnabled()
     }
+
+    func usageAuditEntries() async -> [UsageAuditEntry] {
+        guard let handle else { return [] }
+        return handle.usageAuditEntries()
+    }
 }
 
 extension ServerService {

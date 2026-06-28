@@ -14,4 +14,5 @@ protocol ServerServing: Sendable {
     func resetBearerToken() async throws -> String
     func setUsageLoggingEnabled(_ enabled: Bool) async
     func usageLoggingEnabled() async -> Bool
+    func usageAuditEntries() async -> [UsageAuditEntry]
 }

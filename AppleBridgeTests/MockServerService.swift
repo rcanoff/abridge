@@ -19,6 +19,7 @@ actor MockServerService: ServerServing {
     private(set) var usageLoggingEnabledState = true
     private(set) var setUsageLoggingEnabledCallCount = 0
     private(set) var recordApiKeyRotationCallCount = 0
+    private(set) var usageAuditEntriesResult: [UsageAuditEntry] = []
 
     func refreshStatus() async -> ServerRunState {
         refreshResult
@@ -87,6 +88,14 @@ actor MockServerService: ServerServing {
 
     func usageLoggingEnabled() async -> Bool {
         usageLoggingEnabledState
+    }
+
+    func usageAuditEntries() async -> [UsageAuditEntry] {
+        usageAuditEntriesResult
+    }
+
+    func setUsageAuditEntriesResult(_ entries: [UsageAuditEntry]) {
+        usageAuditEntriesResult = entries
     }
 
     func setRefreshResult(_ result: ServerRunState) {
