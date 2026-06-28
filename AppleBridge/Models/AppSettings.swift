@@ -36,7 +36,11 @@ final class AppSettings {
         self.defaults = defaults
 
         let storedPort = defaults.integer(forKey: Keys.mcpPort)
-        mcpPort = storedPort > 0 ? UInt16(storedPort) : 3020
+        if let port = UInt16(exactly: storedPort), port > 0 {
+            mcpPort = port
+        } else {
+            mcpPort = 3020
+        }
         mcpEnabled = defaults.bool(forKey: Keys.mcpEnabled)
 
         if let stored = defaults.stringArray(forKey: Keys.savedCapabilityIDs) {
