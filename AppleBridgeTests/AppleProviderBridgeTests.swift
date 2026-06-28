@@ -65,14 +65,11 @@ struct AppleProviderBridgeTests {
     func routesEventKitGetReminder() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
-        mockStore.fakeReminders = [
-            FakeReminder(
-                id: "r1",
-                listID: "l1",
-                title: "T",
-                completed: false,
-                dueDateISO: nil,
-                notes: nil
+        mockStore.reminders = [
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: "r1",
+                calendarIdentifier: "l1",
+                title: "T"
             ),
         ]
         let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))

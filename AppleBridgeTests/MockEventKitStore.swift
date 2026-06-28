@@ -6,7 +6,7 @@ import Foundation
 final class MockEventKitStore: EventKitStoreing {
     var authorizationStatus: EKAuthorizationStatus = .fullAccess
     var calendars: [EKCalendar] = []
-    var fakeReminders: [FakeReminder] = []
+    var reminders: [EKReminder] = []
 
     func reminderAuthorizationStatus() -> EKAuthorizationStatus {
         authorizationStatus
@@ -21,12 +21,12 @@ final class MockEventKitStore: EventKitStoreing {
         return NSPredicate(value: true)
     }
 
-    func fetchReminders(matching predicate: NSPredicate) throws -> [any ReminderRepresentable] {
+    func fetchReminders(matching predicate: NSPredicate) throws -> [EKReminder] {
         _ = predicate
-        return fakeReminders
+        return reminders
     }
 
-    func fetchReminder(withIdentifier id: String) throws -> (any ReminderRepresentable)? {
-        fakeReminders.first { $0.calendarItemIdentifier == id }
+    func fetchReminder(withIdentifier id: String) throws -> EKReminder? {
+        reminders.first { $0.calendarItemIdentifier == id }
     }
 }
