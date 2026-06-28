@@ -93,6 +93,21 @@ struct ServerStoreTests {
 
     @Test
     @MainActor
+    func resetBearerTokenPreservesActiveTokenAfterStop() async {
+        let mock = MockServerService()
+        await mock.setRefreshResult(.running)
+        await mock.setBearerTokenResult("token-before-reset")
+        let store = ServerStore(serverService: mock)
+        await store.startServer(port: 3020, enabledCapabilities: [])
+
+        await store.resetBearerToken(port: 3020, enabledCapabilities: [], restartIfRunning: false)
+
+        #expect(await mock.activeBearerToken == "rotated-token-before-reset")
+        #expect(store.bearerToken == "rotated-token-before-reset")
+    }
+
+    @Test
+    @MainActor
     func resetBearerTokenRestartsWhenRunning() async {
         let mock = MockServerService()
         await mock.setRefreshResult(.running)

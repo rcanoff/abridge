@@ -48,6 +48,7 @@ actor MockServerService: ServerServing {
     func stop() async throws {
         stopCallCount += 1
         refreshResult = .stopped
+        activeBearerToken = nil
 
         if let stopError {
             throw stopError
@@ -60,8 +61,10 @@ actor MockServerService: ServerServing {
         }
 
         bearerTokenResult = "rotated-\(bearerTokenResult)"
+        if refreshResult == .running {
+            try await stop()
+        }
         activeBearerToken = bearerTokenResult
-        refreshResult = .stopped
         return bearerTokenResult
     }
 

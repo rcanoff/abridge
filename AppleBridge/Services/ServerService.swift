@@ -109,10 +109,10 @@ actor ServerService: ServerServing {
     func resetBearerToken() async throws -> String {
         do {
             let token = try tokenStore.rotateBearerToken()
-            currentBearerToken = token
             if handle != nil {
                 try await stop()
             }
+            currentBearerToken = token
             return token
         } catch let error as KeychainError {
             throw ServerOperationError(message: "Failed to reset bearer token: \(error.message)")
