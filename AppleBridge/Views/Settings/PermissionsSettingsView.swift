@@ -1,10 +1,12 @@
 import AppKit
+import EventKit
 import SwiftUI
 
 struct PermissionsSettingsView: View {
     @Bindable var permissionsStore: PermissionsStore
     @Bindable var settingsStore: SettingsStore
     @Bindable var appStore: AppStore
+    @State private var eventsReadAuthorized = PermissionsEventKitAuthorization.eventsReadAuthorized
 
     var body: some View {
         Form {
@@ -26,6 +28,9 @@ struct PermissionsSettingsView: View {
                 RemindersMCPPermissionsGroup { capabilityID in
                     binding(for: capabilityID)
                 }
+                CalendarsMCPPermissionsGroup { capabilityID in
+                    binding(for: capabilityID)
+                }
             } header: {
                 Text("MCP Permissions")
             }
@@ -35,13 +40,20 @@ struct PermissionsSettingsView: View {
         .onAppear {
             appStore.refreshStatus()
             permissionsStore.reloadFromSettings()
+            refreshEventsAuthorizationAndReapplyIfNeeded()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             appStore.refreshStatus()
+            refreshEventsAuthorizationAndReapplyIfNeeded()
         }
         .onChange(of: appStore.permissionStatus.grantsReadAccess) { _, remindersAuthorized in
             guard remindersAuthorized, permissionsStore.requiresAppleRemindersAccess else { return }
-            Task { await settingsStore.applySavedCapabilities(remindersAuthorized: true) }
+            Task {
+                await settingsStore.applySavedCapabilities(
+                    remindersAuthorized: true,
+                    eventsAuthorized: PermissionsEventKitAuthorization.eventsReadAuthorized
+                )
+            }
         }
         .safeAreaInset(edge: .bottom) {
             if let lastError = appStore.lastError {
@@ -60,15 +72,42 @@ struct PermissionsSettingsView: View {
             set: { newValue in
                 permissionsStore.setChecked(newValue, for: capabilityID)
                 let remindersAuthorized = appStore.permissionStatus.grantsReadAccess
+                let eventsAuthorized = PermissionsEventKitAuthorization.eventsReadAuthorized
                 guard permissionsStore.shouldApplySavedCapabilitiesAfterToggle(
                     enabling: newValue,
-                    remindersAuthorized: remindersAuthorized
+                    capabilityID: capabilityID,
+                    remindersAuthorized: remindersAuthorized,
+                    eventsAuthorized: eventsAuthorized
                 ) else { return }
                 Task {
-                    await settingsStore.applySavedCapabilities(remindersAuthorized: remindersAuthorized)
+                    await settingsStore.applySavedCapabilities(
+                        remindersAuthorized: remindersAuthorized,
+                        eventsAuthorized: eventsAuthorized
+                    )
                 }
             }
         )
+    }
+
+    private func refreshEventsAuthorizationAndReapplyIfNeeded() {
+        let current = PermissionsEventKitAuthorization.eventsReadAuthorized
+        let becameAuthorized = current && !eventsReadAuthorized
+        eventsReadAuthorized = current
+
+        guard becameAuthorized, permissionsStore.requiresCalendarAccess else { return }
+
+        Task {
+            await settingsStore.applySavedCapabilities(
+                remindersAuthorized: appStore.permissionStatus.grantsReadAccess,
+                eventsAuthorized: current
+            )
+        }
+    }
+}
+
+private enum PermissionsEventKitAuthorization {
+    static var eventsReadAuthorized: Bool {
+        EKEventStore.authorizationStatus(for: .event) == .fullAccess
     }
 }
 
@@ -82,6 +121,20 @@ private struct RemindersMCPPermissionsGroup: View {
             }
         } header: {
             Text("Reminders")
+        }
+    }
+}
+
+private struct CalendarsMCPPermissionsGroup: View {
+    let capabilityBinding: (String) -> Binding<Bool>
+
+    var body: some View {
+        Section {
+            ForEach(CapabilityCatalog.calendarsCapabilities) { capability in
+                Toggle(capability.label, isOn: capabilityBinding(capability.id))
+            }
+        } header: {
+            Text("Calendars")
         }
     }
 }

@@ -16,7 +16,9 @@ final class MockEventKitStore: EventKitStoreing {
     }
 
     var authorizationStatus: EKAuthorizationStatus = .fullAccess
+    var eventAuthorizationStatusValue: EKAuthorizationStatus = .fullAccess
     var calendars: [EKCalendar] = []
+    var eventCalendarsList: [EKCalendar] = []
     var reminders: [EKReminder] = []
     private(set) var lastPredicateKind: PredicateKind?
 
@@ -24,8 +26,16 @@ final class MockEventKitStore: EventKitStoreing {
         authorizationStatus
     }
 
+    func eventAuthorizationStatus() -> EKAuthorizationStatus {
+        eventAuthorizationStatusValue
+    }
+
     func reminderCalendars() -> [EKCalendar] {
         calendars
+    }
+
+    func eventCalendars() -> [EKCalendar] {
+        eventCalendarsList
     }
 
     func predicateForReminders(in calendars: [EKCalendar]) -> NSPredicate {

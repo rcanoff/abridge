@@ -107,7 +107,14 @@ struct PermissionsStoreIntegrationTests {
 
         let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
 
-        #expect(store.shouldApplySavedCapabilitiesAfterToggle(enabling: true, remindersAuthorized: true))
+        #expect(
+            store.shouldApplySavedCapabilitiesAfterToggle(
+                enabling: true,
+                capabilityID: "read",
+                remindersAuthorized: true,
+                eventsAuthorized: false
+            )
+        )
     }
 
     @Test
@@ -120,7 +127,12 @@ struct PermissionsStoreIntegrationTests {
         let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
 
         #expect(
-            store.shouldApplySavedCapabilitiesAfterToggle(enabling: true, remindersAuthorized: false) == false
+            store.shouldApplySavedCapabilitiesAfterToggle(
+                enabling: true,
+                capabilityID: "read",
+                remindersAuthorized: false,
+                eventsAuthorized: false
+            ) == false
         )
     }
 
@@ -133,7 +145,52 @@ struct PermissionsStoreIntegrationTests {
 
         let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
 
-        #expect(store.shouldApplySavedCapabilitiesAfterToggle(enabling: false, remindersAuthorized: false))
+        #expect(
+            store.shouldApplySavedCapabilitiesAfterToggle(
+                enabling: false,
+                capabilityID: "read",
+                remindersAuthorized: false,
+                eventsAuthorized: false
+            )
+        )
+    }
+
+    @Test
+    @MainActor
+    func shouldApplySavedCapabilitiesAfterEnablingCalendarWhenEventsAuthorized() throws {
+        let suiteName = "PermissionsStoreTests.calendarApplyWhenAuthorized"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+
+        #expect(
+            store.shouldApplySavedCapabilitiesAfterToggle(
+                enabling: true,
+                capabilityID: "calendars-read",
+                remindersAuthorized: false,
+                eventsAuthorized: true
+            )
+        )
+    }
+
+    @Test
+    @MainActor
+    func shouldNotApplySavedCapabilitiesAfterEnablingCalendarWithoutEventsAccess() throws {
+        let suiteName = "PermissionsStoreTests.calendarSkipApplyWhenUnauthorized"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+
+        #expect(
+            store.shouldApplySavedCapabilitiesAfterToggle(
+                enabling: true,
+                capabilityID: "calendars-read",
+                remindersAuthorized: true,
+                eventsAuthorized: false
+            ) == false
+        )
     }
 
     @Test

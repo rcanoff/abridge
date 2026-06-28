@@ -26,6 +26,9 @@ enum EventKitSerialization {
             "type": calendarTypeString(calendar.type),
             "cg_color": cgColorJSONObject(from: calendar.cgColor),
             "allowed_entity_types": entityTypesArray(from: calendar.allowedEntityTypes),
+            "supported_event_availabilities": eventAvailabilityArray(
+                from: calendar.supportedEventAvailabilities
+            ),
             "allows_content_modifications": calendar.allowsContentModifications,
             "is_immutable": calendar.isImmutable,
             "is_subscribed": calendar.isSubscribed,
@@ -276,5 +279,14 @@ enum EventKitSerialization {
         if mask.contains(.event) { types.append("event") }
         if mask.contains(.reminder) { types.append("reminder") }
         return types
+    }
+
+    private static func eventAvailabilityArray(from mask: EKCalendarEventAvailabilityMask) -> [String] {
+        var availabilities: [String] = []
+        if mask.contains(.busy) { availabilities.append("busy") }
+        if mask.contains(.free) { availabilities.append("free") }
+        if mask.contains(.tentative) { availabilities.append("tentative") }
+        if mask.contains(.unavailable) { availabilities.append("unavailable") }
+        return availabilities
     }
 }

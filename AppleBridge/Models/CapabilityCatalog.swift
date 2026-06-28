@@ -28,4 +28,13 @@ enum CapabilityCatalog {
         ),
         CapabilityDefinition(id: "search", capabilityID: "eventkit.reminders.search", label: "Search", shipped: true),
     ]
+
+    static let calendarsCapabilities: [CapabilityDefinition] = [
+        CapabilityDefinition(
+            id: "calendars-read",
+            capabilityID: "eventkit.calendars.read",
+            label: "Read",
+            shipped: true
+        ),
+    ]
 }

@@ -13,7 +13,9 @@ enum EventKitProviderError: Error, Equatable {
 @MainActor
 protocol EventKitStoreing {
     func reminderAuthorizationStatus() -> EKAuthorizationStatus
+    func eventAuthorizationStatus() -> EKAuthorizationStatus
     func reminderCalendars() -> [EKCalendar]
+    func eventCalendars() -> [EKCalendar]
     func predicateForReminders(in calendars: [EKCalendar]) -> NSPredicate
     func predicateForIncompleteReminders(
         withDueDateStarting startDate: Date?,
@@ -49,8 +51,16 @@ final class LiveEventKitStore: EventKitStoreing {
         EKEventStore.authorizationStatus(for: .reminder)
     }
 
+    func eventAuthorizationStatus() -> EKAuthorizationStatus {
+        EKEventStore.authorizationStatus(for: .event)
+    }
+
     func reminderCalendars() -> [EKCalendar] {
         eventStore.calendars(for: .reminder)
+    }
+
+    func eventCalendars() -> [EKCalendar] {
+        eventStore.calendars(for: .event)
     }
 
     func predicateForReminders(in calendars: [EKCalendar]) -> NSPredicate {
@@ -192,6 +202,8 @@ final class EventKitProvider {
         switch operation {
         case "list_lists":
             listLists()
+        case "list_calendars":
+            listCalendars()
         case "list_reminders", "get_reminder", "search_reminders":
             handleReadOperation(operation: operation, payloadJson: payloadJson)
         case "create_reminder", "create_list", "update_reminder", "move_reminder", "delete_reminder",

@@ -228,7 +228,7 @@ struct SettingsStoreTests {
         await serverStore.startServer(port: 3020, enabledCapabilities: [])
         let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
 
-        await settingsStore.applySavedCapabilities(remindersAuthorized: false)
+        await settingsStore.applySavedCapabilities(remindersAuthorized: false, eventsAuthorized: false)
 
         #expect(await mock.startCallCount == 2)
         #expect(await mock.lastEnabledCapabilities == ["diagnostics.read"])
@@ -303,7 +303,7 @@ struct SettingsStoreTests {
         await serverStore.startServer(port: 3020, enabledCapabilities: [])
         let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
 
-        await settingsStore.applySavedCapabilities(remindersAuthorized: true)
+        await settingsStore.applySavedCapabilities(remindersAuthorized: true, eventsAuthorized: false)
 
         #expect(await mock.startCallCount == 2)
         #expect(await mock.lastEnabledCapabilities == ["diagnostics.read", "eventkit.reminders.read"])
