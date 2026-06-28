@@ -153,6 +153,29 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
     .get("arguments")
     .cloned()
     .unwrap_or_else(|| serde_json::json!({}));
+
+  if tool.name == tools::TOOL_GET_USAGE_LOG {
+    let limit = parse_usage_log_limit(&arguments);
+    record_tool_call(name, true);
+    let payload = state.audit_store.usage_log_response(limit);
+    let payload_json = match serde_json::to_string(&payload) {
+      Ok(json) => json,
+      Err(_) => {
+        return tool_error_response(id, "serialization_error", "failed to serialize usage log");
+      }
+    };
+    return json_response(
+      StatusCode::OK,
+      json_rpc_result(
+        id,
+        serde_json::json!({
+          "content": [{ "type": "text", "text": payload_json }],
+          "isError": false
+        }),
+      ),
+    );
+  }
+
   let payload_json = serde_json::to_string(&arguments).unwrap_or_else(|_| "{}".into());
 
   let response = state.provider.call_provider(ProviderRequest {
@@ -207,6 +230,13 @@ fn tool_descriptor(tool: &ToolDefinition) -> Value {
     "name": tool.name,
     "description": tool.description,
     "inputSchema": tools::input_schema(tool)
+  })
+}
+
+fn parse_usage_log_limit(arguments: &Value) -> Option<usize> {
+  arguments.get("limit").and_then(|value| match value {
+    Value::Number(number) => number.as_u64().map(|limit| limit as usize),
+    _ => None,
   })
 }
 

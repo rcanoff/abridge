@@ -67,9 +67,10 @@ struct AppSettingsTests {
         appSettings.saveCapabilityIDs(["read"])
 
         #expect(appSettings.enabledMCPCapabilityIDs == ["eventkit.reminders.read"])
-        #expect(appSettings.serverEnabledMCPCapabilityIDs(remindersAuthorized: false) == [])
+        #expect(appSettings.serverEnabledMCPCapabilityIDs(remindersAuthorized: false) == ["diagnostics.read"])
         #expect(
-            appSettings.serverEnabledMCPCapabilityIDs(remindersAuthorized: true) == ["eventkit.reminders.read"]
+            appSettings.serverEnabledMCPCapabilityIDs(remindersAuthorized: true)
+                == ["diagnostics.read", "eventkit.reminders.read"]
         )
     }
 

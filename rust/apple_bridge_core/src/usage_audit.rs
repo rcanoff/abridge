@@ -13,6 +13,12 @@ pub const EVENT_PORT_BIND: &str = "port_bind";
 pub const EVENT_MCP_INITIALIZE: &str = "mcp_initialize";
 pub const EVENT_API_KEY_ROTATION: &str = "api_key_rotation";
 
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct UsageLogResponse {
+  pub logging_enabled: bool,
+  pub entries: Vec<UsageAuditEntry>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, uniffi::Record, serde::Serialize)]
 pub struct UsageAuditEntry {
   pub timestamp_utc: String,
@@ -69,6 +75,22 @@ impl UsageAuditStore {
     match self.entries.lock() {
       Ok(entries) => entries.iter().cloned().collect(),
       Err(_) => Vec::new(),
+    }
+  }
+
+  pub fn entries_limited(&self, limit: Option<usize>) -> Vec<UsageAuditEntry> {
+    let all = self.entries();
+    match limit {
+      Some(0) => Vec::new(),
+      Some(n) if n < all.len() => all[all.len() - n..].to_vec(),
+      _ => all,
+    }
+  }
+
+  pub fn usage_log_response(&self, limit: Option<usize>) -> UsageLogResponse {
+    UsageLogResponse {
+      logging_enabled: self.logging_enabled(),
+      entries: self.entries_limited(limit),
     }
   }
 
@@ -183,6 +205,31 @@ mod tests {
     assert!(!entry.success);
     assert_eq!(entry.duration_ms, Some(99));
     assert!(entry.timestamp_utc.ends_with('Z'));
+  }
+
+  #[test]
+  fn entries_limited_returns_most_recent_entries() {
+    let store = UsageAuditStore::new();
+    for index in 0..5 {
+      store.record(&format!("event_{index}"), None, true, None);
+    }
+
+    let limited = store.entries_limited(Some(2));
+    assert_eq!(limited.len(), 2);
+    assert_eq!(limited[0].event_type, "event_3");
+    assert_eq!(limited[1].event_type, "event_4");
+  }
+
+  #[test]
+  fn usage_log_response_reflects_logging_enabled_flag() {
+    let store = UsageAuditStore::new();
+    store.record(EVENT_SERVER_START, None, true, None);
+    store.set_logging_enabled(false);
+
+    let response = store.usage_log_response(None);
+    assert!(!response.logging_enabled);
+    assert_eq!(response.entries.len(), 1);
+    assert_eq!(response.entries[0].event_type, EVENT_SERVER_START);
   }
 
   #[test]

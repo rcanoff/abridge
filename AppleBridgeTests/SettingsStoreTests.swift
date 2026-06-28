@@ -27,7 +27,7 @@ struct SettingsStoreTests {
         await settingsStore.performLaunchRestoreIfNeeded()
 
         #expect(await mock.startCallCount == 1)
-        #expect(await mock.lastEnabledCapabilities == ["eventkit.reminders.read"])
+        #expect(await mock.lastEnabledCapabilities == ["diagnostics.read", "eventkit.reminders.read"])
     }
 
     @Test
@@ -98,7 +98,7 @@ struct SettingsStoreTests {
         #expect(appSettings.mcpPort == 3030)
         #expect(await mock.startCallCount == 1)
         #expect(await mock.lastStartPort == 3030)
-        #expect(await mock.lastEnabledCapabilities == ["eventkit.reminders.read"])
+        #expect(await mock.lastEnabledCapabilities == ["diagnostics.read", "eventkit.reminders.read"])
     }
 
     @Test
@@ -231,7 +231,7 @@ struct SettingsStoreTests {
         await settingsStore.applySavedCapabilities(remindersAuthorized: false)
 
         #expect(await mock.startCallCount == 2)
-        #expect(await mock.lastEnabledCapabilities == [])
+        #expect(await mock.lastEnabledCapabilities == ["diagnostics.read"])
     }
 
     @Test
@@ -258,7 +258,7 @@ struct SettingsStoreTests {
 
         await settingsStore.resetBearerToken()
 
-        #expect(await mock.lastEnabledCapabilities == [])
+        #expect(await mock.lastEnabledCapabilities == ["diagnostics.read"])
     }
 
     @Test
@@ -284,7 +284,7 @@ struct SettingsStoreTests {
         await settingsStore.performLaunchRestoreIfNeeded()
 
         #expect(await mock.startCallCount == 1)
-        #expect(await mock.lastEnabledCapabilities == [])
+        #expect(await mock.lastEnabledCapabilities == ["diagnostics.read"])
     }
 
     @Test
@@ -306,7 +306,7 @@ struct SettingsStoreTests {
         await settingsStore.applySavedCapabilities(remindersAuthorized: true)
 
         #expect(await mock.startCallCount == 2)
-        #expect(await mock.lastEnabledCapabilities == ["eventkit.reminders.read"])
+        #expect(await mock.lastEnabledCapabilities == ["diagnostics.read", "eventkit.reminders.read"])
     }
 
     @Test
