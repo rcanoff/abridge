@@ -9,6 +9,7 @@ pub const TOOL_SEARCH_REMINDERS: &str = "eventkit.reminders.search_reminders";
 pub const TOOL_CREATE_REMINDER: &str = "eventkit.reminders.create_reminder";
 pub const TOOL_CREATE_LIST: &str = "eventkit.reminders.create_list";
 pub const TOOL_UPDATE_REMINDER: &str = "eventkit.reminders.update_reminder";
+pub const TOOL_MOVE_REMINDER: &str = "eventkit.reminders.move_reminder";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ToolDefinition {
@@ -19,7 +20,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 7] = [
+const ALL_TOOLS: [ToolDefinition; 8] = [
   ToolDefinition {
     name: TOOL_LIST_LISTS,
     capability: capabilities::EVENTKIT_REMINDERS_READ,
@@ -68,6 +69,13 @@ const ALL_TOOLS: [ToolDefinition; 7] = [
     provider: "eventkit",
     operation: "update_reminder",
     description: "Update an existing reminder by reminder_id with optional EventKit fields",
+  },
+  ToolDefinition {
+    name: TOOL_MOVE_REMINDER,
+    capability: capabilities::EVENTKIT_REMINDERS_EDIT,
+    provider: "eventkit",
+    operation: "move_reminder",
+    description: "Move a reminder to another list by reminder_id and target calendar_identifier",
   },
 ];
 
@@ -165,6 +173,14 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["reminder_id"]
     }),
+    TOOL_MOVE_REMINDER => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "reminder_id": { "type": "string" },
+        "calendar_identifier": { "type": "string" }
+      },
+      "required": ["reminder_id", "calendar_identifier"]
+    }),
     _ => serde_json::json!({ "type": "object" }),
   }
 }
@@ -173,7 +189,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
 mod tests {
   use super::{
     TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_GET_REMINDER, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS,
-    TOOL_SEARCH_REMINDERS, TOOL_UPDATE_REMINDER, tools_for_capabilities,
+    TOOL_MOVE_REMINDER, TOOL_SEARCH_REMINDERS, TOOL_UPDATE_REMINDER, tools_for_capabilities,
   };
 
   #[test]
@@ -203,9 +219,9 @@ mod tests {
   }
 
   #[test]
-  fn lists_update_tool_when_edit_capability_enabled() {
+  fn lists_edit_tools_when_edit_capability_enabled() {
     let tools = tools_for_capabilities(&["eventkit.reminders.edit".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_UPDATE_REMINDER]);
+    assert_eq!(names, vec![TOOL_UPDATE_REMINDER, TOOL_MOVE_REMINDER]);
   }
 }
