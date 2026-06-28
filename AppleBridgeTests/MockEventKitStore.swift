@@ -132,11 +132,6 @@ final class MockEventKitStore: EventKitStoreing {
         }
     }
 
-    func removeReminder(_ reminder: EKReminder, commit: Bool) throws {
-        guard commit else { return }
-        reminders.removeAll { $0.calendarItemIdentifier == reminder.calendarItemIdentifier }
-    }
-
     func sources() -> [EKSource] {
         let liveSources = eventStore.sources
         return liveSources.isEmpty ? [stubReminderSource] : liveSources

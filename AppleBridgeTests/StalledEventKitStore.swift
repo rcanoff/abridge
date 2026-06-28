@@ -66,11 +66,6 @@ final class StalledEventKitStore: EventKitStoreing {
         _ = commit
     }
 
-    func removeReminder(_ reminder: EKReminder, commit: Bool) throws {
-        _ = reminder
-        _ = commit
-    }
-
     func sources() -> [EKSource] {
         [Self.stubReminderSource]
     }
