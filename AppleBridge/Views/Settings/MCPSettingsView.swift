@@ -10,6 +10,7 @@ struct MCPSettingsView: View {
 
     var body: some View {
         Form {
+            startupSection
             serverSection
             connectionSection
             authenticationSection
@@ -43,6 +44,24 @@ struct MCPSettingsView: View {
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
+            }
+        }
+    }
+
+    private var startupSection: some View {
+        Section {
+            Toggle("Launch at login", isOn: launchAtLoginBinding)
+        } header: {
+            Text("Startup")
+        } footer: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Starts Apple Bridge when you log in. MCP server starts only if you left it enabled.")
+                if let error = settingsStore.launchAtLoginError {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .textSelection(.enabled)
+                }
             }
         }
     }
@@ -120,6 +139,15 @@ struct MCPSettingsView: View {
                     .foregroundStyle(.orange)
             }
         }
+    }
+
+    private var launchAtLoginBinding: Binding<Bool> {
+        Binding(
+            get: { settingsStore.appSettings.launchAtLogin },
+            set: { newValue in
+                Task { await settingsStore.applyLaunchAtLoginChange(newValue) }
+            }
+        )
     }
 
     private var mcpEnabledBinding: Binding<Bool> {
