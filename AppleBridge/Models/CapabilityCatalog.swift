@@ -17,7 +17,7 @@ enum CapabilityCatalog {
             id: "complete",
             capabilityID: "eventkit.reminders.complete",
             label: "Complete",
-            shipped: false
+            shipped: true
         ),
         CapabilityDefinition(id: "alarms", capabilityID: "eventkit.reminders.alarms", label: "Alarms", shipped: false),
         CapabilityDefinition(

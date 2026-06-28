@@ -4,6 +4,7 @@ pub const EVENTKIT_REMINDERS_READ: &str = "eventkit.reminders.read";
 pub const EVENTKIT_REMINDERS_SEARCH: &str = "eventkit.reminders.search";
 pub const EVENTKIT_REMINDERS_CREATE: &str = "eventkit.reminders.create";
 pub const EVENTKIT_REMINDERS_EDIT: &str = "eventkit.reminders.edit";
+pub const EVENTKIT_REMINDERS_COMPLETE: &str = "eventkit.reminders.complete";
 
 pub fn is_valid_capability_id(id: &str) -> bool {
   !id.is_empty()
@@ -18,15 +19,19 @@ pub fn is_valid_capability_id(id: &str) -> bool {
 pub fn is_allowed_in_v1(id: &str) -> bool {
   matches!(
     id,
-    EVENTKIT_REMINDERS_READ | EVENTKIT_REMINDERS_SEARCH | EVENTKIT_REMINDERS_CREATE | EVENTKIT_REMINDERS_EDIT
+    EVENTKIT_REMINDERS_READ
+      | EVENTKIT_REMINDERS_SEARCH
+      | EVENTKIT_REMINDERS_CREATE
+      | EVENTKIT_REMINDERS_EDIT
+      | EVENTKIT_REMINDERS_COMPLETE
   )
 }
 
 #[cfg(test)]
 mod tests {
   use super::{
-    EVENTKIT_REMINDERS_CREATE, EVENTKIT_REMINDERS_EDIT, EVENTKIT_REMINDERS_READ, EVENTKIT_REMINDERS_SEARCH,
-    is_allowed_in_v1, is_valid_capability_id,
+    EVENTKIT_REMINDERS_COMPLETE, EVENTKIT_REMINDERS_CREATE, EVENTKIT_REMINDERS_EDIT, EVENTKIT_REMINDERS_READ,
+    EVENTKIT_REMINDERS_SEARCH, is_allowed_in_v1, is_valid_capability_id,
   };
 
   #[test]
@@ -45,11 +50,12 @@ mod tests {
   }
 
   #[test]
-  fn v1_allowlist_includes_read_search_create_and_edit() {
+  fn v1_allowlist_includes_read_search_create_edit_and_complete() {
     assert!(is_allowed_in_v1(EVENTKIT_REMINDERS_READ));
     assert!(is_allowed_in_v1(EVENTKIT_REMINDERS_SEARCH));
     assert!(is_allowed_in_v1(EVENTKIT_REMINDERS_CREATE));
     assert!(is_allowed_in_v1(EVENTKIT_REMINDERS_EDIT));
+    assert!(is_allowed_in_v1(EVENTKIT_REMINDERS_COMPLETE));
     assert!(!is_allowed_in_v1("eventkit.reminders.write"));
   }
 }
