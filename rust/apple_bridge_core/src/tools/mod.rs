@@ -12,7 +12,6 @@ pub const TOOL_UPDATE_REMINDER: &str = "eventkit.reminders.update_reminder";
 pub const TOOL_MOVE_REMINDER: &str = "eventkit.reminders.move_reminder";
 pub const TOOL_COMPLETE_REMINDER: &str = "eventkit.reminders.complete_reminder";
 pub const TOOL_UNCOMPLETE_REMINDER: &str = "eventkit.reminders.uncomplete_reminder";
-pub const TOOL_SET_REMINDER_ALARMS: &str = "eventkit.reminders.set_reminder_alarms";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ToolDefinition {
@@ -23,7 +22,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 11] = [
+const ALL_TOOLS: [ToolDefinition; 10] = [
   ToolDefinition {
     name: TOOL_LIST_LISTS,
     capability: capabilities::EVENTKIT_REMINDERS_READ,
@@ -93,13 +92,6 @@ const ALL_TOOLS: [ToolDefinition; 11] = [
     provider: "eventkit",
     operation: "uncomplete_reminder",
     description: "Mark a reminder as incomplete by reminder_id",
-  },
-  ToolDefinition {
-    name: TOOL_SET_REMINDER_ALARMS,
-    capability: capabilities::EVENTKIT_REMINDERS_ALARMS,
-    provider: "eventkit",
-    operation: "set_reminder_alarms",
-    description: "Replace a reminder's alarms by reminder_id; pass an empty array to remove all",
   },
 ];
 
@@ -212,14 +204,6 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["reminder_id"]
     }),
-    TOOL_SET_REMINDER_ALARMS => serde_json::json!({
-      "type": "object",
-      "properties": {
-        "reminder_id": { "type": "string" },
-        "alarms": { "type": "array" }
-      },
-      "required": ["reminder_id", "alarms"]
-    }),
     _ => serde_json::json!({ "type": "object" }),
   }
 }
@@ -228,8 +212,8 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
 mod tests {
   use super::{
     TOOL_COMPLETE_REMINDER, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_GET_REMINDER, TOOL_LIST_LISTS,
-    TOOL_LIST_REMINDERS, TOOL_MOVE_REMINDER, TOOL_SEARCH_REMINDERS, TOOL_SET_REMINDER_ALARMS, TOOL_UNCOMPLETE_REMINDER,
-    TOOL_UPDATE_REMINDER, tools_for_capabilities,
+    TOOL_LIST_REMINDERS, TOOL_MOVE_REMINDER, TOOL_SEARCH_REMINDERS, TOOL_UNCOMPLETE_REMINDER, TOOL_UPDATE_REMINDER,
+    tools_for_capabilities,
   };
 
   #[test]
@@ -270,12 +254,5 @@ mod tests {
     let tools = tools_for_capabilities(&["eventkit.reminders.complete".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
     assert_eq!(names, vec![TOOL_COMPLETE_REMINDER, TOOL_UNCOMPLETE_REMINDER]);
-  }
-
-  #[test]
-  fn lists_alarms_tool_when_alarms_capability_enabled() {
-    let tools = tools_for_capabilities(&["eventkit.reminders.alarms".into()]);
-    let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_SET_REMINDER_ALARMS]);
   }
 }

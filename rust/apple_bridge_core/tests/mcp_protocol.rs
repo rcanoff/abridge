@@ -449,50 +449,6 @@ fn tools_call_dispatches_uncomplete_reminder() {
 }
 
 #[test]
-fn mcp_tools_list_includes_set_reminder_alarms_when_alarms_capability_enabled() {
-  let port = allocate_test_port();
-  let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":24,"method":"tools/list","params":{}}"#;
-
-  let handle = create_server(
-    config_on_port(port, vec!["eventkit.reminders.alarms".into()]),
-    Box::new(mock.clone_for_server()),
-  )
-  .expect("create_server");
-  start_server(handle.clone()).expect("start");
-  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
-  stop_server(handle).expect("stop");
-
-  assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.reminders.set_reminder_alarms"));
-  assert!(!resp.contains("eventkit.reminders.update_reminder"));
-}
-
-#[test]
-fn tools_call_dispatches_set_reminder_alarms() {
-  let port = allocate_test_port();
-  let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":25,"method":"tools/call","params":{"name":"eventkit.reminders.set_reminder_alarms","arguments":{"reminder_id":"rem-42","alarms":[{"relative_offset":-300}]}}}"#;
-
-  let handle = create_server(
-    config_on_port(port, vec!["eventkit.reminders.alarms".into()]),
-    Box::new(mock.clone_for_server()),
-  )
-  .expect("create_server");
-  start_server(handle.clone()).expect("start");
-  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
-  stop_server(handle).expect("stop");
-
-  assert_eq!(status, 200);
-  assert!(resp.contains(r#""isError":false"#));
-  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
-  assert_eq!(recorded.provider, "eventkit");
-  assert_eq!(recorded.operation, "set_reminder_alarms");
-  assert!(recorded.payload_json.contains("rem-42"));
-  assert!(recorded.payload_json.contains("relative_offset"));
-}
-
-#[test]
 fn tools_call_dispatches_create_list() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();

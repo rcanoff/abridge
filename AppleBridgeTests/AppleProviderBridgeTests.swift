@@ -169,30 +169,6 @@ struct AppleProviderBridgeTests {
 
     @Test
     @MainActor
-    func routesEventKitSetReminderAlarms() {
-        let mockStore = MockEventKitStore()
-        mockStore.authorizationStatus = .fullAccess
-        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-alarm")]
-        mockStore.reminders = [
-            EventKitTestSupport.makeReminder(
-                calendarItemIdentifier: "r-alarm",
-                calendarIdentifier: "list-alarm",
-                title: "Task"
-            ),
-        ]
-        let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
-        let request = ProviderRequest(
-            provider: "eventkit",
-            operation: "set_reminder_alarms",
-            payloadJson: #"{"reminder_id":"r-alarm","alarms":[{"relative_offset":-300}]}"#
-        )
-        let response = bridge.callProvider(request: request)
-        #expect(response.ok == true)
-        #expect(response.payloadJson.contains("relative_offset"))
-    }
-
-    @Test
-    @MainActor
     func routesEventKitUncompleteReminder() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
