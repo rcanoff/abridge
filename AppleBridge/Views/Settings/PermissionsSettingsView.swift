@@ -6,6 +6,7 @@ struct PermissionsSettingsView: View {
     @Bindable var permissionsStore: PermissionsStore
     @Bindable var settingsStore: SettingsStore
     @Bindable var appStore: AppStore
+    @State private var eventsReadAuthorized = PermissionsEventKitAuthorization.eventsReadAuthorized
 
     var body: some View {
         Form {
@@ -39,9 +40,11 @@ struct PermissionsSettingsView: View {
         .onAppear {
             appStore.refreshStatus()
             permissionsStore.reloadFromSettings()
+            refreshEventsAuthorizationAndReapplyIfNeeded()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             appStore.refreshStatus()
+            refreshEventsAuthorizationAndReapplyIfNeeded()
         }
         .onChange(of: appStore.permissionStatus.grantsReadAccess) { _, remindersAuthorized in
             guard remindersAuthorized, permissionsStore.requiresAppleRemindersAccess else { return }
@@ -69,18 +72,36 @@ struct PermissionsSettingsView: View {
             set: { newValue in
                 permissionsStore.setChecked(newValue, for: capabilityID)
                 let remindersAuthorized = appStore.permissionStatus.grantsReadAccess
+                let eventsAuthorized = PermissionsEventKitAuthorization.eventsReadAuthorized
                 guard permissionsStore.shouldApplySavedCapabilitiesAfterToggle(
                     enabling: newValue,
-                    remindersAuthorized: remindersAuthorized
+                    capabilityID: capabilityID,
+                    remindersAuthorized: remindersAuthorized,
+                    eventsAuthorized: eventsAuthorized
                 ) else { return }
                 Task {
                     await settingsStore.applySavedCapabilities(
                         remindersAuthorized: remindersAuthorized,
-                        eventsAuthorized: PermissionsEventKitAuthorization.eventsReadAuthorized
+                        eventsAuthorized: eventsAuthorized
                     )
                 }
             }
         )
+    }
+
+    private func refreshEventsAuthorizationAndReapplyIfNeeded() {
+        let current = PermissionsEventKitAuthorization.eventsReadAuthorized
+        let becameAuthorized = current && !eventsReadAuthorized
+        eventsReadAuthorized = current
+
+        guard becameAuthorized, permissionsStore.requiresCalendarAccess else { return }
+
+        Task {
+            await settingsStore.applySavedCapabilities(
+                remindersAuthorized: appStore.permissionStatus.grantsReadAccess,
+                eventsAuthorized: current
+            )
+        }
     }
 }
 
