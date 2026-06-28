@@ -186,6 +186,52 @@ just review-strict       # same agents; exit non-zero on failure
 
 Reviews are written under `docs/reviews/`. Act on feedback with **receiving-code-review**; triage with the table in § Review triage.
 
+### GitHub issues
+
+Use **`gh`** from the repo root (`rcanoff/apple-bridge`). When the user asks to create an issue, follow this workflow.
+
+**Templates:** `docs/github-issue-templates/`
+
+| File | Use |
+|------|-----|
+| `standalone.md` | Single issue, no parent epic |
+| `epic.md` | Parent tracking a feature area |
+| `subtask.md` | Child of an epic — one small PR each |
+
+**Labels:**
+
+| Label | Apply to |
+|-------|----------|
+| `enhancement` | All feature work (default) |
+| `epic` | Parent epics only |
+| `subtask` | Sub-issues of an epic |
+
+Do **not** list child issues in markdown tables on the epic body. Use GitHub **native sub-issues** (task list on the epic). Put merge order as a numbered list of titles in the epic body.
+
+**Create a standalone issue:**
+
+```sh
+gh issue create --title "Short title" --label enhancement --body-file docs/github-issue-templates/standalone.md
+```
+
+(Edit the template content into a temp file first; fill all sections before creating.)
+
+**Create an epic + subtasks:**
+
+1. Create epic: `gh issue create --title "Epic: …" --label enhancement --label epic --body-file <epic-body.md>`
+2. Create each subtask: `gh issue create --title "…" --label enhancement --label subtask --body-file <subtask-body.md>`
+3. Link subtasks to the epic (use integer issue `id` from `gh api repos/rcanoff/apple-bridge/issues/<N> --jq .id`):
+
+```sh
+gh api -X POST /repos/rcanoff/apple-bridge/issues/<EPIC_NUMBER>/sub_issues -F sub_issue_id=<CHILD_ID>
+```
+
+Add children in merge order (first subtask first). Sub-issue bodies must **not** include a `## Parent` section — GitHub shows the parent on the issue. Use `## Depends on` for sibling ordering instead.
+
+**Subtask sizing:** One reviewable PR per subtask. Split Rust pipeline vs Swift UI vs MCP tool registration when a feature spans layers.
+
+**Issue body quality:** Pull requirements from `docs/prd.md`; include scope, out-of-scope, acceptance criteria, branch name, and verification commands. Remove temp body files after `gh issue create`.
+
 ### Shell commands
 
 Available on this branch:
@@ -243,4 +289,5 @@ Do **not** commit unless the user explicitly says the work is ready to commit.
 | Architecture & bootstrap | `docs/architecture-bootstrap-guide.md` |
 | Naming, libs, dev standards | `docs/conventions.md` |
 | PR specs / plans | `docs/superpowers/specs/`, `docs/superpowers/plans/` |
+| GitHub issue templates | `docs/github-issue-templates/` |
 | Xcode project | `project.yml` → `AppleBridge.xcodeproj` |
