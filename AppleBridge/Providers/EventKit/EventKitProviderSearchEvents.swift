@@ -6,7 +6,7 @@ extension EventKitProvider {
         let startDate: Date
         let endDate: Date
         let calendarIdentifier: String?
-        let query: String?
+        let query: String
     }
 
     func searchEvents(payloadJson: String) -> ProviderResponse {
@@ -22,8 +22,8 @@ extension EventKitProvider {
                 end: arguments.endDate,
                 calendars: calendars
             )
-            var events = try store.fetchEvents(matching: predicate)
-            events = applyQueryFilter(to: events, query: arguments.query)
+            let events = try store.fetchEvents(matching: predicate)
+                .filter { matchesQuery($0, query: arguments.query) }
             let payloadObjects = events.map(EventKitSerialization.eventJSONObject)
             let payload = try EventKitSerialization.jsonString(from: payloadObjects)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
@@ -34,18 +34,12 @@ extension EventKitProvider {
         }
     }
 
-    private func applyQueryFilter(to events: [EKEvent], query: String?) -> [EKEvent] {
-        guard let query else { return events }
-        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return events }
-
-        let needle = trimmed.lowercased()
-        return events.filter { event in
-            let candidates = [event.title, event.notes, event.location]
-            return candidates.contains { field in
-                guard let field else { return false }
-                return field.lowercased().contains(needle)
-            }
+    private func matchesQuery(_ event: EKEvent, query: String) -> Bool {
+        let needle = query.lowercased()
+        let candidates = [event.title, event.notes, event.location]
+        return candidates.contains { field in
+            guard let field else { return false }
+            return field.lowercased().contains(needle)
         }
     }
 
@@ -68,7 +62,7 @@ extension EventKitProvider {
         }
 
         let calendarIdentifier = try optionalStringArgument(named: "calendar_identifier", in: dictionary)
-        let query = try optionalStringArgument(named: "query", in: dictionary)
+        let query = try requiredNonEmptyStringArgument(named: "query", in: dictionary)
 
         return SearchEventsArguments(
             startDate: startDate,
@@ -102,6 +96,26 @@ extension EventKitProvider {
         }
 
         return value
+    }
+
+    private func requiredNonEmptyStringArgument(named key: String, in dictionary: [String: Any]) throws -> String {
+        guard dictionary.keys.contains(key) else {
+            throw EventKitProviderError.invalidArguments("\(key) is required")
+        }
+        if dictionary[key] is NSNull {
+            throw EventKitProviderError.invalidArguments("\(key) is required")
+        }
+
+        guard let value = dictionary[key] as? String else {
+            throw EventKitProviderError.invalidArguments("\(key) must be a string")
+        }
+
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            throw EventKitProviderError.invalidArguments("\(key) must not be empty")
+        }
+
+        return trimmed
     }
 
     private func parseISO8601Date(_ value: String) -> Date? {

@@ -337,7 +337,8 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "end_date": { "type": "string", "format": "date-time" },
         "calendar_identifier": { "type": "string" },
         "query": { "type": "string" }
-      }
+      },
+      "required": ["query"]
     }),
     TOOL_CREATE_CALENDAR | TOOL_CREATE_LIST => serde_json::json!({
       "type": "object",

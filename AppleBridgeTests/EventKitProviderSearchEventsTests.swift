@@ -11,6 +11,9 @@ struct EventKitProviderSearchEventsTests {
         mockStore.eventAuthorizationStatusValue = .fullAccess
         let start = Date(timeIntervalSince1970: 1_700_000_000)
         let end = Date(timeIntervalSince1970: 1_700_086_400)
+        mockStore.eventCalendarsList = [
+            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+        ]
         mockStore.events = [
             EventKitTestSupport.makeEvent(
                 calendarItemIdentifier: "evt-1",
@@ -38,10 +41,7 @@ struct EventKitProviderSearchEventsTests {
 
         let data = try #require(response.payloadJson.data(using: .utf8))
         let decoded = try JSONSerialization.jsonObject(with: data)
-        guard let events = decoded as? [[String: Any]] else {
-            Issue.record("Expected array of event objects")
-            return
-        }
+        let events = try #require(decoded as? [[String: Any]])
 
         #expect(events.count == 1)
         #expect(events.first?["title"] as? String == "Team Standup")
@@ -54,10 +54,27 @@ struct EventKitProviderSearchEventsTests {
         mockStore.eventAuthorizationStatusValue = .denied
         let provider = EventKitProvider(store: mockStore)
 
-        let response = provider.handle(operation: "search_events", payloadJson: #"{}"#)
+        let response = provider.handle(
+            operation: "search_events",
+            payloadJson: #"{"query":"standup"}"#
+        )
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("permission_denied") == true)
+    }
+
+    @Test
+    @MainActor
+    func searchEventsMissingQueryReturnsInvalidArguments() {
+        let mockStore = MockEventKitStore()
+        mockStore.eventAuthorizationStatusValue = .fullAccess
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(operation: "search_events", payloadJson: #"{}"#)
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("query is required") == true)
     }
 
     @Test
@@ -69,7 +86,7 @@ struct EventKitProviderSearchEventsTests {
 
         let response = provider.handle(
             operation: "search_events",
-            payloadJson: #"{"start_date":"2023-11-16T00:00:00Z","end_date":"2023-11-15T00:00:00Z"}"#
+            payloadJson: #"{"start_date":"2023-11-16T00:00:00Z","end_date":"2023-11-15T00:00:00Z","query":"meeting"}"#
         )
 
         #expect(response.ok == false)
