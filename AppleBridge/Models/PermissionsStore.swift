@@ -18,7 +18,9 @@ final class PermissionsStore {
     }
 
     var requiresAppleRemindersAccess: Bool {
-        !checkedCapabilityIDs.isEmpty
+        checkedCapabilityIDs.contains { id in
+            CapabilityCatalog.remindersCapabilities.contains { $0.id == id && $0.shipped }
+        }
     }
 
     func setChecked(_ checked: Bool, for capabilityID: String) {
@@ -36,5 +38,9 @@ final class PermissionsStore {
 
     func reloadFromSettings() {
         checkedCapabilityIDs = appSettings.savedCapabilityIDs
+    }
+
+    func shouldApplySavedCapabilitiesAfterToggle(enabling: Bool, remindersAuthorized: Bool) -> Bool {
+        remindersAuthorized || !enabling
     }
 }

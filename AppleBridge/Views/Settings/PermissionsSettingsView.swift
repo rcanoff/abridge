@@ -39,6 +39,10 @@ struct PermissionsSettingsView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             appStore.refreshStatus()
         }
+        .onChange(of: appStore.permissionStatus.grantsReadAccess) { _, remindersAuthorized in
+            guard remindersAuthorized, permissionsStore.requiresAppleRemindersAccess else { return }
+            Task { await settingsStore.applySavedCapabilities(remindersAuthorized: true) }
+        }
         .safeAreaInset(edge: .bottom) {
             if let lastError = appStore.lastError {
                 Text(lastError)
@@ -55,7 +59,14 @@ struct PermissionsSettingsView: View {
             get: { permissionsStore.checkedCapabilityIDs.contains(capabilityID) },
             set: { newValue in
                 permissionsStore.setChecked(newValue, for: capabilityID)
-                Task { await settingsStore.applySavedCapabilities() }
+                let remindersAuthorized = appStore.permissionStatus.grantsReadAccess
+                guard permissionsStore.shouldApplySavedCapabilitiesAfterToggle(
+                    enabling: newValue,
+                    remindersAuthorized: remindersAuthorized
+                ) else { return }
+                Task {
+                    await settingsStore.applySavedCapabilities(remindersAuthorized: remindersAuthorized)
+                }
             }
         )
     }

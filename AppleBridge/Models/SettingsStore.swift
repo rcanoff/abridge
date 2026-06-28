@@ -86,13 +86,15 @@ final class SettingsStore {
         )
     }
 
-    func applySavedCapabilities() async {
+    func applySavedCapabilities(remindersAuthorized: Bool) async {
         tokenResetNotice = nil
         guard appSettings.mcpEnabled else { return }
 
         await serverStore.restartServer(
             port: appSettings.mcpPort,
-            enabledCapabilities: appSettings.enabledMCPCapabilityIDs
+            enabledCapabilities: appSettings.serverEnabledMCPCapabilityIDs(
+                remindersAuthorized: remindersAuthorized
+            )
         )
     }
 

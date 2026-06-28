@@ -36,6 +36,19 @@ struct PermissionsStoreIntegrationTests {
 
     @Test
     @MainActor
+    func requiresAppleRemindersAccessOnlyForShippedCapabilities() throws {
+        let suiteName = "PermissionsStoreTests.shippedOnly"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+        store.setChecked(true, for: "create")
+
+        #expect(store.requiresAppleRemindersAccess == false)
+    }
+
+    @Test
+    @MainActor
     func requiresAppleRemindersAccessWhenNoMCPCapabilitiesEnabled() throws {
         let suiteName = "PermissionsStoreTests.notRequired"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
@@ -44,6 +57,44 @@ struct PermissionsStoreIntegrationTests {
         let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
 
         #expect(store.requiresAppleRemindersAccess == false)
+    }
+
+    @Test
+    @MainActor
+    func shouldApplySavedCapabilitiesAfterEnablingWhenRemindersAuthorized() throws {
+        let suiteName = "PermissionsStoreTests.applyWhenAuthorized"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+
+        #expect(store.shouldApplySavedCapabilitiesAfterToggle(enabling: true, remindersAuthorized: true))
+    }
+
+    @Test
+    @MainActor
+    func shouldNotApplySavedCapabilitiesAfterEnablingShippedCapabilityWithoutRemindersAccess() throws {
+        let suiteName = "PermissionsStoreTests.skipApplyWhenUnauthorized"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+
+        #expect(
+            store.shouldApplySavedCapabilitiesAfterToggle(enabling: true, remindersAuthorized: false) == false
+        )
+    }
+
+    @Test
+    @MainActor
+    func shouldApplySavedCapabilitiesAfterDisablingWithoutRemindersAccess() throws {
+        let suiteName = "PermissionsStoreTests.applyWhenDisabling"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+
+        #expect(store.shouldApplySavedCapabilitiesAfterToggle(enabling: false, remindersAuthorized: false))
     }
 
     @Test

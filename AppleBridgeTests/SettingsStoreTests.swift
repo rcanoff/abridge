@@ -202,6 +202,50 @@ struct SettingsStoreTests {
 
     @Test
     @MainActor
+    func applySavedCapabilitiesOmitsShippedCapabilitiesWithoutRemindersAccess() async throws {
+        let suiteName = "SettingsStoreTests.gatedApply"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = true
+        appSettings.saveCapabilityIDs(["read"])
+
+        let mock = MockServerService()
+        await mock.setRefreshResult(.running)
+        let serverStore = ServerStore(serverService: mock)
+        await serverStore.startServer(port: 3020, enabledCapabilities: [])
+        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+
+        await settingsStore.applySavedCapabilities(remindersAuthorized: false)
+
+        #expect(await mock.startCallCount == 2)
+        #expect(await mock.lastEnabledCapabilities == [])
+    }
+
+    @Test
+    @MainActor
+    func applySavedCapabilitiesAppliesShippedCapabilitiesWhenRemindersAuthorized() async throws {
+        let suiteName = "SettingsStoreTests.authorizedApply"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = true
+        appSettings.saveCapabilityIDs(["read"])
+
+        let mock = MockServerService()
+        await mock.setRefreshResult(.running)
+        let serverStore = ServerStore(serverService: mock)
+        await serverStore.startServer(port: 3020, enabledCapabilities: [])
+        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+
+        await settingsStore.applySavedCapabilities(remindersAuthorized: true)
+
+        #expect(await mock.startCallCount == 2)
+        #expect(await mock.lastEnabledCapabilities == ["eventkit.reminders.read"])
+    }
+
+    @Test
+    @MainActor
     func applyMCPEnabledChangeDoesNotDoubleStartAfterLaunchRestore() async throws {
         let suiteName = "SettingsStoreTests.launchRestoreNoDoubleStart"
         let defaults = try #require(UserDefaults(suiteName: suiteName))

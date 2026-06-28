@@ -41,13 +41,17 @@ struct SettingsWindowView: View {
 /// Without this, controls render with inactive gray accents until the user refocuses the window.
 private struct SettingsWindowKeyFocus: NSViewRepresentable {
     func makeNSView(context _: Context) -> NSView {
-        let view = NSView(frame: .zero)
-        Task { @MainActor in
-            NSApp.activate(ignoringOtherApps: true)
-            view.window?.makeKeyAndOrderFront(nil)
-        }
-        return view
+        SettingsWindowKeyFocusView(frame: .zero)
     }
 
     func updateNSView(_: NSView, context _: Context) {}
+}
+
+private final class SettingsWindowKeyFocusView: NSView {
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        guard let window else { return }
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+    }
 }
