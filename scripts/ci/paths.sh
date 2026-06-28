@@ -20,6 +20,10 @@ while IFS= read -r file; do
       PATHS_RUST_CHANGED=1
       PATHS_SWIFT_CHANGED=1
       ;;
+    AppleBridgeCore/*)
+      PATHS_RUST_CHANGED=1
+      PATHS_SWIFT_CHANGED=1
+      ;;
     AppleBridge/*|AppleBridgeTests/*|project.yml|AppleBridge.xcodeproj/*)
       PATHS_SWIFT_CHANGED=1
       ;;

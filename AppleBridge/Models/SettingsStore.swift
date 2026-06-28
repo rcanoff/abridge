@@ -73,13 +73,17 @@ final class SettingsStore {
 
     func resetBearerToken() async {
         tokenResetNotice = nil
+        let wasRunning = serverStore.runState == .running
         await serverStore.resetBearerToken(
             port: appSettings.mcpPort,
             enabledCapabilities: appSettings.enabledMCPCapabilityIDs,
             restartIfRunning: appSettings.mcpEnabled
         )
         guard serverStore.lastError == nil else { return }
-        tokenResetNotice = "Server will restart with a new token. Update your MCP client."
+        tokenResetNotice = tokenResetNoticeMessage(
+            mcpEnabled: appSettings.mcpEnabled,
+            wasRunning: wasRunning
+        )
     }
 
     func applySavedCapabilities() async {
@@ -90,6 +94,14 @@ final class SettingsStore {
             port: appSettings.mcpPort,
             enabledCapabilities: appSettings.enabledMCPCapabilityIDs
         )
+    }
+
+    private func tokenResetNoticeMessage(mcpEnabled: Bool, wasRunning: Bool) -> String {
+        if mcpEnabled, wasRunning {
+            "Server restarted with a new token. Update your MCP client."
+        } else {
+            "Bearer token reset. Update your MCP client with the new token."
+        }
     }
 
     /// Restores the MCP server once per process launch when `mcpEnabled` was persisted.

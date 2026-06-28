@@ -3,6 +3,12 @@ import SwiftUI
 
 @main
 struct AppleBridgeApp: App {
+    /// True when injected into the test runner (legacy TEST_HOST) or xcodebuild test.
+    private static var isRunningUnitTests: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || ProcessInfo.processInfo.environment["XCInjectBundleInto"] != nil
+    }
+
     @State private var store = AppStore()
     @State private var serverStore = ServerStore()
     @State private var appSettings = AppSettings()
@@ -19,6 +25,8 @@ struct AppleBridgeApp: App {
         _settingsStore = State(initialValue: settingsStore)
         _store = State(initialValue: AppStore())
 
+        guard !Self.isRunningUnitTests else { return }
+
         // Restore persisted MCP server at process launch. MenuBarExtra content is not
         // mounted until the popover opens, so this must not live in view onAppear.
         Task(priority: .userInitiated) { @MainActor in
@@ -32,20 +40,12 @@ struct AppleBridgeApp: App {
         MenuBarExtra("Apple Bridge", systemImage: "bell") {
             MenuBarPopoverView(store: store, serverStore: serverStore)
                 .onAppear {
-                    store.refreshStatus()
-                    Task {
-                        await serverStore.refreshBearerToken()
-                        await serverStore.refreshStatus()
-                    }
+                    refreshAppAndServerState()
                 }
                 .onReceive(NotificationCenter.default.publisher(
                     for: NSApplication.didBecomeActiveNotification
                 )) { _ in
-                    store.refreshStatus()
-                    Task {
-                        await serverStore.refreshBearerToken()
-                        await serverStore.refreshStatus()
-                    }
+                    refreshAppAndServerState()
                 }
         }
         .menuBarExtraStyle(.window)
@@ -59,5 +59,21 @@ struct AppleBridgeApp: App {
             )
         }
         .defaultSize(width: 600, height: 460)
+    }
+
+    @MainActor
+    private func refreshAppAndServerState() {
+        guard !Self.isRunningUnitTests else { return }
+        store.refreshStatus()
+        Task {
+            await refreshServerStateFromService()
+        }
+    }
+
+    @MainActor
+    private func refreshServerStateFromService() async {
+        guard !Self.isRunningUnitTests else { return }
+        await serverStore.refreshBearerToken()
+        await serverStore.refreshStatus()
     }
 }

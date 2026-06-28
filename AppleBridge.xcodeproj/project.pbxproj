@@ -19,8 +19,9 @@
 		443320E7C46B01BAAA95E468 /* AppleProviderBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC41FD68BF0BAD78C417BECE /* AppleProviderBridge.swift */; };
 		4D9E22B14A3EAACA6B189FFA /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E5B28D470673A0A4AA09CB /* AppSettingsTests.swift */; };
 		523F9C90B3E102ED79EB9EA9 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 258AB58BDB3B042D0FF6E698 /* SettingsStore.swift */; };
-		595F023AE435D43C0D23317C /* KeychainServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 564C584A78853A0587586674 /* KeychainServiceTests.swift */; };
+		57D5BC3F0EDD74FC82266967 /* BearerTokenStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168914F1F0FC6DAF5013D981 /* BearerTokenStoreTests.swift */; };
 		5BBE5DD0F85E3B370FACD2A8 /* MockServerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B39750CFA69109FBBE0899B /* MockServerService.swift */; };
+		5C432A6AE607A30E352C4192 /* KeychainServiceIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBBF81C3509780ADC778473 /* KeychainServiceIntegrationTests.swift */; };
 		6051BD7549D7FF560C068E9E /* MockURLOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86823620FB198FFCB3167A11 /* MockURLOpener.swift */; };
 		60FD0A8FF20E78B4EB93D578 /* apple_bridge_core.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02B065B605C800213EF61640 /* apple_bridge_core.swift */; };
 		65F8730E6F95FE7B7F9D6BF0 /* RemindersPermissionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */; };
@@ -35,6 +36,7 @@
 		A1EE361B7F39E414D73D4158 /* SettingsStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A08A7B375756F6E1F29C647 /* SettingsStoreTests.swift */; };
 		A379FED46FA22BFE7EBA3232 /* RemindersPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A72D4B9CEB174F696205046 /* RemindersPermissionService.swift */; };
 		ABFBA2863CF018BC9FFA76F3 /* ServerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 840D41B480A50A2080E5AFAD /* ServerStore.swift */; };
+		AE4477865F7B0D003BC3B530 /* MockBearerTokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F9E835DF7BD9E1609D3DBF9 /* MockBearerTokenStore.swift */; };
 		AEB9B5EF550B836B5DF13EF4 /* ServerConfigCapabilitiesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D3CEABF33D27B04DBE589C /* ServerConfigCapabilitiesTests.swift */; };
 		B093734CB3D64AC488A72A1C /* AppStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E67E426EFAB33A7A23E90338 /* AppStoreTests.swift */; };
 		B0BC84F142BD96E436D64C00 /* EventKitProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2129FE8EDB586593AB94360F /* EventKitProviderTests.swift */; };
@@ -69,17 +71,19 @@
 		0B39750CFA69109FBBE0899B /* MockServerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockServerService.swift; sourceTree = "<group>"; };
 		0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBridgeApp.swift; sourceTree = "<group>"; };
 		0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionStatusTests.swift; sourceTree = "<group>"; };
+		168914F1F0FC6DAF5013D981 /* BearerTokenStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BearerTokenStoreTests.swift; sourceTree = "<group>"; };
 		1A08A7B375756F6E1F29C647 /* SettingsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStoreTests.swift; sourceTree = "<group>"; };
 		2129FE8EDB586593AB94360F /* EventKitProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderTests.swift; sourceTree = "<group>"; };
 		258AB58BDB3B042D0FF6E698 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		27D3CEABF33D27B04DBE589C /* ServerConfigCapabilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerConfigCapabilitiesTests.swift; sourceTree = "<group>"; };
+		2F9E835DF7BD9E1609D3DBF9 /* MockBearerTokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockBearerTokenStore.swift; sourceTree = "<group>"; };
 		34F173AAC105177E71E9A236 /* ServerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerService.swift; sourceTree = "<group>"; };
 		3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionStatus.swift; sourceTree = "<group>"; };
 		4A72D4B9CEB174F696205046 /* RemindersPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionService.swift; sourceTree = "<group>"; };
-		564C584A78853A0587586674 /* KeychainServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainServiceTests.swift; sourceTree = "<group>"; };
 		5A7896AD2101CB7CC37F3298 /* EventKitReminderMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitReminderMapping.swift; sourceTree = "<group>"; };
 		5E28A832B6850DD201DF12F8 /* BlockingRemindersPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockingRemindersPermissionService.swift; sourceTree = "<group>"; };
 		5E2D8AFFF6004C50652089B5 /* PermissionsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsStore.swift; sourceTree = "<group>"; };
+		5EBBF81C3509780ADC778473 /* KeychainServiceIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainServiceIntegrationTests.swift; sourceTree = "<group>"; };
 		63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRemindersPermissionService.swift; sourceTree = "<group>"; };
 		840D41B480A50A2080E5AFAD /* ServerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStore.swift; sourceTree = "<group>"; };
 		86823620FB198FFCB3167A11 /* MockURLOpener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLOpener.swift; sourceTree = "<group>"; };
@@ -133,10 +137,12 @@
 				061BA2725CA72D643E140494 /* AppleProviderBridgeTests.swift */,
 				A0E5B28D470673A0A4AA09CB /* AppSettingsTests.swift */,
 				E67E426EFAB33A7A23E90338 /* AppStoreTests.swift */,
+				168914F1F0FC6DAF5013D981 /* BearerTokenStoreTests.swift */,
 				5E28A832B6850DD201DF12F8 /* BlockingRemindersPermissionService.swift */,
 				2129FE8EDB586593AB94360F /* EventKitProviderTests.swift */,
 				A9B22C04E154CBD7665032F6 /* EventKitReminderMappingTests.swift */,
-				564C584A78853A0587586674 /* KeychainServiceTests.swift */,
+				5EBBF81C3509780ADC778473 /* KeychainServiceIntegrationTests.swift */,
+				2F9E835DF7BD9E1609D3DBF9 /* MockBearerTokenStore.swift */,
 				97D1FABE02F2CD00445E6D0C /* MockEventKitStore.swift */,
 				63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */,
 				0B39750CFA69109FBBE0899B /* MockServerService.swift */,
@@ -355,10 +361,12 @@
 				4D9E22B14A3EAACA6B189FFA /* AppSettingsTests.swift in Sources */,
 				B093734CB3D64AC488A72A1C /* AppStoreTests.swift in Sources */,
 				DBEBE88FE028C1FF9AD723B4 /* AppleProviderBridgeTests.swift in Sources */,
+				57D5BC3F0EDD74FC82266967 /* BearerTokenStoreTests.swift in Sources */,
 				1E6CD3CB40F8C514854108E6 /* BlockingRemindersPermissionService.swift in Sources */,
 				B0BC84F142BD96E436D64C00 /* EventKitProviderTests.swift in Sources */,
 				9CD6496C930A1ED4BEB42381 /* EventKitReminderMappingTests.swift in Sources */,
-				595F023AE435D43C0D23317C /* KeychainServiceTests.swift in Sources */,
+				5C432A6AE607A30E352C4192 /* KeychainServiceIntegrationTests.swift in Sources */,
+				AE4477865F7B0D003BC3B530 /* MockBearerTokenStore.swift in Sources */,
 				9BD92CCD16EE90EEC938EF97 /* MockEventKitStore.swift in Sources */,
 				22A1A27010210BCA212E7589 /* MockRemindersPermissionService.swift in Sources */,
 				5BBE5DD0F85E3B370FACD2A8 /* MockServerService.swift in Sources */,
