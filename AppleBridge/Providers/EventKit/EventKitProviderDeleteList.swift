@@ -2,7 +2,7 @@
 import Foundation
 
 extension EventKitProvider {
-    private func parseCalendarIdentifierArguments(_ payloadJson: String) throws -> String {
+    func parseCalendarIdentifierArguments(_ payloadJson: String) throws -> String {
         guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw EventKitProviderError.invalidArguments("calendar_identifier is required")
         }

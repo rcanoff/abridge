@@ -9,7 +9,7 @@ extension EventKitProvider {
             handleUpdateMutation(operation: operation, payloadJson: payloadJson)
         case "move_reminder":
             moveReminder(payloadJson: payloadJson)
-        case "delete_reminder", "delete_list":
+        case "delete_reminder", "delete_list", "delete_calendar":
             handleDeleteMutation(operation: operation, payloadJson: payloadJson)
         case "complete_reminder":
             completeReminder(payloadJson: payloadJson)
@@ -54,6 +54,8 @@ extension EventKitProvider {
             deleteReminder(payloadJson: payloadJson)
         case "delete_list":
             deleteList(payloadJson: payloadJson)
+        case "delete_calendar":
+            deleteCalendar(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }

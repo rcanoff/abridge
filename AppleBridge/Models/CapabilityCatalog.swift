@@ -48,5 +48,11 @@ enum CapabilityCatalog {
             label: "Edit",
             shipped: true
         ),
+        CapabilityDefinition(
+            id: "calendars-delete",
+            capabilityID: "eventkit.calendars.delete",
+            label: "Delete",
+            shipped: true
+        ),
     ]
 }

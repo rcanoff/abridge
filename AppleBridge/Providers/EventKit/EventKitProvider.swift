@@ -218,7 +218,7 @@ final class EventKitProvider {
             handleReadOperation(operation: operation, payloadJson: payloadJson)
         case "create_reminder", "create_list", "create_calendar", "update_reminder", "update_calendar", "move_reminder",
              "delete_reminder",
-             "delete_list", "complete_reminder", "uncomplete_reminder", "set_reminder_alarms",
+             "delete_list", "delete_calendar", "complete_reminder", "uncomplete_reminder", "set_reminder_alarms",
              "set_reminder_recurrence":
             handleMutationOperation(operation: operation, payloadJson: payloadJson)
         default:
