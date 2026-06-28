@@ -1,8 +1,4 @@
 docs/*
-!docs/superpowers/
-!docs/superpowers/**
-!docs/reviews/
-!docs/reviews/**
 !docs/conventions.md
 !docs/prd.md
 !docs/architecture-bootstrap-guide.md
