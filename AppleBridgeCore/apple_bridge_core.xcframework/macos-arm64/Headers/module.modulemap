@@ -1,0 +1,4 @@
+module apple_bridge_coreFFI {
+    header "apple_bridge_coreFFI.h"
+    export *
+}

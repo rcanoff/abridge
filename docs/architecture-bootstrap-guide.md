@@ -186,7 +186,7 @@ AppleBridge/
 ```sh
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 cargo install just
-rustup target add aarch64-apple-darwin x86_64-apple-darwin
+rustup target add aarch64-apple-darwin
 ```
 
 ### Step 1 — Create the Rust workspace
@@ -517,25 +517,21 @@ XCFRAMEWORK_DIR="$OUTPUT_DIR/apple_bridge_core.xcframework"
 
 cd "$SCRIPT_DIR"
 
+ARM64_LIB="target/aarch64-apple-darwin/release/libapple_bridge_core.a"
+
 echo "Building macOS arm64..."
 cargo build --release -p apple_bridge_core --target aarch64-apple-darwin
-
-echo "Building macOS x86_64..."
-cargo build --release -p apple_bridge_core --target x86_64-apple-darwin
 
 mkdir -p "$OUTPUT_DIR/Sources"
 mkdir -p "$OUTPUT_DIR/Headers"
 
-MACOS_LIB_DIR="$OUTPUT_DIR/lib-macos"
+MACOS_LIB_DIR="$OUTPUT_DIR/lib-macos-arm64"
 mkdir -p "$MACOS_LIB_DIR"
-lipo -create \
-  target/aarch64-apple-darwin/release/libapple_bridge_core.a \
-  target/x86_64-apple-darwin/release/libapple_bridge_core.a \
-  -output "$MACOS_LIB_DIR/libapple_bridge_core.a"
+cp "$ARM64_LIB" "$MACOS_LIB_DIR/libapple_bridge_core.a"
 
 echo "Generating Swift bindings..."
 cargo run --release -p apple_bridge_core --bin uniffi-bindgen generate \
-  --library target/aarch64-apple-darwin/release/libapple_bridge_core.a \
+  --library "$ARM64_LIB" \
   --language swift \
   --out-dir "$OUTPUT_DIR/Sources"
 

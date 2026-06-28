@@ -9,7 +9,6 @@ XCFRAMEWORK_DIR="$OUTPUT_DIR/apple_bridge_core.xcframework"
 cd "$SCRIPT_DIR"
 
 ARM64_LIB="target/aarch64-apple-darwin/release/libapple_bridge_core.a"
-X86_64_LIB="target/x86_64-apple-darwin/release/libapple_bridge_core.a"
 
 echo "Building macOS arm64..."
 cargo build --release -p apple_bridge_core --target aarch64-apple-darwin
@@ -17,21 +16,13 @@ cargo build --release -p apple_bridge_core --target aarch64-apple-darwin
 mkdir -p "$OUTPUT_DIR/Sources"
 mkdir -p "$OUTPUT_DIR/Headers"
 
-MACOS_LIB_DIR="$OUTPUT_DIR/lib-macos"
+MACOS_LIB_DIR="$OUTPUT_DIR/lib-macos-arm64"
 mkdir -p "$MACOS_LIB_DIR"
-
-if rustup target list --installed | grep -qx 'x86_64-apple-darwin'; then
-  echo "Building macOS x86_64..."
-  cargo build --release -p apple_bridge_core --target x86_64-apple-darwin
-  lipo -create "$ARM64_LIB" "$X86_64_LIB" -output "$MACOS_LIB_DIR/libapple_bridge_core.a"
-else
-  echo "Skipping x86_64 (target not installed) — arm64-only library"
-  cp "$ARM64_LIB" "$MACOS_LIB_DIR/libapple_bridge_core.a"
-fi
+cp "$ARM64_LIB" "$MACOS_LIB_DIR/libapple_bridge_core.a"
 
 echo "Generating Swift bindings..."
 cargo run --release -p apple_bridge_core --bin uniffi-bindgen generate \
-  --library target/aarch64-apple-darwin/release/libapple_bridge_core.a \
+  --library "$ARM64_LIB" \
   --language swift \
   --out-dir "$OUTPUT_DIR/Sources"
 
