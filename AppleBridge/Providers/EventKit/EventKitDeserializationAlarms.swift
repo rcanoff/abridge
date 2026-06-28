@@ -77,17 +77,17 @@ extension EventKitDeserialization {
         if value is NSNull {
             throw EventKitProviderError.invalidArguments("radius must be a number or null")
         }
-        if value is Bool {
-            throw EventKitProviderError.invalidArguments("radius must be a number")
-        }
-        if let radius = value as? Double {
-            return radius
-        }
         if let number = value as? NSNumber {
             if CFGetTypeID(number) == CFBooleanGetTypeID() {
                 throw EventKitProviderError.invalidArguments("radius must be a number")
             }
             return number.doubleValue
+        }
+        if value is Bool {
+            throw EventKitProviderError.invalidArguments("radius must be a number")
+        }
+        if let radius = value as? Double {
+            return radius
         }
         throw EventKitProviderError.invalidArguments("radius must be a number")
     }
@@ -101,17 +101,17 @@ extension EventKitDeserialization {
         if value is NSNull {
             throw EventKitProviderError.invalidArguments("relative_offset must be a number or null")
         }
-        if value is Bool {
-            throw EventKitProviderError.invalidArguments("relative_offset must be a number")
-        }
-        if let offset = value as? Double {
-            return offset
-        }
         if let number = value as? NSNumber {
             if CFGetTypeID(number) == CFBooleanGetTypeID() {
                 throw EventKitProviderError.invalidArguments("relative_offset must be a number")
             }
             return number.doubleValue
+        }
+        if value is Bool {
+            throw EventKitProviderError.invalidArguments("relative_offset must be a number")
+        }
+        if let offset = value as? Double {
+            return offset
         }
         throw EventKitProviderError.invalidArguments("relative_offset must be a number")
     }

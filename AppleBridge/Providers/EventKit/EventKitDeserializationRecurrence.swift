@@ -52,7 +52,8 @@ extension EventKitDeserialization {
         }
 
         let hasEndDate = dictionary.keys.contains("end_date") && !(dictionary["end_date"] is NSNull)
-        let hasOccurrenceCount = dictionary.keys.contains("occurrence_count") && !(dictionary["occurrence_count"] is NSNull)
+        let hasOccurrenceCount = dictionary.keys
+            .contains("occurrence_count") && !(dictionary["occurrence_count"] is NSNull)
 
         if hasEndDate, hasOccurrenceCount {
             throw EventKitProviderError.invalidArguments(
@@ -62,7 +63,8 @@ extension EventKitDeserialization {
 
         if hasEndDate {
             guard let endDate = try optionalISO8601Date(dictionary["end_date"]) else {
-                throw EventKitProviderError.invalidArguments("recurrence_end end_date must be a valid ISO8601 date-time")
+                throw EventKitProviderError
+                    .invalidArguments("recurrence_end end_date must be a valid ISO8601 date-time")
             }
             return EKRecurrenceEnd(end: endDate)
         }
@@ -106,10 +108,6 @@ extension EventKitDeserialization {
             throw EventKitProviderError.invalidArguments("Expected number array or null")
         }
         return try array.map { element in
-            if element is Bool {
-                throw EventKitProviderError.invalidArguments("Expected integer in number array")
-            }
-            if let int = element as? Int { return NSNumber(value: int) }
             if let number = element as? NSNumber {
                 if CFGetTypeID(number) == CFBooleanGetTypeID() {
                     throw EventKitProviderError.invalidArguments("Expected integer in number array")
@@ -119,6 +117,10 @@ extension EventKitDeserialization {
                 }
                 return number
             }
+            if element is Bool {
+                throw EventKitProviderError.invalidArguments("Expected integer in number array")
+            }
+            if let int = element as? Int { return NSNumber(value: int) }
             throw EventKitProviderError.invalidArguments("Expected integer in number array")
         }
     }

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00D7E4FBDAEA263F5B1DC745 /* RemindersPermissionStatusReconciliationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7F3698A6C4B83BE5E94F35 /* RemindersPermissionStatusReconciliationTests.swift */; };
+		0515F5EF57B616CCDCB79C16 /* EventKitProviderCreateValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 828BF65E947F980064F26AAA /* EventKitProviderCreateValidationTests.swift */; };
 		0697F960B91CDBE3A38D4F06 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2AF683581041C37901C5610 /* KeychainService.swift */; };
 		0FF39115817D3F4FDA50D54F /* RemindersPermissionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */; };
 		14EEE63F84E039A033483CF5 /* StalledEventKitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6E8DA79BFB87C1E5EB17DE6 /* StalledEventKitStore.swift */; };
@@ -106,6 +107,7 @@
 		63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRemindersPermissionService.swift; sourceTree = "<group>"; };
 		6D195461D77501BE91ED2E00 /* EventKitDeserializationRecurrence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitDeserializationRecurrence.swift; sourceTree = "<group>"; };
 		7B4D56A8BE9577545A4ACEF9 /* RemindersPermissionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionServiceTests.swift; sourceTree = "<group>"; };
+		828BF65E947F980064F26AAA /* EventKitProviderCreateValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderCreateValidationTests.swift; sourceTree = "<group>"; };
 		840D41B480A50A2080E5AFAD /* ServerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStore.swift; sourceTree = "<group>"; };
 		86823620FB198FFCB3167A11 /* MockURLOpener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLOpener.swift; sourceTree = "<group>"; };
 		8C810FA4ED893ADE6FF771DC /* EventKitDeserializationAlarms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitDeserializationAlarms.swift; sourceTree = "<group>"; };
@@ -180,6 +182,7 @@
 				168914F1F0FC6DAF5013D981 /* BearerTokenStoreTests.swift */,
 				5E28A832B6850DD201DF12F8 /* BlockingRemindersPermissionService.swift */,
 				A6B1BF51F48B89CE4035DA11 /* EventKitProviderCreateTests.swift */,
+				828BF65E947F980064F26AAA /* EventKitProviderCreateValidationTests.swift */,
 				2129FE8EDB586593AB94360F /* EventKitProviderTests.swift */,
 				DA10FBBA3E71A83884C01863 /* EventKitSerializationTests.swift */,
 				C723EF9225492B1A29DD1228 /* EventKitTestSupport.swift */,
@@ -427,6 +430,7 @@
 				57D5BC3F0EDD74FC82266967 /* BearerTokenStoreTests.swift in Sources */,
 				1E6CD3CB40F8C514854108E6 /* BlockingRemindersPermissionService.swift in Sources */,
 				76B3E17D364672FA80673714 /* EventKitProviderCreateTests.swift in Sources */,
+				0515F5EF57B616CCDCB79C16 /* EventKitProviderCreateValidationTests.swift in Sources */,
 				B0BC84F142BD96E436D64C00 /* EventKitProviderTests.swift in Sources */,
 				A1EDC7283BF01F3D249DB758 /* EventKitSerializationTests.swift in Sources */,
 				DB666ECE2D4B76B9BA2CFD94 /* EventKitTestSupport.swift in Sources */,

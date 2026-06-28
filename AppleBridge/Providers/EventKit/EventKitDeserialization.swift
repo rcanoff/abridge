@@ -15,8 +15,6 @@ enum EventKitDeserialization {
     static func optionalInt(_ value: Any?) throws -> Int? {
         guard let value else { return nil }
         if value is NSNull { return nil }
-        if value is Bool { throw EventKitProviderError.invalidArguments("Expected integer or null") }
-        if let int = value as? Int { return int }
         if let number = value as? NSNumber {
             if CFGetTypeID(number) == CFBooleanGetTypeID() {
                 throw EventKitProviderError.invalidArguments("Expected integer or null")
@@ -26,6 +24,8 @@ enum EventKitDeserialization {
             }
             return number.intValue
         }
+        if value is Bool { throw EventKitProviderError.invalidArguments("Expected integer or null") }
+        if let int = value as? Int { return int }
         throw EventKitProviderError.invalidArguments("Expected integer or null")
     }
 
