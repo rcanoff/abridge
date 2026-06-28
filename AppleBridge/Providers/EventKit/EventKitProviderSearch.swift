@@ -47,12 +47,15 @@ extension EventKitProvider {
         return calendars
     }
 
-    func eventCalendars(calendarIdentifier: String) throws -> [EKCalendar] {
+    func eventCalendars(calendarIdentifier: String?) throws -> [EKCalendar] {
         let calendars = store.eventCalendars()
-        guard let calendar = calendars.first(where: { $0.calendarIdentifier == calendarIdentifier }) else {
-            throw EventKitProviderError.invalidArguments("Unknown calendar_identifier: \(calendarIdentifier)")
+        if let calendarIdentifier {
+            guard let calendar = calendars.first(where: { $0.calendarIdentifier == calendarIdentifier }) else {
+                throw EventKitProviderError.invalidArguments("Unknown calendar_identifier: \(calendarIdentifier)")
+            }
+            return [calendar]
         }
-        return [calendar]
+        return calendars
     }
 
     private func searchPredicate(
