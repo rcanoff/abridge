@@ -86,3 +86,7 @@ clean-rust: _rust-workspace
     rm -rf AppleBridgeCore
 
 rebuild: clean-rust build-rust
+
+# Orchestration gate checks for pr3b–pr3k reminder features (docs + PR history)
+verify-orchestration:
+    @scripts/verify-orchestration-gates.sh
