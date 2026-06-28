@@ -63,11 +63,5 @@ enum CapabilityCatalog {
             label: "Read",
             shipped: true
         ),
-        CapabilityDefinition(
-            id: "events-search",
-            capabilityID: "eventkit.events.search",
-            label: "Search",
-            shipped: true
-        ),
     ]
 }

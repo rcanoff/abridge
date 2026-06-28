@@ -224,7 +224,7 @@ final class EventKitProvider {
             listLists()
         case "list_calendars":
             listCalendars()
-        case "list_reminders", "get_reminder", "search_reminders", "list_events", "search_events":
+        case "list_reminders", "get_reminder", "search_reminders", "list_events":
             handleReadOperation(operation: operation, payloadJson: payloadJson)
         case "create_reminder", "create_list", "create_calendar", "update_reminder", "update_calendar", "move_reminder",
              "delete_reminder",
