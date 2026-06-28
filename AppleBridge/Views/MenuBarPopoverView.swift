@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct MenuBarPopoverView: View {
@@ -7,18 +8,12 @@ struct MenuBarPopoverView: View {
     @Bindable var serverStore: ServerStore
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: SettingsDesign.popoverSpacing) {
             Text("Apple Bridge")
                 .font(.headline)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Reminders Access")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-
-                Text(store.permissionStatus.displayName)
-                    .font(.body)
-                    .foregroundStyle(permissionStatusColor)
+            LabeledContent("Reminders Access") {
+                PermissionStatusIndicator(status: store.permissionStatus)
             }
 
             if let lastError = store.lastError {
@@ -48,14 +43,8 @@ struct MenuBarPopoverView: View {
 
             Divider()
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Server")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-
-                Text(serverStore.runState.displayName)
-                    .font(.body)
-                    .foregroundStyle(serverStatusColor)
+            LabeledContent("Server") {
+                ServerStatusIndicator(state: serverStore.runState)
             }
 
             if let lastError = serverStore.lastError {
@@ -66,8 +55,12 @@ struct MenuBarPopoverView: View {
             }
 
             Button("Settings…") {
+                NSApp.activate(ignoringOtherApps: true)
                 openWindow(id: "settings")
             }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .frame(maxWidth: .infinity)
 
             if isServerStarting {
                 ProgressView()
@@ -76,29 +69,10 @@ struct MenuBarPopoverView: View {
         }
         .padding()
         .frame(width: 260)
-    }
-
-    private var permissionStatusColor: Color {
-        switch store.permissionStatus {
-        case .authorized:
-            .green
-        case .notDetermined, .unknown, .writeOnly:
-            .orange
-        case .denied, .restricted:
-            .red
-        }
-    }
-
-    private var serverStatusColor: Color {
-        switch serverStore.runState {
-        case .running:
-            .green
-        case .starting:
-            .orange
-        case .stopped:
-            .secondary
-        case .error:
-            .red
+        .presentationBackground {
+            Rectangle()
+                .fill(.clear)
+                .glassEffect(.regular, in: .rect(cornerRadius: SettingsDesign.glassCornerRadius))
         }
     }
 
