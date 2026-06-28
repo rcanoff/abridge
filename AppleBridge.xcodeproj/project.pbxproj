@@ -42,6 +42,7 @@
 		AEB9B5EF550B836B5DF13EF4 /* ServerConfigCapabilitiesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D3CEABF33D27B04DBE589C /* ServerConfigCapabilitiesTests.swift */; };
 		B093734CB3D64AC488A72A1C /* AppStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E67E426EFAB33A7A23E90338 /* AppStoreTests.swift */; };
 		B0BC84F142BD96E436D64C00 /* EventKitProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2129FE8EDB586593AB94360F /* EventKitProviderTests.swift */; };
+		B66E1BBBCDCB37A806C439A6 /* Arm64OnlyBuildConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EBE8594105150B6E2239FFF /* Arm64OnlyBuildConfigurationTests.swift */; };
 		B7C032A7A55F0B43103E2D11 /* EventKitProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2B9116F294A471D608AE114 /* EventKitProvider.swift */; };
 		BA971967C55DE01A0123591B /* SettingsWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C453F98EBE5CA0E0631FE443 /* SettingsWindowView.swift */; };
 		CE5FEA5F341DF203272C1953 /* StatusIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C0185B2328E52AB5EBDD1D /* StatusIndicator.swift */; };
@@ -79,6 +80,7 @@
 		2129FE8EDB586593AB94360F /* EventKitProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderTests.swift; sourceTree = "<group>"; };
 		258AB58BDB3B042D0FF6E698 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		27D3CEABF33D27B04DBE589C /* ServerConfigCapabilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerConfigCapabilitiesTests.swift; sourceTree = "<group>"; };
+		2EBE8594105150B6E2239FFF /* Arm64OnlyBuildConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Arm64OnlyBuildConfigurationTests.swift; sourceTree = "<group>"; };
 		2F9E835DF7BD9E1609D3DBF9 /* MockBearerTokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockBearerTokenStore.swift; sourceTree = "<group>"; };
 		34F173AAC105177E71E9A236 /* ServerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerService.swift; sourceTree = "<group>"; };
 		3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionStatus.swift; sourceTree = "<group>"; };
@@ -152,6 +154,7 @@
 				061BA2725CA72D643E140494 /* AppleProviderBridgeTests.swift */,
 				A0E5B28D470673A0A4AA09CB /* AppSettingsTests.swift */,
 				E67E426EFAB33A7A23E90338 /* AppStoreTests.swift */,
+				2EBE8594105150B6E2239FFF /* Arm64OnlyBuildConfigurationTests.swift */,
 				168914F1F0FC6DAF5013D981 /* BearerTokenStoreTests.swift */,
 				5E28A832B6850DD201DF12F8 /* BlockingRemindersPermissionService.swift */,
 				2129FE8EDB586593AB94360F /* EventKitProviderTests.swift */,
@@ -380,6 +383,7 @@
 				4D9E22B14A3EAACA6B189FFA /* AppSettingsTests.swift in Sources */,
 				B093734CB3D64AC488A72A1C /* AppStoreTests.swift in Sources */,
 				DBEBE88FE028C1FF9AD723B4 /* AppleProviderBridgeTests.swift in Sources */,
+				B66E1BBBCDCB37A806C439A6 /* Arm64OnlyBuildConfigurationTests.swift in Sources */,
 				57D5BC3F0EDD74FC82266967 /* BearerTokenStoreTests.swift in Sources */,
 				1E6CD3CB40F8C514854108E6 /* BlockingRemindersPermissionService.swift in Sources */,
 				B0BC84F142BD96E436D64C00 /* EventKitProviderTests.swift in Sources */,
