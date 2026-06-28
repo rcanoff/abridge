@@ -340,5 +340,4 @@ struct EventKitProviderTests {
         #expect(response.payloadJson.contains("list-9"))
         #expect(response.payloadJson.contains("is_completed"))
     }
-
 }
