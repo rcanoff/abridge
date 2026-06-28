@@ -58,40 +58,249 @@ check_docs_tracked() {
   return 1
 }
 
-check_spec_predates_merge() {
+# slug -> newline-separated impl paths (Swift provider + rust tools/mod.rs)
+impl_paths_for_slug() {
+  local slug="$1"
+  local swift=""
+  case "$slug" in
+    pr3b-search-filter-reminders) swift="AppleBridge/Providers/EventKit/EventKitProviderSearch.swift" ;;
+    pr3c-create-reminder) swift="AppleBridge/Providers/EventKit/EventKitProviderCreate.swift" ;;
+    pr3d-create-reminder-list) swift="AppleBridge/Providers/EventKit/EventKitProviderCreateList.swift" ;;
+    pr3e-update-reminder) swift="AppleBridge/Providers/EventKit/EventKitProviderUpdate.swift" ;;
+    pr3f-move-reminder) swift="AppleBridge/Providers/EventKit/EventKitProviderMove.swift" ;;
+    pr3g-complete-uncomplete-reminder) swift="AppleBridge/Providers/EventKit/EventKitProviderComplete.swift" ;;
+    pr3h-reminder-alarms) swift="AppleBridge/Providers/EventKit/EventKitProviderSetReminderAlarms.swift" ;;
+    pr3i-reminder-recurrence) swift="AppleBridge/Providers/EventKit/EventKitProviderSetReminderRecurrence.swift" ;;
+    pr3j-delete-reminder) swift="AppleBridge/Providers/EventKit/EventKitProviderDelete.swift" ;;
+    pr3k-delete-reminder-list) swift="AppleBridge/Providers/EventKit/EventKitProviderDeleteList.swift" ;;
+    *) return 1 ;;
+  esac
+  printf '%s\n%s\n' "$swift" "rust/apple_bridge_core/src/tools/mod.rs"
+}
+
+commit_touches_any() {
+  local oid="$1"
+  shift
+  local path
+  local names
+  names="$(git show --name-only --format='' "$oid" 2>/dev/null || true)"
+  for path in "$@"; do
+    if grep -qxF "$path" <<<"$names"; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+load_impl_paths() {
+  local slug="$1"
+  IMPL_PATHS=()
+  while IFS= read -r line; do
+    [[ -n "$line" ]] && IMPL_PATHS+=("$line")
+  done < <(impl_paths_for_slug "$slug" || true)
+  ((${#IMPL_PATHS[@]} > 0))
+}
+
+check_branch_order() {
+  local slug="$1"
+  local basename="$2"
+  local spec="docs/superpowers/specs/${basename}.md"
+  local plan="docs/superpowers/plans/${basename}.md"
+  local branch="feat/${slug}"
+  local branch_ref merge_base
+  local -a doc_paths
+  local oid earliest_spec earliest_impl
+
+  if ! load_impl_paths "$slug"; then
+    echo "branch-order: unknown slug $slug"
+    return 1
+  fi
+  doc_paths=("$spec" "$plan")
+
+  if git show-ref --verify --quiet "refs/remotes/origin/${branch}"; then
+    branch_ref="origin/${branch}"
+  elif git show-ref --verify --quiet "refs/heads/${branch}"; then
+    branch_ref="${branch}"
+  else
+    echo "branch-order: no remote or local ${branch}"
+    return 1
+  fi
+
+  merge_base="$(git merge-base main "$branch_ref" 2>/dev/null || true)"
+  if [[ -z "$merge_base" ]]; then
+    echo "branch-order: cannot find merge-base for ${branch_ref}"
+    return 1
+  fi
+
+  earliest_spec=""
+  earliest_impl=""
+  while IFS= read -r oid; do
+    [[ -z "$oid" ]] && continue
+    if [[ -z "$earliest_spec" ]] && commit_touches_any "$oid" "${doc_paths[@]}"; then
+      earliest_spec="$oid"
+    fi
+    if [[ -z "$earliest_impl" ]] && commit_touches_any "$oid" "${IMPL_PATHS[@]}"; then
+      earliest_impl="$oid"
+    fi
+  done < <(git rev-list --reverse "${merge_base}..${branch_ref}")
+
+  if [[ -z "$earliest_spec" ]]; then
+    echo "branch-order: no spec/plan commit on ${branch_ref}"
+    return 1
+  fi
+  if [[ -z "$earliest_impl" ]]; then
+    echo "branch-order: no impl commit on ${branch_ref}"
+    return 1
+  fi
+
+  if git merge-base --is-ancestor "$earliest_spec" "$earliest_impl" 2>/dev/null \
+    && [[ "$earliest_spec" != "$earliest_impl" ]]; then
+    echo "branch-order: spec ${earliest_spec:0:7} predates impl ${earliest_impl:0:7} on ${branch_ref}"
+    return 0
+  fi
+
+  echo "branch-order: spec ${earliest_spec:0:7} does not predate impl ${earliest_impl:0:7} on ${branch_ref}"
+  return 1
+}
+
+check_pr_commits_order() {
+  local slug="$1"
+  local basename="$2"
+  local pr="$3"
+  local spec="docs/superpowers/specs/${basename}.md"
+  local plan="docs/superpowers/plans/${basename}.md"
+  local -a doc_paths commits
+  local oid earliest_spec earliest_impl spec_idx impl_idx idx
+  local commit_line
+
+  if ! load_impl_paths "$slug"; then
+    echo "pr-commits: unknown slug $slug"
+    return 1
+  fi
+  doc_paths=("$spec" "$plan")
+
+  commits=()
+  while IFS= read -r commit_line; do
+    [[ -n "$commit_line" ]] && commits+=("$commit_line")
+  done < <(gh pr view "$pr" --json commits --jq '.commits[].oid' 2>/dev/null || true)
+  if ((${#commits[@]} == 0)); then
+    echo "pr-commits: no commits on PR #$pr"
+    return 1
+  fi
+
+  earliest_spec=""
+  earliest_impl=""
+  spec_idx=-1
+  impl_idx=-1
+  idx=0
+  for oid in "${commits[@]}"; do
+    if [[ -z "$earliest_spec" ]] && commit_touches_any "$oid" "${doc_paths[@]}"; then
+      earliest_spec="$oid"
+      spec_idx="$idx"
+    fi
+    if [[ -z "$earliest_impl" ]] && commit_touches_any "$oid" "${IMPL_PATHS[@]}"; then
+      earliest_impl="$oid"
+      impl_idx="$idx"
+    fi
+    idx=$((idx + 1))
+  done
+
+  if [[ -z "$earliest_spec" ]]; then
+    echo "pr-commits: no spec/plan commit in PR #$pr timeline"
+    return 1
+  fi
+  if [[ -z "$earliest_impl" ]]; then
+    echo "pr-commits: no impl commit in PR #$pr timeline"
+    return 1
+  fi
+
+  if [[ "$spec_idx" -lt "$impl_idx" ]]; then
+    echo "pr-commits: spec ${earliest_spec:0:7} before impl ${earliest_impl:0:7} in PR #$pr"
+    return 0
+  fi
+
+  echo "pr-commits: spec ${earliest_spec:0:7} not before impl ${earliest_impl:0:7} in PR #$pr"
+  return 1
+}
+
+check_main_ancestry() {
   local basename="$1"
   local pr="$2"
   local spec="docs/superpowers/specs/${basename}.md"
   local spec_add merge_oid
 
   if [[ ! -f "$spec" ]]; then
-    echo "FAIL (spec missing: $spec)"
+    echo "main-ancestry: spec missing $spec"
     return 1
   fi
 
   spec_add="$(git log --diff-filter=A --follow --format='%H' -- "$spec" | tail -1 || true)"
   if [[ -z "$spec_add" ]]; then
-    echo "FAIL (no add commit for $spec)"
+    echo "main-ancestry: no add commit for $spec"
     return 1
   fi
 
   merge_oid="$(gh pr view "$pr" --json mergeCommit --jq '.mergeCommit.oid // empty' 2>/dev/null || true)"
   if [[ -z "$merge_oid" ]]; then
-    echo "FAIL (no merge commit for PR #$pr)"
+    echo "main-ancestry: no merge commit for PR #$pr"
     return 1
   fi
 
   if [[ "$spec_add" == "$merge_oid" ]]; then
-    echo "FAIL (spec introduced in merge commit $merge_oid; expected predating commit)"
+    echo "main-ancestry: spec introduced in merge commit ${merge_oid:0:7}"
     return 1
   fi
 
   if git merge-base --is-ancestor "$spec_add" "$merge_oid" 2>/dev/null; then
-    echo "PASS (spec $spec_add predates merge $merge_oid)"
+    echo "main-ancestry: spec ${spec_add:0:7} predates merge ${merge_oid:0:7}"
     return 0
   fi
 
-  echo "FAIL (spec add $spec_add does not predate merge $merge_oid)"
+  echo "main-ancestry: spec ${spec_add:0:7} not ancestor of merge ${merge_oid:0:7}"
+  return 1
+}
+
+check_spec_predates_merge() {
+  local slug="$1"
+  local basename="$2"
+  local pr="$3"
+  local main_ok=0 branch_ok=0 pr_ok=0
+  local -a failed=()
+  local detail pass_reason=""
+
+  if detail="$(check_main_ancestry "$basename" "$pr" 2>&1)"; then
+    main_ok=1
+    pass_reason="main-ancestry"
+  else
+    failed+=("$detail")
+  fi
+
+  if detail="$(check_branch_order "$slug" "$basename" 2>&1)"; then
+    branch_ok=1
+    [[ -z "$pass_reason" ]] && pass_reason="branch-order"
+  else
+    failed+=("$detail")
+  fi
+
+  if detail="$(check_pr_commits_order "$slug" "$basename" "$pr" 2>&1)"; then
+    pr_ok=1
+    [[ -z "$pass_reason" ]] && pass_reason="pr-commits"
+  else
+    failed+=("$detail")
+  fi
+
+  if [[ "$main_ok" -eq 1 || "$branch_ok" -eq 1 || "$pr_ok" -eq 1 ]]; then
+    if [[ "$main_ok" -eq 1 ]]; then
+      echo "PASS (main-ancestry)"
+    elif [[ "$branch_ok" -eq 1 ]]; then
+      echo "PASS (branch-order)"
+    else
+      echo "PASS (pr-commits)"
+    fi
+    return 0
+  fi
+
+  echo "FAIL (checks failed: ${failed[*]})"
   return 1
 }
 
@@ -216,7 +425,7 @@ for entry in "${FEATURES[@]}"; do
   fi
 
   printf '  (b) spec predates merge: '
-  if out="$(check_spec_predates_merge "$basename" "$pr")"; then
+  if out="$(check_spec_predates_merge "$slug" "$basename" "$pr")"; then
     printf '%s\n' "$out"
     gate_b=1
   else
