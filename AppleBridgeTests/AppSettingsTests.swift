@@ -72,6 +72,26 @@ struct AppSettingsTests {
 
     @Test
     @MainActor
+    func serverEnabledMCPCapabilityIDsGatesCalendarCapabilitiesOnEventsAuthorization() throws {
+        let suiteName = "AppSettingsTests.calendarServerGating"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.saveCapabilityIDs(["calendars-read"])
+
+        #expect(
+            appSettings.serverEnabledMCPCapabilityIDs(remindersAuthorized: false, eventsAuthorized: true)
+                == ["diagnostics.read", "eventkit.calendars.read"]
+        )
+        #expect(
+            appSettings.serverEnabledMCPCapabilityIDs(remindersAuthorized: false, eventsAuthorized: false)
+                == ["diagnostics.read"]
+        )
+    }
+
+    @Test
+    @MainActor
     func serverEnabledMCPCapabilityIDsOmitsShippedCapabilitiesWithoutRemindersAccess() throws {
         let suiteName = "AppSettingsTests.gatedCapabilities"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
@@ -81,9 +101,12 @@ struct AppSettingsTests {
         appSettings.saveCapabilityIDs(["read"])
 
         #expect(appSettings.enabledMCPCapabilityIDs == ["eventkit.reminders.read"])
-        #expect(appSettings.serverEnabledMCPCapabilityIDs(remindersAuthorized: false) == ["diagnostics.read"])
         #expect(
-            appSettings.serverEnabledMCPCapabilityIDs(remindersAuthorized: true)
+            appSettings.serverEnabledMCPCapabilityIDs(remindersAuthorized: false, eventsAuthorized: false)
+                == ["diagnostics.read"]
+        )
+        #expect(
+            appSettings.serverEnabledMCPCapabilityIDs(remindersAuthorized: true, eventsAuthorized: false)
                 == ["diagnostics.read", "eventkit.reminders.read"]
         )
     }

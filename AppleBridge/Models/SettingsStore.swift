@@ -1,3 +1,4 @@
+import EventKit
 import Foundation
 import Observation
 
@@ -118,14 +119,15 @@ final class SettingsStore {
         )
     }
 
-    func applySavedCapabilities(remindersAuthorized: Bool) async {
+    func applySavedCapabilities(remindersAuthorized: Bool, eventsAuthorized: Bool) async {
         tokenResetNotice = nil
         guard appSettings.mcpEnabled else { return }
 
         await serverStore.restartServer(
             port: appSettings.mcpPort,
             enabledCapabilities: appSettings.serverEnabledMCPCapabilityIDs(
-                remindersAuthorized: remindersAuthorized
+                remindersAuthorized: remindersAuthorized,
+                eventsAuthorized: eventsAuthorized
             ),
             usageLoggingEnabled: appSettings.usageLoggingEnabled
         )
@@ -133,8 +135,13 @@ final class SettingsStore {
 
     private var serverEnabledCapabilities: [String] {
         appSettings.serverEnabledMCPCapabilityIDs(
-            remindersAuthorized: permissionService.currentStatus().grantsReadAccess
+            remindersAuthorized: permissionService.currentStatus().grantsReadAccess,
+            eventsAuthorized: Self.eventsReadAuthorized
         )
+    }
+
+    private static var eventsReadAuthorized: Bool {
+        EKEventStore.authorizationStatus(for: .event) == .fullAccess
     }
 
     private func tokenResetNoticeMessage(mcpEnabled: Bool, wasRunning: Bool) -> String {

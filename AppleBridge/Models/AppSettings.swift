@@ -1,4 +1,3 @@
-import EventKit
 import Foundation
 import Observation
 
@@ -93,18 +92,14 @@ final class AppSettings {
             .map(\.capabilityID)
     }
 
-    func serverEnabledMCPCapabilityIDs(remindersAuthorized: Bool) -> [String] {
+    func serverEnabledMCPCapabilityIDs(remindersAuthorized: Bool, eventsAuthorized: Bool) -> [String] {
         var capabilities = ["diagnostics.read"]
         if remindersAuthorized {
             capabilities.append(contentsOf: enabledReminderCapabilityIDs)
         }
-        if Self.isEventAuthorized {
+        if eventsAuthorized {
             capabilities.append(contentsOf: enabledCalendarCapabilityIDs)
         }
         return capabilities
-    }
-
-    private static var isEventAuthorized: Bool {
-        EKEventStore.authorizationStatus(for: .event) == .fullAccess
     }
 }

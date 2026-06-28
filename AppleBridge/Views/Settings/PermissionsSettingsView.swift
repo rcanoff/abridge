@@ -1,4 +1,5 @@
 import AppKit
+import EventKit
 import SwiftUI
 
 struct PermissionsSettingsView: View {
@@ -44,7 +45,12 @@ struct PermissionsSettingsView: View {
         }
         .onChange(of: appStore.permissionStatus.grantsReadAccess) { _, remindersAuthorized in
             guard remindersAuthorized, permissionsStore.requiresAppleRemindersAccess else { return }
-            Task { await settingsStore.applySavedCapabilities(remindersAuthorized: true) }
+            Task {
+                await settingsStore.applySavedCapabilities(
+                    remindersAuthorized: true,
+                    eventsAuthorized: PermissionsEventKitAuthorization.eventsReadAuthorized
+                )
+            }
         }
         .safeAreaInset(edge: .bottom) {
             if let lastError = appStore.lastError {
@@ -68,10 +74,19 @@ struct PermissionsSettingsView: View {
                     remindersAuthorized: remindersAuthorized
                 ) else { return }
                 Task {
-                    await settingsStore.applySavedCapabilities(remindersAuthorized: remindersAuthorized)
+                    await settingsStore.applySavedCapabilities(
+                        remindersAuthorized: remindersAuthorized,
+                        eventsAuthorized: PermissionsEventKitAuthorization.eventsReadAuthorized
+                    )
                 }
             }
         )
+    }
+}
+
+private enum PermissionsEventKitAuthorization {
+    static var eventsReadAuthorized: Bool {
+        EKEventStore.authorizationStatus(for: .event) == .fullAccess
     }
 }
 
