@@ -27,8 +27,6 @@ protocol EventKitStoreing {
     ) -> NSPredicate
     func fetchReminders(matching predicate: NSPredicate) throws -> [EKReminder]
     func fetchReminder(withIdentifier id: String) throws -> EKReminder?
-    func makeReminder() -> EKReminder
-    func saveReminder(_ reminder: EKReminder, commit: Bool) throws
 }
 
 @MainActor
@@ -95,14 +93,6 @@ final class LiveEventKitStore: EventKitStoreing {
         }
         return reminder
     }
-
-    func makeReminder() -> EKReminder {
-        EKReminder(eventStore: eventStore)
-    }
-
-    func saveReminder(_ reminder: EKReminder, commit: Bool) throws {
-        try eventStore.save(reminder, commit: commit)
-    }
 }
 
 @MainActor
@@ -168,8 +158,6 @@ final class EventKitProvider {
             getReminder(payloadJson: payloadJson)
         case "search_reminders":
             searchReminders(payloadJson: payloadJson)
-        case "create_reminder":
-            createReminder(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }
