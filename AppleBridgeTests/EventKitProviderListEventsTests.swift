@@ -42,6 +42,9 @@ struct EventKitProviderListEventsTests {
         mockStore.eventAuthorizationStatusValue = .fullAccess
         let start = Date(timeIntervalSince1970: 1_700_000_000)
         let end = Date(timeIntervalSince1970: 1_700_086_400)
+        mockStore.eventCalendarsList = [
+            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+        ]
         mockStore.events = [
             EventKitTestSupport.makeEvent(
                 calendarItemIdentifier: "evt-1",
@@ -62,10 +65,8 @@ struct EventKitProviderListEventsTests {
 
         let data = try #require(response.payloadJson.data(using: .utf8))
         let decoded = try JSONSerialization.jsonObject(with: data)
-        guard let events = decoded as? [[String: Any]], let first = events.first else {
-            Issue.record("Expected array of event objects")
-            return
-        }
+        let events = try #require(decoded as? [[String: Any]])
+        let first = try #require(events.first)
 
         #expect(Set(first.keys) == Self.eventReadKeys)
         #expect(first["calendar_item_identifier"] as? String == "evt-1")
