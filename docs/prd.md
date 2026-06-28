@@ -192,6 +192,7 @@ Future providers include:
 - Contacts
 - HealthKit
 - PhotoKit
+- Vision
 
 Additional Apple frameworks may be added over time.
 

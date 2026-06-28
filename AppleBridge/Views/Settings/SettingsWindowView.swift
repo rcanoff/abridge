@@ -28,6 +28,8 @@ struct SettingsWindowView: View {
                         settingsStore: settingsStore,
                         appStore: appStore
                     )
+                case .diagnostics:
+                    DiagnosticsSettingsView(settingsStore: settingsStore)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

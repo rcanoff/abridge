@@ -11,6 +11,8 @@ enum SettingsDesign {
             "point.3.connected.trianglepath.dotted"
         case .permissions:
             "lock.shield"
+        case .diagnostics:
+            "waveform.path.ecg"
         }
     }
 }

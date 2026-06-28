@@ -153,4 +153,8 @@ final class ServerStore {
     func usageLoggingEnabled() async -> Bool {
         await serverService.usageLoggingEnabled()
     }
+
+    func usageAuditEntries() async -> [UsageAuditEntry] {
+        await serverService.usageAuditEntries()
+    }
 }
