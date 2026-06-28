@@ -297,7 +297,21 @@ Always set `TZ=UTC` for deterministic timestamp assertions.
 - Provider request/response bodies travel as JSON strings (`payload_json`, `error_json`).
 - Serialize and deserialize at the provider boundary in Swift.
 - Validate payload size in Rust before parsing.
-- Prefer faithful Apple API shapes over custom domain models unless MCP schema requirements force a mapping layer.
+
+### Framework fidelity (required)
+
+Bridge, do not convert. Read responses must be **complete serializations** of the Apple framework object, not curated subsets.
+
+| Allowed | Forbidden |
+|---------|-----------|
+| Type encoding (`Date` → ISO 8601, `nil` → `null`, nested objects stay nested) | Omitting Apple properties from read payloads |
+| JSON keys in `snake_case` mirroring Apple property names | Semantic aliases (`id`, `list_id`, `completed`, …) |
+| Same full shape for every read tool returning that type | Different field sets per endpoint or per PR milestone |
+| Test fakes that implement the full production shape | Production DTOs with hand-picked fields |
+
+Write paths (create/update) accept arguments that map to Apple API inputs; they still must not invent parallel domain models. See root `AGENTS.md` § Framework fidelity.
+
+Partial-payload specs are **invalid** unless the user explicitly approves a temporary migration exception in writing.
 
 ---
 

@@ -43,6 +43,34 @@ Full process model, bootstrap steps, and endpoint design live in the architectur
 - **Never edit generated code** — `AppleBridgeCore/`, `apple_bridge_core.swift`.
 - **Follow `docs/conventions.md`** for naming, libraries, formatting, errors, concurrency, and testing.
 
+### Framework fidelity (providers / MCP payloads)
+
+Apple Bridge is a **bridge**, not a converter. Swift providers call Apple frameworks; MCP exposes the result as JSON. The only allowed transformation is **mechanical serialization** — not semantic reshaping.
+
+**Allowed (serialization only):**
+
+- Apple object/property → JSON value (types that cannot cross JSON boundaries)
+- `nil` / missing optional → JSON `null` (never substitute `""`, `0`, or `false` for absent Apple values)
+- `Date` → ISO 8601 string; `DateComponents` → structured object preserving calendar fields
+- `URL` → string; `Data` / opaque buffers → base64 when the framework exposes them as data
+- Nested framework objects → nested JSON objects (same depth Apple provides — do not flatten)
+- JSON key `snake_case` encoding of Apple API names (e.g. `calendarItemIdentifier` → `calendar_item_identifier`) — naming convention only, not renaming semantics
+
+**Forbidden — reject in design, spec, implementation, and review:**
+
+- **Field subsetting** — omitting Apple properties from read responses because a capability is “not shipped yet” or to keep PRs small
+- **Renamed semantics** — aliases that hide Apple names (e.g. `id` for `calendar_item_identifier`, `list_id` for `calendar.calendar_identifier`, `completed` for `is_completed`) unless the Apple API itself uses that name
+- **Invented fields** — keys that do not correspond to an Apple property or standard serialization envelope
+- **Derived / computed fields** — aggregations, defaults, filtering, sorting, or business logic applied to framework data
+- **Conditional omission** — dropping keys when “empty” (e.g. omit `notes` when nil) unless Apple’s API treats absent and empty identically and the spec documents the exception
+- **Custom DTOs** — hand-maintained “read models” that are not exhaustive projections of the framework type (protocol test seams may use fakes that implement the same **full** shape)
+
+**Specs and plans:** If a spec or plan proposes a partial payload, incremental field rollout, or “minimal demo shape,” **do not implement it**. Revise the spec to full faithful projection or escalate to the user. PR 3a/3a1 minimal reminder JSON is **legacy debt** corrected by PR 3a2.
+
+**Read tools:** All read endpoints returning the same framework type must return the **same complete JSON shape** (e.g. `list_reminders` items ≡ `get_reminder` object ≡ each element’s fidelity).
+
+Details: `docs/conventions.md` § JSON and payloads.
+
 ## Branch naming
 
 Match existing repo conventions:
