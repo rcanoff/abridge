@@ -59,4 +59,9 @@ final class AppSettings {
             .filter { $0.shipped && savedCapabilityIDs.contains($0.id) }
             .map(\.capabilityID)
     }
+
+    func serverEnabledMCPCapabilityIDs(remindersAuthorized: Bool) -> [String] {
+        guard remindersAuthorized else { return [] }
+        return enabledMCPCapabilityIDs
+    }
 }

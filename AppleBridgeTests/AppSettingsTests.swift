@@ -58,6 +58,23 @@ struct AppSettingsTests {
 
     @Test
     @MainActor
+    func serverEnabledMCPCapabilityIDsOmitsShippedCapabilitiesWithoutRemindersAccess() throws {
+        let suiteName = "AppSettingsTests.gatedCapabilities"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.saveCapabilityIDs(["read"])
+
+        #expect(appSettings.enabledMCPCapabilityIDs == ["eventkit.reminders.read"])
+        #expect(appSettings.serverEnabledMCPCapabilityIDs(remindersAuthorized: false) == [])
+        #expect(
+            appSettings.serverEnabledMCPCapabilityIDs(remindersAuthorized: true) == ["eventkit.reminders.read"]
+        )
+    }
+
+    @Test
+    @MainActor
     func initLoadsMaximumValidPort() throws {
         let suiteName = "AppSettingsTests.maxPort"
         let defaults = try #require(UserDefaults(suiteName: suiteName))

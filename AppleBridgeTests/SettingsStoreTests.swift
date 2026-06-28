@@ -14,9 +14,15 @@ struct SettingsStoreTests {
         appSettings.mcpEnabled = true
         appSettings.saveCapabilityIDs(["read"])
 
+        let permissionMock = MockRemindersPermissionService()
+        permissionMock.status = .authorized
         let mock = MockServerService()
         let serverStore = ServerStore(serverService: mock)
-        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+        let settingsStore = SettingsStore(
+            appSettings: appSettings,
+            serverStore: serverStore,
+            permissionService: permissionMock
+        )
 
         await settingsStore.performLaunchRestoreIfNeeded()
 
@@ -73,12 +79,18 @@ struct SettingsStoreTests {
         defaults.set(3030, forKey: "mcpPort")
         defaults.set(["read"], forKey: "savedCapabilityIDs")
 
+        let permissionMock = MockRemindersPermissionService()
+        permissionMock.status = .authorized
         let mock = MockServerService()
 
         // Mirror AppleBridgeApp.init() wiring — no SwiftUI views or onAppear callbacks.
         let appSettings = AppSettings(defaults: defaults)
         let serverStore = ServerStore(serverService: mock)
-        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+        let settingsStore = SettingsStore(
+            appSettings: appSettings,
+            serverStore: serverStore,
+            permissionService: permissionMock
+        )
 
         await settingsStore.performLaunchRestoreIfNeeded()
 
@@ -198,6 +210,103 @@ struct SettingsStoreTests {
 
         #expect(settingsStore.tokenResetNotice == nil)
         #expect(serverStore.lastError == "failed to bind server: port in use")
+    }
+
+    @Test
+    @MainActor
+    func applySavedCapabilitiesOmitsShippedCapabilitiesWithoutRemindersAccess() async throws {
+        let suiteName = "SettingsStoreTests.gatedApply"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = true
+        appSettings.saveCapabilityIDs(["read"])
+
+        let mock = MockServerService()
+        await mock.setRefreshResult(.running)
+        let serverStore = ServerStore(serverService: mock)
+        await serverStore.startServer(port: 3020, enabledCapabilities: [])
+        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+
+        await settingsStore.applySavedCapabilities(remindersAuthorized: false)
+
+        #expect(await mock.startCallCount == 2)
+        #expect(await mock.lastEnabledCapabilities == [])
+    }
+
+    @Test
+    @MainActor
+    func resetBearerTokenOmitsShippedCapabilitiesWithoutRemindersAccess() async throws {
+        let suiteName = "SettingsStoreTests.gatedReset"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = true
+        appSettings.saveCapabilityIDs(["read"])
+
+        let permissionMock = MockRemindersPermissionService()
+        permissionMock.status = .notDetermined
+        let mock = MockServerService()
+        await mock.setRefreshResult(.running)
+        let serverStore = ServerStore(serverService: mock)
+        await serverStore.startServer(port: 3020, enabledCapabilities: [])
+        let settingsStore = SettingsStore(
+            appSettings: appSettings,
+            serverStore: serverStore,
+            permissionService: permissionMock
+        )
+
+        await settingsStore.resetBearerToken()
+
+        #expect(await mock.lastEnabledCapabilities == [])
+    }
+
+    @Test
+    @MainActor
+    func performLaunchRestoreOmitsShippedCapabilitiesWithoutRemindersAccess() async throws {
+        let suiteName = "SettingsStoreTests.gatedLaunchRestore"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = true
+        appSettings.saveCapabilityIDs(["read"])
+
+        let permissionMock = MockRemindersPermissionService()
+        permissionMock.status = .denied
+        let mock = MockServerService()
+        let serverStore = ServerStore(serverService: mock)
+        let settingsStore = SettingsStore(
+            appSettings: appSettings,
+            serverStore: serverStore,
+            permissionService: permissionMock
+        )
+
+        await settingsStore.performLaunchRestoreIfNeeded()
+
+        #expect(await mock.startCallCount == 1)
+        #expect(await mock.lastEnabledCapabilities == [])
+    }
+
+    @Test
+    @MainActor
+    func applySavedCapabilitiesAppliesShippedCapabilitiesWhenRemindersAuthorized() async throws {
+        let suiteName = "SettingsStoreTests.authorizedApply"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = true
+        appSettings.saveCapabilityIDs(["read"])
+
+        let mock = MockServerService()
+        await mock.setRefreshResult(.running)
+        let serverStore = ServerStore(serverService: mock)
+        await serverStore.startServer(port: 3020, enabledCapabilities: [])
+        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+
+        await settingsStore.applySavedCapabilities(remindersAuthorized: true)
+
+        #expect(await mock.startCallCount == 2)
+        #expect(await mock.lastEnabledCapabilities == ["eventkit.reminders.read"])
     }
 
     @Test
