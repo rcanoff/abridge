@@ -15,8 +15,8 @@ protocol EventKitStoreing {
     func reminderAuthorizationStatus() -> EKAuthorizationStatus
     func reminderCalendars() -> [EKCalendar]
     func predicateForReminders(in calendars: [EKCalendar]) -> NSPredicate
-    func fetchReminders(matching predicate: NSPredicate) throws -> [any ReminderRepresentable]
-    func fetchReminder(withIdentifier id: String) throws -> (any ReminderRepresentable)?
+    func fetchReminders(matching predicate: NSPredicate) throws -> [EKReminder]
+    func fetchReminder(withIdentifier id: String) throws -> EKReminder?
 }
 
 @MainActor
@@ -39,7 +39,7 @@ final class LiveEventKitStore: EventKitStoreing {
         eventStore.predicateForReminders(in: calendars)
     }
 
-    func fetchReminders(matching predicate: NSPredicate) throws -> [any ReminderRepresentable] {
+    func fetchReminders(matching predicate: NSPredicate) throws -> [EKReminder] {
         var fetched: [EKReminder] = []
         try EventKitReminderFetch.waitForCompletion { complete in
             eventStore.fetchReminders(matching: predicate) { reminders in
@@ -50,7 +50,7 @@ final class LiveEventKitStore: EventKitStoreing {
         return fetched
     }
 
-    func fetchReminder(withIdentifier id: String) throws -> (any ReminderRepresentable)? {
+    func fetchReminder(withIdentifier id: String) throws -> EKReminder? {
         guard let item = eventStore.calendarItem(withIdentifier: id) else {
             return nil
         }
@@ -133,8 +133,8 @@ final class EventKitProvider {
         }
 
         do {
-            let lists = store.reminderCalendars().map(EventKitReminderMapping.listDictionary)
-            let payload = try EventKitReminderMapping.jsonString(from: lists)
+            let lists = store.reminderCalendars().map(EventKitSerialization.calendarJSONObject)
+            let payload = try EventKitSerialization.jsonString(from: lists)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch {
             return providerError(from: error)
@@ -150,8 +150,8 @@ final class EventKitProvider {
             let listID = try parseListIDArguments(payloadJson)
             let predicate = try reminderPredicate(listID: listID)
             let reminders = try store.fetchReminders(matching: predicate)
-            let payloadObjects = reminders.map { EventKitReminderMapping.reminderDictionary(from: $0) }
-            let payload = try EventKitReminderMapping.jsonString(from: payloadObjects)
+            let payloadObjects = reminders.map(EventKitSerialization.reminderJSONObject)
+            let payload = try EventKitSerialization.jsonString(from: payloadObjects)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as EventKitProviderError {
             return providerErrorResponse(from: error)
@@ -170,8 +170,8 @@ final class EventKitProvider {
             guard let reminder = try store.fetchReminder(withIdentifier: reminderID) else {
                 return errorResponse(code: "invalid_arguments", message: "Unknown reminder_id: \(reminderID)")
             }
-            let payload = try EventKitReminderMapping.jsonString(
-                from: EventKitReminderMapping.reminderDictionary(from: reminder)
+            let payload = try EventKitSerialization.jsonString(
+                from: EventKitSerialization.reminderJSONObject(from: reminder)
             )
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as EventKitProviderError {
@@ -285,7 +285,7 @@ final class EventKitProvider {
 
     private func errorResponse(code: String, message: String) -> ProviderResponse {
         let payload: [String: String] = ["code": code, "message": message]
-        let errorJson = (try? EventKitReminderMapping.jsonString(from: payload)) ?? #"{"code":"provider_error"}"#
+        let errorJson = (try? EventKitSerialization.jsonString(from: payload)) ?? #"{"code":"provider_error"}"#
         return ProviderResponse(ok: false, payloadJson: "{}", errorJson: errorJson)
     }
 

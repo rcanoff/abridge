@@ -42,7 +42,6 @@ struct EventKitProviderTests {
         var result = 0
 
         try EventKitReminderFetch.waitForCompletion(timeout: 1) { complete in
-            // EventKit delivers completions on the main run loop, not via immediate return.
             Timer.scheduledTimer(withTimeInterval: 0.001, repeats: false) { _ in
                 result = 42
                 complete()
@@ -70,17 +69,14 @@ struct EventKitProviderTests {
 
     @Test
     @MainActor
-    func getReminderReturnsPayload() {
+    func getReminderReturnsFaithfulPayload() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
-        mockStore.fakeReminders = [
-            FakeReminder(
-                id: "rem-1",
-                listID: "list-1",
-                title: "Task",
-                completed: false,
-                dueDateISO: nil,
-                notes: nil
+        mockStore.reminders = [
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: "rem-1",
+                calendarIdentifier: "list-1",
+                title: "Task"
             ),
         ]
         let provider = EventKitProvider(store: mockStore)
@@ -91,7 +87,9 @@ struct EventKitProviderTests {
         )
 
         #expect(response.ok == true)
+        #expect(response.payloadJson.contains("calendar_item_identifier"))
         #expect(response.payloadJson.contains("rem-1"))
+        #expect(response.payloadJson.contains("calendar_identifier"))
         #expect(response.payloadJson.contains("list-1"))
     }
 
@@ -166,17 +164,15 @@ struct EventKitProviderTests {
 
     @Test
     @MainActor
-    func listRemindersIncludesListID() {
+    func listRemindersReturnsFaithfulReminderShape() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
-        mockStore.fakeReminders = [
-            FakeReminder(
-                id: "rem-2",
-                listID: "list-9",
+        mockStore.reminders = [
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: "rem-2",
+                calendarIdentifier: "list-9",
                 title: "Eggs",
-                completed: true,
-                dueDateISO: nil,
-                notes: nil
+                isCompleted: true
             ),
         ]
         let provider = EventKitProvider(store: mockStore)
@@ -184,7 +180,9 @@ struct EventKitProviderTests {
         let response = provider.handle(operation: "list_reminders", payloadJson: "{}")
 
         #expect(response.ok == true)
-        #expect(response.payloadJson.contains("list-9"))
+        #expect(response.payloadJson.contains("calendar_item_identifier"))
         #expect(response.payloadJson.contains("rem-2"))
+        #expect(response.payloadJson.contains("list-9"))
+        #expect(response.payloadJson.contains("is_completed"))
     }
 }

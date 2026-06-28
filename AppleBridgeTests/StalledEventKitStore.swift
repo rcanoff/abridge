@@ -22,7 +22,7 @@ final class StalledEventKitStore: EventKitStoreing {
         return NSPredicate(value: true)
     }
 
-    func fetchReminders(matching predicate: NSPredicate) throws -> [any ReminderRepresentable] {
+    func fetchReminders(matching predicate: NSPredicate) throws -> [EKReminder] {
         _ = predicate
         try EventKitReminderFetch.waitForCompletion(timeout: fetchTimeout) { _ in
             // Intentionally never call complete — mirrors a stalled EventKit callback.
@@ -30,7 +30,7 @@ final class StalledEventKitStore: EventKitStoreing {
         return []
     }
 
-    func fetchReminder(withIdentifier id: String) throws -> (any ReminderRepresentable)? {
+    func fetchReminder(withIdentifier id: String) throws -> EKReminder? {
         _ = id
         return nil
     }
