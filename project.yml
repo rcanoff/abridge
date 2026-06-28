@@ -9,6 +9,8 @@ settings:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
     MACOSX_DEPLOYMENT_TARGET: "26.0"
+    ARCHS: arm64
+    EXCLUDED_ARCHS: x86_64
 targets:
   AppleBridge:
     type: application
