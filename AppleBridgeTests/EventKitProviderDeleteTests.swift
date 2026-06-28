@@ -25,9 +25,9 @@ struct EventKitProviderDeleteTests {
         )
 
         #expect(response.ok == true)
-        #expect(response.payloadJson.contains("\"calendar_item_identifier\":\"rem-delete-1\""))
-        #expect(!response.payloadJson.contains("\"deleted\""))
-        #expect(!response.payloadJson.contains("\"reminder_id\""))
+        #expect(response.payloadJson.contains("\"deleted\":true"))
+        #expect(response.payloadJson.contains("\"reminder_id\":\"rem-delete-1\""))
+        #expect(!response.payloadJson.contains("calendar_item_identifier"))
         #expect(mockStore.reminders.isEmpty)
     }
 

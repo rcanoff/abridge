@@ -25,7 +25,7 @@ struct AppleProviderBridgeDeleteTests {
         )
         let response = bridge.callProvider(request: request)
         #expect(response.ok == true)
-        #expect(response.payloadJson.contains("\"calendar_item_identifier\":\"r-delete\""))
-        #expect(!response.payloadJson.contains("\"deleted\""))
+        #expect(response.payloadJson.contains("\"deleted\":true"))
+        #expect(response.payloadJson.contains("\"reminder_id\":\"r-delete\""))
     }
 }
