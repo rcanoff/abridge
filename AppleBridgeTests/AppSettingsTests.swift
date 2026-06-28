@@ -88,6 +88,47 @@ struct AppSettingsTests {
 
     @Test
     @MainActor
+    func usageLoggingEnabledDefaultsToTrueOnFreshInstall() throws {
+        let suiteName = "AppSettingsTests.usageLoggingDefault"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+
+        #expect(appSettings.usageLoggingEnabled == true)
+    }
+
+    @Test
+    @MainActor
+    func usageLoggingEnabledPersistsAcrossInstances() throws {
+        let suiteName = "AppSettingsTests.usageLoggingPersist"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.usageLoggingEnabled = false
+
+        let reloaded = AppSettings(defaults: defaults)
+
+        #expect(reloaded.usageLoggingEnabled == false)
+        #expect(defaults.bool(forKey: "usageLoggingEnabled") == false)
+    }
+
+    @Test
+    @MainActor
+    func usageLoggingEnabledLoadsPersistedTrueValue() throws {
+        let suiteName = "AppSettingsTests.usageLoggingPersistTrue"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        defaults.set(true, forKey: "usageLoggingEnabled")
+
+        let appSettings = AppSettings(defaults: defaults)
+
+        #expect(appSettings.usageLoggingEnabled == true)
+    }
+
+    @Test
+    @MainActor
     func launchAtLoginDefaultsToFalseOnFreshInstall() throws {
         let suiteName = "AppSettingsTests.launchAtLoginDefault"
         let defaults = try #require(UserDefaults(suiteName: suiteName))

@@ -7,6 +7,7 @@ final class AppSettings {
     private enum Keys {
         static let mcpPort = "mcpPort"
         static let mcpEnabled = "mcpEnabled"
+        static let usageLoggingEnabled = "usageLoggingEnabled"
         static let launchAtLogin = "launchAtLogin"
         static let savedCapabilityIDs = "savedCapabilityIDs"
     }
@@ -24,6 +25,13 @@ final class AppSettings {
         didSet {
             guard mcpEnabled != oldValue else { return }
             defaults.set(mcpEnabled, forKey: Keys.mcpEnabled)
+        }
+    }
+
+    var usageLoggingEnabled: Bool {
+        didSet {
+            guard usageLoggingEnabled != oldValue else { return }
+            defaults.set(usageLoggingEnabled, forKey: Keys.usageLoggingEnabled)
         }
     }
 
@@ -50,6 +58,11 @@ final class AppSettings {
             mcpPort = 3020
         }
         mcpEnabled = defaults.bool(forKey: Keys.mcpEnabled)
+        if defaults.object(forKey: Keys.usageLoggingEnabled) != nil {
+            usageLoggingEnabled = defaults.bool(forKey: Keys.usageLoggingEnabled)
+        } else {
+            usageLoggingEnabled = true
+        }
         launchAtLogin = defaults.bool(forKey: Keys.launchAtLogin)
 
         if let stored = defaults.stringArray(forKey: Keys.savedCapabilityIDs) {

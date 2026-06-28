@@ -14,7 +14,11 @@ actor MockServerService: ServerServing {
     private(set) var lastStartHost: String?
     private(set) var lastStartPort: UInt16?
     private(set) var lastEnabledCapabilities: [String]?
+    private(set) var lastStartUsageLoggingEnabled: Bool?
     private(set) var activeBearerToken: String?
+    private(set) var usageLoggingEnabledState = true
+    private(set) var setUsageLoggingEnabledCallCount = 0
+    private(set) var recordApiKeyRotationCallCount = 0
 
     func refreshStatus() async -> ServerRunState {
         refreshResult
@@ -31,16 +35,23 @@ actor MockServerService: ServerServing {
         activeBearerToken
     }
 
-    func start(host: String, port: UInt16, enabledCapabilities: [String]) async throws {
+    func start(
+        host: String,
+        port: UInt16,
+        enabledCapabilities: [String],
+        usageLoggingEnabled: Bool
+    ) async throws {
         startCallCount += 1
         lastStartHost = host
         lastStartPort = port
         lastEnabledCapabilities = enabledCapabilities
+        lastStartUsageLoggingEnabled = usageLoggingEnabled
 
         if let startError {
             throw startError
         }
 
+        usageLoggingEnabledState = usageLoggingEnabled
         activeBearerToken = bearerTokenResult
         refreshResult = .running
     }
@@ -61,11 +72,21 @@ actor MockServerService: ServerServing {
         }
 
         if refreshResult == .running {
+            recordApiKeyRotationCallCount += 1
             try await stop()
         }
         bearerTokenResult = "rotated-\(bearerTokenResult)"
         activeBearerToken = bearerTokenResult
         return bearerTokenResult
+    }
+
+    func setUsageLoggingEnabled(_ enabled: Bool) async {
+        setUsageLoggingEnabledCallCount += 1
+        usageLoggingEnabledState = enabled
+    }
+
+    func usageLoggingEnabled() async -> Bool {
+        usageLoggingEnabledState
     }
 
     func setRefreshResult(_ result: ServerRunState) {

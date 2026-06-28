@@ -51,7 +51,11 @@ final class ServerStore {
         }
     }
 
-    func startServer(port: UInt16, enabledCapabilities: [String]) async {
+    func startServer(
+        port: UInt16,
+        enabledCapabilities: [String],
+        usageLoggingEnabled: Bool = true
+    ) async {
         guard !isStarting, runState != .running, runState != .starting else { return }
 
         isStarting = true
@@ -64,7 +68,8 @@ final class ServerStore {
             try await serverService.start(
                 host: host,
                 port: port,
-                enabledCapabilities: enabledCapabilities
+                enabledCapabilities: enabledCapabilities,
+                usageLoggingEnabled: usageLoggingEnabled
             )
             await refreshBearerToken()
             let state = await serverService.refreshStatus()
@@ -97,12 +102,25 @@ final class ServerStore {
         }
     }
 
-    func restartServer(port: UInt16, enabledCapabilities: [String]) async {
+    func restartServer(
+        port: UInt16,
+        enabledCapabilities: [String],
+        usageLoggingEnabled: Bool = true
+    ) async {
         await stopServer()
-        await startServer(port: port, enabledCapabilities: enabledCapabilities)
+        await startServer(
+            port: port,
+            enabledCapabilities: enabledCapabilities,
+            usageLoggingEnabled: usageLoggingEnabled
+        )
     }
 
-    func resetBearerToken(port: UInt16, enabledCapabilities: [String], restartIfRunning: Bool) async {
+    func resetBearerToken(
+        port: UInt16,
+        enabledCapabilities: [String],
+        restartIfRunning: Bool,
+        usageLoggingEnabled: Bool = true
+    ) async {
         let shouldRestart = restartIfRunning && runState == .running
 
         do {
@@ -111,7 +129,11 @@ final class ServerStore {
 
             if shouldRestart {
                 runState = .stopped
-                await startServer(port: port, enabledCapabilities: enabledCapabilities)
+                await startServer(
+                    port: port,
+                    enabledCapabilities: enabledCapabilities,
+                    usageLoggingEnabled: usageLoggingEnabled
+                )
             } else {
                 await refreshStatus()
             }
@@ -122,5 +144,13 @@ final class ServerStore {
             lastError = error.localizedDescription
             runState = .error(error.localizedDescription)
         }
+    }
+
+    func setUsageLoggingEnabled(_ enabled: Bool) async {
+        await serverService.setUsageLoggingEnabled(enabled)
+    }
+
+    func usageLoggingEnabled() async -> Bool {
+        await serverService.usageLoggingEnabled()
     }
 }

@@ -49,7 +49,12 @@ actor ServerService: ServerServing {
         currentBearerToken
     }
 
-    func start(host: String, port: UInt16, enabledCapabilities: [String]) async throws {
+    func start(
+        host: String,
+        port: UInt16,
+        enabledCapabilities: [String],
+        usageLoggingEnabled: Bool
+    ) async throws {
         if !hasInitializedLogging {
             initLogging()
             hasInitializedLogging = true
@@ -83,6 +88,8 @@ actor ServerService: ServerServing {
             throw ServerOperationError(message: ServerService.userMessage(for: .StateUnavailable))
         }
 
+        handle.setUsageLoggingEnabled(enabled: usageLoggingEnabled)
+
         do {
             try startServer(handle: handle)
         } catch let error as CoreError {
@@ -107,7 +114,8 @@ actor ServerService: ServerServing {
     }
 
     func resetBearerToken() async throws -> String {
-        if handle != nil {
+        if let handle {
+            handle.recordApiKeyRotation()
             try await stop()
         }
 
@@ -118,6 +126,15 @@ actor ServerService: ServerServing {
         } catch let error as KeychainError {
             throw ServerOperationError(message: "Failed to reset bearer token: \(error.message)")
         }
+    }
+
+    func setUsageLoggingEnabled(_ enabled: Bool) async {
+        handle?.setUsageLoggingEnabled(enabled: enabled)
+    }
+
+    func usageLoggingEnabled() async -> Bool {
+        guard let handle else { return true }
+        return handle.usageLoggingEnabled()
     }
 }
 
