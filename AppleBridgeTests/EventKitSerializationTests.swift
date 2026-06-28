@@ -38,6 +38,7 @@ struct EventKitSerializationTests {
         "source",
         "cg_color",
         "allowed_entity_types",
+        "supported_event_availabilities",
         "allows_content_modifications",
         "is_immutable",
         "is_subscribed",
