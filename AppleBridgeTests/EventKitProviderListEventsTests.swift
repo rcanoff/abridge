@@ -30,7 +30,6 @@ struct EventKitProviderListEventsTests {
         "status",
         "birthday_contact_identifier",
         "organizer",
-        "refresh",
         "structured_location",
         "alarms",
         "recurrence_rules",

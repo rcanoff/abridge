@@ -30,7 +30,6 @@ enum EventKitSerialization {
         payload["is_detached"] = event.isDetached
         payload["status"] = eventStatusString(event.status)
         payload["birthday_contact_identifier"] = jsonValue(event.birthdayContactIdentifier)
-        payload["refresh"] = event.refresh
 
         if let organizer = event.organizer {
             payload["organizer"] = participantJSONObject(from: organizer)

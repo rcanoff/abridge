@@ -30,7 +30,6 @@ struct EventKitSerializationEventTests {
         "status",
         "birthday_contact_identifier",
         "organizer",
-        "refresh",
         "structured_location",
         "alarms",
         "recurrence_rules",
@@ -48,5 +47,18 @@ struct EventKitSerializationEventTests {
         let keys = Set(EventKitSerialization.eventJSONObject(from: event).keys)
 
         #expect(keys == Self.eventReadKeys)
+    }
+
+    @Test
+    @MainActor
+    func eventJSONObjectIsJSONSerializable() throws {
+        let event = EventKitTestSupport.makeEvent(
+            calendarItemIdentifier: "evt-1",
+            calendarIdentifier: "cal-work",
+            title: "Meeting"
+        )
+
+        let payload = EventKitSerialization.eventJSONObject(from: event)
+        _ = try JSONSerialization.data(withJSONObject: payload)
     }
 }

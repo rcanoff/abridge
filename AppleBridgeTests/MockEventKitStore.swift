@@ -222,7 +222,7 @@ final class MockEventKitStore: EventKitStoreing {
             guard let calendarID = event.calendar?.calendarIdentifier, calendarIDs.contains(calendarID) else {
                 return false
             }
-            return event.startDate >= lastEventQuery.start && event.endDate <= lastEventQuery.end
+            return event.endDate >= lastEventQuery.start && event.startDate <= lastEventQuery.end
         }
     }
 
