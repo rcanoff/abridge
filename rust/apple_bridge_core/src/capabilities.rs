@@ -4,6 +4,7 @@ pub const EVENTKIT_REMINDERS_READ: &str = "eventkit.reminders.read";
 pub const EVENTKIT_REMINDERS_SEARCH: &str = "eventkit.reminders.search";
 pub const EVENTKIT_REMINDERS_CREATE: &str = "eventkit.reminders.create";
 pub const EVENTKIT_REMINDERS_EDIT: &str = "eventkit.reminders.edit";
+pub const EVENTKIT_REMINDERS_DELETE: &str = "eventkit.reminders.delete";
 pub const EVENTKIT_REMINDERS_COMPLETE: &str = "eventkit.reminders.complete";
 pub const EVENTKIT_REMINDERS_ALARMS: &str = "eventkit.reminders.alarms";
 pub const EVENTKIT_REMINDERS_RECURRENCE: &str = "eventkit.reminders.recurrence";
@@ -25,6 +26,7 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
       | EVENTKIT_REMINDERS_SEARCH
       | EVENTKIT_REMINDERS_CREATE
       | EVENTKIT_REMINDERS_EDIT
+      | EVENTKIT_REMINDERS_DELETE
       | EVENTKIT_REMINDERS_COMPLETE
       | EVENTKIT_REMINDERS_ALARMS
       | EVENTKIT_REMINDERS_RECURRENCE
@@ -34,9 +36,9 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
 #[cfg(test)]
 mod tests {
   use super::{
-    EVENTKIT_REMINDERS_ALARMS, EVENTKIT_REMINDERS_COMPLETE, EVENTKIT_REMINDERS_CREATE, EVENTKIT_REMINDERS_EDIT,
-    EVENTKIT_REMINDERS_READ, EVENTKIT_REMINDERS_RECURRENCE, EVENTKIT_REMINDERS_SEARCH, is_allowed_in_v1,
-    is_valid_capability_id,
+    EVENTKIT_REMINDERS_ALARMS, EVENTKIT_REMINDERS_COMPLETE, EVENTKIT_REMINDERS_CREATE, EVENTKIT_REMINDERS_DELETE,
+    EVENTKIT_REMINDERS_EDIT, EVENTKIT_REMINDERS_READ, EVENTKIT_REMINDERS_RECURRENCE, EVENTKIT_REMINDERS_SEARCH,
+    is_allowed_in_v1, is_valid_capability_id,
   };
 
   #[test]
@@ -55,11 +57,12 @@ mod tests {
   }
 
   #[test]
-  fn v1_allowlist_includes_read_search_create_edit_complete_alarms_and_recurrence() {
+  fn v1_allowlist_includes_read_search_create_edit_delete_complete_alarms_and_recurrence() {
     assert!(is_allowed_in_v1(EVENTKIT_REMINDERS_READ));
     assert!(is_allowed_in_v1(EVENTKIT_REMINDERS_SEARCH));
     assert!(is_allowed_in_v1(EVENTKIT_REMINDERS_CREATE));
     assert!(is_allowed_in_v1(EVENTKIT_REMINDERS_EDIT));
+    assert!(is_allowed_in_v1(EVENTKIT_REMINDERS_DELETE));
     assert!(is_allowed_in_v1(EVENTKIT_REMINDERS_COMPLETE));
     assert!(is_allowed_in_v1(EVENTKIT_REMINDERS_ALARMS));
     assert!(is_allowed_in_v1(EVENTKIT_REMINDERS_RECURRENCE));
