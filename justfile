@@ -7,8 +7,13 @@ review-strict:
     @local/review/bin/review.sh --strict
 
 test-swift:
-    TZ=UTC xcodebuild test -project AppleBridge.xcodeproj -scheme AppleBridge \
-        -only-testing:AppleBridgeTests -destination 'platform=macOS' \
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # arm64-only (see main); build + test-without-building avoids destination ambiguity and pipe hangs.
+    TZ=UTC xcodebuild build-for-testing -project AppleBridge.xcodeproj -scheme AppleBridge \
+        -destination 'platform=macOS,arch=arm64' -quiet
+    TZ=UTC xcodebuild test-without-building -project AppleBridge.xcodeproj -scheme AppleBridge \
+        -only-testing:AppleBridgeTests -destination 'platform=macOS,arch=arm64' \
         -parallel-testing-enabled NO -quiet
 
 # Guard: rust recipes require rust/Cargo.toml (lands with PR 2+)
