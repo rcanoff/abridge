@@ -14,5 +14,7 @@ if [ -x "$REVIEW_SCRIPT" ]; then
   if [ -n "${REVIEW_STRICT:-}" ]; then
     exec "$REVIEW_SCRIPT" --hook --strict
   fi
-  exec "$REVIEW_SCRIPT" --hook
+  if ! "$REVIEW_SCRIPT" --hook; then
+    echo "pre-push review: FAILED (advisory — push will continue; set REVIEW_STRICT=1 to block)" >&2
+  fi
 fi

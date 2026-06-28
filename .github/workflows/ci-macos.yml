@@ -7,13 +7,25 @@ on:
       - "AppleBridge/**"
       - "AppleBridgeTests/**"
       - "project.yml"
+      - "AppleBridge.xcodeproj/**"
       - "rust/**"
+      - "justfile"
+      - ".swiftformat"
+      - ".swiftlint.yml"
+      - "scripts/ci/**"
+      - ".github/workflows/ci-macos.yml"
   pull_request:
     paths:
       - "AppleBridge/**"
       - "AppleBridgeTests/**"
       - "project.yml"
+      - "AppleBridge.xcodeproj/**"
       - "rust/**"
+      - "justfile"
+      - ".swiftformat"
+      - ".swiftlint.yml"
+      - "scripts/ci/**"
+      - ".github/workflows/ci-macos.yml"
 
 concurrency:
   group: macos-ci-${{ github.ref }}

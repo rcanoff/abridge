@@ -21,6 +21,7 @@ fn sample_config() -> ServerConfig {
       name: "eventkit".into(),
       enabled: true,
     }],
+    enabled_capabilities: vec![],
   }
 }
 
@@ -36,6 +37,7 @@ fn lifecycle_start_stop() {
       name: "eventkit".into(),
       enabled: true,
     }],
+    enabled_capabilities: vec![],
   };
   let handle = create_server(config, Box::new(MockProviderBridge::new())).expect("create_server");
 
@@ -76,6 +78,7 @@ fn stop_during_start_releases_port_before_return() {
       name: "eventkit".into(),
       enabled: true,
     }],
+    enabled_capabilities: vec![],
   };
   let handle = create_server(config, Box::new(MockProviderBridge::new())).expect("create_server");
 
@@ -120,6 +123,7 @@ fn concurrent_start_rejected_while_stop_awaits_start_completion() {
       name: "eventkit".into(),
       enabled: true,
     }],
+    enabled_capabilities: vec![],
   };
   let handle = create_server(config, Box::new(MockProviderBridge::new())).expect("create_server");
 

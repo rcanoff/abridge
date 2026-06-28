@@ -1,4 +1,6 @@
-use crate::error::CoreError;
+use std::collections::HashSet;
+
+use crate::{capabilities, error::CoreError};
 
 #[derive(Debug, Clone, uniffi::Record)]
 pub struct ProviderConfig {
@@ -12,6 +14,7 @@ pub struct ServerConfig {
   pub port: u16,
   pub bearer_token: String,
   pub enabled_providers: Vec<ProviderConfig>,
+  pub enabled_capabilities: Vec<String>,
 }
 
 #[derive(Debug, Clone, uniffi::Record)]
@@ -54,10 +57,29 @@ pub fn validate_config(config: &ServerConfig) -> Result<(), CoreError> {
     });
   }
 
-  let mut seen = std::collections::HashSet::new();
+  let mut seen_capabilities = HashSet::new();
+  for capability in &config.enabled_capabilities {
+    if !capabilities::is_valid_capability_id(capability) {
+      return Err(CoreError::InvalidConfig {
+        message: format!("invalid capability id: {capability}"),
+      });
+    }
+    if !capabilities::is_allowed_in_v1(capability) {
+      return Err(CoreError::InvalidConfig {
+        message: format!("unsupported capability: {capability}"),
+      });
+    }
+    if !seen_capabilities.insert(capability.clone()) {
+      return Err(CoreError::InvalidConfig {
+        message: format!("duplicate capability: {capability}"),
+      });
+    }
+  }
+
+  let mut seen = HashSet::new();
   for provider in &config.enabled_providers {
-    let name = provider.name.trim();
-    if name.is_empty() {
+    let name = &provider.name;
+    if name.trim().is_empty() {
       return Err(CoreError::InvalidConfig {
         message: "provider name must not be blank".into(),
       });
@@ -67,7 +89,7 @@ pub fn validate_config(config: &ServerConfig) -> Result<(), CoreError> {
         message: format!("invalid provider name: {name}"),
       });
     }
-    if !seen.insert(name.to_string()) {
+    if !seen.insert(name.clone()) {
       return Err(CoreError::InvalidConfig {
         message: format!("duplicate provider name: {name}"),
       });

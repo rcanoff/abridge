@@ -18,6 +18,7 @@ fn config_on_port(port: u16) -> ServerConfig {
       name: "eventkit".into(),
       enabled: true,
     }],
+    enabled_capabilities: vec![],
   }
 }
 
@@ -64,14 +65,15 @@ fn mcp_with_wrong_token_returns_unauthorized() {
 }
 
 #[test]
-fn mcp_with_valid_token_returns_not_implemented_stub() {
+fn mcp_with_valid_token_returns_json_rpc_response() {
   let port = allocate_test_port();
   let handle = create_server(config_on_port(port), Box::new(MockProviderBridge::new())).expect("create_server");
   start_server(handle.clone()).expect("start");
 
-  let (status_code, body) = http_post("/mcp", "127.0.0.1", port, "{}", Some(TEST_TOKEN));
-  assert_eq!(status_code, 501);
-  assert!(body.contains("not_implemented"));
+  let body = r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"t","version":"0"}}}"#;
+  let (status_code, body) = http_post("/mcp", "127.0.0.1", port, body, Some(TEST_TOKEN));
+  assert_eq!(status_code, 200);
+  assert!(body.contains(r#""protocolVersion":"2024-11-05""#));
 
   stop_server(handle).expect("stop");
 }
