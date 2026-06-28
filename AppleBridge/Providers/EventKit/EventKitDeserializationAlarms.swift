@@ -19,7 +19,7 @@ extension EventKitDeserialization {
 
     private static func alarm(from dictionary: [String: Any]) throws -> EKAlarm {
         let absoluteDate = try optionalISO8601Date(dictionary["absolute_date"])
-        let relativeOffset = dictionary["relative_offset"] as? Double ?? 0
+        let relativeOffset = try relativeOffset(from: dictionary)
 
         let alarm = if let absoluteDate {
             EKAlarm(absoluteDate: absoluteDate)
@@ -70,6 +70,30 @@ extension EventKitDeserialization {
         }
 
         return location
+    }
+
+    private static func relativeOffset(from dictionary: [String: Any]) throws -> Double {
+        guard dictionary.keys.contains("relative_offset") else {
+            return 0
+        }
+
+        let value = dictionary["relative_offset"]
+        if value is NSNull {
+            throw EventKitProviderError.invalidArguments("relative_offset must be a number or null")
+        }
+        if value is Bool {
+            throw EventKitProviderError.invalidArguments("relative_offset must be a number")
+        }
+        if let offset = value as? Double {
+            return offset
+        }
+        if let number = value as? NSNumber {
+            if CFGetTypeID(number) == CFBooleanGetTypeID() {
+                throw EventKitProviderError.invalidArguments("relative_offset must be a number")
+            }
+            return number.doubleValue
+        }
+        throw EventKitProviderError.invalidArguments("relative_offset must be a number")
     }
 
     private static func alarmProximity(from string: String) throws -> EKAlarmProximity {

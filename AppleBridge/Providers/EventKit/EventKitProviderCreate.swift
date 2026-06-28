@@ -117,16 +117,14 @@ extension EventKitProvider {
         guard let calendarIdentifier = dictionary["calendar_identifier"] as? String else {
             throw EventKitProviderError.invalidArguments("calendar_identifier is required")
         }
-        let trimmedCalendarID = calendarIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedCalendarID.isEmpty else {
+        guard !calendarIdentifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw EventKitProviderError.invalidArguments("calendar_identifier must not be empty")
         }
 
         guard let title = dictionary["title"] as? String else {
             throw EventKitProviderError.invalidArguments("title is required")
         }
-        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedTitle.isEmpty else {
+        guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw EventKitProviderError.invalidArguments("title must not be empty")
         }
 
@@ -141,8 +139,8 @@ extension EventKitProvider {
         }
 
         return try CreateReminderArguments(
-            calendarIdentifier: trimmedCalendarID,
-            title: trimmedTitle,
+            calendarIdentifier: calendarIdentifier,
+            title: title,
             notes: EventKitDeserialization.optionalString(dictionary["notes"]),
             location: EventKitDeserialization.optionalString(dictionary["location"]),
             url: EventKitDeserialization.optionalURL(dictionary["url"]),

@@ -251,6 +251,44 @@ struct EventKitProviderCreateTests {
 
     @Test
     @MainActor
+    func createReminderPreservesWhitespaceInTitle() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-create-12")]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_reminder",
+            payloadJson: #"{"calendar_identifier":"list-create-12","title":"  Pay rent  "}"#
+        )
+
+        #expect(response.ok == true)
+        #expect(response.payloadJson.contains("  Pay rent  "))
+    }
+
+    @Test
+    @MainActor
+    func createReminderRejectsInvalidAlarmRelativeOffset() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-create-13")]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_reminder",
+            payloadJson: """
+            {"calendar_identifier":"list-create-13","title":"Alarm test",\
+            "alarms":[{"relative_offset":"soon"}]}
+            """
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("relative_offset must be a number") == true)
+    }
+
+    @Test
+    @MainActor
     func createReminderRejectsInvalidPriority() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
