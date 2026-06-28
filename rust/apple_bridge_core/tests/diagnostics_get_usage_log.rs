@@ -106,14 +106,8 @@ fn get_usage_log_respects_limit() {
   let payload = parse_tool_result_payload(&response);
   let entries = payload.get("entries").and_then(Value::as_array).expect("entries array");
   assert_eq!(entries.len(), 1);
-  assert_eq!(
-    entries[0].get("event_type").and_then(Value::as_str),
-    Some("tool_call")
-  );
-  assert_eq!(
-    entries[0].get("tool_name").and_then(Value::as_str),
-    Some(TOOL_NAME)
-  );
+  assert_eq!(entries[0].get("event_type").and_then(Value::as_str), Some("tool_call"));
+  assert_eq!(entries[0].get("tool_name").and_then(Value::as_str), Some(TOOL_NAME));
 }
 
 #[test]
