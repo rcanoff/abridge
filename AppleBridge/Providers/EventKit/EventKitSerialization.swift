@@ -164,7 +164,7 @@ enum EventKitSerialization {
     private static func dateComponentsJSONObject(from components: DateComponents?) -> Any {
         guard let components else { return NSNull() }
 
-        let payload: [String: Any] = [
+        var payload: [String: Any] = [
             "year": jsonValue(components.year),
             "month": jsonValue(components.month),
             "day": jsonValue(components.day),
@@ -182,7 +182,23 @@ enum EventKitSerialization {
             "time_zone": jsonValue(components.timeZone?.identifier),
         ]
 
+        if let calendar = components.calendar {
+            payload["calendar"] = foundationCalendarJSONObject(from: calendar)
+        } else {
+            payload["calendar"] = NSNull()
+        }
+
         return payload
+    }
+
+    private static func foundationCalendarJSONObject(from calendar: Calendar) -> [String: Any] {
+        [
+            "identifier": calendarIdentifierString(calendar.identifier),
+            "locale": jsonValue(calendar.locale?.identifier),
+            "time_zone": calendar.timeZone.identifier,
+            "first_weekday": calendar.firstWeekday,
+            "minimum_days_in_first_week": calendar.minimumDaysInFirstWeek,
+        ]
     }
 
     // MARK: - Encoding helpers
@@ -252,6 +268,39 @@ enum EventKitSerialization {
     }
 
     // MARK: - Enum strings (mechanical)
+
+    private static func calendarIdentifierString(_ identifier: Calendar.Identifier) -> String {
+        switch identifier {
+        case .gregorian: "gregorian"
+        case .buddhist: "buddhist"
+        case .chinese: "chinese"
+        case .coptic: "coptic"
+        case .ethiopicAmeteMihret: "ethiopic_amete_mihret"
+        case .ethiopicAmeteAlem: "ethiopic_amete_alem"
+        case .hebrew: "hebrew"
+        case .iso8601: "iso8601"
+        case .indian: "indian"
+        case .islamic: "islamic"
+        case .islamicCivil: "islamic_civil"
+        case .islamicTabular: "islamic_tabular"
+        case .islamicUmmAlQura: "islamic_umm_al_qura"
+        case .japanese: "japanese"
+        case .persian: "persian"
+        case .republicOfChina: "republic_of_china"
+        case .bangla: "bangla"
+        case .gujarati: "gujarati"
+        case .kannada: "kannada"
+        case .malayalam: "malayalam"
+        case .marathi: "marathi"
+        case .odia: "odia"
+        case .tamil: "tamil"
+        case .telugu: "telugu"
+        case .vikram: "vikram"
+        case .dangi: "dangi"
+        case .vietnamese: "vietnamese"
+        @unknown default: "unknown"
+        }
+    }
 
     private static func colorSpaceModelString(_ model: CGColorSpaceModel) -> String {
         switch model {

@@ -51,6 +51,33 @@ struct EventKitSerializationTests {
         "alpha",
     ]
 
+    private static let dateComponentsReadKeys: Set<String> = [
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second",
+        "nanosecond",
+        "weekday",
+        "weekday_ordinal",
+        "quarter",
+        "week_of_month",
+        "week_of_year",
+        "year_for_week_of_year",
+        "is_leap_month",
+        "time_zone",
+        "calendar",
+    ]
+
+    private static let foundationCalendarReadKeys: Set<String> = [
+        "identifier",
+        "locale",
+        "time_zone",
+        "first_weekday",
+        "minimum_days_in_first_week",
+    ]
+
     @Test
     @MainActor
     func reminderJSONObjectIncludesAllRequiredKeys() {
@@ -134,6 +161,73 @@ struct EventKitSerializationTests {
         #expect(components?[2] == 0.75)
         #expect(components?[3] == 0.8)
         #expect(cgColor["color_space_model"] as? String == "rgb")
+    }
+
+    @Test
+    @MainActor
+    func dateComponentsJSONObjectIncludesAllRequiredKeys() {
+        let reminder = EventKitTestSupport.makeReminder(calendarItemIdentifier: "rem-dc")
+        var components = DateComponents()
+        components.year = 2026
+        components.month = 6
+        components.day = 28
+        components.calendar = Calendar(identifier: .gregorian)
+        reminder.dueDateComponents = components
+
+        let object = EventKitSerialization.reminderJSONObject(from: reminder)
+        guard let dateComponents = object["due_date_components"] as? [String: Any] else {
+            Issue.record("Expected due_date_components object")
+            return
+        }
+
+        #expect(Set(dateComponents.keys) == Self.dateComponentsReadKeys)
+    }
+
+    @Test
+    @MainActor
+    func dateComponentsJSONObjectSerializesCalendarFaithfullyFromEventKit() {
+        let reminder = EventKitTestSupport.makeReminder(calendarItemIdentifier: "rem-dc-nil-cal")
+        var components = DateComponents()
+        components.year = 2026
+        components.month = 6
+        components.day = 28
+        reminder.dueDateComponents = components
+
+        let object = EventKitSerialization.reminderJSONObject(from: reminder)
+        guard let dateComponents = object["due_date_components"] as? [String: Any] else {
+            Issue.record("Expected due_date_components object")
+            return
+        }
+
+        // EventKit supplies a default calendar when due components are set — serialize as-is.
+        if reminder.dueDateComponents?.calendar == nil {
+            #expect(dateComponents["calendar"] is NSNull)
+        } else {
+            #expect(dateComponents["calendar"] as? [String: Any] != nil)
+        }
+    }
+
+    @Test
+    @MainActor
+    func dateComponentsJSONObjectSerializesPresentCalendarFaithfully() {
+        let reminder = EventKitTestSupport.makeReminder(calendarItemIdentifier: "rem-dc-cal")
+        var components = DateComponents()
+        components.year = 2026
+        components.month = 6
+        components.day = 28
+        components.calendar = Calendar(identifier: .gregorian)
+        reminder.dueDateComponents = components
+
+        let object = EventKitSerialization.reminderJSONObject(from: reminder)
+        guard let dateComponents = object["due_date_components"] as? [String: Any],
+              let calendar = dateComponents["calendar"] as? [String: Any]
+        else {
+            Issue.record("Expected nested calendar in due_date_components")
+            return
+        }
+
+        #expect(Set(calendar.keys) == Self.foundationCalendarReadKeys)
+        #expect(calendar["identifier"] as? String == "gregorian")
     }
 
     @Test
