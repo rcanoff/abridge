@@ -108,7 +108,11 @@ fn get_usage_log_respects_limit() {
   assert_eq!(entries.len(), 1);
   assert_eq!(
     entries[0].get("event_type").and_then(Value::as_str),
-    Some("mcp_initialize")
+    Some("tool_call")
+  );
+  assert_eq!(
+    entries[0].get("tool_name").and_then(Value::as_str),
+    Some(TOOL_NAME)
   );
 }
 

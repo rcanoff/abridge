@@ -156,16 +156,14 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
 
   if tool.name == tools::TOOL_GET_USAGE_LOG {
     let limit = parse_usage_log_limit(&arguments);
+    record_tool_call(name, true);
     let payload = state.audit_store.usage_log_response(limit);
     let payload_json = match serde_json::to_string(&payload) {
       Ok(json) => json,
       Err(_) => {
-        record_tool_call(name, false);
         return tool_error_response(id, "serialization_error", "failed to serialize usage log");
       }
     };
-
-    record_tool_call(name, true);
     return json_response(
       StatusCode::OK,
       json_rpc_result(
