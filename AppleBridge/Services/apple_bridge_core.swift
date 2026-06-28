@@ -441,6 +441,22 @@ fileprivate struct FfiConverterUInt16: FfiConverterPrimitive {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterUInt64: FfiConverterPrimitive {
+    typealias FfiType = UInt64
+    typealias SwiftType = UInt64
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UInt64 {
+        return try lift(readInt(&buf))
+    }
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterBool : FfiConverter {
     typealias FfiType = Int8
     typealias SwiftType = Bool
@@ -513,11 +529,19 @@ fileprivate struct FfiConverterString: FfiConverter {
 
 public protocol ServerHandleProtocol: AnyObject, Sendable {
     
+    func recordApiKeyRotation() 
+    
+    func setUsageLoggingEnabled(enabled: Bool) 
+    
     func start() throws 
     
     func status()  -> ServerStatus
     
     func stop() throws 
+    
+    func usageAuditEntries()  -> [UsageAuditEntry]
+    
+    func usageLoggingEnabled()  -> Bool
     
 }
 open class ServerHandle: ServerHandleProtocol, @unchecked Sendable {
@@ -573,6 +597,21 @@ open class ServerHandle: ServerHandleProtocol, @unchecked Sendable {
     
 
     
+open func recordApiKeyRotation()  {try! rustCall() {
+    uniffi_apple_bridge_core_fn_method_serverhandle_record_api_key_rotation(
+            self.uniffiCloneHandle(),$0
+    )
+}
+}
+    
+open func setUsageLoggingEnabled(enabled: Bool)  {try! rustCall() {
+    uniffi_apple_bridge_core_fn_method_serverhandle_set_usage_logging_enabled(
+            self.uniffiCloneHandle(),
+        FfiConverterBool.lower(enabled),$0
+    )
+}
+}
+    
 open func start()throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
     uniffi_apple_bridge_core_fn_method_serverhandle_start(
             self.uniffiCloneHandle(),$0
@@ -593,6 +632,22 @@ open func stop()throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) 
             self.uniffiCloneHandle(),$0
     )
 }
+}
+    
+open func usageAuditEntries() -> [UsageAuditEntry]  {
+    return try!  FfiConverterSequenceTypeUsageAuditEntry.lift(try! rustCall() {
+    uniffi_apple_bridge_core_fn_method_serverhandle_usage_audit_entries(
+            self.uniffiCloneHandle(),$0
+    )
+})
+}
+    
+open func usageLoggingEnabled() -> Bool  {
+    return try!  FfiConverterBool.lift(try! rustCall() {
+    uniffi_apple_bridge_core_fn_method_serverhandle_usage_logging_enabled(
+            self.uniffiCloneHandle(),$0
+    )
+})
 }
     
 
@@ -1003,6 +1058,72 @@ public func FfiConverterTypeServerStatus_lower(_ value: ServerStatus) -> RustBuf
 }
 
 
+public struct UsageAuditEntry: Equatable, Hashable {
+    public var timestampUtc: String
+    public var eventType: String
+    public var toolName: String?
+    public var success: Bool
+    public var durationMs: UInt64?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(timestampUtc: String, eventType: String, toolName: String?, success: Bool, durationMs: UInt64?) {
+        self.timestampUtc = timestampUtc
+        self.eventType = eventType
+        self.toolName = toolName
+        self.success = success
+        self.durationMs = durationMs
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension UsageAuditEntry: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeUsageAuditEntry: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsageAuditEntry {
+        return
+            try UsageAuditEntry(
+                timestampUtc: FfiConverterString.read(from: &buf), 
+                eventType: FfiConverterString.read(from: &buf), 
+                toolName: FfiConverterOptionString.read(from: &buf), 
+                success: FfiConverterBool.read(from: &buf), 
+                durationMs: FfiConverterOptionUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: UsageAuditEntry, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.timestampUtc, into: &buf)
+        FfiConverterString.write(value.eventType, into: &buf)
+        FfiConverterOptionString.write(value.toolName, into: &buf)
+        FfiConverterBool.write(value.success, into: &buf)
+        FfiConverterOptionUInt64.write(value.durationMs, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsageAuditEntry_lift(_ buf: RustBuffer) throws -> UsageAuditEntry {
+    return try FfiConverterTypeUsageAuditEntry.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsageAuditEntry_lower(_ value: UsageAuditEntry) -> RustBuffer {
+    return FfiConverterTypeUsageAuditEntry.lower(value)
+}
+
+
 public enum CoreError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
 
     
@@ -1252,6 +1373,30 @@ public func FfiConverterCallbackInterfaceProviderBridge_lower(_ v: ProviderBridg
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionUInt64: FfiConverterRustBuffer {
+    typealias SwiftType = UInt64?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterUInt64.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterUInt64.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionString: FfiConverterRustBuffer {
     typealias SwiftType = String?
 
@@ -1347,6 +1492,31 @@ fileprivate struct FfiConverterSequenceTypeProviderStatus: FfiConverterRustBuffe
         return seq
     }
 }
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeUsageAuditEntry: FfiConverterRustBuffer {
+    typealias SwiftType = [UsageAuditEntry]
+
+    public static func write(_ value: [UsageAuditEntry], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeUsageAuditEntry.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [UsageAuditEntry] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [UsageAuditEntry]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeUsageAuditEntry.read(from: &buf))
+        }
+        return seq
+    }
+}
 public func createServer(config: ServerConfig, provider: ProviderBridge)throws  -> ServerHandle  {
     return try  FfiConverterTypeServerHandle_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
     uniffi_apple_bridge_core_fn_func_create_server(
@@ -1410,6 +1580,12 @@ private let initializationResult: InitializationResult = {
     if (uniffi_apple_bridge_core_checksum_func_stop_server() != 44171) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_apple_bridge_core_checksum_method_serverhandle_record_api_key_rotation() != 40851) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_apple_bridge_core_checksum_method_serverhandle_set_usage_logging_enabled() != 65313) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_apple_bridge_core_checksum_method_serverhandle_start() != 58243) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -1417,6 +1593,12 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_apple_bridge_core_checksum_method_serverhandle_stop() != 15302) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_apple_bridge_core_checksum_method_serverhandle_usage_audit_entries() != 44504) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_apple_bridge_core_checksum_method_serverhandle_usage_logging_enabled() != 44709) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_apple_bridge_core_checksum_method_providerbridge_call_provider() != 33479) {

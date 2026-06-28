@@ -11,12 +11,14 @@ mod mcp;
 mod providers;
 mod server;
 mod tools;
+mod usage_audit;
 
 pub use config::{ProviderConfig, ProviderRequest, ProviderResponse, ServerConfig, validate_config};
 pub use diagnostics::{ProviderStatus, ServerStatus};
 pub use error::CoreError;
 pub use providers::ProviderBridge;
 pub use server::ServerHandle;
+pub use usage_audit::UsageAuditEntry;
 
 #[uniffi::export]
 pub fn init_logging() {

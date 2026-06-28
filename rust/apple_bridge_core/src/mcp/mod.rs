@@ -3,6 +3,7 @@
 mod protocol;
 
 use std::sync::Arc;
+use std::time::Instant;
 
 use axum::{
   Json,
@@ -16,6 +17,7 @@ use crate::{
   config::{ProviderConfig, ProviderRequest},
   providers::ProviderBridge,
   tools::{self, ToolDefinition},
+  usage_audit::{EVENT_MCP_INITIALIZE, EVENT_TOOL_CALL, UsageAuditStore},
 };
 
 #[derive(Clone)]
@@ -24,6 +26,7 @@ pub struct McpState {
   pub enabled_capabilities: Vec<String>,
   pub enabled_providers: Vec<ProviderConfig>,
   pub provider: Arc<dyn ProviderBridge>,
+  pub audit_store: Arc<UsageAuditStore>,
 }
 
 use protocol::{
@@ -58,7 +61,7 @@ pub async fn handle_mcp(State(state): State<McpState>, body: axum::body::Bytes) 
   }
 
   match method {
-    "initialize" => handle_initialize(id, params),
+    "initialize" => handle_initialize(id, params, &state),
     "tools/list" => handle_tools_list(id, &state),
     "tools/call" => handle_tools_call(id, params, &state),
     "notifications/initialized" => handle_notification_initialized(id),
@@ -66,7 +69,7 @@ pub async fn handle_mcp(State(state): State<McpState>, body: axum::body::Bytes) 
   }
 }
 
-fn handle_initialize(id: Option<Value>, _params: Value) -> Response {
+fn handle_initialize(id: Option<Value>, _params: Value, state: &McpState) -> Response {
   let Some(id) = id else {
     return StatusCode::NO_CONTENT.into_response();
   };
@@ -79,6 +82,8 @@ fn handle_initialize(id: Option<Value>, _params: Value) -> Response {
       "version": SERVER_VERSION
     }
   });
+
+  state.audit_store.record(EVENT_MCP_INITIALIZE, None, true, None);
 
   json_response(StatusCode::OK, json_rpc_result(id, result))
 }
@@ -101,19 +106,33 @@ fn handle_tools_list(id: Option<Value>, state: &McpState) -> Response {
 }
 
 fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Response {
+  let started = Instant::now();
+
   let Some(id) = id else {
     return StatusCode::NO_CONTENT.into_response();
   };
 
+  let record_tool_call = |tool_name: &str, success: bool| {
+    state.audit_store.record(
+      EVENT_TOOL_CALL,
+      Some(tool_name),
+      success,
+      Some(started.elapsed().as_millis() as u64),
+    );
+  };
+
   let Some(name) = params.get("name").and_then(Value::as_str) else {
+    record_tool_call("<missing>", false);
     return tool_error_response(id, "invalid_params", "missing tool name");
   };
 
   let Some(tool) = tools::resolve_tool(name) else {
+    record_tool_call(name, false);
     return tool_error_response(id, "unknown_tool", &format!("unknown tool: {name}"));
   };
 
   if !capability_enabled(state, tool.capability) {
+    record_tool_call(name, false);
     return tool_error_response(
       id,
       "capability_disabled",
@@ -122,6 +141,7 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
   }
 
   if !provider_enabled(state, tool.provider) {
+    record_tool_call(name, false);
     return tool_error_response(
       id,
       "provider_disabled",
@@ -140,6 +160,8 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
     operation: tool.operation.into(),
     payload_json,
   });
+
+  record_tool_call(name, response.ok);
 
   if response.ok {
     json_response(
