@@ -10,6 +10,8 @@ pub const TOOL_CREATE_REMINDER: &str = "eventkit.reminders.create_reminder";
 pub const TOOL_CREATE_LIST: &str = "eventkit.reminders.create_list";
 pub const TOOL_UPDATE_REMINDER: &str = "eventkit.reminders.update_reminder";
 pub const TOOL_MOVE_REMINDER: &str = "eventkit.reminders.move_reminder";
+pub const TOOL_COMPLETE_REMINDER: &str = "eventkit.reminders.complete_reminder";
+pub const TOOL_UNCOMPLETE_REMINDER: &str = "eventkit.reminders.uncomplete_reminder";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ToolDefinition {
@@ -20,7 +22,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 8] = [
+const ALL_TOOLS: [ToolDefinition; 10] = [
   ToolDefinition {
     name: TOOL_LIST_LISTS,
     capability: capabilities::EVENTKIT_REMINDERS_READ,
@@ -76,6 +78,20 @@ const ALL_TOOLS: [ToolDefinition; 8] = [
     provider: "eventkit",
     operation: "move_reminder",
     description: "Move a reminder to another list by reminder_id and target calendar_identifier",
+  },
+  ToolDefinition {
+    name: TOOL_COMPLETE_REMINDER,
+    capability: capabilities::EVENTKIT_REMINDERS_COMPLETE,
+    provider: "eventkit",
+    operation: "complete_reminder",
+    description: "Mark a reminder as completed by reminder_id",
+  },
+  ToolDefinition {
+    name: TOOL_UNCOMPLETE_REMINDER,
+    capability: capabilities::EVENTKIT_REMINDERS_COMPLETE,
+    provider: "eventkit",
+    operation: "uncomplete_reminder",
+    description: "Mark a reminder as incomplete by reminder_id",
   },
 ];
 
@@ -181,6 +197,13 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["reminder_id", "calendar_identifier"]
     }),
+    TOOL_COMPLETE_REMINDER | TOOL_UNCOMPLETE_REMINDER => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "reminder_id": { "type": "string" }
+      },
+      "required": ["reminder_id"]
+    }),
     _ => serde_json::json!({ "type": "object" }),
   }
 }
@@ -188,8 +211,9 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
 #[cfg(test)]
 mod tests {
   use super::{
-    TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_GET_REMINDER, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS,
-    TOOL_MOVE_REMINDER, TOOL_SEARCH_REMINDERS, TOOL_UPDATE_REMINDER, tools_for_capabilities,
+    TOOL_COMPLETE_REMINDER, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_GET_REMINDER, TOOL_LIST_LISTS,
+    TOOL_LIST_REMINDERS, TOOL_MOVE_REMINDER, TOOL_SEARCH_REMINDERS, TOOL_UNCOMPLETE_REMINDER, TOOL_UPDATE_REMINDER,
+    tools_for_capabilities,
   };
 
   #[test]
@@ -223,5 +247,12 @@ mod tests {
     let tools = tools_for_capabilities(&["eventkit.reminders.edit".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
     assert_eq!(names, vec![TOOL_UPDATE_REMINDER, TOOL_MOVE_REMINDER]);
+  }
+
+  #[test]
+  fn lists_complete_tools_when_complete_capability_enabled() {
+    let tools = tools_for_capabilities(&["eventkit.reminders.complete".into()]);
+    let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
+    assert_eq!(names, vec![TOOL_COMPLETE_REMINDER, TOOL_UNCOMPLETE_REMINDER]);
   }
 }
