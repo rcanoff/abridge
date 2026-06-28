@@ -11,6 +11,9 @@ use crate::{
   http,
   mcp::McpState,
   providers::ProviderBridge,
+  usage_audit::{
+    EVENT_API_KEY_ROTATION, EVENT_PORT_BIND, EVENT_SERVER_START, EVENT_SERVER_STOP, UsageAuditEntry, UsageAuditStore,
+  },
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -31,6 +34,7 @@ struct ServerInner {
   config: ServerConfig,
   #[allow(dead_code)]
   provider: Arc<dyn ProviderBridge>,
+  audit_store: Arc<UsageAuditStore>,
   status: ServerStatus,
   phase: ServerPhase,
   start_generation: u64,
@@ -178,12 +182,14 @@ async fn start_http_server(
   addr: &str,
   router: Router,
   inner: Arc<Mutex<ServerInner>>,
+  audit_store: Arc<UsageAuditStore>,
 ) -> Result<(oneshot::Sender<()>, JoinHandle<()>), CoreError> {
   let listener = tokio::net::TcpListener::bind(addr)
     .await
     .map_err(|error| CoreError::BindFailed {
       message: error.to_string(),
     })?;
+  audit_store.record(EVENT_PORT_BIND, None, true, None);
   let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
   let task_inner = inner.clone();
   let task = tokio::spawn(async move {
@@ -232,11 +238,14 @@ fn wait_for_start_completion(inner: &Arc<Mutex<ServerInner>>, lifecycle: &Arc<Co
 pub fn create_server(config: ServerConfig, provider: Box<dyn ProviderBridge>) -> Result<Arc<ServerHandle>, CoreError> {
   validate_config(&config)?;
 
+  let audit_store = Arc::new(UsageAuditStore::new());
+
   Ok(Arc::new(ServerHandle {
     inner: Arc::new(Mutex::new(ServerInner {
       status: initial_status(&config),
       config,
       provider: Arc::from(provider),
+      audit_store: audit_store.clone(),
       phase: ServerPhase::Stopped,
       start_generation: 0,
       start_in_progress: false,
@@ -306,17 +315,20 @@ impl ServerHandle {
       }
     };
 
-    let mcp_state = {
+    let (mcp_state, audit_store) = {
       let inner = self.inner.lock().map_err(|_| CoreError::StateUnavailable)?;
-      McpState {
+      let audit_store = inner.audit_store.clone();
+      let mcp_state = McpState {
         bearer_token: inner.config.bearer_token.clone(),
         enabled_capabilities: inner.config.enabled_capabilities.clone(),
         enabled_providers: inner.config.enabled_providers.clone(),
         provider: inner.provider.clone(),
-      }
+        audit_store: audit_store.clone(),
+      };
+      (mcp_state, audit_store)
     };
     let router = http::router(mcp_state);
-    let started = runtime.block_on(start_http_server(&addr, router, self.inner.clone()));
+    let started = runtime.block_on(start_http_server(&addr, router, self.inner.clone(), audit_store));
 
     let (shutdown_tx, server_task) = match started {
       Ok(parts) => parts,
@@ -337,6 +349,7 @@ impl ServerHandle {
       inner.server_task = Some(server_task);
       inner.phase = ServerPhase::Running;
       inner.status = running_status(&inner.config);
+      inner.audit_store.record(EVENT_SERVER_START, None, true, None);
       return Ok(());
     }
 
@@ -352,7 +365,7 @@ impl ServerHandle {
   }
 
   pub fn stop(&self) -> Result<(), CoreError> {
-    let wait_for_start = {
+    let (wait_for_start, record_server_stop) = {
       let mut inner = self.inner.lock().map_err(|_| CoreError::StateUnavailable)?;
       match inner.phase {
         ServerPhase::Stopped => {
@@ -361,12 +374,12 @@ impl ServerHandle {
         }
         ServerPhase::Starting => {
           inner.start_generation += 1;
-          inner.start_in_progress
+          (inner.start_in_progress, false)
         }
         ServerPhase::Stopping => return Ok(()),
         ServerPhase::Running => {
           inner.phase = ServerPhase::Stopping;
-          false
+          (false, true)
         }
       }
     };
@@ -394,9 +407,38 @@ impl ServerHandle {
     run_shutdown(parts);
 
     let mut inner = self.inner.lock().map_err(|_| CoreError::StateUnavailable)?;
+    if record_server_stop {
+      inner.audit_store.record(EVENT_SERVER_STOP, None, true, None);
+    }
     inner.phase = ServerPhase::Stopped;
     inner.status = initial_status(&inner.config);
     Ok(())
+  }
+
+  pub fn usage_audit_entries(&self) -> Vec<UsageAuditEntry> {
+    match self.inner.lock() {
+      Ok(inner) => inner.audit_store.entries(),
+      Err(_) => Vec::new(),
+    }
+  }
+
+  pub fn set_usage_logging_enabled(&self, enabled: bool) {
+    if let Ok(inner) = self.inner.lock() {
+      inner.audit_store.set_logging_enabled(enabled);
+    }
+  }
+
+  pub fn usage_logging_enabled(&self) -> bool {
+    match self.inner.lock() {
+      Ok(inner) => inner.audit_store.logging_enabled(),
+      Err(_) => false,
+    }
+  }
+
+  pub fn record_api_key_rotation(&self) {
+    if let Ok(inner) = self.inner.lock() {
+      inner.audit_store.record(EVENT_API_KEY_ROTATION, None, true, None);
+    }
   }
 
   pub fn status(&self) -> ServerStatus {
