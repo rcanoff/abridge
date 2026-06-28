@@ -22,7 +22,7 @@ extension EventKitProvider {
             throw EventKitProviderError.invalidArguments("calendar_identifier must not be empty")
         }
 
-        return trimmed
+        return calendarIdentifier
     }
 
     func deleteList(payloadJson: String) -> ProviderResponse {
@@ -43,7 +43,6 @@ extension EventKitProvider {
             try store.removeCalendar(calendar, commit: true)
 
             let payload = try EventKitSerialization.jsonString(from: [
-                "deleted": true,
                 "calendar_identifier": calendarIdentifier,
             ])
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)

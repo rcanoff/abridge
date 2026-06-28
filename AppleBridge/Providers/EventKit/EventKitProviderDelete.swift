@@ -16,11 +16,11 @@ extension EventKitProvider {
                 )
             }
 
+            let calendarItemIdentifier = reminder.calendarItemIdentifier
             try store.removeReminder(reminder, commit: true)
 
             let payload = try EventKitSerialization.jsonString(from: [
-                "deleted": true,
-                "reminder_id": reminderID,
+                "calendar_item_identifier": calendarItemIdentifier,
             ])
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as EventKitProviderError {
