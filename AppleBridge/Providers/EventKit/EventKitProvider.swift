@@ -194,6 +194,8 @@ final class EventKitProvider {
             createList(payloadJson: payloadJson)
         case "update_reminder":
             updateReminder(payloadJson: payloadJson)
+        case "move_reminder":
+            moveReminder(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }
