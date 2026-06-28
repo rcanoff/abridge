@@ -27,7 +27,7 @@ struct KeychainService: BearerTokenStoring {
             return existing
         }
 
-        let token = Self.generateToken()
+        let token = try Self.generateToken()
         try saveBearerToken(token)
         return token
     }
@@ -101,7 +101,7 @@ struct KeychainService: BearerTokenStoring {
         ]
     }
 
-    private static func generateToken() -> String {
-        UUID().uuidString.replacingOccurrences(of: "-", with: "")
+    private static func generateToken() throws -> String {
+        try APIKeyFormatting.generateAPIKey()
     }
 }

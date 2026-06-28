@@ -9,7 +9,7 @@ struct BearerTokenStoreTests {
         let store = MockBearerTokenStore()
 
         let first = try store.loadOrCreateBearerToken()
-        #expect(!first.isEmpty)
+        #expect(first.hasPrefix(APIKeyFormatting.livePrefix))
 
         let second = try store.loadOrCreateBearerToken()
         #expect(first == second)
@@ -17,9 +17,12 @@ struct BearerTokenStoreTests {
 
     @Test
     func loadOrCreateReturnsExistingToken() throws {
-        let store = MockBearerTokenStore(storedToken: "existing-token")
+        let legacyToken = "existing-token"
+        let store = MockBearerTokenStore(storedToken: legacyToken)
 
-        #expect(try store.loadOrCreateBearerToken() == "existing-token")
+        let loaded = try store.loadOrCreateBearerToken()
+        #expect(loaded == legacyToken)
+        #expect(APIKeyFormatting.isLegacyKey(loaded))
     }
 
     @Test
@@ -29,7 +32,7 @@ struct BearerTokenStoreTests {
         let rotated = try store.rotateBearerToken()
 
         #expect(rotated != "original-token")
-        #expect(!rotated.isEmpty)
+        #expect(rotated.hasPrefix(APIKeyFormatting.livePrefix))
         #expect(try store.loadOrCreateBearerToken() == rotated)
     }
 }

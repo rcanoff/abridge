@@ -289,6 +289,7 @@ Always set `TZ=UTC` for deterministic timestamp assertions.
 - Missing or malformed auth: reject with an HTTP auth error (do not fall through to handlers).
 - Invalid token: reject; do not log the token value.
 - Token storage: Swift Keychain only. Rust receives the token at runtime via `ServerConfig`.
+- V1 API key format: `ab_live_` + 43-character unpadded base64url segment (32-byte CSPRNG). Legacy Keychain tokens without the prefix are preserved on load; rotation issues a new `ab_live_` key.
 
 ---
 
