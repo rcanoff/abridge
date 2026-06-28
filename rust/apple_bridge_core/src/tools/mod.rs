@@ -7,6 +7,7 @@ pub const TOOL_LIST_REMINDERS: &str = "eventkit.reminders.list_reminders";
 pub const TOOL_GET_REMINDER: &str = "eventkit.reminders.get_reminder";
 pub const TOOL_SEARCH_REMINDERS: &str = "eventkit.reminders.search_reminders";
 pub const TOOL_CREATE_REMINDER: &str = "eventkit.reminders.create_reminder";
+pub const TOOL_CREATE_LIST: &str = "eventkit.reminders.create_list";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ToolDefinition {
@@ -17,7 +18,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 5] = [
+const ALL_TOOLS: [ToolDefinition; 6] = [
   ToolDefinition {
     name: TOOL_LIST_LISTS,
     capability: capabilities::EVENTKIT_REMINDERS_READ,
@@ -52,6 +53,13 @@ const ALL_TOOLS: [ToolDefinition; 5] = [
     provider: "eventkit",
     operation: "create_reminder",
     description: "Create a reminder in the given calendar with optional EventKit fields",
+  },
+  ToolDefinition {
+    name: TOOL_CREATE_LIST,
+    capability: capabilities::EVENTKIT_REMINDERS_CREATE,
+    provider: "eventkit",
+    operation: "create_list",
+    description: "Create a reminder list with optional color and source",
   },
 ];
 
@@ -120,6 +128,15 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["calendar_identifier", "title"]
     }),
+    TOOL_CREATE_LIST => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "cg_color": { "type": "object" },
+        "source_identifier": { "type": "string" }
+      },
+      "required": ["title"]
+    }),
     _ => serde_json::json!({ "type": "object" }),
   }
 }
@@ -127,8 +144,8 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
 #[cfg(test)]
 mod tests {
   use super::{
-    TOOL_CREATE_REMINDER, TOOL_GET_REMINDER, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_SEARCH_REMINDERS,
-    tools_for_capabilities,
+    TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_GET_REMINDER, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS,
+    TOOL_SEARCH_REMINDERS, tools_for_capabilities,
   };
 
   #[test]
@@ -151,9 +168,9 @@ mod tests {
   }
 
   #[test]
-  fn lists_create_tool_when_create_capability_enabled() {
+  fn lists_create_tools_when_create_capability_enabled() {
     let tools = tools_for_capabilities(&["eventkit.reminders.create".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_CREATE_REMINDER]);
+    assert_eq!(names, vec![TOOL_CREATE_REMINDER, TOOL_CREATE_LIST]);
   }
 }
