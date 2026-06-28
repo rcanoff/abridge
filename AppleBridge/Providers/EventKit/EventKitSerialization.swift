@@ -230,12 +230,12 @@ enum EventKitSerialization {
         return payload
     }
 
-    private static func numberArray(from numbers: [NSNumber]?) -> [Int] {
-        numbers?.map(\.intValue) ?? []
+    private static func numberArray(from numbers: [NSNumber]?) -> Any {
+        numbers?.map(\.intValue) ?? NSNull()
     }
 
-    private static func recurrenceDaysOfWeekArray(from days: [EKRecurrenceDayOfWeek]?) -> [[String: Any]] {
-        guard let days else { return [] }
+    private static func recurrenceDaysOfWeekArray(from days: [EKRecurrenceDayOfWeek]?) -> Any {
+        guard let days else { return NSNull() }
         return days.map { day in
             [
                 "day_of_the_week": day.dayOfTheWeek.rawValue,

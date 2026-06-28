@@ -141,4 +141,71 @@ struct EventKitSerializationTests {
         let json = try EventKitSerialization.jsonString(from: ["calendar_item_identifier": "x"])
         #expect(json.contains("calendar_item_identifier"))
     }
+
+    @Test
+    @MainActor
+    func recurrenceRuleJSONObjectSerializesNilOptionalArraysAsNull() {
+        let reminder = EventKitTestSupport.makeReminder(calendarItemIdentifier: "rem-rec")
+        reminder.recurrenceRules = [
+            EKRecurrenceRule(recurrenceWith: .daily, interval: 1, end: nil),
+        ]
+
+        let object = EventKitSerialization.reminderJSONObject(from: reminder)
+        guard let rules = object["recurrence_rules"] as? [[String: Any]],
+              let rule = rules.first
+        else {
+            Issue.record("Expected recurrence_rules array with one rule")
+            return
+        }
+
+        let nilOptionalArrayKeys = [
+            "days_of_the_week",
+            "days_of_the_month",
+            "days_of_the_year",
+            "months_of_the_year",
+            "weeks_of_the_year",
+            "set_positions",
+        ]
+
+        for key in nilOptionalArrayKeys {
+            #expect(rule[key] is NSNull, "Expected \(key) to serialize as null when unset")
+        }
+    }
+
+    @Test
+    @MainActor
+    func recurrenceRuleJSONObjectSerializesPresentOptionalArrays() {
+        let reminder = EventKitTestSupport.makeReminder(calendarItemIdentifier: "rem-rec-weekly")
+        reminder.recurrenceRules = [
+            EKRecurrenceRule(
+                recurrenceWith: .weekly,
+                interval: 2,
+                daysOfTheWeek: [EKRecurrenceDayOfWeek(.monday)],
+                daysOfTheMonth: [NSNumber(value: 15)],
+                monthsOfTheYear: [NSNumber(value: 6)],
+                weeksOfTheYear: [NSNumber(value: 3)],
+                daysOfTheYear: [NSNumber(value: 180)],
+                setPositions: [NSNumber(value: -1)],
+                end: nil
+            ),
+        ]
+
+        let object = EventKitSerialization.reminderJSONObject(from: reminder)
+        guard let rules = object["recurrence_rules"] as? [[String: Any]],
+              let rule = rules.first
+        else {
+            Issue.record("Expected recurrence_rules array with one rule")
+            return
+        }
+
+        let daysOfWeek = rule["days_of_the_week"] as? [[String: Any]]
+        #expect(daysOfWeek?.count == 1)
+        #expect(daysOfWeek?.first?["day_of_the_week"] as? Int == EKWeekday.monday.rawValue)
+
+        #expect(rule["days_of_the_month"] as? [Int] == [15])
+        #expect(rule["days_of_the_year"] as? [Int] == [180])
+        #expect(rule["months_of_the_year"] as? [Int] == [6])
+        #expect(rule["weeks_of_the_year"] as? [Int] == [3])
+        #expect(rule["set_positions"] as? [Int] == [-1])
+    }
 }
