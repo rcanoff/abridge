@@ -162,6 +162,10 @@ fn nullable_integer() -> serde_json::Value {
   serde_json::json!({ "type": ["integer", "null"] })
 }
 
+fn nullable_number() -> serde_json::Value {
+  serde_json::json!({ "type": ["number", "null"] })
+}
+
 fn nullable_integer_array() -> serde_json::Value {
   serde_json::json!({
     "type": ["array", "null"],
@@ -174,7 +178,7 @@ fn alarm_entry_schema() -> serde_json::Value {
     "type": "object",
     "properties": {
       "absolute_date": nullable_string_date_time(),
-      "relative_offset": { "type": "number" },
+      "relative_offset": nullable_number(),
       "proximity": {
         "type": ["string", "null"],
         "enum": ["none", "enter", "leave", null]
@@ -184,12 +188,12 @@ fn alarm_entry_schema() -> serde_json::Value {
         "type": ["object", "null"],
         "properties": {
           "title": nullable_string(),
-          "radius": { "type": "number" },
+          "radius": nullable_number(),
           "geo_location": {
             "type": ["object", "null"],
             "properties": {
-              "latitude": { "type": "number" },
-              "longitude": { "type": "number" }
+              "latitude": nullable_number(),
+              "longitude": nullable_number()
             }
           }
         }
