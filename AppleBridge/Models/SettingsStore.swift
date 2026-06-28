@@ -61,11 +61,11 @@ final class SettingsStore {
 
     func refreshUsageAuditEntries() async {
         let entries = await serverStore.usageAuditEntries()
-        usageAuditEntries = entries.reversed()
+        usageAuditEntries = Array(entries.reversed())
     }
 
     func usageAuditExportJSON() -> String {
-        UsageAuditExport.jsonString(from: usageAuditEntries.reversed())
+        UsageAuditExport.jsonString(from: Array(usageAuditEntries.reversed()))
     }
 
     func applyMCPEnabledChange(_ enabled: Bool) async {
