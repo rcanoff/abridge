@@ -83,7 +83,10 @@ final class AppSettings {
     }
 
     func serverEnabledMCPCapabilityIDs(remindersAuthorized: Bool) -> [String] {
-        guard remindersAuthorized else { return [] }
-        return enabledMCPCapabilityIDs
+        var capabilities = ["diagnostics.read"]
+        if remindersAuthorized {
+            capabilities.append(contentsOf: enabledMCPCapabilityIDs)
+        }
+        return capabilities
     }
 }

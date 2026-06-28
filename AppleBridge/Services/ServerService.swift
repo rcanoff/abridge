@@ -74,7 +74,10 @@ actor ServerService: ServerServing {
                 host: host,
                 port: port,
                 bearerToken: token,
-                enabledProviders: [ProviderConfig(name: "eventkit", enabled: true)],
+                enabledProviders: [
+                    ProviderConfig(name: "eventkit", enabled: true),
+                    ProviderConfig(name: "diagnostics", enabled: true),
+                ],
                 enabledCapabilities: enabledCapabilities
             )
             handle = try createServer(config: config, provider: providerBridge)

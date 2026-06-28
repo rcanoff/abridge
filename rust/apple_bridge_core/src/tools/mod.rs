@@ -16,6 +16,7 @@ pub const TOOL_COMPLETE_REMINDER: &str = "eventkit.reminders.complete_reminder";
 pub const TOOL_UNCOMPLETE_REMINDER: &str = "eventkit.reminders.uncomplete_reminder";
 pub const TOOL_SET_REMINDER_ALARMS: &str = "eventkit.reminders.set_reminder_alarms";
 pub const TOOL_SET_REMINDER_RECURRENCE: &str = "eventkit.reminders.set_reminder_recurrence";
+pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ToolDefinition {
@@ -26,7 +27,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 14] = [
+const ALL_TOOLS: [ToolDefinition; 15] = [
   ToolDefinition {
     name: TOOL_LIST_LISTS,
     capability: capabilities::EVENTKIT_REMINDERS_READ,
@@ -124,6 +125,13 @@ const ALL_TOOLS: [ToolDefinition; 14] = [
     provider: "eventkit",
     operation: "set_reminder_recurrence",
     description: "Replace a reminder's recurrence rules by reminder_id; pass an empty array to remove all",
+  },
+  ToolDefinition {
+    name: TOOL_GET_USAGE_LOG,
+    capability: capabilities::DIAGNOSTICS_READ,
+    provider: "diagnostics",
+    operation: "get_usage_log",
+    description: "Return the local usage audit log (read-only; no bearer tokens or payloads)",
   },
 ];
 
@@ -250,6 +258,12 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["reminder_id"]
     }),
+    TOOL_GET_USAGE_LOG => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "limit": { "type": "integer", "minimum": 0 }
+      }
+    }),
     TOOL_SET_REMINDER_ALARMS => serde_json::json!({
       "type": "object",
       "properties": {
@@ -274,9 +288,9 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
 mod tests {
   use super::{
     TOOL_COMPLETE_REMINDER, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER,
-    TOOL_GET_REMINDER, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_REMINDER, TOOL_SEARCH_REMINDERS,
-    TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_UNCOMPLETE_REMINDER, TOOL_UPDATE_REMINDER,
-    tools_for_capabilities,
+    TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_REMINDER,
+    TOOL_SEARCH_REMINDERS, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_UNCOMPLETE_REMINDER,
+    TOOL_UPDATE_REMINDER, tools_for_capabilities,
   };
 
   #[test]
@@ -338,5 +352,12 @@ mod tests {
     let tools = tools_for_capabilities(&["eventkit.reminders.recurrence".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
     assert_eq!(names, vec![TOOL_SET_REMINDER_RECURRENCE]);
+  }
+
+  #[test]
+  fn lists_diagnostics_tool_when_diagnostics_read_capability_enabled() {
+    let tools = tools_for_capabilities(&["diagnostics.read".into()]);
+    let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
+    assert_eq!(names, vec![TOOL_GET_USAGE_LOG]);
   }
 }
