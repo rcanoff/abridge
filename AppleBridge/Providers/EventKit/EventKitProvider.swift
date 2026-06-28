@@ -242,20 +242,6 @@ final class EventKitProvider {
         }
     }
 
-    private func listCalendars() -> ProviderResponse {
-        guard isEventAuthorized else {
-            return errorResponse(code: "permission_denied", message: "Calendars access not granted")
-        }
-
-        do {
-            let calendars = store.eventCalendars().map(EventKitSerialization.calendarJSONObject)
-            let payload = try EventKitSerialization.jsonString(from: calendars)
-            return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
-        } catch {
-            return providerError(from: error)
-        }
-    }
-
     private func listReminders(payloadJson: String) -> ProviderResponse {
         guard isAuthorized else {
             return errorResponse(code: "permission_denied", message: "Reminders access not granted")
@@ -298,15 +284,6 @@ final class EventKitProvider {
 
     var isAuthorized: Bool {
         switch store.reminderAuthorizationStatus() {
-        case .fullAccess:
-            true
-        default:
-            false
-        }
-    }
-
-    var isEventAuthorized: Bool {
-        switch store.eventAuthorizationStatus() {
         case .fullAccess:
             true
         default:
