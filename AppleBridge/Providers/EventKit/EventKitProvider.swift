@@ -291,7 +291,7 @@ final class EventKitProvider {
     }
 
     private func reminderPredicate(listID: String?) throws -> NSPredicate {
-        let calendars = try reminderCalendars(listID: listID)
+        let calendars = try reminderCalendars(calendarIdentifier: listID)
         return store.predicateForReminders(in: calendars)
     }
 

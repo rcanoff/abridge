@@ -9,11 +9,10 @@ extension EventKitProvider {
     }
 
     struct SearchRemindersArguments {
-        let listID: String?
+        let calendarIdentifier: String?
         let completionStatus: ReminderCompletionStatus
         let dueDateStart: Date?
         let dueDateEnd: Date?
-        let query: String?
     }
 
     func searchReminders(payloadJson: String) -> ProviderResponse {
@@ -23,7 +22,7 @@ extension EventKitProvider {
 
         do {
             let arguments = try parseSearchRemindersArguments(payloadJson)
-            let calendars = try reminderCalendars(listID: arguments.listID)
+            let calendars = try reminderCalendars(calendarIdentifier: arguments.calendarIdentifier)
             let predicate = searchPredicate(for: arguments, calendars: calendars)
             var reminders = try store.fetchReminders(matching: predicate)
             reminders = applyPostFetchFilters(to: reminders, arguments: arguments)
@@ -37,11 +36,11 @@ extension EventKitProvider {
         }
     }
 
-    func reminderCalendars(listID: String?) throws -> [EKCalendar] {
+    func reminderCalendars(calendarIdentifier: String?) throws -> [EKCalendar] {
         let calendars = store.reminderCalendars()
-        if let listID {
-            guard let calendar = calendars.first(where: { $0.calendarIdentifier == listID }) else {
-                throw EventKitProviderError.invalidArguments("Unknown list_id: \(listID)")
+        if let calendarIdentifier {
+            guard let calendar = calendars.first(where: { $0.calendarIdentifier == calendarIdentifier }) else {
+                throw EventKitProviderError.invalidArguments("Unknown calendar_identifier: \(calendarIdentifier)")
             }
             return [calendar]
         }
@@ -63,8 +62,8 @@ extension EventKitProvider {
             )
         case .completed:
             return store.predicateForCompletedReminders(
-                withCompletionDateStarting: hasDueDates ? arguments.dueDateStart : nil,
-                ending: hasDueDates ? arguments.dueDateEnd : nil,
+                withCompletionDateStarting: nil,
+                ending: nil,
                 calendars: calendars
             )
         case .all:
@@ -79,7 +78,7 @@ extension EventKitProvider {
         var filtered = reminders
 
         let hasDueDates = arguments.dueDateStart != nil || arguments.dueDateEnd != nil
-        if hasDueDates, arguments.completionStatus == .all {
+        if hasDueDates, arguments.completionStatus == .all || arguments.completionStatus == .completed {
             filtered = filtered.filter { reminder in
                 guard let dueDate = dueDate(from: reminder.dueDateComponents) else {
                     return false
@@ -91,15 +90,6 @@ extension EventKitProvider {
                     return false
                 }
                 return true
-            }
-        }
-
-        if let query = arguments.query {
-            let needle = query.lowercased()
-            filtered = filtered.filter { reminder in
-                let titleMatch = reminder.title?.lowercased().contains(needle) == true
-                let notesMatch = reminder.notes?.lowercased().contains(needle) == true
-                return titleMatch || notesMatch
             }
         }
 
@@ -116,11 +106,10 @@ extension EventKitProvider {
     private func parseSearchRemindersArguments(_ payloadJson: String) throws -> SearchRemindersArguments {
         guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return SearchRemindersArguments(
-                listID: nil,
+                calendarIdentifier: nil,
                 completionStatus: .all,
                 dueDateStart: nil,
-                dueDateEnd: nil,
-                query: nil
+                dueDateEnd: nil
             )
         }
 
@@ -130,7 +119,7 @@ extension EventKitProvider {
 
         let dictionary = try parseJSONObject(from: data)
 
-        let listID = try optionalStringArgument(named: "list_id", in: dictionary)
+        let calendarIdentifier = try optionalStringArgument(named: "calendar_identifier", in: dictionary)
         let completionStatus = try parseCompletionStatusArgument(in: dictionary)
         let dueDateStart = try optionalISO8601DateArgument(named: "due_date_start", in: dictionary)
         let dueDateEnd = try optionalISO8601DateArgument(named: "due_date_end", in: dictionary)
@@ -139,14 +128,11 @@ extension EventKitProvider {
             throw EventKitProviderError.invalidArguments("due_date_start must not be after due_date_end")
         }
 
-        let query = try optionalStringArgument(named: "query", in: dictionary)
-
         return SearchRemindersArguments(
-            listID: listID,
+            calendarIdentifier: calendarIdentifier,
             completionStatus: completionStatus,
             dueDateStart: dueDateStart,
-            dueDateEnd: dueDateEnd,
-            query: query
+            dueDateEnd: dueDateEnd
         )
     }
 

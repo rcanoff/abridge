@@ -193,31 +193,53 @@ struct EventKitProviderTests {
 
     @Test
     @MainActor
-    func searchRemindersFiltersByQuery() {
+    func searchRemindersCompletedFiltersByDueDateNotCompletionDate() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
-        mockStore.reminders = [
-            EventKitTestSupport.makeReminder(
-                calendarItemIdentifier: "rem-eggs",
-                title: "Buy eggs",
-                notes: "Organic"
-            ),
-            EventKitTestSupport.makeReminder(
-                calendarItemIdentifier: "rem-milk",
-                title: "Groceries",
-                notes: "Get milk"
-            ),
-        ]
+
+        let earlyDue = Date(timeIntervalSince1970: 1_700_000_000)
+        let lateDue = Date(timeIntervalSince1970: 1_800_000_000)
+        let earlyCompletion = Date(timeIntervalSince1970: 1_750_000_000)
+        let lateCompletion = Date(timeIntervalSince1970: 1_850_000_000)
+
+        let dueInRangeCompletedOutside = EventKitTestSupport.makeReminder(
+            calendarItemIdentifier: "rem-due-in-range",
+            title: "Due in range",
+            isCompleted: true
+        )
+        dueInRangeCompletedOutside.completionDate = lateCompletion
+        dueInRangeCompletedOutside.dueDateComponents = Calendar.current.dateComponents(
+            [.year, .month, .day, .hour, .minute, .second],
+            from: lateDue
+        )
+
+        let dueOutsideCompletedInRange = EventKitTestSupport.makeReminder(
+            calendarItemIdentifier: "rem-due-outside",
+            title: "Due outside",
+            isCompleted: true
+        )
+        dueOutsideCompletedInRange.completionDate = earlyCompletion
+        dueOutsideCompletedInRange.dueDateComponents = Calendar.current.dateComponents(
+            [.year, .month, .day, .hour, .minute, .second],
+            from: earlyDue
+        )
+
+        mockStore.reminders = [dueInRangeCompletedOutside, dueOutsideCompletedInRange]
         let provider = EventKitProvider(store: mockStore)
+
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        let start = formatter.string(from: Date(timeIntervalSince1970: 1_790_000_000))
+        let end = formatter.string(from: Date(timeIntervalSince1970: 1_810_000_000))
 
         let response = provider.handle(
             operation: "search_reminders",
-            payloadJson: #"{"query":"milk"}"#
+            payloadJson: #"{"completion_status":"completed","due_date_start":"\#(start)","due_date_end":"\#(end)"}"#
         )
 
         #expect(response.ok == true)
-        #expect(!response.payloadJson.contains("rem-eggs"))
-        #expect(response.payloadJson.contains("rem-milk"))
+        #expect(response.payloadJson.contains("rem-due-in-range"))
+        #expect(!response.payloadJson.contains("rem-due-outside"))
     }
 
     @Test

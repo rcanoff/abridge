@@ -225,7 +225,7 @@ fn mcp_tools_list_includes_search_reminders_when_search_capability_enabled() {
 fn tools_call_dispatches_search_reminders() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"eventkit.reminders.search_reminders","arguments":{"completion_status":"incomplete","query":"milk"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"eventkit.reminders.search_reminders","arguments":{"completion_status":"incomplete","calendar_identifier":"list-1"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.search".into()]),
@@ -242,7 +242,8 @@ fn tools_call_dispatches_search_reminders() {
   assert_eq!(recorded.provider, "eventkit");
   assert_eq!(recorded.operation, "search_reminders");
   assert!(recorded.payload_json.contains("incomplete"));
-  assert!(recorded.payload_json.contains("milk"));
+  assert!(recorded.payload_json.contains("calendar_identifier"));
+  assert!(recorded.payload_json.contains("list-1"));
 }
 
 #[test]

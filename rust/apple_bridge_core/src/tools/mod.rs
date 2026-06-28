@@ -43,7 +43,7 @@ const ALL_TOOLS: [ToolDefinition; 4] = [
     capability: capabilities::EVENTKIT_REMINDERS_SEARCH,
     provider: "eventkit",
     operation: "search_reminders",
-    description: "Search reminders with completion, due-date, list, and text filters",
+    description: "Search reminders with completion, due-date, and calendar filters",
   },
 ];
 
@@ -84,14 +84,13 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_SEARCH_REMINDERS => serde_json::json!({
       "type": "object",
       "properties": {
-        "list_id": { "type": "string" },
+        "calendar_identifier": { "type": "string" },
         "completion_status": {
           "type": "string",
           "enum": ["incomplete", "completed", "all"]
         },
         "due_date_start": { "type": "string", "format": "date-time" },
-        "due_date_end": { "type": "string", "format": "date-time" },
-        "query": { "type": "string" }
+        "due_date_end": { "type": "string", "format": "date-time" }
       }
     }),
     _ => serde_json::json!({ "type": "object" }),
