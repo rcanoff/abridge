@@ -42,9 +42,22 @@ struct PermissionsStoreIntegrationTests {
         defaults.removePersistentDomain(forName: suiteName)
 
         let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
-        store.setChecked(true, for: "create")
+        store.setChecked(true, for: "edit")
 
         #expect(store.requiresAppleRemindersAccess == false)
+    }
+
+    @Test
+    @MainActor
+    func requiresAppleRemindersAccessWhenCreateCapabilityEnabled() throws {
+        let suiteName = "PermissionsStoreTests.createShipped"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+        store.setChecked(true, for: "create")
+
+        #expect(store.requiresAppleRemindersAccess == true)
     }
 
     @Test

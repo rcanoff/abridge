@@ -10,7 +10,7 @@ struct CapabilityDefinition: Identifiable, Equatable {
 enum CapabilityCatalog {
     static let remindersCapabilities: [CapabilityDefinition] = [
         CapabilityDefinition(id: "read", capabilityID: "eventkit.reminders.read", label: "Read", shipped: true),
-        CapabilityDefinition(id: "create", capabilityID: "eventkit.reminders.create", label: "Create", shipped: false),
+        CapabilityDefinition(id: "create", capabilityID: "eventkit.reminders.create", label: "Create", shipped: true),
         CapabilityDefinition(id: "edit", capabilityID: "eventkit.reminders.edit", label: "Edit", shipped: false),
         CapabilityDefinition(id: "delete", capabilityID: "eventkit.reminders.delete", label: "Delete", shipped: false),
         CapabilityDefinition(

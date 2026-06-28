@@ -62,6 +62,23 @@ struct AppleProviderBridgeTests {
 
     @Test
     @MainActor
+    func routesEventKitCreateReminder() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-new")]
+        let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
+        let request = ProviderRequest(
+            provider: "eventkit",
+            operation: "create_reminder",
+            payloadJson: #"{"calendar_identifier":"list-new","title":"Created"}"#
+        )
+        let response = bridge.callProvider(request: request)
+        #expect(response.ok == true)
+        #expect(response.payloadJson.contains("Created"))
+    }
+
+    @Test
+    @MainActor
     func routesEventKitGetReminder() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess

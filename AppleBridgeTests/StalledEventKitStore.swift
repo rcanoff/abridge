@@ -56,4 +56,13 @@ final class StalledEventKitStore: EventKitStoreing {
         _ = id
         return nil
     }
+
+    func makeReminder() -> EKReminder {
+        EKReminder(eventStore: EKEventStore())
+    }
+
+    func saveReminder(_ reminder: EKReminder, commit: Bool) throws {
+        _ = reminder
+        _ = commit
+    }
 }

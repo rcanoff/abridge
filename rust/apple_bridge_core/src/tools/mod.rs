@@ -6,6 +6,7 @@ pub const TOOL_LIST_LISTS: &str = "eventkit.reminders.list_lists";
 pub const TOOL_LIST_REMINDERS: &str = "eventkit.reminders.list_reminders";
 pub const TOOL_GET_REMINDER: &str = "eventkit.reminders.get_reminder";
 pub const TOOL_SEARCH_REMINDERS: &str = "eventkit.reminders.search_reminders";
+pub const TOOL_CREATE_REMINDER: &str = "eventkit.reminders.create_reminder";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ToolDefinition {
@@ -16,7 +17,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 4] = [
+const ALL_TOOLS: [ToolDefinition; 5] = [
   ToolDefinition {
     name: TOOL_LIST_LISTS,
     capability: capabilities::EVENTKIT_REMINDERS_READ,
@@ -44,6 +45,13 @@ const ALL_TOOLS: [ToolDefinition; 4] = [
     provider: "eventkit",
     operation: "search_reminders",
     description: "Search reminders with completion, due-date, and calendar filters",
+  },
+  ToolDefinition {
+    name: TOOL_CREATE_REMINDER,
+    capability: capabilities::EVENTKIT_REMINDERS_CREATE,
+    provider: "eventkit",
+    operation: "create_reminder",
+    description: "Create a reminder in the given calendar with optional EventKit fields",
   },
 ];
 
@@ -93,13 +101,35 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "due_date_end": { "type": "string", "format": "date-time" }
       }
     }),
+    TOOL_CREATE_REMINDER => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "calendar_identifier": { "type": "string" },
+        "title": { "type": "string" },
+        "notes": { "type": "string" },
+        "location": { "type": "string" },
+        "url": { "type": "string" },
+        "priority": { "type": "integer" },
+        "due_date_components": { "type": "object" },
+        "start_date_components": { "type": "object" },
+        "time_zone": { "type": "string" },
+        "is_completed": { "type": "boolean" },
+        "completion_date": { "type": "string", "format": "date-time" },
+        "alarms": { "type": "array" },
+        "recurrence_rules": { "type": "array" }
+      },
+      "required": ["calendar_identifier", "title"]
+    }),
     _ => serde_json::json!({ "type": "object" }),
   }
 }
 
 #[cfg(test)]
 mod tests {
-  use super::{TOOL_GET_REMINDER, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_SEARCH_REMINDERS, tools_for_capabilities};
+  use super::{
+    TOOL_CREATE_REMINDER, TOOL_GET_REMINDER, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_SEARCH_REMINDERS,
+    tools_for_capabilities,
+  };
 
   #[test]
   fn lists_read_tools_when_capability_enabled() {
@@ -118,5 +148,12 @@ mod tests {
     let tools = tools_for_capabilities(&["eventkit.reminders.search".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
     assert_eq!(names, vec![TOOL_SEARCH_REMINDERS]);
+  }
+
+  #[test]
+  fn lists_create_tool_when_create_capability_enabled() {
+    let tools = tools_for_capabilities(&["eventkit.reminders.create".into()]);
+    let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
+    assert_eq!(names, vec![TOOL_CREATE_REMINDER]);
   }
 }
