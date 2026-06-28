@@ -24,7 +24,7 @@ enum CapabilityCatalog {
             id: "recurrence",
             capabilityID: "eventkit.reminders.recurrence",
             label: "Recurrence",
-            shipped: false
+            shipped: true
         ),
         CapabilityDefinition(id: "search", capabilityID: "eventkit.reminders.search", label: "Search", shipped: true),
     ]
