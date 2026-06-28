@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-enum AppleEnforcementTag: Equatable, Sendable {
+enum AppleEnforcementTag: Equatable {
     case notApplicable
     case needed
     case granted
@@ -9,16 +9,16 @@ enum AppleEnforcementTag: Equatable, Sendable {
     var label: String {
         switch self {
         case .notApplicable:
-            return "Apple —"
+            "Apple —"
         case .needed:
-            return "Apple needed"
+            "Apple needed"
         case .granted:
-            return "Apple granted"
+            "Apple granted"
         }
     }
 }
 
-enum MCPEnforcementTag: Equatable, Sendable {
+enum MCPEnforcementTag: Equatable {
     case active
     case pending
     case off
@@ -27,18 +27,18 @@ enum MCPEnforcementTag: Equatable, Sendable {
     var label: String {
         switch self {
         case .active:
-            return "MCP active"
+            "MCP active"
         case .pending:
-            return "MCP pending"
+            "MCP pending"
         case .off:
-            return "MCP off"
+            "MCP off"
         case .blocked:
-            return "MCP blocked"
+            "MCP blocked"
         }
     }
 }
 
-struct CapabilityEnforcement: Equatable, Sendable {
+struct CapabilityEnforcement: Equatable {
     let apple: AppleEnforcementTag
     let mcp: MCPEnforcementTag
 }
@@ -51,33 +51,30 @@ enum PermissionsDerivation {
         remindersAuthorized: Bool
     ) -> CapabilityEnforcement {
         if !capability.shipped {
-            let apple: AppleEnforcementTag
-            if !checked {
-                apple = .notApplicable
+            let apple: AppleEnforcementTag = if !checked {
+                .notApplicable
             } else if remindersAuthorized {
-                apple = .granted
+                .granted
             } else {
-                apple = .needed
+                .needed
             }
             return CapabilityEnforcement(apple: apple, mcp: .blocked)
         }
 
-        let mcp: MCPEnforcementTag
-        if saved && checked {
-            mcp = .active
+        let mcp: MCPEnforcementTag = if saved, checked {
+            .active
         } else if checked {
-            mcp = .pending
+            .pending
         } else {
-            mcp = .off
+            .off
         }
 
-        let apple: AppleEnforcementTag
-        if !checked && !saved {
-            apple = .notApplicable
+        let apple: AppleEnforcementTag = if !checked, !saved {
+            .notApplicable
         } else if remindersAuthorized {
-            apple = .granted
+            .granted
         } else {
-            apple = .needed
+            .needed
         }
 
         return CapabilityEnforcement(apple: apple, mcp: mcp)

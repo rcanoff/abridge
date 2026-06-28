@@ -19,7 +19,7 @@ protocol EventKitStoreing {
 }
 
 @MainActor
-final class LiveEventKitStore: EventKitStoreing, Sendable {
+final class LiveEventKitStore: EventKitStoreing {
     private let eventStore: EKEventStore
 
     init(eventStore: EKEventStore = EKEventStore()) {
@@ -96,7 +96,7 @@ enum LiveEventKitEnvironment {
 }
 
 @MainActor
-final class EventKitProvider: Sendable {
+final class EventKitProvider {
     private let store: any EventKitStoreing
 
     init(store: any EventKitStoreing = LiveEventKitStore()) {
@@ -106,11 +106,11 @@ final class EventKitProvider: Sendable {
     func handle(operation: String, payloadJson: String) -> ProviderResponse {
         switch operation {
         case "list_lists":
-            return listLists()
+            listLists()
         case "list_reminders":
-            return listReminders(payloadJson: payloadJson)
+            listReminders(payloadJson: payloadJson)
         default:
-            return errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
+            errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }
     }
 
@@ -144,13 +144,13 @@ final class EventKitProvider: Sendable {
             switch error {
             case .permissionDenied:
                 return errorResponse(code: "permission_denied", message: "Reminders access not granted")
-            case .invalidArguments(let message):
+            case let .invalidArguments(message):
                 return errorResponse(code: "invalid_arguments", message: message)
             case .serializationFailed:
                 return errorResponse(code: "eventkit_error", message: "Failed to serialize reminders")
-            case .eventKitError(let message):
+            case let .eventKitError(message):
                 return errorResponse(code: "eventkit_error", message: message)
-            case .unknownOperation(let message):
+            case let .unknownOperation(message):
                 return errorResponse(code: "unknown_operation", message: message)
             case .reminderFetchTimedOut:
                 return errorResponse(code: "eventkit_error", message: "Reminder fetch timed out")
@@ -163,9 +163,9 @@ final class EventKitProvider: Sendable {
     private var isAuthorized: Bool {
         switch store.reminderAuthorizationStatus() {
         case .fullAccess:
-            return true
+            true
         default:
-            return false
+            false
         }
     }
 

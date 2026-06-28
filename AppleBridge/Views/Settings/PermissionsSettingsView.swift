@@ -98,7 +98,6 @@ struct PermissionsSettingsView: View {
         )
     }
 
-    @ViewBuilder
     private func enforcementTags(_ enforcement: CapabilityEnforcement) -> some View {
         HStack(spacing: 4) {
             tag(enforcement.apple.label, color: appleTagColor(enforcement.apple))
@@ -119,35 +118,35 @@ struct PermissionsSettingsView: View {
     private func appleTagColor(_ tag: AppleEnforcementTag) -> Color {
         switch tag {
         case .granted:
-            return .green
+            .green
         case .needed:
-            return .orange
+            .orange
         case .notApplicable:
-            return .secondary
+            .secondary
         }
     }
 
     private func mcpTagColor(_ tag: MCPEnforcementTag) -> Color {
         switch tag {
         case .active:
-            return .green
+            .green
         case .pending:
-            return .orange
+            .orange
         case .blocked:
-            return .red
+            .red
         case .off:
-            return .secondary
+            .secondary
         }
     }
 
     private func rowBackground(for enforcement: CapabilityEnforcement) -> Color {
         switch enforcement.mcp {
         case .active:
-            return Color.green.opacity(0.06)
+            Color.green.opacity(0.06)
         case .blocked:
-            return Color.red.opacity(0.05)
+            Color.red.opacity(0.05)
         default:
-            return .clear
+            .clear
         }
     }
 

@@ -1,9 +1,9 @@
+@testable import AppleBridge
 import EventKit
 import Foundation
-@testable import AppleBridge
 
 @MainActor
-final class MockEventKitStore: EventKitStoreing, Sendable {
+final class MockEventKitStore: EventKitStoreing {
     var authorizationStatus: EKAuthorizationStatus = .fullAccess
     var calendars: [EKCalendar] = []
     var reminders: [EKReminder] = []

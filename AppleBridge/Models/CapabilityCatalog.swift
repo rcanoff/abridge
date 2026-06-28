@@ -1,6 +1,6 @@
 import Foundation
 
-struct CapabilityDefinition: Identifiable, Equatable, Sendable {
+struct CapabilityDefinition: Identifiable, Equatable {
     let id: String
     let capabilityID: String
     let label: String
@@ -13,9 +13,19 @@ enum CapabilityCatalog {
         CapabilityDefinition(id: "create", capabilityID: "eventkit.reminders.create", label: "Create", shipped: false),
         CapabilityDefinition(id: "edit", capabilityID: "eventkit.reminders.edit", label: "Edit", shipped: false),
         CapabilityDefinition(id: "delete", capabilityID: "eventkit.reminders.delete", label: "Delete", shipped: false),
-        CapabilityDefinition(id: "complete", capabilityID: "eventkit.reminders.complete", label: "Complete", shipped: false),
+        CapabilityDefinition(
+            id: "complete",
+            capabilityID: "eventkit.reminders.complete",
+            label: "Complete",
+            shipped: false
+        ),
         CapabilityDefinition(id: "alarms", capabilityID: "eventkit.reminders.alarms", label: "Alarms", shipped: false),
-        CapabilityDefinition(id: "recurrence", capabilityID: "eventkit.reminders.recurrence", label: "Recurrence", shipped: false),
+        CapabilityDefinition(
+            id: "recurrence",
+            capabilityID: "eventkit.reminders.recurrence",
+            label: "Recurrence",
+            shipped: false
+        ),
         CapabilityDefinition(id: "search", capabilityID: "eventkit.reminders.search", label: "Search", shipped: false),
     ]
 }

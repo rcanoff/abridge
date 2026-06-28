@@ -1,18 +1,20 @@
 import Foundation
 import Observation
 
-enum SettingsTab: String, CaseIterable, Identifiable, Sendable {
+enum SettingsTab: String, CaseIterable, Identifiable {
     case mcp
     case permissions
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var title: String {
         switch self {
         case .mcp:
-            return "MCP"
+            "MCP"
         case .permissions:
-            return "Permissions"
+            "Permissions"
         }
     }
 }

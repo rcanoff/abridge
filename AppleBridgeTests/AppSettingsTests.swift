@@ -1,14 +1,14 @@
+@testable import AppleBridge
 import Foundation
 import Testing
-@testable import AppleBridge
 
 @Suite("AppSettings")
 struct AppSettingsTests {
     @Test
     @MainActor
-    func initLoadsValidPersistedPort() {
+    func initLoadsValidPersistedPort() throws {
         let suiteName = "AppSettingsTests.validPort"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
         defaults.set(3030, forKey: "mcpPort")
 
@@ -19,9 +19,9 @@ struct AppSettingsTests {
 
     @Test
     @MainActor
-    func initFallsBackToDefaultWhenPortIsZero() {
+    func initFallsBackToDefaultWhenPortIsZero() throws {
         let suiteName = "AppSettingsTests.zeroPort"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
         defaults.set(0, forKey: "mcpPort")
 
@@ -32,11 +32,11 @@ struct AppSettingsTests {
 
     @Test
     @MainActor
-    func initFallsBackToDefaultWhenPortExceedsUInt16Max() {
+    func initFallsBackToDefaultWhenPortExceedsUInt16Max() throws {
         let suiteName = "AppSettingsTests.overflowPort"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
-        defaults.set(70_000, forKey: "mcpPort")
+        defaults.set(70000, forKey: "mcpPort")
 
         let appSettings = AppSettings(defaults: defaults)
 
@@ -45,9 +45,9 @@ struct AppSettingsTests {
 
     @Test
     @MainActor
-    func initFallsBackToDefaultWhenPortIsNegative() {
+    func initFallsBackToDefaultWhenPortIsNegative() throws {
         let suiteName = "AppSettingsTests.negativePort"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
         defaults.set(-1, forKey: "mcpPort")
 
@@ -58,14 +58,14 @@ struct AppSettingsTests {
 
     @Test
     @MainActor
-    func initLoadsMaximumValidPort() {
+    func initLoadsMaximumValidPort() throws {
         let suiteName = "AppSettingsTests.maxPort"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
-        defaults.set(65_535, forKey: "mcpPort")
+        defaults.set(65535, forKey: "mcpPort")
 
         let appSettings = AppSettings(defaults: defaults)
 
-        #expect(appSettings.mcpPort == 65_535)
+        #expect(appSettings.mcpPort == 65535)
     }
 }

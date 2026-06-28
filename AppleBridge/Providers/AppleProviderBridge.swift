@@ -6,7 +6,9 @@ import Foundation
 final class AppleProviderBridge: ProviderBridge, Sendable {
     private let makeEventKitProvider: @MainActor @Sendable () -> EventKitProvider
 
-    init(makeEventKitProvider: @escaping @MainActor @Sendable () -> EventKitProvider = { LiveEventKitEnvironment.sharedProvider }) {
+    init(makeEventKitProvider: @escaping @MainActor @Sendable ()
+        -> EventKitProvider = { LiveEventKitEnvironment.sharedProvider })
+    {
         self.makeEventKitProvider = makeEventKitProvider
     }
 

@@ -1,6 +1,6 @@
+@testable import AppleBridge
 import Foundation
 import Testing
-@testable import AppleBridge
 
 @Suite("PermissionsDerivation")
 struct PermissionsStoreTests {
@@ -123,9 +123,9 @@ struct PermissionsStoreTests {
 struct PermissionsStoreIntegrationTests {
     @Test
     @MainActor
-    func writeOnlyStatusIsNotRemindersAuthorized() {
+    func writeOnlyStatusIsNotRemindersAuthorized() throws {
         let suiteName = "PermissionsStoreTests.writeOnly"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
 
         let mock = MockRemindersPermissionService()
@@ -140,9 +140,9 @@ struct PermissionsStoreIntegrationTests {
 
     @Test
     @MainActor
-    func writeOnlyReadEnforcementShowsAppleNeeded() {
+    func writeOnlyReadEnforcementShowsAppleNeeded() throws {
         let suiteName = "PermissionsStoreTests.writeOnlyEnforcement"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
 
         let mock = MockRemindersPermissionService()
@@ -160,9 +160,9 @@ struct PermissionsStoreIntegrationTests {
 
     @Test
     @MainActor
-    func saveReconcilesCheckedIDsAfterFilteringUnshipped() async {
+    func saveReconcilesCheckedIDsAfterFilteringUnshipped() async throws {
         let suiteName = "PermissionsStoreTests.saveReconcile"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
 
         let mock = MockRemindersPermissionService()
@@ -184,9 +184,9 @@ struct PermissionsStoreIntegrationTests {
 
     @Test
     @MainActor
-    func saveRequestsAccessWhenWriteOnlyAndReadChecked() async {
+    func saveRequestsAccessWhenWriteOnlyAndReadChecked() async throws {
         let suiteName = "PermissionsStoreTests.writeOnlySave"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
 
         let mock = MockRemindersPermissionService()

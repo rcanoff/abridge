@@ -1,14 +1,14 @@
+@testable import AppleBridge
 import Foundation
 import Testing
-@testable import AppleBridge
 
 @Suite("ServerConfigCapabilities")
 struct ServerConfigCapabilitiesTests {
     @Test
     @MainActor
-    func startPassesEnabledCapabilities() async {
+    func startPassesEnabledCapabilities() async throws {
         let mock = MockServerService()
-        let appSettings = AppSettings(defaults: UserDefaults(suiteName: "ServerConfigCapabilitiesTests")!)
+        let appSettings = try AppSettings(defaults: #require(UserDefaults(suiteName: "ServerConfigCapabilitiesTests")))
         appSettings.saveCapabilityIDs(["read"])
         let store = ServerStore(serverService: mock)
 

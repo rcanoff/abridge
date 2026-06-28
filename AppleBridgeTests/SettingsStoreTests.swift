@@ -1,14 +1,14 @@
+@testable import AppleBridge
 import Foundation
 import Testing
-@testable import AppleBridge
 
 @Suite("SettingsStore")
 struct SettingsStoreTests {
     @Test
     @MainActor
-    func performLaunchRestoreAtAppStartupStartsWhenMCPEnabled() async {
+    func performLaunchRestoreAtAppStartupStartsWhenMCPEnabled() async throws {
         let suiteName = "SettingsStoreTests.launchRestore"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
         let appSettings = AppSettings(defaults: defaults)
         appSettings.mcpEnabled = true
@@ -26,9 +26,9 @@ struct SettingsStoreTests {
 
     @Test
     @MainActor
-    func performLaunchRestoreAtAppStartupSkipsWhenMCPEnabledOff() async {
+    func performLaunchRestoreAtAppStartupSkipsWhenMCPEnabledOff() async throws {
         let suiteName = "SettingsStoreTests.launchRestoreSkip"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
         let appSettings = AppSettings(defaults: defaults)
         appSettings.mcpEnabled = false
@@ -44,9 +44,9 @@ struct SettingsStoreTests {
 
     @Test
     @MainActor
-    func performLaunchRestoreIsIdempotent() async {
+    func performLaunchRestoreIsIdempotent() async throws {
         let suiteName = "SettingsStoreTests.launchRestoreIdempotent"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
         let appSettings = AppSettings(defaults: defaults)
         appSettings.mcpEnabled = true
@@ -63,9 +63,9 @@ struct SettingsStoreTests {
 
     @Test
     @MainActor
-    func performLaunchRestoreReadsPersistedSettingsWithoutViewLifecycle() async {
+    func performLaunchRestoreReadsPersistedSettingsWithoutViewLifecycle() async throws {
         let suiteName = "SettingsStoreTests.launchRestorePersisted"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
 
         // Persist as if the user enabled MCP in a prior session.
@@ -91,9 +91,9 @@ struct SettingsStoreTests {
 
     @Test
     @MainActor
-    func launchRestoreFailureSurvivesPostRestoreRefresh() async {
+    func launchRestoreFailureSurvivesPostRestoreRefresh() async throws {
         let suiteName = "SettingsStoreTests.launchRestoreFailure"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
         let appSettings = AppSettings(defaults: defaults)
         appSettings.mcpEnabled = true
@@ -115,9 +115,9 @@ struct SettingsStoreTests {
 
     @Test
     @MainActor
-    func resetBearerTokenShowsNoticeOnlyAfterSuccessfulReset() async {
+    func resetBearerTokenShowsNoticeOnlyAfterSuccessfulReset() async throws {
         let suiteName = "SettingsStoreTests.resetBearerTokenSuccess"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
         let appSettings = AppSettings(defaults: defaults)
         appSettings.mcpEnabled = false
@@ -134,9 +134,9 @@ struct SettingsStoreTests {
 
     @Test
     @MainActor
-    func resetBearerTokenClearsNoticeWhenResetFails() async {
+    func resetBearerTokenClearsNoticeWhenResetFails() async throws {
         let suiteName = "SettingsStoreTests.resetBearerTokenFailure"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
         let appSettings = AppSettings(defaults: defaults)
         appSettings.mcpEnabled = false
@@ -157,9 +157,9 @@ struct SettingsStoreTests {
 
     @Test
     @MainActor
-    func resetBearerTokenOmitsNoticeWhenRestartFailsAfterRotation() async {
+    func resetBearerTokenOmitsNoticeWhenRestartFailsAfterRotation() async throws {
         let suiteName = "SettingsStoreTests.resetBearerTokenRestartFailure"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
         let appSettings = AppSettings(defaults: defaults)
         appSettings.mcpEnabled = true
@@ -181,9 +181,9 @@ struct SettingsStoreTests {
 
     @Test
     @MainActor
-    func applyMCPEnabledChangeDoesNotDoubleStartAfterLaunchRestore() async {
+    func applyMCPEnabledChangeDoesNotDoubleStartAfterLaunchRestore() async throws {
         let suiteName = "SettingsStoreTests.launchRestoreNoDoubleStart"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
         let appSettings = AppSettings(defaults: defaults)
         appSettings.mcpEnabled = true

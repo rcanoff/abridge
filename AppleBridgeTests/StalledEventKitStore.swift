@@ -1,10 +1,10 @@
+@testable import AppleBridge
 import EventKit
 import Foundation
-@testable import AppleBridge
 
 /// Simulates EventKit's async reminder fetch never invoking its completion handler.
 @MainActor
-final class StalledEventKitStore: EventKitStoreing, Sendable {
+final class StalledEventKitStore: EventKitStoreing {
     var authorizationStatus: EKAuthorizationStatus = .fullAccess
     var calendars: [EKCalendar] = []
     var fetchTimeout: TimeInterval = 0.05
