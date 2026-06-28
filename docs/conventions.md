@@ -18,7 +18,7 @@ For product scope, see `docs/prd.md`. For architecture and bootstrap steps, see 
 | Task runner | `just` |
 | Project generation | `xcodegen` (`project.yml`) |
 
-Rust targets: `aarch64-apple-darwin`, `x86_64-apple-darwin`.
+Rust targets: `aarch64-apple-darwin` (arm64 only).
 
 ---
 

@@ -6,7 +6,7 @@ Source of truth for agent behavior, skills, verification, and branch naming. Kee
 
 | Question | Answer |
 |----------|--------|
-| **Platform** | macOS **26.0+** only |
+| **Platform** | macOS **26.0+** only, **arm64** only |
 | **Purpose** | Generic Apple framework bridge over local authenticated MCP |
 | **Runtime** | Menu bar agent app; MCP on `127.0.0.1` (default port `3020`) |
 | **Stack** | SwiftUI shell + Rust core (`apple_bridge_core`) via UniFFI |
