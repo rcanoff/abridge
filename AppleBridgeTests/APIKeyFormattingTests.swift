@@ -49,4 +49,49 @@ struct APIKeyFormattingTests {
     func livePrefixConstant() {
         #expect(APIKeyFormatting.livePrefix == "ab_live_")
     }
+
+    @Test
+    func maskAPIKeyShowsPrefixAndMasksLiveKeySegment() {
+        let segment = String(repeating: "A", count: 39) + "3f9a"
+        let key = APIKeyFormatting.livePrefix + segment
+
+        let masked = APIKeyFormatting.maskAPIKey(key)
+
+        #expect(masked == APIKeyFormatting.livePrefix + String(repeating: "•", count: 39) + "3f9a")
+        #expect(!masked.contains("AAAA"))
+    }
+
+    @Test
+    func maskAPIKeyMasksLegacyHexKey() {
+        let key = "a1b2c3d4e5f6789012345678901234ab"
+
+        let masked = APIKeyFormatting.maskAPIKey(key)
+
+        #expect(masked == String(repeating: "•", count: 28) + "34ab")
+        #expect(!masked.contains("a1b2"))
+    }
+
+    @Test
+    func maskAPIKeyFullyMasksShortKeys() {
+        #expect(APIKeyFormatting.maskAPIKey("") == "")
+        #expect(APIKeyFormatting.maskAPIKey("ab") == "••")
+        #expect(APIKeyFormatting.maskAPIKey("1234") == "••••")
+    }
+
+    @Test
+    func maskAPIKeyShowsLastFourForFiveCharacterLegacyKey() {
+        #expect(APIKeyFormatting.maskAPIKey("12345") == "•2345")
+    }
+
+    @Test
+    func maskAPIKeyFullyMasksShortLiveKeySegment() {
+        let key = APIKeyFormatting.livePrefix + "abc"
+
+        #expect(APIKeyFormatting.maskAPIKey(key) == APIKeyFormatting.livePrefix + "•••")
+    }
+
+    @Test
+    func maskAPIKeyShowsPrefixWhenLiveKeySegmentIsEmpty() {
+        #expect(APIKeyFormatting.maskAPIKey(APIKeyFormatting.livePrefix) == APIKeyFormatting.livePrefix)
+    }
 }

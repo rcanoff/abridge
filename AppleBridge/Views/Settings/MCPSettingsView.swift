@@ -113,9 +113,8 @@ struct MCPSettingsView: View {
     private var authenticationContent: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let token = serverStore.bearerToken {
-                Text(token)
+                Text(APIKeyFormatting.maskAPIKey(token))
                     .font(.system(.caption, design: .monospaced))
-                    .textSelection(.enabled)
                     .lineLimit(3)
             } else {
                 Text("Not loaded")
