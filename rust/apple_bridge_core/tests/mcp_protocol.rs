@@ -193,6 +193,49 @@ fn mcp_tools_list_includes_update_calendar_when_calendars_edit_enabled() {
 }
 
 #[test]
+fn mcp_tools_list_includes_list_events_when_events_read_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.events.read".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("eventkit.events.list_events"));
+  assert!(!resp.contains("eventkit.calendars.list_calendars"));
+}
+
+#[test]
+fn tools_call_dispatches_list_events() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":15,"method":"tools/call","params":{"name":"eventkit.events.list_events","arguments":{"start_date":"2023-11-14T22:13:20Z","end_date":"2023-11-15T22:13:20Z"}}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.events.read".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "eventkit");
+  assert_eq!(recorded.operation, "list_events");
+  assert!(recorded.payload_json.contains("start_date"));
+}
+
+#[test]
 fn mcp_tools_list_includes_delete_calendar_when_calendars_delete_enabled() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();

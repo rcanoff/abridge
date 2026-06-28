@@ -52,12 +52,17 @@ final class PermissionsStore {
             return eventsAuthorized
         }
 
+        if CapabilityCatalog.eventsCapabilities.contains(where: { $0.id == capabilityID && $0.shipped }) {
+            return eventsAuthorized
+        }
+
         return remindersAuthorized
     }
 
     var requiresCalendarAccess: Bool {
         checkedCapabilityIDs.contains { id in
             CapabilityCatalog.calendarsCapabilities.contains { $0.id == id && $0.shipped }
+                || CapabilityCatalog.eventsCapabilities.contains { $0.id == id && $0.shipped }
         }
     }
 }
