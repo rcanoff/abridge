@@ -111,6 +111,18 @@ final class StalledEventKitStore: EventKitStoreing {
         _ = commit
     }
 
+    func predicateForEvents(withStart startDate: Date, end endDate: Date, calendars: [EKCalendar]) -> NSPredicate {
+        _ = startDate
+        _ = endDate
+        _ = calendars
+        return NSPredicate(value: true)
+    }
+
+    func fetchEvents(matching predicate: NSPredicate) throws -> [EKEvent] {
+        _ = predicate
+        return []
+    }
+
     private static let stubReminderSource: EKSource = {
         let source = EKSource()
         source.setValue("mock-source-local", forKey: "sourceIdentifier")

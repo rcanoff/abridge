@@ -19,6 +19,38 @@ enum EventKitSerialization {
         return payload
     }
 
+    static func eventJSONObject(from event: EKEvent) -> [String: Any] {
+        var payload = calendarItemJSONObject(from: event)
+        payload["event_identifier"] = jsonValue(event.eventIdentifier)
+        payload["availability"] = eventAvailabilityString(event.availability)
+        payload["start_date"] = iso8601String(from: event.startDate)
+        payload["end_date"] = iso8601String(from: event.endDate)
+        payload["is_all_day"] = event.isAllDay
+        payload["occurrence_date"] = iso8601String(from: event.occurrenceDate)
+        payload["is_detached"] = event.isDetached
+        payload["status"] = eventStatusString(event.status)
+        payload["birthday_contact_identifier"] = jsonValue(event.birthdayContactIdentifier)
+
+        if let organizer = event.organizer {
+            payload["organizer"] = participantJSONObject(from: organizer)
+        } else {
+            payload["organizer"] = NSNull()
+        }
+
+        if let structuredLocation = event.structuredLocation {
+            payload["structured_location"] = structuredLocationJSONObject(from: structuredLocation)
+        } else {
+            payload["structured_location"] = NSNull()
+        }
+
+        payload["alarms"] = optionalArrayJSONObject(from: event.alarms, map: alarmJSONObject)
+        payload["recurrence_rules"] = optionalArrayJSONObject(
+            from: event.recurrenceRules,
+            map: recurrenceRuleJSONObject
+        )
+        return payload
+    }
+
     static func calendarJSONObject(from calendar: EKCalendar) -> [String: Any] {
         var payload: [String: Any] = [
             "calendar_identifier": calendar.calendarIdentifier,

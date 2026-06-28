@@ -64,4 +64,31 @@ enum EventKitTestSupport {
             ?? eventStore.sources.first
         return calendar
     }
+
+    static func makeEvent(
+        eventStore: EKEventStore = EKEventStore(),
+        calendarItemIdentifier: String,
+        calendarIdentifier: String? = nil,
+        title: String? = nil,
+        startDate: Date = Date(timeIntervalSince1970: 1_700_000_000),
+        endDate: Date = Date(timeIntervalSince1970: 1_700_003_600)
+    ) -> EKEvent {
+        let event = EKEvent(eventStore: eventStore)
+        event.setValue(calendarItemIdentifier, forKey: "calendarItemIdentifier")
+        event.setValue("evt-\(calendarItemIdentifier)", forKey: "eventIdentifier")
+        if let title {
+            event.title = title
+        }
+        event.startDate = startDate
+        event.endDate = endDate
+
+        if let calendarIdentifier {
+            event.calendar = makeEventCalendar(
+                eventStore: eventStore,
+                calendarIdentifier: calendarIdentifier
+            )
+        }
+
+        return event
+    }
 }
