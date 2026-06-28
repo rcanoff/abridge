@@ -14,6 +14,7 @@
 | 2 | 2026-06-28 | 6550bc6 | 1 | 1 | 0 |
 | 3 | 2026-06-28 | 3e8d67d | 0 | 2 | 0 |
 | 4 | 2026-06-28 | 4b1e223 | 0 | 0 | 0 |
+| 5 | 2026-06-28 | ab8c5d6 | 0 | 0 | 0 |
 
 ## Thread 1 — New Swift files are added under the wrong repository path
 
@@ -65,7 +66,7 @@
 - **Fix:** `parseReminderIDArguments` in `EventKitProvider.swift` now returns the original `reminder_id` for lookup (trim used only for empty validation). `delete_reminder` uses this shared parser via `EventKitProviderDelete.swift`. Added `deleteReminderDoesNotTrimReminderIDForLookup` in `EventKitProviderDeleteTests.swift`.
 
 ## Summary
-All resolved. Thread 1 (wrong file paths) resolved in run 2. Thread 2 (custom delete payload shape) resolved in PR #28; `reminder_id` exact-lookup for `delete_reminder` resolved in PR #29 (`feat/fix-reminder-id-exact-lookup`).
+All threads resolved. Thread 1 (wrong file paths) resolved in run 2. Thread 2 (custom delete payload shape) resolved in PR #28; `reminder_id` exact-lookup for `delete_reminder` resolved in PR #29 (`feat/fix-reminder-id-exact-lookup`). Run 5 (ab8c5d6): Open 0 — PR #28+#29 fixes merged on main; historical run 2 `still-open` disposition superseded.
 
 ## Verification Note
 I reviewed only the provided diff, inventory, existing context, and inlined skills. I did not run tests, builds, linters, shell commands, or inspect repository files.

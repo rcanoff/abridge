@@ -13,6 +13,7 @@
 | 1 | 2026-06-28 | 52a2bb6 | 1 | 0 | 1 |
 | 2 | 2026-06-28 | 01afe88 | 1 | 1 | 1 |
 | 3 | 2026-06-28 | 3e8d67d | 0 | 2 | 0 |
+| 5 | 2026-06-28 | ab8c5d6 | 0 | 0 | 0 |
 
 ## Thread 1 — New Swift files are outside the project path
 
@@ -52,7 +53,7 @@
 - **Fix:** `EventKitProviderDeleteList.swift` returns original `calendarIdentifier` for lookup/response; trim used only for empty validation. Response is only `calendar_identifier` (no `deleted`). Added `deleteListDoesNotTrimCalendarIdentifierForLookup` test. Spec updated at `docs/superpowers/specs/2026-06-28-pr3k-delete-reminder-list.md`.
 
 ## Summary
-All resolved. Thread 2 (calendar identifier trimming) resolved in PR #28 (`feat/fix-delete-fidelity`). Related: PR #29 fixed the shared `parseReminderIDArguments` helper (exact `reminder_id` for lookup, trim only for empty validation) used by `delete_reminder` and other mutation tools — parallel framework-fidelity fix to the `calendar_identifier` exact-lookup change in PR #28.
+All threads resolved. Thread 2 (calendar identifier trimming) resolved in PR #28 (`feat/fix-delete-fidelity`). Related: PR #29 fixed the shared `parseReminderIDArguments` helper (exact `reminder_id` for lookup, trim only for empty validation) used by `delete_reminder` and other mutation tools — parallel framework-fidelity fix to the `calendar_identifier` exact-lookup change in PR #28. Run 5 (ab8c5d6): Open 0 — PR #28+#29 fixes merged on main.
 
 ## Verification Note
 I reviewed only the provided diff, inventory, existing code context, and inlined skills. I did not run tests, builds, linters, shell commands, or inspect repository files.
