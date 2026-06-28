@@ -202,6 +202,50 @@ fn tools_call_dispatches_get_reminder() {
 }
 
 #[test]
+fn mcp_tools_list_includes_search_reminders_when_search_capability_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":13,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.reminders.search".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("eventkit.reminders.search_reminders"));
+  assert!(!resp.contains("eventkit.reminders.list_reminders"));
+}
+
+#[test]
+fn tools_call_dispatches_search_reminders() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"eventkit.reminders.search_reminders","arguments":{"completion_status":"incomplete","query":"milk"}}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.reminders.search".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "eventkit");
+  assert_eq!(recorded.operation, "search_reminders");
+  assert!(recorded.payload_json.contains("incomplete"));
+  assert!(recorded.payload_json.contains("milk"));
+}
+
+#[test]
 fn mcp_tools_list_includes_get_reminder() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();

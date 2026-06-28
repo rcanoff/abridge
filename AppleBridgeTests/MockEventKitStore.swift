@@ -4,9 +4,16 @@ import Foundation
 
 @MainActor
 final class MockEventKitStore: EventKitStoreing {
+    enum PredicateKind: Equatable {
+        case all(calendars: [EKCalendar])
+        case incomplete(start: Date?, end: Date?, calendars: [EKCalendar])
+        case completed(start: Date?, end: Date?, calendars: [EKCalendar])
+    }
+
     var authorizationStatus: EKAuthorizationStatus = .fullAccess
     var calendars: [EKCalendar] = []
     var reminders: [EKReminder] = []
+    private(set) var lastPredicateKind: PredicateKind?
 
     func reminderAuthorizationStatus() -> EKAuthorizationStatus {
         authorizationStatus
@@ -17,16 +24,123 @@ final class MockEventKitStore: EventKitStoreing {
     }
 
     func predicateForReminders(in calendars: [EKCalendar]) -> NSPredicate {
-        _ = calendars
+        lastPredicateKind = .all(calendars: calendars)
+        return NSPredicate(value: true)
+    }
+
+    func predicateForIncompleteReminders(
+        withDueDateStarting startDate: Date?,
+        ending endDate: Date?,
+        calendars: [EKCalendar]
+    ) -> NSPredicate {
+        lastPredicateKind = .incomplete(start: startDate, end: endDate, calendars: calendars)
+        return NSPredicate(value: true)
+    }
+
+    func predicateForCompletedReminders(
+        withCompletionDateStarting startDate: Date?,
+        ending endDate: Date?,
+        calendars: [EKCalendar]
+    ) -> NSPredicate {
+        lastPredicateKind = .completed(start: startDate, end: endDate, calendars: calendars)
         return NSPredicate(value: true)
     }
 
     func fetchReminders(matching predicate: NSPredicate) throws -> [EKReminder] {
         _ = predicate
-        return reminders
+        guard let lastPredicateKind else {
+            return reminders
+        }
+
+        let calendarIDs = calendarIdentifiers(for: lastPredicateKind)
+        return reminders.filter { reminder in
+            matchesPredicate(reminder, kind: lastPredicateKind, calendarIDs: calendarIDs)
+        }
+    }
+
+    private func matchesPredicate(
+        _ reminder: EKReminder,
+        kind: PredicateKind,
+        calendarIDs: Set<String>
+    ) -> Bool {
+        if !calendarIDs.isEmpty {
+            guard let calendarID = reminder.calendar?.calendarIdentifier,
+                  calendarIDs.contains(calendarID)
+            else {
+                return false
+            }
+        }
+
+        switch kind {
+        case .all:
+            return true
+        case let .incomplete(start, end, _):
+            guard !isReminderCompleted(reminder) else {
+                return false
+            }
+            return matchesDueDateRange(reminder: reminder, start: start, end: end)
+        case let .completed(start, end, _):
+            return matchesCompletedReminder(reminder, start: start, end: end)
+        }
+    }
+
+    private func matchesCompletedReminder(_ reminder: EKReminder, start: Date?, end: Date?) -> Bool {
+        guard isReminderCompleted(reminder) else {
+            return false
+        }
+        guard start != nil || end != nil else {
+            return true
+        }
+        guard let completionDate = reminder.completionDate else {
+            return false
+        }
+        if let start, completionDate < start {
+            return false
+        }
+        if let end, completionDate > end {
+            return false
+        }
+        return true
     }
 
     func fetchReminder(withIdentifier id: String) throws -> EKReminder? {
         reminders.first { $0.calendarItemIdentifier == id }
+    }
+
+    private func calendarIdentifiers(for kind: PredicateKind) -> Set<String> {
+        let calendars: [EKCalendar] = switch kind {
+        case let .all(cals):
+            cals
+        case let .incomplete(_, _, cals), let .completed(_, _, cals):
+            cals
+        }
+        return Set(calendars.map(\.calendarIdentifier))
+    }
+
+    private func matchesDueDateRange(reminder: EKReminder, start: Date?, end: Date?) -> Bool {
+        guard start != nil || end != nil else {
+            return true
+        }
+        guard let dueDate = dueDate(from: reminder.dueDateComponents) else {
+            return false
+        }
+        if let start, dueDate < start {
+            return false
+        }
+        if let end, dueDate > end {
+            return false
+        }
+        return true
+    }
+
+    private func isReminderCompleted(_ reminder: EKReminder) -> Bool {
+        reminder.isCompleted || reminder.completionDate != nil
+    }
+
+    private func dueDate(from components: DateComponents?) -> Date? {
+        guard let components else {
+            return nil
+        }
+        return Calendar.current.date(from: components)
     }
 }

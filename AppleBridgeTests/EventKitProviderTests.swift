@@ -164,6 +164,115 @@ struct EventKitProviderTests {
 
     @Test
     @MainActor
+    func searchRemindersFiltersByCompletionStatus() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.reminders = [
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: "rem-open",
+                title: "Open task",
+                isCompleted: false
+            ),
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: "rem-done",
+                title: "Done task",
+                isCompleted: true
+            ),
+        ]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "search_reminders",
+            payloadJson: #"{"completion_status":"incomplete"}"#
+        )
+
+        #expect(response.ok == true)
+        #expect(response.payloadJson.contains("rem-open"))
+        #expect(!response.payloadJson.contains("rem-done"))
+    }
+
+    @Test
+    @MainActor
+    func searchRemindersFiltersByQuery() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.reminders = [
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: "rem-eggs",
+                title: "Buy eggs",
+                notes: "Organic"
+            ),
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: "rem-milk",
+                title: "Groceries",
+                notes: "Get milk"
+            ),
+        ]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "search_reminders",
+            payloadJson: #"{"query":"milk"}"#
+        )
+
+        #expect(response.ok == true)
+        #expect(!response.payloadJson.contains("rem-eggs"))
+        #expect(response.payloadJson.contains("rem-milk"))
+    }
+
+    @Test
+    @MainActor
+    func searchRemindersRejectsInvalidCompletionStatus() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "search_reminders",
+            payloadJson: #"{"completion_status":"maybe"}"#
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+    }
+
+    @Test
+    @MainActor
+    func searchRemindersReturnsFaithfulReminderShape() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.reminders = [
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: "rem-search",
+                calendarIdentifier: "list-3",
+                title: "Searchable"
+            ),
+        ]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(operation: "search_reminders", payloadJson: "{}")
+
+        #expect(response.ok == true)
+        #expect(response.payloadJson.contains("calendar_item_identifier"))
+        #expect(response.payloadJson.contains("rem-search"))
+        #expect(response.payloadJson.contains("list-3"))
+    }
+
+    @Test
+    @MainActor
+    func searchRemindersPermissionDeniedWhenUnauthorized() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .denied
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(operation: "search_reminders", payloadJson: "{}")
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("permission_denied") == true)
+    }
+
+    @Test
+    @MainActor
     func listRemindersReturnsFaithfulReminderShape() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
