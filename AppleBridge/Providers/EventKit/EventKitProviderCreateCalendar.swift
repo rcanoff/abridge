@@ -38,7 +38,7 @@ extension EventKitProvider {
         }
     }
 
-    private func resolveEventSource(sourceIdentifier: String?) throws -> EKSource {
+    func resolveEventSource(sourceIdentifier: String?) throws -> EKSource {
         if let sourceIdentifier {
             guard let source = store.sources().first(where: { $0.sourceIdentifier == sourceIdentifier }) else {
                 throw EventKitProviderError.invalidArguments(

@@ -2,6 +2,11 @@ import CoreGraphics
 import Foundation
 
 extension EventKitDeserialization {
+    static func optionalPresentCGColor(_ dictionary: [String: Any], key: String) throws -> OptionalField<CGColor> {
+        guard dictionary.keys.contains(key) else { return .absent }
+        return try .present(cgColor(from: dictionary[key]))
+    }
+
     static func cgColor(from value: Any?) throws -> CGColor? {
         guard let value else { return nil }
         if value is NSNull { return nil }
