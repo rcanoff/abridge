@@ -28,11 +28,17 @@ final class SettingsStore {
     let appSettings: AppSettings
 
     private let serverStore: ServerStore
+    private let permissionService: any RemindersPermissionChecking
     private var didPerformLaunchRestore = false
 
-    init(appSettings: AppSettings, serverStore: ServerStore) {
+    init(
+        appSettings: AppSettings,
+        serverStore: ServerStore,
+        permissionService: any RemindersPermissionChecking = RemindersPermissionService()
+    ) {
         self.appSettings = appSettings
         self.serverStore = serverStore
+        self.permissionService = permissionService
     }
 
     var endpointURL: String {
@@ -46,7 +52,7 @@ final class SettingsStore {
         if enabled {
             await serverStore.startServer(
                 port: appSettings.mcpPort,
-                enabledCapabilities: appSettings.enabledMCPCapabilityIDs
+                enabledCapabilities: serverEnabledCapabilities
             )
         } else {
             await serverStore.stopServer()
@@ -63,7 +69,7 @@ final class SettingsStore {
 
         await serverStore.restartServer(
             port: port,
-            enabledCapabilities: appSettings.enabledMCPCapabilityIDs
+            enabledCapabilities: serverEnabledCapabilities
         )
     }
 
@@ -76,7 +82,7 @@ final class SettingsStore {
         let wasRunning = serverStore.runState == .running
         await serverStore.resetBearerToken(
             port: appSettings.mcpPort,
-            enabledCapabilities: appSettings.enabledMCPCapabilityIDs,
+            enabledCapabilities: serverEnabledCapabilities,
             restartIfRunning: appSettings.mcpEnabled
         )
         guard serverStore.lastError == nil else { return }
@@ -98,6 +104,12 @@ final class SettingsStore {
         )
     }
 
+    private var serverEnabledCapabilities: [String] {
+        appSettings.serverEnabledMCPCapabilityIDs(
+            remindersAuthorized: permissionService.currentStatus().grantsReadAccess
+        )
+    }
+
     private func tokenResetNoticeMessage(mcpEnabled: Bool, wasRunning: Bool) -> String {
         if mcpEnabled, wasRunning {
             "Server restarted with a new token. Update your MCP client."
@@ -116,7 +128,7 @@ final class SettingsStore {
 
         await serverStore.startServer(
             port: appSettings.mcpPort,
-            enabledCapabilities: appSettings.enabledMCPCapabilityIDs
+            enabledCapabilities: serverEnabledCapabilities
         )
     }
 }
