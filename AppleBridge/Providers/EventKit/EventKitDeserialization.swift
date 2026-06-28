@@ -2,7 +2,58 @@ import CoreFoundation
 @preconcurrency import EventKit
 import Foundation
 
+enum OptionalField<T> {
+    case absent
+    case present(T?)
+}
+
 enum EventKitDeserialization {
+    static func optionalPresentString(_ dictionary: [String: Any], key: String) throws -> OptionalField<String> {
+        guard dictionary.keys.contains(key) else { return .absent }
+        return try .present(optionalString(dictionary[key]))
+    }
+
+    static func optionalPresentInt(_ dictionary: [String: Any], key: String) throws -> OptionalField<Int> {
+        guard dictionary.keys.contains(key) else { return .absent }
+        return try .present(optionalInt(dictionary[key]))
+    }
+
+    static func optionalPresentBool(_ dictionary: [String: Any], key: String) throws -> OptionalField<Bool> {
+        guard dictionary.keys.contains(key) else { return .absent }
+        return try .present(optionalBool(dictionary[key]))
+    }
+
+    static func optionalPresentURL(_ dictionary: [String: Any], key: String) throws -> OptionalField<URL> {
+        guard dictionary.keys.contains(key) else { return .absent }
+        return try .present(optionalURL(dictionary[key]))
+    }
+
+    static func optionalPresentISO8601Date(_ dictionary: [String: Any], key: String) throws -> OptionalField<Date> {
+        guard dictionary.keys.contains(key) else { return .absent }
+        return try .present(optionalISO8601Date(dictionary[key]))
+    }
+
+    static func optionalPresentDateComponents(
+        _ dictionary: [String: Any],
+        key: String
+    ) throws -> OptionalField<DateComponents> {
+        guard dictionary.keys.contains(key) else { return .absent }
+        return try .present(dateComponents(from: dictionary[key]))
+    }
+
+    static func optionalPresentAlarms(_ dictionary: [String: Any], key: String) throws -> OptionalField<[EKAlarm]> {
+        guard dictionary.keys.contains(key) else { return .absent }
+        return try .present(alarms(from: dictionary[key]))
+    }
+
+    static func optionalPresentRecurrenceRules(
+        _ dictionary: [String: Any],
+        key: String
+    ) throws -> OptionalField<[EKRecurrenceRule]> {
+        guard dictionary.keys.contains(key) else { return .absent }
+        return try .present(recurrenceRules(from: dictionary[key]))
+    }
+
     static func optionalString(_ value: Any?) throws -> String? {
         guard let value else { return nil }
         if value is NSNull { return nil }
