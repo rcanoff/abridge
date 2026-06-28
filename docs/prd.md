@@ -37,6 +37,7 @@ Apple Bridge is not:
 - an orchestration engine
 - a synchronization service
 - a cloud service
+- a separate background daemon or launchd service (the MCP server runs inside the menu bar app process)
 
 Business logic belongs to the MCP client, not to Apple Bridge.
 
@@ -75,6 +76,7 @@ The application stores only:
 - configuration
 - authentication credentials
 - operational state
+- local usage audit logs (operational metadata only — not Apple framework data)
 
 ## Modular
 
@@ -197,9 +199,21 @@ Each provider should be self-contained and follow the architecture defined in `a
 
 ---
 
-# User Interface
+# Runtime Model
 
-Apple Bridge is primarily a background service.
+Apple Bridge is a **menu bar agent** — a single macOS application process that embeds the MCP HTTP server in Rust. There is no separate background service or daemon.
+
+The user has full control over availability:
+
+- **Launch at login** is optional and off by default. When enabled, the app starts at user login via `SMAppService.mainApp`.
+- **MCP server state** is independent of launch at login. The server restores whatever the user last chose: if MCP was enabled when the app last ran, it starts enabled on the next launch; if disabled, it stays off.
+- Port, enabled capabilities, and other settings persist across launches.
+
+Launch at login only brings the application process up. It does not force the MCP server on unless the user previously left it enabled.
+
+---
+
+# User Interface
 
 The SwiftUI application exists only to configure and monitor the bridge.
 
@@ -207,12 +221,20 @@ Its responsibilities include:
 
 - provider status
 - permission status
-- bearer token management
+- API key management (masked display, copy, reset)
 - localhost port configuration
-- launch at login
+- launch at login toggle
+- MCP server enable/disable
 - server status
-- diagnostics
-- logs
+- diagnostics and usage logs
+
+### Settings tabs
+
+| Tab | Purpose |
+|-----|---------|
+| **MCP** | Server on/off, host, port, endpoint, API key |
+| **Permissions** | EventKit capability tree with Apple vs MCP enforcement |
+| **Diagnostics** | Usage log viewer, logging toggle, export |
 
 The application is not intended to browse, edit, or manage Apple data directly.
 
@@ -224,12 +246,81 @@ Apple Bridge exposes a local authenticated MCP endpoint.
 
 Characteristics:
 
-- localhost only
-- configurable port
+- localhost only (`127.0.0.1`)
+- configurable port (default `3020`)
 - bearer token authentication
 - no remote access by default
 
 Networking behavior is defined by the architecture guide.
+
+---
+
+# Authentication
+
+Version 1 uses a single **API key** transmitted as a Bearer token:
+
+```
+Authorization: Bearer <key>
+```
+
+### API key (V1)
+
+| Aspect | Requirement |
+|--------|-------------|
+| Generation | Cryptographically random (256-bit entropy) |
+| Format | Prefixed identifier, e.g. `ab_live_<random>` |
+| Storage | macOS Keychain (Swift); Rust receives at runtime only |
+| UI | Masked by default (e.g. `ab_live_••••••••3f9a`); Copy reveals full key |
+| Rotation | User-initiated reset; server restarts with new key |
+| Logging | Bearer tokens and API keys must never appear in logs |
+
+`/health` does not require authentication. All MCP routes require a valid Bearer token.
+
+### Future authentication
+
+Version 1 ships Bearer-only. Future versions may add:
+
+- multiple named, independently revocable API keys
+- mutual TLS
+- Unix domain socket transport with peer credentials
+- request signing (HMAC)
+
+These are not in Version 1 scope. The PRD will be updated when a specific alternative is chosen.
+
+---
+
+# Diagnostics and Usage Logging
+
+Apple Bridge records **local, operational usage metadata** to help users and MCP clients understand bridge activity. This is not Apple framework data and does not include request or response payloads.
+
+### Recorded events (when logging is enabled)
+
+| Field | Recorded |
+|-------|----------|
+| Timestamp (UTC) | Yes |
+| MCP tool name | Yes |
+| Success or failure | Yes |
+| Duration (ms) | Yes |
+| Request/response payloads | No |
+| Bearer tokens | Never |
+
+Lifecycle events are also captured: server start/stop, port bind, MCP client `initialize`, and API key rotation (event only — not the key value).
+
+### User control
+
+- **Record tool usage** toggle in Diagnostics (default: on).
+- When off, new events are not recorded. Existing buffer remains readable until cleared or rotated out.
+- Logs are local only — no cloud sync or remote telemetry.
+
+### Storage
+
+- In-memory ring buffer (bounded, e.g. last 1,000 events).
+- Optional persistence to a local log file under `~/Library/Logs/AppleBridge/`.
+- Rust owns collection and retention; Swift surfaces logs in the Diagnostics UI.
+
+### MCP diagnostics tool
+
+A read-only MCP tool (e.g. `diagnostics.get_usage_log`) returns the accumulated audit log as JSON. It requires normal Bearer authentication. When logging is disabled, the tool still responds but indicates that recording is off and returns only previously captured entries (if any).
 
 ---
 
@@ -240,6 +331,7 @@ Apple Bridge stores only:
 - application configuration
 - authentication credentials
 - operational state
+- local usage audit logs (metadata only)
 
 All user data remains owned by Apple frameworks.
 
@@ -259,3 +351,6 @@ Apple Bridge is successful when:
 - new providers can be added without architectural changes
 - the bridge remains completely unaware of the software consuming it
 - Apple APIs are exposed with minimal abstraction
+- users control launch-at-login and MCP server state independently
+- usage can be inspected locally and via a read-only MCP diagnostics tool
+- API keys are strong, masked in the UI, and never logged

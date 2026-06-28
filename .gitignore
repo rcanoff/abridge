@@ -6,6 +6,8 @@ docs/*
 !docs/conventions.md
 !docs/prd.md
 !docs/architecture-bootstrap-guide.md
+!docs/github-issue-templates/
+!docs/github-issue-templates/**
 .DS_Store
 xcuserdata/
 *.xcuserstate
