@@ -83,6 +83,7 @@
 		BFA73037E12473965BED9092 /* APIKeyFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B65A129383F53A6EDB25AF /* APIKeyFormatting.swift */; };
 		C45634D6199ED09788343744 /* EventKitProviderCreate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13926FC196E096123C63EBA7 /* EventKitProviderCreate.swift */; };
 		C4E63EE6AA1423B9718AE67C /* EventKitProviderAlarmsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8659E1DA31D65D3506F10F7F /* EventKitProviderAlarmsTests.swift */; };
+		C52983C00DA6F97A5D2C1FF6 /* SettingsStoreUsageLoggingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A55461E0BD369ADDC25FAFC1 /* SettingsStoreUsageLoggingTests.swift */; };
 		C764B769B53E60974DE2F894 /* AppleProviderBridgeDeleteListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9971421EB83DA709A01E372 /* AppleProviderBridgeDeleteListTests.swift */; };
 		CE5FEA5F341DF203272C1953 /* StatusIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C0185B2328E52AB5EBDD1D /* StatusIndicator.swift */; };
 		D0627B3BB609AB3D217E0361 /* PermissionsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146F0FCF53C1EC00B261451 /* PermissionsSettingsView.swift */; };
@@ -173,6 +174,7 @@
 		A38731056AA8C2298134E5C0 /* AppleProviderBridgeDeleteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleProviderBridgeDeleteTests.swift; sourceTree = "<group>"; };
 		A429EB5FE5384A20ECA19397 /* EventKitDeserialization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitDeserialization.swift; sourceTree = "<group>"; };
 		A474AA4DA74F6A5010AC742C /* EventKitProviderUpdateValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderUpdateValidationTests.swift; sourceTree = "<group>"; };
+		A55461E0BD369ADDC25FAFC1 /* SettingsStoreUsageLoggingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStoreUsageLoggingTests.swift; sourceTree = "<group>"; };
 		A6B1BF51F48B89CE4035DA11 /* EventKitProviderCreateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderCreateTests.swift; sourceTree = "<group>"; };
 		B1248AB2AF2E733A7DBF3FFF /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
 		B34332B87B622ABB41D06752 /* ServerServing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerServing.swift; sourceTree = "<group>"; };
@@ -288,6 +290,7 @@
 				E9BE21E08C8A28A2970B8FAB /* ServerStoreTests.swift */,
 				F05C246209CCD36F08E9FF8A /* SettingsStoreLaunchAtLoginTests.swift */,
 				1A08A7B375756F6E1F29C647 /* SettingsStoreTests.swift */,
+				A55461E0BD369ADDC25FAFC1 /* SettingsStoreUsageLoggingTests.swift */,
 				CF9F62B5834A3345F997495F /* StaleRemindersPermissionService.swift */,
 				E6E8DA79BFB87C1E5EB17DE6 /* StalledEventKitStore.swift */,
 			);
@@ -583,6 +586,7 @@
 				D90613D97CA2526890DDD29B /* ServerStoreTests.swift in Sources */,
 				657F8AC7B0E5582CA6335754 /* SettingsStoreLaunchAtLoginTests.swift in Sources */,
 				A1EE361B7F39E414D73D4158 /* SettingsStoreTests.swift in Sources */,
+				C52983C00DA6F97A5D2C1FF6 /* SettingsStoreUsageLoggingTests.swift in Sources */,
 				A596D73AC23907B0E888FEB0 /* StaleRemindersPermissionService.swift in Sources */,
 				14EEE63F84E039A033483CF5 /* StalledEventKitStore.swift in Sources */,
 			);

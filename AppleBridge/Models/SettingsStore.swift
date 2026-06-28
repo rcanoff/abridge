@@ -50,6 +50,11 @@ final class SettingsStore {
         "http://127.0.0.1:\(appSettings.mcpPort)/mcp"
     }
 
+    func applyUsageLoggingChange(_ enabled: Bool) async {
+        appSettings.usageLoggingEnabled = enabled
+        await serverStore.setUsageLoggingEnabled(enabled)
+    }
+
     func applyMCPEnabledChange(_ enabled: Bool) async {
         appSettings.mcpEnabled = enabled
         tokenResetNotice = nil
@@ -57,7 +62,8 @@ final class SettingsStore {
         if enabled {
             await serverStore.startServer(
                 port: appSettings.mcpPort,
-                enabledCapabilities: serverEnabledCapabilities
+                enabledCapabilities: serverEnabledCapabilities,
+                usageLoggingEnabled: appSettings.usageLoggingEnabled
             )
         } else {
             await serverStore.stopServer()
@@ -74,7 +80,8 @@ final class SettingsStore {
 
         await serverStore.restartServer(
             port: port,
-            enabledCapabilities: serverEnabledCapabilities
+            enabledCapabilities: serverEnabledCapabilities,
+            usageLoggingEnabled: appSettings.usageLoggingEnabled
         )
     }
 
@@ -88,7 +95,8 @@ final class SettingsStore {
         await serverStore.resetBearerToken(
             port: appSettings.mcpPort,
             enabledCapabilities: serverEnabledCapabilities,
-            restartIfRunning: appSettings.mcpEnabled
+            restartIfRunning: appSettings.mcpEnabled,
+            usageLoggingEnabled: appSettings.usageLoggingEnabled
         )
         guard serverStore.lastError == nil else { return }
         tokenResetNotice = tokenResetNoticeMessage(
@@ -105,7 +113,8 @@ final class SettingsStore {
             port: appSettings.mcpPort,
             enabledCapabilities: appSettings.serverEnabledMCPCapabilityIDs(
                 remindersAuthorized: remindersAuthorized
-            )
+            ),
+            usageLoggingEnabled: appSettings.usageLoggingEnabled
         )
     }
 
@@ -161,7 +170,8 @@ final class SettingsStore {
 
         await serverStore.startServer(
             port: appSettings.mcpPort,
-            enabledCapabilities: serverEnabledCapabilities
+            enabledCapabilities: serverEnabledCapabilities,
+            usageLoggingEnabled: appSettings.usageLoggingEnabled
         )
     }
 }
