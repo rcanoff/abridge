@@ -90,6 +90,24 @@ struct EventKitProviderCreateListTests {
 
     @Test
     @MainActor
+    func createListInvalidCGColorReturnsInvalidArguments() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_list",
+            payloadJson: #"{"title":"Bad Color","cg_color":{"color_space_model":"rgb","components":[0.25,0.5]}}"#
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("cg_color components for rgb must have 3 or 4 values") == true)
+        #expect(mockStore.calendars.isEmpty)
+    }
+
+    @Test
+    @MainActor
     func createListPermissionDeniedWhenUnauthorized() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .denied

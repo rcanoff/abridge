@@ -14,10 +14,22 @@ extension EventKitDeserialization {
         }
 
         let alpha = try cgColorAlpha(from: dictionary["alpha"], components: components)
-        let colorSpace = try cgColorSpace(from: dictionary)
+        let colorSpaceModel = try cgColorSpaceModel(from: dictionary)
+        if let colorSpaceModel {
+            try validateComponentCount(components.count, for: colorSpaceModel)
+        }
 
+        let colorSpace = try cgColorSpace(from: colorSpaceModel)
         if let colorSpace {
-            return CGColor(colorSpace: colorSpace, components: normalizedComponents(components, alpha: alpha))
+            let normalized = normalizedComponents(components, alpha: alpha, colorSpaceModel: colorSpaceModel)
+            guard let color = CGColor(colorSpace: colorSpace, components: normalized) else {
+                throw EventKitProviderError.invalidArguments("cg_color is invalid for the given color_space_model")
+            }
+            return color
+        }
+
+        guard !components.isEmpty else {
+            throw EventKitProviderError.invalidArguments("cg_color components are required")
         }
 
         return CGColor(
@@ -84,12 +96,17 @@ extension EventKitDeserialization {
         throw EventKitProviderError.invalidArguments("cg_color alpha must be a number or null")
     }
 
-    private static func cgColorSpace(from dictionary: [String: Any]) throws -> CGColorSpace? {
+    private static func cgColorSpaceModel(from dictionary: [String: Any]) throws -> String? {
         guard let modelValue = dictionary["color_space_model"] else { return nil }
         if modelValue is NSNull { return nil }
         guard let model = modelValue as? String else {
             throw EventKitProviderError.invalidArguments("cg_color color_space_model must be a string or null")
         }
+        return model
+    }
+
+    private static func cgColorSpace(from model: String?) throws -> CGColorSpace? {
+        guard let model else { return nil }
 
         switch model {
         case "rgb":
@@ -103,12 +120,51 @@ extension EventKitDeserialization {
         }
     }
 
-    private static func normalizedComponents(_ components: [CGFloat], alpha: CGFloat) -> [CGFloat] {
-        switch components.count {
-        case 1:
-            [components[0], alpha]
-        case 3:
-            [components[0], components[1], components[2], alpha]
+    private static func validateComponentCount(_ count: Int, for model: String) throws {
+        switch model {
+        case "rgb":
+            guard count == 3 || count == 4 else {
+                throw EventKitProviderError.invalidArguments(
+                    "cg_color components for rgb must have 3 or 4 values"
+                )
+            }
+        case "gray":
+            guard count == 1 || count == 2 else {
+                throw EventKitProviderError.invalidArguments(
+                    "cg_color components for gray must have 1 or 2 values"
+                )
+            }
+        case "cmyk":
+            guard count == 4 || count == 5 else {
+                throw EventKitProviderError.invalidArguments(
+                    "cg_color components for cmyk must have 4 or 5 values"
+                )
+            }
+        default:
+            break
+        }
+    }
+
+    private static func normalizedComponents(
+        _ components: [CGFloat],
+        alpha: CGFloat,
+        colorSpaceModel: String?
+    ) -> [CGFloat] {
+        switch colorSpaceModel {
+        case "rgb":
+            switch components.count {
+            case 3:
+                [components[0], components[1], components[2], alpha]
+            default:
+                components
+            }
+        case "gray":
+            switch components.count {
+            case 1:
+                [components[0], alpha]
+            default:
+                components
+            }
         default:
             components
         }
