@@ -58,6 +58,19 @@ struct AppSettingsTests {
 
     @Test
     @MainActor
+    func enabledMCPCapabilityIDsIncludesCheckedCalendarCreateCapability() throws {
+        let suiteName = "AppSettingsTests.calendarCreateCapability"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.saveCapabilityIDs(["calendars-create"])
+
+        #expect(appSettings.enabledCalendarCapabilityIDs == ["eventkit.calendars.create"])
+    }
+
+    @Test
+    @MainActor
     func enabledMCPCapabilityIDsIncludesCheckedCalendarCapabilities() throws {
         let suiteName = "AppSettingsTests.calendarCapabilities"
         let defaults = try #require(UserDefaults(suiteName: suiteName))

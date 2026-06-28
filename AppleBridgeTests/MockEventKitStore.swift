@@ -158,8 +158,18 @@ final class MockEventKitStore: EventKitStoreing {
             ?? stubReminderSource
     }
 
+    func defaultEventSource() -> EKSource? {
+        eventStore.defaultCalendarForNewEvents?.source
+            ?? eventStore.sources.first
+            ?? stubReminderSource
+    }
+
     func makeReminderCalendar() -> EKCalendar {
         EKCalendar(for: .reminder, eventStore: eventStore)
+    }
+
+    func makeEventCalendar() -> EKCalendar {
+        EKCalendar(for: .event, eventStore: eventStore)
     }
 
     func saveCalendar(_ calendar: EKCalendar, commit: Bool) throws {
@@ -172,19 +182,33 @@ final class MockEventKitStore: EventKitStoreing {
         }
 
         if calendar.source == nil {
-            calendar.source = defaultReminderSource()
+            calendar.source = isEventCalendar(calendar) ? defaultEventSource() : defaultReminderSource()
         }
 
-        if let index = calendars.firstIndex(where: { $0.calendarIdentifier == calendar.calendarIdentifier }) {
-            calendars[index] = calendar
+        var storage = isEventCalendar(calendar) ? eventCalendarsList : calendars
+        if let index = storage.firstIndex(where: { $0.calendarIdentifier == calendar.calendarIdentifier }) {
+            storage[index] = calendar
         } else {
-            calendars.append(calendar)
+            storage.append(calendar)
+        }
+        if isEventCalendar(calendar) {
+            eventCalendarsList = storage
+        } else {
+            calendars = storage
         }
     }
 
     func removeCalendar(_ calendar: EKCalendar, commit: Bool) throws {
         guard commit else { return }
-        calendars.removeAll { $0.calendarIdentifier == calendar.calendarIdentifier }
+        if isEventCalendar(calendar) {
+            eventCalendarsList.removeAll { $0.calendarIdentifier == calendar.calendarIdentifier }
+        } else {
+            calendars.removeAll { $0.calendarIdentifier == calendar.calendarIdentifier }
+        }
+    }
+
+    private func isEventCalendar(_ calendar: EKCalendar) -> Bool {
+        calendar.allowedEntityTypes.contains(.event) && !calendar.allowedEntityTypes.contains(.reminder)
     }
 
     func makeTestCalendar(calendarIdentifier: String, title: String = "Test List") -> EKCalendar {

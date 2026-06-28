@@ -36,5 +36,11 @@ enum CapabilityCatalog {
             label: "Read",
             shipped: true
         ),
+        CapabilityDefinition(
+            id: "calendars-create",
+            capabilityID: "eventkit.calendars.create",
+            label: "Create",
+            shipped: true
+        ),
     ]
 }
