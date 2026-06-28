@@ -185,7 +185,7 @@ final class EventKitProvider {
         case "list_reminders", "get_reminder", "search_reminders":
             handleReadOperation(operation: operation, payloadJson: payloadJson)
         case "create_reminder", "create_list", "update_reminder", "move_reminder", "complete_reminder",
-             "uncomplete_reminder":
+             "uncomplete_reminder", "set_reminder_alarms":
             handleMutationOperation(operation: operation, payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
@@ -219,6 +219,8 @@ final class EventKitProvider {
             completeReminder(payloadJson: payloadJson)
         case "uncomplete_reminder":
             uncompleteReminder(payloadJson: payloadJson)
+        case "set_reminder_alarms":
+            setReminderAlarms(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }
