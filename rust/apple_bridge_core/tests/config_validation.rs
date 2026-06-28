@@ -110,6 +110,13 @@ fn accepts_create_capability() {
 }
 
 #[test]
+fn accepts_edit_capability() {
+  let mut config = sample_config();
+  config.enabled_capabilities = vec!["eventkit.reminders.edit".into()];
+  assert!(validate_config(&config).is_ok());
+}
+
+#[test]
 fn rejects_unknown_capability() {
   let mut config = sample_config();
   config.enabled_capabilities = vec!["eventkit.foo.bar".into()];
