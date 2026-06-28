@@ -102,6 +102,6 @@ struct KeychainService: BearerTokenStoring {
     }
 
     private static func generateToken() -> String {
-        UUID().uuidString.replacingOccurrences(of: "-", with: "")
+        APIKeyFormatting.generateAPIKey()
     }
 }

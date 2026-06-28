@@ -29,6 +29,6 @@ final class MockBearerTokenStore: BearerTokenStoring, @unchecked Sendable {
     }
 
     private static func generateToken() -> String {
-        UUID().uuidString.replacingOccurrences(of: "-", with: "")
+        APIKeyFormatting.generateAPIKey()
     }
 }
