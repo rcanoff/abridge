@@ -88,6 +88,11 @@ final class StalledEventKitStore: EventKitStoreing {
         _ = commit
     }
 
+    func removeCalendar(_ calendar: EKCalendar, commit: Bool) throws {
+        _ = calendar
+        _ = commit
+    }
+
     private static let stubReminderSource: EKSource = {
         let source = EKSource()
         source.setValue("mock-source-local", forKey: "sourceIdentifier")

@@ -172,6 +172,11 @@ final class MockEventKitStore: EventKitStoreing {
         }
     }
 
+    func removeCalendar(_ calendar: EKCalendar, commit: Bool) throws {
+        guard commit else { return }
+        calendars.removeAll { $0.calendarIdentifier == calendar.calendarIdentifier }
+    }
+
     func makeTestCalendar(calendarIdentifier: String, title: String = "Test List") -> EKCalendar {
         EventKitTestSupport.makeCalendar(
             eventStore: eventStore,
