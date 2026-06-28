@@ -19,6 +19,8 @@ struct EventKitSerializationTests {
         "has_recurrence_rules",
         "has_notes",
         "has_attendees",
+        "time_zone",
+        "attendees",
         "is_completed",
         "completion_date",
         "priority",
@@ -33,7 +35,7 @@ struct EventKitSerializationTests {
         "title",
         "type",
         "source",
-        "color",
+        "cg_color",
         "allowed_entity_types",
         "allows_content_modifications",
         "is_immutable",
@@ -67,6 +69,8 @@ struct EventKitSerializationTests {
         #expect(object["notes"] is NSNull)
         #expect(object["calendar"] is NSNull)
         #expect(object["due_date_components"] is NSNull)
+        #expect(object["time_zone"] is NSNull)
+        #expect((object["attendees"] as? [Any])?.isEmpty == true)
     }
 
     @Test
@@ -85,7 +89,7 @@ struct EventKitSerializationTests {
         }
 
         #expect(calendar["calendar_identifier"] as? String == "list-abc")
-        #expect(Set(calendar.keys).isSuperset(of: ["source", "type", "color"]))
+        #expect(Set(calendar.keys).isSuperset(of: ["source", "type", "cg_color"]))
     }
 
     @Test

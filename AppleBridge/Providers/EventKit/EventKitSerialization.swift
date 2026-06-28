@@ -21,7 +21,7 @@ enum EventKitSerialization {
             "calendar_identifier": calendar.calendarIdentifier,
             "title": jsonValue(calendar.title),
             "type": calendarTypeString(calendar.type),
-            "color": cgColorHexString(from: calendar.cgColor),
+            "cg_color": cgColorHexString(from: calendar.cgColor),
             "allowed_entity_types": entityTypesArray(from: calendar.allowedEntityTypes),
             "allows_content_modifications": calendar.allowsContentModifications,
             "is_immutable": calendar.isImmutable,
@@ -61,6 +61,8 @@ enum EventKitSerialization {
             "has_recurrence_rules": item.hasRecurrenceRules,
             "has_notes": item.hasNotes,
             "has_attendees": item.hasAttendees,
+            "time_zone": jsonValue(item.timeZone?.identifier),
+            "attendees": (item.attendees ?? []).map(participantJSONObject),
         ]
 
         if let calendar = item.calendar {
@@ -73,6 +75,18 @@ enum EventKitSerialization {
     }
 
     // MARK: - Nested types
+
+    private static func participantJSONObject(from participant: EKParticipant) -> [String: Any] {
+        [
+            "url": urlString(from: participant.url),
+            "name": jsonValue(participant.name),
+            "participant_status": participantStatusString(participant.participantStatus),
+            "participant_role": participantRoleString(participant.participantRole),
+            "participant_type": participantTypeString(participant.participantType),
+            "is_current_user": participant.isCurrentUser,
+            "contact_predicate": participant.contactPredicate.predicateFormat,
+        ]
+    }
 
     private static func sourceJSONObject(from source: EKSource) -> [String: Any] {
         [
@@ -278,6 +292,42 @@ enum EventKitSerialization {
         case .weekly: "weekly"
         case .monthly: "monthly"
         case .yearly: "yearly"
+        @unknown default: "unknown"
+        }
+    }
+
+    private static func participantStatusString(_ status: EKParticipantStatus) -> String {
+        switch status {
+        case .unknown: "unknown"
+        case .pending: "pending"
+        case .accepted: "accepted"
+        case .declined: "declined"
+        case .tentative: "tentative"
+        case .delegated: "delegated"
+        case .completed: "completed"
+        case .inProcess: "in_process"
+        @unknown default: "unknown"
+        }
+    }
+
+    private static func participantRoleString(_ role: EKParticipantRole) -> String {
+        switch role {
+        case .unknown: "unknown"
+        case .required: "required"
+        case .optional: "optional"
+        case .chair: "chair"
+        case .nonParticipant: "non_participant"
+        @unknown default: "unknown"
+        }
+    }
+
+    private static func participantTypeString(_ type: EKParticipantType) -> String {
+        switch type {
+        case .unknown: "unknown"
+        case .person: "person"
+        case .room: "room"
+        case .resource: "resource"
+        case .group: "group"
         @unknown default: "unknown"
         }
     }

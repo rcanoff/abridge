@@ -171,6 +171,21 @@ Use **XcodeBuildMCP** tools instead of raw `xcodebuild` shell commands when avai
 - Use `build_run_sim` / project build tools for compile and test workflows
 - Use `discover_projs` only when session defaults are missing or wrong
 
+### Code review
+
+Do **not** run review yourself — no review skill, no reviewer subagents, no hand-written findings.
+
+Use the repo review runner:
+
+```sh
+just review              # Grok + Codex (default)
+just review --codex-only # Codex only
+just review --grok-only  # Grok only
+just review-strict       # same agents; exit non-zero on failure
+```
+
+Reviews are written under `docs/reviews/`. Act on feedback with **receiving-code-review**; triage with the table in § Review triage.
+
 ### Shell commands
 
 Available on this branch:
@@ -178,6 +193,7 @@ Available on this branch:
 ```sh
 just test-swift     # xcodebuild test (macOS)
 just test-all       # test-swift; adds test-rust when rust/Cargo.toml exists
+just review         # multi-agent code review (see § Code review)
 ```
 
 After the Rust workspace lands (PR 2+, requires `rust/Cargo.toml`):
