@@ -80,6 +80,21 @@ struct EventKitProviderUpdateValidationTests {
 
     @Test
     @MainActor
+    func updateReminderRejectsNullIsCompleted() {
+        let (provider, _) = providerWithReminder()
+
+        let response = provider.handle(
+            operation: "update_reminder",
+            payloadJson: #"{"reminder_id":"rem-val","is_completed":null}"#
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("is_completed must be a boolean") == true)
+    }
+
+    @Test
+    @MainActor
     func updateReminderClearsNotesWhenNullProvided() {
         let (provider, mockStore) = providerWithReminder()
         mockStore.reminders[0].notes = "remove me"

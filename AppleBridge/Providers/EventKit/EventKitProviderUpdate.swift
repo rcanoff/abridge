@@ -52,7 +52,7 @@ extension EventKitProvider {
         try applyOptionalTitle(from: arguments, to: reminder)
         applyOptionalStringFields(from: arguments, to: reminder)
         try applyOptionalPriority(from: arguments, to: reminder)
-        applyOptionalDateFields(from: arguments, to: reminder)
+        try applyOptionalDateFields(from: arguments, to: reminder)
         applyOptionalCollectionFields(from: arguments, to: reminder)
     }
 
@@ -140,7 +140,7 @@ extension EventKitProvider {
         }
     }
 
-    private func applyOptionalDateFields(from arguments: UpdateReminderArguments, to reminder: EKReminder) {
+    private func applyOptionalDateFields(from arguments: UpdateReminderArguments, to reminder: EKReminder) throws {
         switch arguments.dueDateComponents {
         case .absent:
             break
@@ -159,7 +159,10 @@ extension EventKitProvider {
         case .absent:
             break
         case let .present(isCompleted):
-            reminder.isCompleted = isCompleted ?? false
+            guard let isCompleted else {
+                throw EventKitProviderError.invalidArguments("is_completed must be a boolean")
+            }
+            reminder.isCompleted = isCompleted
         }
 
         switch arguments.completionDate {
