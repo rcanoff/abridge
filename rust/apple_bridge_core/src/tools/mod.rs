@@ -150,18 +150,40 @@ pub fn resolve_tool(name: &str) -> Option<&'static ToolDefinition> {
   all_tools().iter().find(|tool| tool.name == name)
 }
 
+fn nullable_string() -> serde_json::Value {
+  serde_json::json!({ "type": ["string", "null"] })
+}
+
+fn nullable_string_date_time() -> serde_json::Value {
+  serde_json::json!({ "type": ["string", "null"], "format": "date-time" })
+}
+
+fn nullable_integer() -> serde_json::Value {
+  serde_json::json!({ "type": ["integer", "null"] })
+}
+
+fn nullable_integer_array() -> serde_json::Value {
+  serde_json::json!({
+    "type": ["array", "null"],
+    "items": { "type": "integer" }
+  })
+}
+
 fn alarm_entry_schema() -> serde_json::Value {
   serde_json::json!({
     "type": "object",
     "properties": {
-      "absolute_date": { "type": "string", "format": "date-time" },
+      "absolute_date": nullable_string_date_time(),
       "relative_offset": { "type": "number" },
-      "proximity": { "type": "string", "enum": ["none", "enter", "leave"] },
-      "email_address": { "type": "string" },
+      "proximity": {
+        "type": ["string", "null"],
+        "enum": ["none", "enter", "leave", null]
+      },
+      "email_address": nullable_string(),
       "structured_location": {
         "type": ["object", "null"],
         "properties": {
-          "title": { "type": "string" },
+          "title": nullable_string(),
           "radius": { "type": "number" },
           "geo_location": {
             "type": ["object", "null"],
@@ -198,30 +220,30 @@ fn recurrence_rule_entry_schema() -> serde_json::Value {
         "type": "string",
         "enum": ["daily", "weekly", "monthly", "yearly"]
       },
-      "interval": { "type": "integer" },
+      "interval": nullable_integer(),
       "recurrence_end": {
         "type": ["object", "null"],
         "properties": {
-          "end_date": { "type": "string", "format": "date-time" },
-          "occurrence_count": { "type": "integer" }
+          "end_date": nullable_string_date_time(),
+          "occurrence_count": nullable_integer()
         }
       },
       "days_of_the_week": {
-        "type": "array",
+        "type": ["array", "null"],
         "items": {
           "type": "object",
           "properties": {
             "day_of_the_week": { "type": "integer" },
-            "week_number": { "type": "integer" }
+            "week_number": nullable_integer()
           },
           "required": ["day_of_the_week"]
         }
       },
-      "days_of_the_month": { "type": "array", "items": { "type": "integer" } },
-      "days_of_the_year": { "type": "array", "items": { "type": "integer" } },
-      "months_of_the_year": { "type": "array", "items": { "type": "integer" } },
-      "weeks_of_the_year": { "type": "array", "items": { "type": "integer" } },
-      "set_positions": { "type": "array", "items": { "type": "integer" } }
+      "days_of_the_month": nullable_integer_array(),
+      "days_of_the_year": nullable_integer_array(),
+      "months_of_the_year": nullable_integer_array(),
+      "weeks_of_the_year": nullable_integer_array(),
+      "set_positions": nullable_integer_array()
     },
     "required": ["frequency"]
   })
