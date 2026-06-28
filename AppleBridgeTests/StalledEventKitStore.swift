@@ -89,8 +89,16 @@ final class StalledEventKitStore: EventKitStoreing {
         Self.stubReminderSource
     }
 
+    func defaultEventSource() -> EKSource? {
+        Self.stubReminderSource
+    }
+
     func makeReminderCalendar() -> EKCalendar {
         EKCalendar(for: .reminder, eventStore: EKEventStore())
+    }
+
+    func makeEventCalendar() -> EKCalendar {
+        EKCalendar(for: .event, eventStore: EKEventStore())
     }
 
     func saveCalendar(_ calendar: EKCalendar, commit: Bool) throws {

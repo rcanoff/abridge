@@ -34,7 +34,9 @@ protocol EventKitStoreing {
     func removeReminder(_ reminder: EKReminder, commit: Bool) throws
     func sources() -> [EKSource]
     func defaultReminderSource() -> EKSource?
+    func defaultEventSource() -> EKSource?
     func makeReminderCalendar() -> EKCalendar
+    func makeEventCalendar() -> EKCalendar
     func saveCalendar(_ calendar: EKCalendar, commit: Bool) throws
     func removeCalendar(_ calendar: EKCalendar, commit: Bool) throws
 }
@@ -132,8 +134,16 @@ final class LiveEventKitStore: EventKitStoreing {
         eventStore.defaultCalendarForNewReminders()?.source ?? eventStore.sources.first
     }
 
+    func defaultEventSource() -> EKSource? {
+        eventStore.defaultCalendarForNewEvents?.source ?? eventStore.sources.first
+    }
+
     func makeReminderCalendar() -> EKCalendar {
         EKCalendar(for: .reminder, eventStore: eventStore)
+    }
+
+    func makeEventCalendar() -> EKCalendar {
+        EKCalendar(for: .event, eventStore: eventStore)
     }
 
     func saveCalendar(_ calendar: EKCalendar, commit: Bool) throws {
@@ -206,7 +216,8 @@ final class EventKitProvider {
             listCalendars()
         case "list_reminders", "get_reminder", "search_reminders":
             handleReadOperation(operation: operation, payloadJson: payloadJson)
-        case "create_reminder", "create_list", "update_reminder", "move_reminder", "delete_reminder",
+        case "create_reminder", "create_list", "create_calendar", "update_reminder", "move_reminder",
+             "delete_reminder",
              "delete_list", "complete_reminder", "uncomplete_reminder", "set_reminder_alarms",
              "set_reminder_recurrence":
             handleMutationOperation(operation: operation, payloadJson: payloadJson)

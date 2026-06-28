@@ -153,6 +153,49 @@ fn mcp_tools_list_includes_list_calendars_when_calendars_read_enabled() {
 }
 
 #[test]
+fn mcp_tools_list_includes_create_calendar_when_calendars_create_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.calendars.create".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("eventkit.calendars.create_calendar"));
+  assert!(!resp.contains("eventkit.calendars.list_calendars"));
+}
+
+#[test]
+fn tools_call_dispatches_create_calendar() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"eventkit.calendars.create_calendar","arguments":{"title":"Work"}}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.calendars.create".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "eventkit");
+  assert_eq!(recorded.operation, "create_calendar");
+  assert!(recorded.payload_json.contains("Work"));
+}
+
+#[test]
 fn tools_call_dispatches_list_calendars() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
