@@ -5,6 +5,7 @@ use crate::capabilities;
 pub const TOOL_LIST_LISTS: &str = "eventkit.reminders.list_lists";
 pub const TOOL_LIST_REMINDERS: &str = "eventkit.reminders.list_reminders";
 pub const TOOL_GET_REMINDER: &str = "eventkit.reminders.get_reminder";
+pub const TOOL_SEARCH_REMINDERS: &str = "eventkit.reminders.search_reminders";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ToolDefinition {
@@ -15,7 +16,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 3] = [
+const ALL_TOOLS: [ToolDefinition; 4] = [
   ToolDefinition {
     name: TOOL_LIST_LISTS,
     capability: capabilities::EVENTKIT_REMINDERS_READ,
@@ -36,6 +37,13 @@ const ALL_TOOLS: [ToolDefinition; 3] = [
     provider: "eventkit",
     operation: "get_reminder",
     description: "Get a single reminder by reminder_id",
+  },
+  ToolDefinition {
+    name: TOOL_SEARCH_REMINDERS,
+    capability: capabilities::EVENTKIT_REMINDERS_SEARCH,
+    provider: "eventkit",
+    operation: "search_reminders",
+    description: "Search reminders with completion, due-date, and calendar filters",
   },
 ];
 
@@ -73,13 +81,25 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["reminder_id"]
     }),
+    TOOL_SEARCH_REMINDERS => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "calendar_identifier": { "type": "string" },
+        "completion_status": {
+          "type": "string",
+          "enum": ["incomplete", "completed", "all"]
+        },
+        "due_date_start": { "type": "string", "format": "date-time" },
+        "due_date_end": { "type": "string", "format": "date-time" }
+      }
+    }),
     _ => serde_json::json!({ "type": "object" }),
   }
 }
 
 #[cfg(test)]
 mod tests {
-  use super::{TOOL_GET_REMINDER, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, tools_for_capabilities};
+  use super::{TOOL_GET_REMINDER, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_SEARCH_REMINDERS, tools_for_capabilities};
 
   #[test]
   fn lists_read_tools_when_capability_enabled() {
@@ -91,5 +111,12 @@ mod tests {
   #[test]
   fn lists_no_tools_when_capability_empty() {
     assert!(tools_for_capabilities(&[]).is_empty());
+  }
+
+  #[test]
+  fn lists_search_tool_when_search_capability_enabled() {
+    let tools = tools_for_capabilities(&["eventkit.reminders.search".into()]);
+    let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
+    assert_eq!(names, vec![TOOL_SEARCH_REMINDERS]);
   }
 }
