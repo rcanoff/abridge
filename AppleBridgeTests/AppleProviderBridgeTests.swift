@@ -145,6 +145,55 @@ struct AppleProviderBridgeTests {
 
     @Test
     @MainActor
+    func routesEventKitCompleteReminder() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-done")]
+        mockStore.reminders = [
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: "r-done",
+                calendarIdentifier: "list-done",
+                title: "Task"
+            ),
+        ]
+        let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
+        let request = ProviderRequest(
+            provider: "eventkit",
+            operation: "complete_reminder",
+            payloadJson: #"{"reminder_id":"r-done"}"#
+        )
+        let response = bridge.callProvider(request: request)
+        #expect(response.ok == true)
+        #expect(response.payloadJson.contains("\"is_completed\":true"))
+    }
+
+    @Test
+    @MainActor
+    func routesEventKitUncompleteReminder() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-reopen")]
+        mockStore.reminders = [
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: "r-reopen",
+                calendarIdentifier: "list-reopen",
+                title: "Done task",
+                isCompleted: true
+            ),
+        ]
+        let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
+        let request = ProviderRequest(
+            provider: "eventkit",
+            operation: "uncomplete_reminder",
+            payloadJson: #"{"reminder_id":"r-reopen"}"#
+        )
+        let response = bridge.callProvider(request: request)
+        #expect(response.ok == true)
+        #expect(response.payloadJson.contains("\"is_completed\":false"))
+    }
+
+    @Test
+    @MainActor
     func routesEventKitGetReminder() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
