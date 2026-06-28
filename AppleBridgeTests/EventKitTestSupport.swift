@@ -18,13 +18,7 @@ enum EventKitTestSupport {
         if let title {
             reminder.title = title
         }
-        if isCompleted {
-            reminder.completionDate = Date()
-            reminder.setValue(true, forKey: "completed")
-        } else {
-            reminder.completionDate = nil
-            reminder.setValue(false, forKey: "completed")
-        }
+        reminder.isCompleted = isCompleted
         reminder.notes = notes
 
         if let calendarIdentifier {

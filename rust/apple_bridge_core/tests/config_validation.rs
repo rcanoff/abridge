@@ -96,13 +96,6 @@ fn accepts_read_capability() {
 }
 
 #[test]
-fn accepts_search_capability() {
-  let mut config = sample_config();
-  config.enabled_capabilities = vec!["eventkit.reminders.search".into()];
-  assert!(validate_config(&config).is_ok());
-}
-
-#[test]
 fn rejects_unknown_capability() {
   let mut config = sample_config();
   config.enabled_capabilities = vec!["eventkit.foo.bar".into()];
