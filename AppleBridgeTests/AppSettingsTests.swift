@@ -58,6 +58,19 @@ struct AppSettingsTests {
 
     @Test
     @MainActor
+    func enabledMCPCapabilityIDsIncludesCheckedCalendarDeleteCapability() throws {
+        let suiteName = "AppSettingsTests.calendarDeleteCapability"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.saveCapabilityIDs(["calendars-delete"])
+
+        #expect(appSettings.enabledCalendarCapabilityIDs == ["eventkit.calendars.delete"])
+    }
+
+    @Test
+    @MainActor
     func enabledMCPCapabilityIDsIncludesCheckedCalendarEditCapability() throws {
         let suiteName = "AppSettingsTests.calendarEditCapability"
         let defaults = try #require(UserDefaults(suiteName: suiteName))

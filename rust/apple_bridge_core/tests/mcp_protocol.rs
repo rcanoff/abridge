@@ -193,6 +193,49 @@ fn mcp_tools_list_includes_update_calendar_when_calendars_edit_enabled() {
 }
 
 #[test]
+fn mcp_tools_list_includes_delete_calendar_when_calendars_delete_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.calendars.delete".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("eventkit.calendars.delete_calendar"));
+  assert!(!resp.contains("eventkit.calendars.update_calendar"));
+}
+
+#[test]
+fn tools_call_dispatches_delete_calendar() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"eventkit.calendars.delete_calendar","arguments":{"calendar_identifier":"cal-work"}}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.calendars.delete".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "eventkit");
+  assert_eq!(recorded.operation, "delete_calendar");
+  assert!(recorded.payload_json.contains("cal-work"));
+}
+
+#[test]
 fn tools_call_dispatches_update_calendar() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
