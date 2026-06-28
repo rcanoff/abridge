@@ -58,19 +58,6 @@ struct AppSettingsTests {
 
     @Test
     @MainActor
-    func enabledMCPCapabilityIDsIncludesCheckedEventsReadCapability() throws {
-        let suiteName = "AppSettingsTests.eventsReadCapability"
-        let defaults = try #require(UserDefaults(suiteName: suiteName))
-        defaults.removePersistentDomain(forName: suiteName)
-
-        let appSettings = AppSettings(defaults: defaults)
-        appSettings.saveCapabilityIDs(["events-read"])
-
-        #expect(appSettings.enabledEventsCapabilityIDs == ["eventkit.events.read"])
-    }
-
-    @Test
-    @MainActor
     func enabledMCPCapabilityIDsIncludesCheckedCalendarDeleteCapability() throws {
         let suiteName = "AppSettingsTests.calendarDeleteCapability"
         let defaults = try #require(UserDefaults(suiteName: suiteName))

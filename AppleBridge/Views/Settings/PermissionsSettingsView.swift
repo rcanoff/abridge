@@ -31,9 +31,6 @@ struct PermissionsSettingsView: View {
                 CalendarsMCPPermissionsGroup { capabilityID in
                     binding(for: capabilityID)
                 }
-                EventsMCPPermissionsGroup { capabilityID in
-                    binding(for: capabilityID)
-                }
             } header: {
                 Text("MCP Permissions")
             }
@@ -138,20 +135,6 @@ private struct CalendarsMCPPermissionsGroup: View {
             }
         } header: {
             Text("Calendars")
-        }
-    }
-}
-
-private struct EventsMCPPermissionsGroup: View {
-    let capabilityBinding: (String) -> Binding<Bool>
-
-    var body: some View {
-        Section {
-            ForEach(CapabilityCatalog.eventsCapabilities) { capability in
-                Toggle(capability.label, isOn: capabilityBinding(capability.id))
-            }
-        } header: {
-            Text("Events")
         }
     }
 }

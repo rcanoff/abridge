@@ -55,13 +55,4 @@ enum CapabilityCatalog {
             shipped: true
         ),
     ]
-
-    static let eventsCapabilities: [CapabilityDefinition] = [
-        CapabilityDefinition(
-            id: "events-read",
-            capabilityID: "eventkit.events.read",
-            label: "Read",
-            shipped: true
-        ),
-    ]
 }

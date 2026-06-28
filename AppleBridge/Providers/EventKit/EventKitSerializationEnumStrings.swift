@@ -140,25 +140,4 @@ extension EventKitSerialization {
         @unknown default: "unknown"
         }
     }
-
-    static func eventAvailabilityString(_ availability: EKEventAvailability) -> String {
-        switch availability {
-        case .notSupported: "not_supported"
-        case .busy: "busy"
-        case .free: "free"
-        case .tentative: "tentative"
-        case .unavailable: "unavailable"
-        @unknown default: "unknown"
-        }
-    }
-
-    static func eventStatusString(_ status: EKEventStatus) -> String {
-        switch status {
-        case .none: "none"
-        case .confirmed: "confirmed"
-        case .tentative: "tentative"
-        case .canceled: "canceled"
-        @unknown default: "unknown"
-        }
-    }
 }

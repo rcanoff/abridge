@@ -77,7 +77,7 @@ final class AppSettings {
     }
 
     var enabledMCPCapabilityIDs: [String] {
-        enabledReminderCapabilityIDs + enabledCalendarCapabilityIDs + enabledEventsCapabilityIDs
+        enabledReminderCapabilityIDs + enabledCalendarCapabilityIDs
     }
 
     var enabledReminderCapabilityIDs: [String] {
@@ -92,12 +92,6 @@ final class AppSettings {
             .map(\.capabilityID)
     }
 
-    var enabledEventsCapabilityIDs: [String] {
-        CapabilityCatalog.eventsCapabilities
-            .filter { $0.shipped && savedCapabilityIDs.contains($0.id) }
-            .map(\.capabilityID)
-    }
-
     func serverEnabledMCPCapabilityIDs(remindersAuthorized: Bool, eventsAuthorized: Bool) -> [String] {
         var capabilities = ["diagnostics.read"]
         if remindersAuthorized {
@@ -105,7 +99,6 @@ final class AppSettings {
         }
         if eventsAuthorized {
             capabilities.append(contentsOf: enabledCalendarCapabilityIDs)
-            capabilities.append(contentsOf: enabledEventsCapabilityIDs)
         }
         return capabilities
     }
