@@ -9,7 +9,7 @@ struct AppleBridgeApp: App {
             || ProcessInfo.processInfo.environment["XCInjectBundleInto"] != nil
     }
 
-    @State private var store = AppStore()
+    @State private var store: AppStore
     @State private var serverStore = ServerStore()
     @State private var appSettings = AppSettings()
     @State private var permissionsStore: PermissionsStore
@@ -18,12 +18,18 @@ struct AppleBridgeApp: App {
     init() {
         let appSettings = AppSettings()
         let serverStore = ServerStore()
-        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+        let permissionService = RemindersPermissionService()
+        let store = AppStore(permissionService: permissionService)
+        let settingsStore = SettingsStore(
+            appSettings: appSettings,
+            serverStore: serverStore,
+            permissionService: permissionService
+        )
         _appSettings = State(initialValue: appSettings)
         _serverStore = State(initialValue: serverStore)
         _permissionsStore = State(initialValue: PermissionsStore(appSettings: appSettings))
         _settingsStore = State(initialValue: settingsStore)
-        _store = State(initialValue: AppStore())
+        _store = State(initialValue: store)
 
         guard !Self.isRunningUnitTests else { return }
 

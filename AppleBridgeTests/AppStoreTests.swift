@@ -79,6 +79,19 @@ struct AppStoreTests {
 
     @Test
     @MainActor
+    func refreshStatusKeepsGrantedAccessAfterRequestDespiteStaleEventKit() async {
+        let service = StaleRemindersPermissionService()
+        let store = AppStore(permissionService: service)
+
+        await store.requestAccess()
+        store.refreshStatus()
+
+        #expect(store.permissionStatus == .authorized)
+        #expect(store.permissionStatus.grantsReadAccess)
+    }
+
+    @Test
+    @MainActor
     func openRemindersPrivacySettingsSetsErrorOnFailure() {
         let urlOpener = MockURLOpener()
         urlOpener.shouldSucceed = false
