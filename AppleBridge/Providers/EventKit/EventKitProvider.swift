@@ -220,6 +220,10 @@ final class EventKitProvider {
     }
 
     private func parseReminderIDArguments(_ payloadJson: String) throws -> String {
+        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw EventKitProviderError.invalidArguments("reminder_id is required")
+        }
+
         guard let data = payloadJson.data(using: .utf8) else {
             throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }

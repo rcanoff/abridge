@@ -126,6 +126,20 @@ struct EventKitProviderTests {
 
     @Test
     @MainActor
+    func getReminderEmptyPayloadReturnsInvalidArguments() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(operation: "get_reminder", payloadJson: "")
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("reminder_id is required") == true)
+    }
+
+    @Test
+    @MainActor
     func listRemindersIncludesListID() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
