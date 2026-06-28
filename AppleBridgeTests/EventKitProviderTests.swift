@@ -95,6 +95,30 @@ struct EventKitProviderTests {
 
     @Test
     @MainActor
+    func getReminderDoesNotTrimReminderIDForLookup() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.reminders = [
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: "rem-1",
+                calendarIdentifier: "list-1",
+                title: "Task"
+            ),
+        ]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "get_reminder",
+            payloadJson: #"{"reminder_id":" rem-1 "}"#
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("Unknown reminder_id:  rem-1 ") == true)
+    }
+
+    @Test
+    @MainActor
     func getReminderUnknownIDReturnsInvalidArguments() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
