@@ -150,6 +150,97 @@ pub fn resolve_tool(name: &str) -> Option<&'static ToolDefinition> {
   all_tools().iter().find(|tool| tool.name == name)
 }
 
+fn alarm_entry_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": "object",
+    "properties": {
+      "absolute_date": { "type": "string", "format": "date-time" },
+      "relative_offset": { "type": "number" },
+      "proximity": { "type": "string", "enum": ["none", "enter", "leave"] },
+      "email_address": { "type": "string" },
+      "structured_location": {
+        "type": ["object", "null"],
+        "properties": {
+          "title": { "type": "string" },
+          "radius": { "type": "number" },
+          "geo_location": {
+            "type": ["object", "null"],
+            "properties": {
+              "latitude": { "type": "number" },
+              "longitude": { "type": "number" }
+            }
+          }
+        }
+      }
+    }
+  })
+}
+
+fn alarms_array_schema(nullable: bool) -> serde_json::Value {
+  if nullable {
+    serde_json::json!({
+      "type": ["array", "null"],
+      "items": alarm_entry_schema()
+    })
+  } else {
+    serde_json::json!({
+      "type": "array",
+      "items": alarm_entry_schema()
+    })
+  }
+}
+
+fn recurrence_rule_entry_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": "object",
+    "properties": {
+      "frequency": {
+        "type": "string",
+        "enum": ["daily", "weekly", "monthly", "yearly"]
+      },
+      "interval": { "type": "integer" },
+      "recurrence_end": {
+        "type": ["object", "null"],
+        "properties": {
+          "end_date": { "type": "string", "format": "date-time" },
+          "occurrence_count": { "type": "integer" }
+        }
+      },
+      "days_of_the_week": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "day_of_the_week": { "type": "integer" },
+            "week_number": { "type": "integer" }
+          },
+          "required": ["day_of_the_week"]
+        }
+      },
+      "days_of_the_month": { "type": "array", "items": { "type": "integer" } },
+      "days_of_the_year": { "type": "array", "items": { "type": "integer" } },
+      "months_of_the_year": { "type": "array", "items": { "type": "integer" } },
+      "weeks_of_the_year": { "type": "array", "items": { "type": "integer" } },
+      "set_positions": { "type": "array", "items": { "type": "integer" } }
+    },
+    "required": ["frequency"]
+  })
+}
+
+fn recurrence_rules_array_schema(nullable: bool) -> serde_json::Value {
+  if nullable {
+    serde_json::json!({
+      "type": ["array", "null"],
+      "items": recurrence_rule_entry_schema()
+    })
+  } else {
+    serde_json::json!({
+      "type": "array",
+      "items": recurrence_rule_entry_schema()
+    })
+  }
+}
+
 pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
   match tool.name {
     TOOL_LIST_LISTS => serde_json::json!({
@@ -195,8 +286,8 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "time_zone": { "type": "string" },
         "is_completed": { "type": "boolean" },
         "completion_date": { "type": "string", "format": "date-time" },
-        "alarms": { "type": "array" },
-        "recurrence_rules": { "type": "array" }
+        "alarms": alarms_array_schema(false),
+        "recurrence_rules": recurrence_rules_array_schema(false)
       },
       "required": ["calendar_identifier", "title"]
     }),
@@ -224,8 +315,8 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "time_zone": { "type": ["string", "null"] },
         "is_completed": { "type": "boolean" },
         "completion_date": { "type": ["string", "null"], "format": "date-time" },
-        "alarms": { "type": ["array", "null"] },
-        "recurrence_rules": { "type": ["array", "null"] }
+        "alarms": alarms_array_schema(true),
+        "recurrence_rules": recurrence_rules_array_schema(true)
       },
       "required": ["reminder_id"]
     }),
@@ -268,7 +359,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "type": "object",
       "properties": {
         "reminder_id": { "type": "string" },
-        "alarms": { "type": "array" }
+        "alarms": alarms_array_schema(false)
       },
       "required": ["reminder_id", "alarms"]
     }),
@@ -276,7 +367,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "type": "object",
       "properties": {
         "reminder_id": { "type": "string" },
-        "recurrence_rules": { "type": "array" }
+        "recurrence_rules": recurrence_rules_array_schema(false)
       },
       "required": ["reminder_id", "recurrence_rules"]
     }),
@@ -290,8 +381,64 @@ mod tests {
     TOOL_COMPLETE_REMINDER, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER,
     TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_REMINDER,
     TOOL_SEARCH_REMINDERS, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_UNCOMPLETE_REMINDER,
-    TOOL_UPDATE_REMINDER, tools_for_capabilities,
+    TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
   };
+
+  fn array_items_type(schema: &serde_json::Value, property: &str) -> Option<String> {
+    schema
+      .get("properties")
+      .and_then(|properties| properties.get(property))
+      .and_then(|property_schema| property_schema.get("items"))
+      .and_then(|items| items.get("type"))
+      .and_then(|value| value.as_str())
+      .map(str::to_owned)
+  }
+
+  #[test]
+  fn set_reminder_alarms_schema_describes_object_array_items() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_SET_REMINDER_ALARMS)
+      .expect("set_reminder_alarms tool");
+    let schema = input_schema(tool);
+
+    assert_eq!(array_items_type(&schema, "alarms").as_deref(), Some("object"));
+  }
+
+  #[test]
+  fn set_reminder_recurrence_schema_describes_object_array_items() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_SET_REMINDER_RECURRENCE)
+      .expect("set_reminder_recurrence tool");
+    let schema = input_schema(tool);
+
+    assert_eq!(array_items_type(&schema, "recurrence_rules").as_deref(), Some("object"));
+  }
+
+  #[test]
+  fn create_reminder_schema_describes_object_array_items() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_CREATE_REMINDER)
+      .expect("create_reminder tool");
+    let schema = input_schema(tool);
+
+    assert_eq!(array_items_type(&schema, "alarms").as_deref(), Some("object"));
+    assert_eq!(array_items_type(&schema, "recurrence_rules").as_deref(), Some("object"));
+  }
+
+  #[test]
+  fn update_reminder_schema_describes_object_array_items() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_UPDATE_REMINDER)
+      .expect("update_reminder tool");
+    let schema = input_schema(tool);
+
+    assert_eq!(array_items_type(&schema, "alarms").as_deref(), Some("object"));
+    assert_eq!(array_items_type(&schema, "recurrence_rules").as_deref(), Some("object"));
+  }
 
   #[test]
   fn lists_read_tools_when_capability_enabled() {

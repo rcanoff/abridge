@@ -1,11 +1,28 @@
 mod support;
 
 use apple_bridge_core::{ProviderConfig, ServerConfig, create_server, start_server, stop_server};
+use serde_json::Value;
 use support::mock_provider::MockProviderBridge;
 use support::port::{allocate_test_port, http_post_json};
 
 const TEST_TOKEN: &str = "integration-test-token";
 const PROTOCOL_VERSION: &str = "2024-11-05";
+
+fn tool_input_property_items_type(response: &str, tool_name: &str, property: &str) -> Option<String> {
+  let envelope: Value = serde_json::from_str(response).ok()?;
+  let tools = envelope.get("result")?.get("tools")?.as_array()?;
+  let tool = tools
+    .iter()
+    .find(|tool| tool.get("name").and_then(Value::as_str) == Some(tool_name))?;
+  tool
+    .get("inputSchema")?
+    .get("properties")?
+    .get(property)?
+    .get("items")?
+    .get("type")?
+    .as_str()
+    .map(str::to_owned)
+}
 
 fn config_on_port(port: u16, enabled_capabilities: Vec<String>) -> ServerConfig {
   ServerConfig {
@@ -466,6 +483,10 @@ fn mcp_tools_list_includes_set_reminder_alarms_when_alarms_capability_enabled() 
   assert_eq!(status, 200);
   assert!(resp.contains("eventkit.reminders.set_reminder_alarms"));
   assert!(!resp.contains("eventkit.reminders.update_reminder"));
+  assert_eq!(
+    tool_input_property_items_type(&resp, "eventkit.reminders.set_reminder_alarms", "alarms").as_deref(),
+    Some("object")
+  );
 }
 
 #[test]
@@ -510,6 +531,10 @@ fn mcp_tools_list_includes_set_reminder_recurrence_when_recurrence_capability_en
   assert_eq!(status, 200);
   assert!(resp.contains("eventkit.reminders.set_reminder_recurrence"));
   assert!(!resp.contains("eventkit.reminders.update_reminder"));
+  assert_eq!(
+    tool_input_property_items_type(&resp, "eventkit.reminders.set_reminder_recurrence", "recurrence_rules").as_deref(),
+    Some("object")
+  );
 }
 
 #[test]
