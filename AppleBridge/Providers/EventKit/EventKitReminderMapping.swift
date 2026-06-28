@@ -1,6 +1,29 @@
 import EventKit
 import Foundation
 
+protocol ReminderRepresentable {
+    var calendarItemIdentifier: String { get }
+    var reminderListID: String? { get }
+    var reminderTitle: String? { get }
+    var isCompleted: Bool { get }
+    var dueDateComponents: DateComponents? { get }
+    var reminderNotes: String? { get }
+}
+
+extension EKReminder: ReminderRepresentable {
+    var reminderListID: String? {
+        calendar?.calendarIdentifier
+    }
+
+    var reminderTitle: String? {
+        title
+    }
+
+    var reminderNotes: String? {
+        notes
+    }
+}
+
 enum EventKitReminderMapping {
     private static func isoString(from date: Date) -> String {
         let formatter = ISO8601DateFormatter()
@@ -16,10 +39,11 @@ enum EventKitReminderMapping {
         ]
     }
 
-    static func reminderDictionary(from reminder: EKReminder) -> [String: Any] {
+    static func reminderDictionary(from reminder: some ReminderRepresentable) -> [String: Any] {
         var payload: [String: Any] = [
             "id": reminder.calendarItemIdentifier,
-            "title": reminder.title ?? "",
+            "list_id": reminder.reminderListID ?? NSNull(),
+            "title": reminder.reminderTitle ?? "",
             "completed": reminder.isCompleted,
         ]
 
@@ -29,7 +53,7 @@ enum EventKitReminderMapping {
             payload["due_date"] = NSNull()
         }
 
-        if let notes = reminder.notes, !notes.isEmpty {
+        if let notes = reminder.reminderNotes, !notes.isEmpty {
             payload["notes"] = notes
         }
 

@@ -15,7 +15,8 @@ protocol EventKitStoreing {
     func reminderAuthorizationStatus() -> EKAuthorizationStatus
     func reminderCalendars() -> [EKCalendar]
     func predicateForReminders(in calendars: [EKCalendar]) -> NSPredicate
-    func fetchReminders(matching predicate: NSPredicate) throws -> [EKReminder]
+    func fetchReminders(matching predicate: NSPredicate) throws -> [any ReminderRepresentable]
+    func fetchReminder(withIdentifier id: String) throws -> (any ReminderRepresentable)?
 }
 
 @MainActor
@@ -38,7 +39,7 @@ final class LiveEventKitStore: EventKitStoreing {
         eventStore.predicateForReminders(in: calendars)
     }
 
-    func fetchReminders(matching predicate: NSPredicate) throws -> [EKReminder] {
+    func fetchReminders(matching predicate: NSPredicate) throws -> [any ReminderRepresentable] {
         var fetched: [EKReminder] = []
         try EventKitReminderFetch.waitForCompletion { complete in
             eventStore.fetchReminders(matching: predicate) { reminders in
@@ -47,6 +48,16 @@ final class LiveEventKitStore: EventKitStoreing {
             }
         }
         return fetched
+    }
+
+    func fetchReminder(withIdentifier id: String) throws -> (any ReminderRepresentable)? {
+        guard let item = eventStore.calendarItem(withIdentifier: id) else {
+            return nil
+        }
+        guard let reminder = item as? EKReminder else {
+            throw EventKitProviderError.invalidArguments("Not a reminder: \(id)")
+        }
+        return reminder
     }
 }
 
@@ -109,6 +120,8 @@ final class EventKitProvider {
             listLists()
         case "list_reminders":
             listReminders(payloadJson: payloadJson)
+        case "get_reminder":
+            getReminder(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }
@@ -134,27 +147,35 @@ final class EventKitProvider {
         }
 
         do {
-            let listID = try parseArguments(payloadJson)
+            let listID = try parseListIDArguments(payloadJson)
             let predicate = try reminderPredicate(listID: listID)
             let reminders = try store.fetchReminders(matching: predicate)
-            let payloadObjects = reminders.map(EventKitReminderMapping.reminderDictionary)
+            let payloadObjects = reminders.map { EventKitReminderMapping.reminderDictionary(from: $0) }
             let payload = try EventKitReminderMapping.jsonString(from: payloadObjects)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as EventKitProviderError {
-            switch error {
-            case .permissionDenied:
-                return errorResponse(code: "permission_denied", message: "Reminders access not granted")
-            case let .invalidArguments(message):
-                return errorResponse(code: "invalid_arguments", message: message)
-            case .serializationFailed:
-                return errorResponse(code: "eventkit_error", message: "Failed to serialize reminders")
-            case let .eventKitError(message):
-                return errorResponse(code: "eventkit_error", message: message)
-            case let .unknownOperation(message):
-                return errorResponse(code: "unknown_operation", message: message)
-            case .reminderFetchTimedOut:
-                return errorResponse(code: "eventkit_error", message: "Reminder fetch timed out")
+            return providerErrorResponse(from: error)
+        } catch {
+            return providerError(from: error)
+        }
+    }
+
+    private func getReminder(payloadJson: String) -> ProviderResponse {
+        guard isAuthorized else {
+            return errorResponse(code: "permission_denied", message: "Reminders access not granted")
+        }
+
+        do {
+            let reminderID = try parseReminderIDArguments(payloadJson)
+            guard let reminder = try store.fetchReminder(withIdentifier: reminderID) else {
+                return errorResponse(code: "invalid_arguments", message: "Unknown reminder_id: \(reminderID)")
             }
+            let payload = try EventKitReminderMapping.jsonString(
+                from: EventKitReminderMapping.reminderDictionary(from: reminder)
+            )
+            return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
+        } catch let error as EventKitProviderError {
+            return providerErrorResponse(from: error)
         } catch {
             return providerError(from: error)
         }
@@ -169,7 +190,22 @@ final class EventKitProvider {
         }
     }
 
-    private func parseArguments(_ payloadJson: String) throws -> String? {
+    private func parseJSONObject(from data: Data) throws -> [String: Any] {
+        let object: Any
+        do {
+            object = try JSONSerialization.jsonObject(with: data)
+        } catch {
+            throw EventKitProviderError.invalidArguments("Arguments must be valid JSON object")
+        }
+
+        guard let dictionary = object as? [String: Any] else {
+            throw EventKitProviderError.invalidArguments("Arguments must be a JSON object")
+        }
+
+        return dictionary
+    }
+
+    private func parseListIDArguments(_ payloadJson: String) throws -> String? {
         guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return nil
         }
@@ -178,10 +214,7 @@ final class EventKitProvider {
             throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
 
-        let object = try JSONSerialization.jsonObject(with: data)
-        guard let dictionary = object as? [String: Any] else {
-            throw EventKitProviderError.invalidArguments("Arguments must be a JSON object")
-        }
+        let dictionary = try parseJSONObject(from: data)
 
         guard dictionary.keys.contains("list_id") else {
             return nil
@@ -198,6 +231,29 @@ final class EventKitProvider {
         throw EventKitProviderError.invalidArguments("list_id must be a string or null")
     }
 
+    private func parseReminderIDArguments(_ payloadJson: String) throws -> String {
+        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw EventKitProviderError.invalidArguments("reminder_id is required")
+        }
+
+        guard let data = payloadJson.data(using: .utf8) else {
+            throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
+        }
+
+        let dictionary = try parseJSONObject(from: data)
+
+        guard let reminderID = dictionary["reminder_id"] as? String else {
+            throw EventKitProviderError.invalidArguments("reminder_id is required")
+        }
+
+        let trimmed = reminderID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            throw EventKitProviderError.invalidArguments("reminder_id must not be empty")
+        }
+
+        return trimmed
+    }
+
     private func reminderPredicate(listID: String?) throws -> NSPredicate {
         if let listID {
             let calendars = store.reminderCalendars()
@@ -208,6 +264,23 @@ final class EventKitProvider {
         }
 
         return store.predicateForReminders(in: store.reminderCalendars())
+    }
+
+    private func providerErrorResponse(from error: EventKitProviderError) -> ProviderResponse {
+        switch error {
+        case .permissionDenied:
+            errorResponse(code: "permission_denied", message: "Reminders access not granted")
+        case let .invalidArguments(message):
+            errorResponse(code: "invalid_arguments", message: message)
+        case .serializationFailed:
+            errorResponse(code: "eventkit_error", message: "Failed to serialize reminders")
+        case let .eventKitError(message):
+            errorResponse(code: "eventkit_error", message: message)
+        case let .unknownOperation(message):
+            errorResponse(code: "unknown_operation", message: message)
+        case .reminderFetchTimedOut:
+            errorResponse(code: "eventkit_error", message: "Reminder fetch timed out")
+        }
     }
 
     private func errorResponse(code: String, message: String) -> ProviderResponse {

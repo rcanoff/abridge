@@ -15,6 +15,7 @@ struct EventKitReminderMappingTests {
     func encodesReminderShapeFields() throws {
         let payload: [String: Any] = [
             "id": "rem-1",
+            "list_id": "list-abc",
             "title": "Buy milk",
             "completed": true,
             "due_date": "2026-06-28T12:00:00Z",
@@ -25,6 +26,26 @@ struct EventKitReminderMappingTests {
 
         #expect(json.contains("Buy milk"))
         #expect(json.contains("rem-1"))
+        #expect(json.contains("list_id"))
         #expect(json.contains("due_date"))
+    }
+
+    @Test
+    func reminderDictionaryIncludesListID() throws {
+        let reminder = FakeReminder(
+            id: "rem-1",
+            listID: "list-abc",
+            title: "Buy milk",
+            completed: false,
+            dueDateISO: "2026-06-28T12:00:00Z",
+            notes: "2%"
+        )
+
+        let dict = EventKitReminderMapping.reminderDictionary(from: reminder)
+        let json = try EventKitReminderMapping.jsonString(from: dict)
+
+        #expect(json.contains("\"list_id\""))
+        #expect(json.contains("list-abc"))
+        #expect(json.contains("Buy milk"))
     }
 }

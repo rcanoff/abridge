@@ -61,6 +61,31 @@ struct AppleProviderBridgeTests {
     }
 
     @Test
+    @MainActor
+    func routesEventKitGetReminder() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.fakeReminders = [
+            FakeReminder(
+                id: "r1",
+                listID: "l1",
+                title: "T",
+                completed: false,
+                dueDateISO: nil,
+                notes: nil
+            ),
+        ]
+        let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
+        let request = ProviderRequest(
+            provider: "eventkit",
+            operation: "get_reminder",
+            payloadJson: #"{"reminder_id":"r1"}"#
+        )
+        let response = bridge.callProvider(request: request)
+        #expect(response.ok == true)
+    }
+
+    @Test
     func unknownProviderReturnsError() {
         let bridge = AppleProviderBridge()
         let request = ProviderRequest(
