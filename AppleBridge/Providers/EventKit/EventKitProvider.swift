@@ -182,31 +182,12 @@ final class EventKitProvider {
         switch operation {
         case "list_lists":
             listLists()
-        case "list_reminders", "get_reminder", "search_reminders":
-            handleReadOperation(operation: operation, payloadJson: payloadJson)
-        case "create_reminder", "create_list", "update_reminder", "move_reminder", "complete_reminder",
-             "uncomplete_reminder":
-            handleMutationOperation(operation: operation, payloadJson: payloadJson)
-        default:
-            errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
-        }
-    }
-
-    private func handleReadOperation(operation: String, payloadJson: String) -> ProviderResponse {
-        switch operation {
         case "list_reminders":
             listReminders(payloadJson: payloadJson)
         case "get_reminder":
             getReminder(payloadJson: payloadJson)
         case "search_reminders":
             searchReminders(payloadJson: payloadJson)
-        default:
-            errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
-        }
-    }
-
-    private func handleMutationOperation(operation: String, payloadJson: String) -> ProviderResponse {
-        switch operation {
         case "create_reminder":
             createReminder(payloadJson: payloadJson)
         case "create_list":
@@ -215,10 +196,6 @@ final class EventKitProvider {
             updateReminder(payloadJson: payloadJson)
         case "move_reminder":
             moveReminder(payloadJson: payloadJson)
-        case "complete_reminder":
-            completeReminder(payloadJson: payloadJson)
-        case "uncomplete_reminder":
-            uncompleteReminder(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }

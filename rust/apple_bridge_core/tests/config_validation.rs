@@ -117,13 +117,6 @@ fn accepts_edit_capability() {
 }
 
 #[test]
-fn accepts_complete_capability() {
-  let mut config = sample_config();
-  config.enabled_capabilities = vec!["eventkit.reminders.complete".into()];
-  assert!(validate_config(&config).is_ok());
-}
-
-#[test]
 fn rejects_unknown_capability() {
   let mut config = sample_config();
   config.enabled_capabilities = vec!["eventkit.foo.bar".into()];
