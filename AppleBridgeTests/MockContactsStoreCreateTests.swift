@@ -14,7 +14,7 @@ struct MockContactsStoreCreateTests {
 
         let saved = try store.createContact(in: "container-1", contact: contact)
 
-        #expect(saved.identifier == "mock-contact-1")
+        #expect(saved.identifier.isEmpty == false)
         #expect(saved.givenName == "New")
         #expect(store.contacts.count == 1)
         #expect(try store.fetchContact(identifier: saved.identifier)?.givenName == "New")

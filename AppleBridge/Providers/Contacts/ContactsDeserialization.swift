@@ -67,9 +67,7 @@ enum ContactsDeserialization {
         if dictionary.keys.contains("image_data") {
             contact.imageData = try optionalData(dictionary["image_data"])
         }
-        if dictionary.keys.contains("thumbnail_image_data") {
-            contact.thumbnailImageData = try optionalData(dictionary["thumbnail_image_data"])
-        }
+
         if dictionary.keys.contains("birthday") {
             contact.birthday = try dateComponents(from: dictionary["birthday"])
         }
@@ -248,11 +246,28 @@ enum ContactsDeserialization {
     }
 
     private static func labeledStrings(from value: Any?, field: String) throws -> [CNLabeledValue<NSString>] {
-        try labeledValues(from: value, field: field) { valueObject in
-            guard let string = valueObject as? String else {
+        try labeledStringValues(from: value, field: field)
+    }
+
+    private static func labeledStringValues(
+        from value: Any?,
+        field: String
+    ) throws -> [CNLabeledValue<NSString>] {
+        guard let value else { return [] }
+        if value is NSNull { return [] }
+        guard let array = value as? [[String: Any]] else {
+            throw ContactsProviderError.invalidArguments("\(field) must be an array")
+        }
+
+        return try array.map { entry in
+            guard entry.keys.contains("value") else {
+                throw ContactsProviderError.invalidArguments("\(field) entries require value")
+            }
+            guard let string = entry["value"] as? String else {
                 throw ContactsProviderError.invalidArguments("\(field) values must be strings")
             }
-            return string as NSString
+            let label = try optionalString(entry["label"])
+            return CNLabeledValue(label: label, value: string as NSString)
         }
     }
 
@@ -295,8 +310,8 @@ enum ContactsDeserialization {
     }
 
     private static func labeledDateComponents(from value: Any?) throws -> [CNLabeledValue<NSDateComponents>] {
-        try labeledValues(from: value, field: "dates") { valueObject in
-            guard let components = try dateComponents(from: valueObject) else {
+        try labeledValues(from: value, field: "dates") { valueDictionary in
+            guard let components = try dateComponents(from: valueDictionary) else {
                 throw ContactsProviderError.invalidArguments("dates values must be date component objects")
             }
             return components as NSDateComponents
@@ -308,19 +323,6 @@ enum ContactsDeserialization {
         field: String,
         mapValue: ([String: Any]) throws -> Value
     ) throws -> [CNLabeledValue<Value>] where Value: NSObjectProtocol {
-        try labeledValues(from: value, field: field) { valueObject in
-            guard let valueDictionary = valueObject as? [String: Any] else {
-                throw ContactsProviderError.invalidArguments("\(field) values must be objects")
-            }
-            return try mapValue(valueDictionary)
-        }
-    }
-
-    private static func labeledValues<Value>(
-        from value: Any?,
-        field: String,
-        mapValue: (Any) throws -> Value
-    ) throws -> [CNLabeledValue<Value>] {
         guard let value else { return [] }
         if value is NSNull { return [] }
         guard let array = value as? [[String: Any]] else {
@@ -331,11 +333,11 @@ enum ContactsDeserialization {
             guard entry.keys.contains("value") else {
                 throw ContactsProviderError.invalidArguments("\(field) entries require value")
             }
-            let label = try optionalString(entry["label"])
-            let mappedValue = try mapValue(entry["value"] as Any)
-            if let identifier = try optionalString(entry["identifier"]) {
-                return CNLabeledValue(label: label, identifier: identifier, value: mappedValue)
+            guard let valueDictionary = entry["value"] as? [String: Any] else {
+                throw ContactsProviderError.invalidArguments("\(field) values must be objects")
             }
+            let label = try optionalString(entry["label"])
+            let mappedValue = try mapValue(valueDictionary)
             return CNLabeledValue(label: label, value: mappedValue)
         }
     }

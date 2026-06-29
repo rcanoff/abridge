@@ -8,7 +8,6 @@ final class MockContactsStore: ContactsStoreing {
     var contacts: [CNContact] = []
     var knownContainerIdentifiers: Set<String> = ["container-1"]
     var fetchError: ContactsProviderError?
-    private var nextContactID = 1
 
     func contactsAuthorizationStatus() -> CNAuthorizationStatus {
         authorizationStatus
@@ -109,9 +108,6 @@ final class MockContactsStore: ContactsStoreing {
             throw ContactsProviderError.contactsError("Failed to copy contact")
         }
 
-        let generatedID = "mock-contact-\(nextContactID)"
-        nextContactID += 1
-        saved.setValue(generatedID, forKey: "identifier")
         contacts.append(saved)
         return saved
     }
