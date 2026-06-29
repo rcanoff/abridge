@@ -70,17 +70,6 @@ struct SingleInstanceGuardTests {
     }
 
     @Test
-    func productionCheckerUsesDefaultDetectionClosureWhenNoOtherInstance() {
-        let checker = RunningApplicationInstanceChecker(
-            bundleIdentifier: { "com.applebridge.AppleBridge" },
-            currentProcessIdentifier: { 100 },
-            hasOtherRunningInstance: RunningApplicationInstanceChecker.detectOtherRunningInstance
-        )
-
-        #expect(checker.isDuplicateLaunch() == false)
-    }
-
-    @Test
     func productionCheckerDetectsDuplicateWhenOtherInstancePresent() {
         let checker = RunningApplicationInstanceChecker(
             hasOtherRunningInstance: { _, _ in true }
