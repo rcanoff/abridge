@@ -10,10 +10,25 @@ SCRATCH="${SCRATCH:-/var/folders/j1/79r1s5wn54gdrjpc78k08g5h0000gn/T/grok-goal-b
 BUNDLE="${SCRATCH}/verification-bundle.txt"
 RESULT_DIR="${SCRATCH}/issue-120-xcresult"
 RESULT_BUNDLE="${RESULT_DIR}/test-results.xcresult"
-TEST_LOG="${SCRATCH}/issue-120-test-verbose.log"
+TEST_LOG="$(mktemp "${TMPDIR:-/tmp}/issue-120-test-verbose.XXXXXX")"
+trap 'rm -f "$TEST_LOG"' EXIT
 
 mkdir -p "$SCRATCH" "$RESULT_DIR"
-rm -f "$BUNDLE" "$TEST_LOG"
+
+# Remove stale artifacts that misrepresent guard coverage or ship evidence.
+rm -f \
+  "$BUNDLE" \
+  "$SCRATCH/issue-120-test-verbose.log" \
+  "$SCRATCH/single-instance-guard-suite.log" \
+  "$SCRATCH/gh-pr-ship.log" \
+  "$SCRATCH/single-instance-guard-tests.log" \
+  "$SCRATCH/double-launch-check.log" \
+  "$SCRATCH/double-launch-check-v2.log" \
+  "$SCRATCH/double-launch-check-v3.log" \
+  "$SCRATCH/double-launch-clean-start.log" \
+  "$SCRATCH/double-launch-pid-delta.log" \
+  "$SCRATCH/gh-pr-create.log" \
+  "$SCRATCH/gh-pr-create-137.log"
 : >"$BUNDLE"
 
 section() {
@@ -48,6 +63,17 @@ extract_guard_suite() {
   ' "$TEST_LOG"
 }
 
+append_codex_review() {
+  local review_dir="$1"
+  local path="docs/reviews/${review_dir}/codex.md"
+  section "STEP 8 — cat ${path}"
+  if [ -f "$path" ]; then
+    cat "$path" >>"$BUNDLE"
+  else
+    echo "MISSING: $path" >>"$BUNDLE"
+  fi
+}
+
 # --- Step 1: Issue scope ---
 section "STEP 1 — gh issue view 120"
 append_cmd gh issue view 120
@@ -55,6 +81,12 @@ append_cmd gh issue view 120 --json title,state,labels,closedAt
 
 # --- Step 4: Full test run with guard suite extract ---
 section "STEP 4 — TZ=UTC just test-swift (verbose guard extract)"
+section "NOTE — Swift Testing suite filter"
+{
+  echo "AppleBridgeTests/SingleInstanceGuard -only-testing executes 0 tests (Swift Testing naming)."
+  echo "Guard coverage is extracted from the full test run log and xcresult summary."
+} >>"$BUNDLE"
+
 rm -rf "$RESULT_BUNDLE"
 TZ=UTC xcodebuild build-for-testing -project AppleBridge.xcodeproj -scheme AppleBridge \
   -destination 'platform=macOS,arch=arm64' -quiet >>"$BUNDLE" 2>&1
@@ -129,23 +161,44 @@ ls docs/superpowers/specs/ | cat >>"$BUNDLE"
 section "STEP 8 — ls docs/superpowers/plans/ | cat"
 ls docs/superpowers/plans/ | cat >>"$BUNDLE"
 
-section "STEP 8 — cat docs/reviews/feat-single-instance-guard/codex.md"
-if [ -f docs/reviews/feat-single-instance-guard/codex.md ]; then
-  cat docs/reviews/feat-single-instance-guard/codex.md >>"$BUNDLE"
-else
-  echo "MISSING: docs/reviews/feat-single-instance-guard/codex.md" >>"$BUNDLE"
-fi
+ISSUE_120_REVIEW_DIRS=(
+  feat-single-instance-guard
+  feat-single-instance-guard-bootstrap-entry
+  feat-single-instance-guard-order-fix
+  fix-issue-120-verification-gaps
+  fix-verify-issue-120-port-count
+  fix-issue-120-verification-evidence
+)
+for review_dir in "${ISSUE_120_REVIEW_DIRS[@]}"; do
+  append_codex_review "$review_dir"
+done
 
-section "STEP 8 — cat docs/reviews/feat-single-instance-guard-bootstrap-entry/codex.md"
-if [ -f docs/reviews/feat-single-instance-guard-bootstrap-entry/codex.md ]; then
-  cat docs/reviews/feat-single-instance-guard-bootstrap-entry/codex.md >>"$BUNDLE"
-else
-  echo "MISSING: docs/reviews/feat-single-instance-guard-bootstrap-entry/codex.md" >>"$BUNDLE"
-fi
+# --- Step 6: Ship references ---
+section "STEP 6 — gh pr ship log (all #120 PRs)"
+{
+  for pr in 135 136 137 138 139 140; do
+    echo "--- PR #${pr} ---"
+    gh pr view "$pr" --json number,title,url,state,mergedAt,closingIssuesReferences
+  done
+} >>"$BUNDLE"
 
-# --- Step 5–6: Review + ship references ---
-section "STEP 6 — merged PRs closing #120"
+section "STEP 6 — merged PRs closing #120 (search)"
 gh pr list --search "120" --state merged --json number,title,url,closingIssuesReferences --limit 10 >>"$BUNDLE" 2>&1
+
+# --- Step 9: Tree scope evidence ---
+section "STEP 9 — git status (tree clean; #120 scope)"
+git status --short >>"$BUNDLE"
+{
+  current_branch="$(git rev-parse --abbrev-ref HEAD)"
+  if [ "$current_branch" = "main" ]; then
+    echo "Changed files in #120 PR stack on main (135–140):"
+    git log --oneline --name-only main --grep='#120' --grep='single-instance' --grep='issue-120' --grep='verify-issue-120' -i --max-count=20
+  else
+    echo "Changed files on current branch (${current_branch}) vs main:"
+    git log --oneline --name-only main..HEAD
+    git diff --stat main..HEAD
+  fi
+} >>"$BUNDLE" 2>&1
 
 # --- Step 10: Merge commit ---
 section "STEP 10 — git log --oneline -1"
