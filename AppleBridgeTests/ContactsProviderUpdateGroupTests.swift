@@ -117,6 +117,25 @@ struct ContactsProviderUpdateGroupTests {
 
     @Test
     @MainActor
+    func updateGroupUnknownFieldReturnsInvalidArguments() {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        let group = ContactsTestSupport.makeGroup(name: "Family")
+        mockStore.groups = [group]
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "update_group",
+            payloadJson: #"{"group_identifier":"\#(group.identifier)","nickname":"Friends"}"#
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("Unknown field: nickname") == true)
+    }
+
+    @Test
+    @MainActor
     func updateGroupWhitespaceOnlyNameReturnsInvalidArguments() {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .authorized

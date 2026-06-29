@@ -52,6 +52,11 @@ extension ContactsProvider {
         var fields = dictionary
         fields.removeValue(forKey: "group_identifier")
 
+        let unknownKeys = Set(fields.keys).subtracting(["name"]).sorted()
+        if let unknownKey = unknownKeys.first {
+            throw ContactsProviderError.invalidArguments("Unknown field: \(unknownKey)")
+        }
+
         if let name = fields["name"] {
             if name is NSNull {
                 // Explicit null clears the group name.

@@ -985,7 +985,8 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
           "pattern": r".*\S.*"
         }
       },
-      "required": ["group_identifier"]
+      "required": ["group_identifier"],
+      "additionalProperties": false
     }),
     TOOL_GET_USAGE_LOG => serde_json::json!({
       "type": "object",
@@ -1423,6 +1424,10 @@ mod tests {
       vec!["string".to_owned(), "null".to_owned()]
     );
     assert_eq!(string_property_pattern(&schema, "name").as_deref(), Some(r".*\S.*"));
+    assert_eq!(
+      schema.get("additionalProperties").and_then(|value| value.as_bool()),
+      Some(false)
+    );
   }
 
   #[test]
