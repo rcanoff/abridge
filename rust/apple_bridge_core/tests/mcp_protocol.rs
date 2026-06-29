@@ -1335,6 +1335,51 @@ fn tools_call_dispatches_list_contacts() {
 }
 
 #[test]
+fn mcp_tools_list_includes_search_contacts_when_contacts_search_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":3,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    contacts_config_on_port(port, vec!["contacts.search".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("contacts.search_contacts"));
+  assert!(!resp.contains("contacts.list_contacts"));
+}
+
+#[test]
+fn tools_call_dispatches_search_contacts() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"contacts.search_contacts","arguments":{"name":"Jane","email_address":"jane@example.com","container_identifier":"container-1"}}}"#;
+
+  let handle = create_server(
+    contacts_config_on_port(port, vec!["contacts.search".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "contacts");
+  assert_eq!(recorded.operation, "search_contacts");
+  assert!(recorded.payload_json.contains("Jane"));
+  assert!(recorded.payload_json.contains("jane@example.com"));
+  assert!(recorded.payload_json.contains("container-1"));
+}
+
+#[test]
 fn tools_call_unknown_tool() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();

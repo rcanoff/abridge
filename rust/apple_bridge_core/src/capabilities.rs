@@ -21,10 +21,11 @@ pub const EVENTKIT_EVENTS_ALARMS: &str = "eventkit.events.alarms";
 pub const EVENTKIT_EVENTS_RECURRENCE: &str = "eventkit.events.recurrence";
 pub const EVENTKIT_EVENTS_INVITATIONS: &str = "eventkit.events.invitations";
 pub const CONTACTS_READ: &str = "contacts.read";
+pub const CONTACTS_SEARCH: &str = "contacts.search";
 pub const DIAGNOSTICS_READ: &str = "diagnostics.read";
 
 pub fn is_valid_capability_id(id: &str) -> bool {
-  if id == CONTACTS_READ || id == DIAGNOSTICS_READ {
+  if id == CONTACTS_READ || id == CONTACTS_SEARCH || id == DIAGNOSTICS_READ {
     return true;
   }
 
@@ -61,6 +62,7 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
       | EVENTKIT_EVENTS_RECURRENCE
       | EVENTKIT_EVENTS_INVITATIONS
       | CONTACTS_READ
+      | CONTACTS_SEARCH
       | DIAGNOSTICS_READ
   )
 }
@@ -68,7 +70,8 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
 #[cfg(test)]
 mod tests {
   use super::{
-    CONTACTS_READ, DIAGNOSTICS_READ, EVENTKIT_CALENDARS_CREATE, EVENTKIT_CALENDARS_DELETE, EVENTKIT_CALENDARS_EDIT,
+    CONTACTS_READ, CONTACTS_SEARCH, DIAGNOSTICS_READ, EVENTKIT_CALENDARS_CREATE, EVENTKIT_CALENDARS_DELETE,
+    EVENTKIT_CALENDARS_EDIT,
     EVENTKIT_CALENDARS_READ, EVENTKIT_EVENTS_ALARMS, EVENTKIT_EVENTS_CREATE, EVENTKIT_EVENTS_DELETE,
     EVENTKIT_EVENTS_EDIT, EVENTKIT_EVENTS_INVITATIONS, EVENTKIT_EVENTS_READ, EVENTKIT_EVENTS_RECURRENCE,
     EVENTKIT_EVENTS_SEARCH, EVENTKIT_REMINDERS_ALARMS, EVENTKIT_REMINDERS_COMPLETE, EVENTKIT_REMINDERS_CREATE,
@@ -84,6 +87,11 @@ mod tests {
   #[test]
   fn accepts_contacts_read_capability_shape() {
     assert!(is_valid_capability_id(CONTACTS_READ));
+  }
+
+  #[test]
+  fn accepts_contacts_search_capability_shape() {
+    assert!(is_valid_capability_id(CONTACTS_SEARCH));
   }
 
   #[test]
@@ -125,6 +133,7 @@ mod tests {
     assert!(is_allowed_in_v1(EVENTKIT_EVENTS_RECURRENCE));
     assert!(is_allowed_in_v1(EVENTKIT_EVENTS_INVITATIONS));
     assert!(is_allowed_in_v1(CONTACTS_READ));
+    assert!(is_allowed_in_v1(CONTACTS_SEARCH));
     assert!(!is_allowed_in_v1("eventkit.reminders.write"));
   }
 }
