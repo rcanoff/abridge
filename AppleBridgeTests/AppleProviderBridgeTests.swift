@@ -239,29 +239,6 @@ struct AppleProviderBridgeTests {
     }
 
     @Test
-    @MainActor
-    func routesEventKitGetEvent() {
-        let mockStore = MockEventKitStore()
-        mockStore.eventAuthorizationStatusValue = .fullAccess
-        mockStore.events = [
-            EventKitTestSupport.makeEvent(
-                calendarItemIdentifier: "evt-1",
-                calendarIdentifier: "cal-work",
-                title: "Standup"
-            ),
-        ]
-        let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
-        let request = ProviderRequest(
-            provider: "eventkit",
-            operation: "get_event",
-            payloadJson: #"{"event_identifier":"evt-evt-1"}"#
-        )
-        let response = bridge.callProvider(request: request)
-        #expect(response.ok == true)
-        #expect(response.payloadJson.contains("\"title\":\"Standup\""))
-    }
-
-    @Test
     func unknownProviderReturnsError() {
         let bridge = AppleProviderBridge()
         let request = ProviderRequest(

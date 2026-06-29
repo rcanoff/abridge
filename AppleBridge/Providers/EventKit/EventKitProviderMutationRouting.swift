@@ -3,7 +3,7 @@ import Foundation
 extension EventKitProvider {
     func handleMutationOperation(operation: String, payloadJson: String) -> ProviderResponse {
         switch operation {
-        case "create_reminder", "create_list", "create_calendar":
+        case "create_reminder", "create_list", "create_calendar", "create_event":
             handleCreateMutation(operation: operation, payloadJson: payloadJson)
         case "update_reminder", "update_calendar":
             handleUpdateMutation(operation: operation, payloadJson: payloadJson)
@@ -32,6 +32,8 @@ extension EventKitProvider {
             createList(payloadJson: payloadJson)
         case "create_calendar":
             createCalendar(payloadJson: payloadJson)
+        case "create_event":
+            createEvent(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }

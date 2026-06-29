@@ -7,6 +7,7 @@ final class MockEventKitStore: EventKitStoreing {
     private let eventStore = EKEventStore()
     private var nextReminderID = 1
     private var nextCalendarID = 1
+    private var nextEventID = 1
     private lazy var stubReminderSource: EKSource = Self.makeStubReminderSource()
 
     enum PredicateKind: Equatable {
@@ -228,6 +229,30 @@ final class MockEventKitStore: EventKitStoreing {
 
     func fetchEvent(withIdentifier id: String) throws -> EKEvent? {
         events.first { $0.eventIdentifier == id }
+    }
+
+    func makeEvent() -> EKEvent {
+        EKEvent(eventStore: eventStore)
+    }
+
+    func saveEvent(_ event: EKEvent, commit: Bool) throws {
+        guard commit else { return }
+
+        let existingID = event.calendarItemIdentifier
+        if existingID.isEmpty {
+            event.setValue("mock-evt-\(nextEventID)", forKey: "calendarItemIdentifier")
+            nextEventID += 1
+        }
+
+        if event.eventIdentifier == nil || event.eventIdentifier?.isEmpty == true {
+            event.setValue("evt-\(event.calendarItemIdentifier)", forKey: "eventIdentifier")
+        }
+
+        if let index = events.firstIndex(where: { $0.calendarItemIdentifier == event.calendarItemIdentifier }) {
+            events[index] = event
+        } else {
+            events.append(event)
+        }
     }
 
     func removeCalendar(_ calendar: EKCalendar, commit: Bool) throws {

@@ -69,5 +69,11 @@ enum CapabilityCatalog {
             label: "Search",
             shipped: true
         ),
+        CapabilityDefinition(
+            id: "events-create",
+            capabilityID: "eventkit.events.create",
+            label: "Create",
+            shipped: true
+        ),
     ]
 }

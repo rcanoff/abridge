@@ -128,6 +128,15 @@ final class StalledEventKitStore: EventKitStoreing {
         return nil
     }
 
+    func makeEvent() -> EKEvent {
+        EKEvent(eventStore: EKEventStore())
+    }
+
+    func saveEvent(_ event: EKEvent, commit: Bool) throws {
+        _ = event
+        _ = commit
+    }
+
     private static let stubReminderSource: EKSource = {
         let source = EKSource()
         source.setValue("mock-source-local", forKey: "sourceIdentifier")
