@@ -36,6 +36,7 @@ pub const TOOL_LIST_CONTACTS: &str = "contacts.list_contacts";
 pub const TOOL_GET_CONTACT: &str = "contacts.get_contact";
 pub const TOOL_SEARCH_CONTACTS: &str = "contacts.search_contacts";
 pub const TOOL_CREATE_CONTACT: &str = "contacts.create_contact";
+pub const TOOL_UPDATE_CONTACT: &str = "contacts.update_contact";
 pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -47,7 +48,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 35] = [
+const ALL_TOOLS: [ToolDefinition; 36] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -285,6 +286,13 @@ const ALL_TOOLS: [ToolDefinition; 35] = [
     provider: "contacts",
     operation: "create_contact",
     description: "Create a contact in the given container with optional CNContact fields",
+  },
+  ToolDefinition {
+    name: TOOL_UPDATE_CONTACT,
+    capability: capabilities::CONTACTS_EDIT,
+    provider: "contacts",
+    operation: "update_contact",
+    description: "Update an existing contact by contact_identifier with optional CNContact fields",
   },
   ToolDefinition {
     name: TOOL_GET_USAGE_LOG,
@@ -591,6 +599,59 @@ fn contact_dates_schema() -> serde_json::Value {
   })
 }
 
+fn nullable_contact_date_components_schema() -> serde_json::Value {
+  let base = contact_date_components_schema();
+  serde_json::json!({
+    "type": ["object", "null"],
+    "properties": base.get("properties").cloned().unwrap_or_default()
+  })
+}
+
+fn nullable_contact_array_schema(base: &serde_json::Value) -> serde_json::Value {
+  serde_json::json!({
+    "type": ["array", "null"],
+    "items": base.get("items").cloned().unwrap_or_default()
+  })
+}
+
+fn contact_writable_fields_schema() -> serde_json::Map<String, serde_json::Value> {
+  serde_json::json!({
+    "contact_type": {
+      "type": "string",
+      "enum": ["person", "organization"]
+    },
+    "given_name": nullable_string(),
+    "family_name": nullable_string(),
+    "middle_name": nullable_string(),
+    "name_prefix": nullable_string(),
+    "name_suffix": nullable_string(),
+    "nickname": nullable_string(),
+    "organization_name": nullable_string(),
+    "department_name": nullable_string(),
+    "job_title": nullable_string(),
+    "phonetic_given_name": nullable_string(),
+    "phonetic_middle_name": nullable_string(),
+    "phonetic_family_name": nullable_string(),
+    "phonetic_organization_name": nullable_string(),
+    "previous_family_name": nullable_string(),
+    "note": nullable_string(),
+    "image_data": nullable_string(),
+    "birthday": nullable_contact_date_components_schema(),
+    "non_gregorian_birthday": nullable_contact_date_components_schema(),
+    "phone_numbers": nullable_contact_array_schema(&contact_phone_numbers_schema()),
+    "email_addresses": nullable_contact_array_schema(&contact_string_labeled_values_schema()),
+    "postal_addresses": nullable_contact_array_schema(&contact_postal_addresses_schema()),
+    "url_addresses": nullable_contact_array_schema(&contact_string_labeled_values_schema()),
+    "contact_relations": nullable_contact_array_schema(&contact_relations_schema()),
+    "social_profiles": nullable_contact_array_schema(&contact_social_profiles_schema()),
+    "instant_message_addresses": nullable_contact_array_schema(&contact_instant_message_addresses_schema()),
+    "dates": nullable_contact_array_schema(&contact_dates_schema())
+  })
+  .as_object()
+  .cloned()
+  .unwrap_or_default()
+}
+
 pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
   match tool.name {
     TOOL_LIST_CALENDARS | TOOL_LIST_LISTS => serde_json::json!({
@@ -866,6 +927,15 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         { "required": ["organization_name"] }
       ]
     }),
+    TOOL_UPDATE_CONTACT => {
+      let mut properties = contact_writable_fields_schema();
+      properties.insert("contact_identifier".to_owned(), serde_json::json!({ "type": "string" }));
+      serde_json::json!({
+        "type": "object",
+        "properties": properties,
+        "required": ["contact_identifier"]
+      })
+    }
     TOOL_GET_USAGE_LOG => serde_json::json!({
       "type": "object",
       "properties": {
@@ -912,6 +982,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
 mod tests {
   use super::{
     TOOL_ACCEPT_INVITATION, TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_CONTACT, TOOL_CREATE_EVENT,
+    TOOL_UPDATE_CONTACT,
     TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DECLINE_INVITATION, TOOL_DELETE_CALENDAR, TOOL_DELETE_EVENT,
     TOOL_DELETE_LIST, TOOL_DELETE_REMINDER, TOOL_GET_CONTACT, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG,
     TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT,
@@ -1229,6 +1300,54 @@ mod tests {
   }
 
   #[test]
+  fn lists_update_contact_tool_when_contacts_edit_capability_enabled() {
+    let tools = tools_for_capabilities(&["contacts.edit".into()]);
+    let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
+    assert_eq!(names, vec![TOOL_UPDATE_CONTACT]);
+  }
+
+  #[test]
+  fn update_contact_schema_requires_contact_identifier_and_allows_nullable_fields() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_UPDATE_CONTACT)
+      .expect("update_contact tool");
+    let schema = input_schema(tool);
+
+    assert_eq!(
+      schema.get("required").and_then(|value| value.as_array()).map(|fields| {
+        fields
+          .iter()
+          .filter_map(|field| field.as_str().map(str::to_owned))
+          .collect::<Vec<_>>()
+      }),
+      Some(vec!["contact_identifier".to_owned()])
+    );
+    assert_eq!(
+      nullable_property_types(&schema, "note"),
+      vec!["string".to_owned(), "null".to_owned()]
+    );
+    assert_eq!(
+      nullable_property_types(&schema, "phone_numbers"),
+      vec!["array".to_owned(), "null".to_owned()]
+    );
+    assert_eq!(
+      nullable_property_types(&schema, "birthday"),
+      vec!["object".to_owned(), "null".to_owned()]
+    );
+    assert_eq!(array_items_type(&schema, "phone_numbers").as_deref(), Some("object"));
+    assert_eq!(array_items_type(&schema, "postal_addresses").as_deref(), Some("object"));
+    assert_eq!(array_items_type(&schema, "dates").as_deref(), Some("object"));
+    let properties = schema
+      .get("properties")
+      .and_then(|value| value.as_object())
+      .expect("update_contact properties");
+    assert!(properties.contains_key("image_data"));
+    assert!(!properties.contains_key("container_identifier"));
+    assert!(!properties.contains_key("thumbnail_image_data"));
+  }
+
+  #[test]
   fn create_contact_schema_requires_container_identifier_and_name_field() {
     let tool = all_tools()
       .iter()
@@ -1297,6 +1416,21 @@ mod tests {
       assert!(item_properties.contains_key("label"));
       assert!(item_properties.contains_key("value"));
     }
+  }
+
+  fn nullable_property_types(schema: &serde_json::Value, property: &str) -> Vec<String> {
+    schema
+      .get("properties")
+      .and_then(|properties| properties.get(property))
+      .and_then(|property_schema| property_schema.get("type"))
+      .and_then(|value| value.as_array())
+      .map(|types| {
+        types
+          .iter()
+          .filter_map(|entry| entry.as_str().map(str::to_owned))
+          .collect()
+      })
+      .unwrap_or_default()
   }
 
   fn string_property_min_length(schema: &serde_json::Value, property: &str) -> Option<u64> {
