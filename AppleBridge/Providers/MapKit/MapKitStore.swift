@@ -18,9 +18,14 @@ struct MapKitSearchNearbyRequest {
     let pointOfInterestFilter: MKPointOfInterestFilter?
 }
 
+struct MapKitReverseGeocodeRequest {
+    let coordinate: CLLocationCoordinate2D
+}
+
 @MainActor
 protocol MapKitStoreing {
     func locationAuthorizationStatus() -> CLAuthorizationStatus
     func searchPlaces(request: MapKitSearchRequest) throws -> MapKitSearchResult
     func searchNearby(request: MapKitSearchNearbyRequest) throws -> MapKitSearchResult
+    func reverseGeocode(request: MapKitReverseGeocodeRequest) throws -> [MKMapItem]
 }
