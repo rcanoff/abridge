@@ -48,6 +48,7 @@ pub const TOOL_SEARCH_PLACES: &str = "mapkit.search_places";
 pub const TOOL_SEARCH_NEARBY: &str = "mapkit.search_nearby";
 pub const TOOL_REVERSE_GEOCODE: &str = "mapkit.reverse_geocode";
 pub const TOOL_FORWARD_GEOCODE: &str = "mapkit.forward_geocode";
+pub const TOOL_CALCULATE_ROUTE: &str = "mapkit.calculate_route";
 pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -59,7 +60,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 47] = [
+const ALL_TOOLS: [ToolDefinition; 48] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -383,6 +384,13 @@ const ALL_TOOLS: [ToolDefinition; 47] = [
     description: "Resolve an address string to place representations",
   },
   ToolDefinition {
+    name: TOOL_CALCULATE_ROUTE,
+    capability: capabilities::MAPKIT_ROUTING,
+    provider: "mapkit",
+    operation: "calculate_route",
+    description: "Calculate routes between source and destination coordinates",
+  },
+  ToolDefinition {
     name: TOOL_GET_USAGE_LOG,
     capability: capabilities::DIAGNOSTICS_READ,
     provider: "diagnostics",
@@ -404,6 +412,27 @@ pub fn tools_for_capabilities(enabled: &[String]) -> Vec<&'static ToolDefinition
 
 pub fn resolve_tool(name: &str) -> Option<&'static ToolDefinition> {
   all_tools().iter().find(|tool| tool.name == name)
+}
+
+fn coordinate_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": "object",
+    "properties": {
+      "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+      "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
+    },
+    "required": ["latitude", "longitude"]
+  })
+}
+
+fn route_endpoint_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": "object",
+    "properties": {
+      "coordinate": coordinate_schema()
+    },
+    "required": ["coordinate"]
+  })
 }
 
 fn nullable_string() -> serde_json::Value {
@@ -1198,6 +1227,29 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["address"]
     }),
+    TOOL_CALCULATE_ROUTE => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "source": route_endpoint_schema(),
+        "destination": route_endpoint_schema(),
+        "transport_type": {
+          "type": "string",
+          "enum": ["automobile", "walking", "transit", "cycling", "any"]
+        },
+        "requests_alternate_routes": { "type": "boolean" },
+        "departure_date": { "type": "string", "format": "date-time" },
+        "arrival_date": { "type": "string", "format": "date-time" },
+        "toll_preference": {
+          "type": "string",
+          "enum": ["any", "avoid"]
+        },
+        "highway_preference": {
+          "type": "string",
+          "enum": ["any", "avoid"]
+        }
+      },
+      "required": ["source", "destination"]
+    }),
     TOOL_GET_USAGE_LOG => serde_json::json!({
       "type": "object",
       "properties": {
@@ -1243,10 +1295,11 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
 #[cfg(test)]
 mod tests {
   use super::{
-    TOOL_ACCEPT_INVITATION, TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_CONTACT, TOOL_CREATE_EVENT,
-    TOOL_CREATE_GROUP, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DECLINE_INVITATION, TOOL_DELETE_CALENDAR,
-    TOOL_DELETE_CONTACT, TOOL_DELETE_EVENT, TOOL_DELETE_GROUP, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER,
-    TOOL_FORWARD_GEOCODE, TOOL_GET_CONTACT, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS,
+    TOOL_ACCEPT_INVITATION, TOOL_CALCULATE_ROUTE, TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_CONTACT,
+    TOOL_CREATE_EVENT, TOOL_CREATE_GROUP, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DECLINE_INVITATION,
+    TOOL_DELETE_CALENDAR, TOOL_DELETE_CONTACT, TOOL_DELETE_EVENT, TOOL_DELETE_GROUP, TOOL_DELETE_LIST,
+    TOOL_DELETE_REMINDER, TOOL_FORWARD_GEOCODE, TOOL_GET_CONTACT, TOOL_GET_EVENT, TOOL_GET_REMINDER,
+    TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS,
     TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS,
     TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER, TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS,
     TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE,
@@ -2036,6 +2089,32 @@ mod tests {
       Some(vec!["coordinate"])
     );
     assert!(schema.get("properties").and_then(|p| p.get("coordinate")).is_some());
+  }
+
+  #[test]
+  fn lists_calculate_route_tool_when_mapkit_routing_capability_enabled() {
+    let tools = tools_for_capabilities(&["mapkit.routing".into()]);
+    let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
+    assert_eq!(names, vec![TOOL_CALCULATE_ROUTE]);
+  }
+
+  #[test]
+  fn calculate_route_schema_requires_source_and_destination() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_CALCULATE_ROUTE)
+      .expect("calculate_route tool");
+    let schema = input_schema(tool);
+    assert_eq!(
+      schema
+        .get("required")
+        .and_then(|value| value.as_array())
+        .map(|items| items.iter().filter_map(|item| item.as_str()).collect::<Vec<_>>()),
+      Some(vec!["source", "destination"])
+    );
+    assert!(schema.get("properties").and_then(|p| p.get("source")).is_some());
+    assert!(schema.get("properties").and_then(|p| p.get("destination")).is_some());
+    assert!(schema.get("properties").and_then(|p| p.get("transport_type")).is_some());
   }
 
   #[test]

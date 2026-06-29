@@ -27,6 +27,7 @@ pub const CONTACTS_EDIT: &str = "contacts.edit";
 pub const CONTACTS_DELETE: &str = "contacts.delete";
 pub const MAPKIT_SEARCH: &str = "mapkit.search";
 pub const MAPKIT_GEOCODE: &str = "mapkit.geocode";
+pub const MAPKIT_ROUTING: &str = "mapkit.routing";
 pub const DIAGNOSTICS_READ: &str = "diagnostics.read";
 
 pub fn is_valid_capability_id(id: &str) -> bool {
@@ -37,6 +38,7 @@ pub fn is_valid_capability_id(id: &str) -> bool {
     || id == CONTACTS_DELETE
     || id == MAPKIT_SEARCH
     || id == MAPKIT_GEOCODE
+    || id == MAPKIT_ROUTING
     || id == DIAGNOSTICS_READ
   {
     return true;
@@ -81,6 +83,7 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
       | CONTACTS_DELETE
       | MAPKIT_SEARCH
       | MAPKIT_GEOCODE
+      | MAPKIT_ROUTING
       | DIAGNOSTICS_READ
   )
 }
@@ -94,7 +97,7 @@ mod tests {
     EVENTKIT_EVENTS_INVITATIONS, EVENTKIT_EVENTS_READ, EVENTKIT_EVENTS_RECURRENCE, EVENTKIT_EVENTS_SEARCH,
     EVENTKIT_REMINDERS_ALARMS, EVENTKIT_REMINDERS_COMPLETE, EVENTKIT_REMINDERS_CREATE, EVENTKIT_REMINDERS_DELETE,
     EVENTKIT_REMINDERS_EDIT, EVENTKIT_REMINDERS_READ, EVENTKIT_REMINDERS_RECURRENCE, EVENTKIT_REMINDERS_SEARCH,
-    MAPKIT_GEOCODE, MAPKIT_SEARCH, is_allowed_in_v1, is_valid_capability_id,
+    MAPKIT_GEOCODE, MAPKIT_ROUTING, MAPKIT_SEARCH, is_allowed_in_v1, is_valid_capability_id,
   };
 
   #[test]
@@ -142,6 +145,12 @@ mod tests {
   fn accepts_mapkit_geocode_capability_shape() {
     assert!(is_valid_capability_id(MAPKIT_GEOCODE));
     assert!(is_allowed_in_v1(MAPKIT_GEOCODE));
+  }
+
+  #[test]
+  fn accepts_mapkit_routing_capability_shape() {
+    assert!(is_valid_capability_id(MAPKIT_ROUTING));
+    assert!(is_allowed_in_v1(MAPKIT_ROUTING));
   }
 
   #[test]
