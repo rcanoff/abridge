@@ -27,7 +27,7 @@
 
 ## Thread 1 — Private Contacts SPI used for linking
 
-**Status:** wont-fix
+**Status:** disputed
 **Severity:** bug
 **File:** `AppleBridge/Providers/Contacts/ContactsSaveRequestLinking.swift`
 **Skills:** swiftui-pro, swift-concurrency-pro, requesting-code-review
