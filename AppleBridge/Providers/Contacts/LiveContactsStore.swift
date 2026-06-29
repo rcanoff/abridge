@@ -63,7 +63,9 @@ final class LiveContactsStore: ContactsStoreing {
             predicates.append(CNContact.predicateForContacts(matchingEmailAddress: emailAddress))
         }
         if let phoneNumber {
-            predicates.append(CNContact.predicateForContacts(matchingPhoneNumber: phoneNumber))
+            predicates.append(
+                CNContact.predicateForContacts(matching: CNPhoneNumber(stringValue: phoneNumber))
+            )
         }
         if let containerIdentifier {
             predicates.append(CNContact.predicateForContactsInContainer(withIdentifier: containerIdentifier))
