@@ -657,7 +657,12 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "email_address": { "type": "string", "minLength": 1 },
         "phone_number": { "type": "string", "minLength": 1 },
         "container_identifier": { "type": "string" }
-      }
+      },
+      "anyOf": [
+        { "required": ["name"] },
+        { "required": ["email_address"] },
+        { "required": ["phone_number"] }
+      ]
     }),
     TOOL_GET_USAGE_LOG => serde_json::json!({
       "type": "object",
@@ -989,6 +994,29 @@ mod tests {
       .and_then(|value| value.as_u64())
   }
 
+  fn any_of_required_fields(schema: &serde_json::Value) -> Vec<Vec<String>> {
+    schema
+      .get("anyOf")
+      .and_then(|value| value.as_array())
+      .map(|constraints| {
+        constraints
+          .iter()
+          .filter_map(|constraint| {
+            constraint
+              .get("required")
+              .and_then(|required| required.as_array())
+              .map(|fields| {
+                fields
+                  .iter()
+                  .filter_map(|field| field.as_str().map(str::to_owned))
+                  .collect()
+              })
+          })
+          .collect()
+      })
+      .unwrap_or_default()
+  }
+
   #[test]
   fn search_contacts_schema_requires_non_empty_search_strings() {
     let tool = all_tools()
@@ -1000,6 +1028,14 @@ mod tests {
     assert_eq!(string_property_min_length(&schema, "name"), Some(1));
     assert_eq!(string_property_min_length(&schema, "email_address"), Some(1));
     assert_eq!(string_property_min_length(&schema, "phone_number"), Some(1));
+    assert_eq!(
+      any_of_required_fields(&schema),
+      vec![
+        vec!["name".to_owned()],
+        vec!["email_address".to_owned()],
+        vec!["phone_number".to_owned()]
+      ]
+    );
   }
 
   #[test]
