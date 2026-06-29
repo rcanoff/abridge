@@ -16,38 +16,26 @@ struct AppleBridgeApp: App {
     @State private var settingsStore: SettingsStore
 
     init() {
-        if AppLaunchGuard.evaluate(
+        switch AppleBridgeAppBootstrap.performEntry(
             isRunningUnitTests: Self.isRunningUnitTests,
             singleInstanceChecker: RunningApplicationInstanceChecker()
-        ) == .exitDuplicate {
+        ) {
+        case .exitDuplicate:
             exit(0)
-        }
+        case let .continued(stores):
+            _appSettings = State(initialValue: stores.appSettings)
+            _serverStore = State(initialValue: stores.serverStore)
+            _permissionsStore = State(initialValue: stores.permissionsStore)
+            _settingsStore = State(initialValue: stores.settingsStore)
+            _store = State(initialValue: stores.store)
 
-        let appSettings = AppSettings()
-        let serverStore = ServerStore(
-            serverService: ServerService(
-                tokenStore: BearerTokenStoreFactory.make(useKeychain: appSettings.useKeychainForAPIKey)
+            guard !Self.isRunningUnitTests else { return }
+
+            AppleBridgeAppLaunchSupport.scheduleLaunchRestore(
+                settingsStore: stores.settingsStore,
+                serverStore: stores.serverStore
             )
-        )
-        let permissionService = RemindersPermissionService()
-        let store = AppStore(permissionService: permissionService)
-        let settingsStore = SettingsStore(
-            appSettings: appSettings,
-            serverStore: serverStore,
-            permissionService: permissionService
-        )
-        _appSettings = State(initialValue: appSettings)
-        _serverStore = State(initialValue: serverStore)
-        _permissionsStore = State(initialValue: PermissionsStore(appSettings: appSettings))
-        _settingsStore = State(initialValue: settingsStore)
-        _store = State(initialValue: store)
-
-        guard !Self.isRunningUnitTests else { return }
-
-        AppleBridgeAppLaunchSupport.scheduleLaunchRestore(
-            settingsStore: settingsStore,
-            serverStore: serverStore
-        )
+        }
     }
 
     var body: some Scene {
