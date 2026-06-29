@@ -62,6 +62,16 @@ struct ContactsSerializationTests {
     ]
 
     @Test
+    func groupJSONObjectIncludesIdentifierAndNameOnly() {
+        let group = ContactsTestSupport.makeGroup(name: "Family")
+        let json = ContactsSerialization.groupJSONObject(from: group)
+
+        #expect(Set(json.keys) == ["identifier", "name"])
+        #expect((json["identifier"] as? String)?.isEmpty == false)
+        #expect(json["name"] as? String == "Family")
+    }
+
+    @Test
     func contactJSONObjectIncludesAllExpectedKeys() {
         let contact = ContactsTestSupport.makeRichContact()
         let json = ContactsSerialization.contactJSONObject(from: contact)
@@ -162,6 +172,12 @@ struct ContactsSerializationTests {
 }
 
 enum ContactsTestSupport {
+    static func makeGroup(name: String) -> CNGroup {
+        let group = CNMutableGroup()
+        group.name = name
+        return group
+    }
+
     static func makeRichContact() -> CNContact {
         let contact = CNMutableContact()
         applyScalarFields(to: contact)

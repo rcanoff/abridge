@@ -40,6 +40,30 @@ final class LiveContactsStore: ContactsStoreing {
         return fetched
     }
 
+    func fetchGroups(containerIdentifier: String?) throws -> [CNGroup] {
+        if let containerIdentifier {
+            let containers = try contactStore.containers(matching: nil)
+            guard containers.contains(where: { $0.identifier == containerIdentifier }) else {
+                throw ContactsProviderError.invalidArguments(
+                    "Unknown container_identifier: \(containerIdentifier)"
+                )
+            }
+        }
+
+        let predicate: NSPredicate?
+        if let containerIdentifier {
+            predicate = CNGroup.predicateForGroupsInContainer(withIdentifier: containerIdentifier)
+        } else {
+            predicate = nil
+        }
+
+        do {
+            return try contactStore.groups(matching: predicate)
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
+    }
+
     func fetchContact(identifier: String) throws -> CNContact? {
         do {
             return try contactStore.unifiedContact(
