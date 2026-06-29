@@ -4,13 +4,16 @@ import Testing
 
 @Suite("SingleInstanceGuard")
 struct SingleInstanceGuardTests {
-    @Test
-    func appEntryStatePropertiesHaveNoDefaultInitializers() throws {
-        let sourceURL = URL(fileURLWithPath: #filePath)
+    private static func appleBridgeAppSourceURL() -> URL {
+        URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("AppleBridge/AppleBridgeApp.swift")
-        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+    }
+
+    @Test
+    func appEntryStatePropertiesHaveNoDefaultInitializers() throws {
+        let source = try String(contentsOf: Self.appleBridgeAppSourceURL(), encoding: .utf8)
         let stateLines = source
             .split(separator: "\n", omittingEmptySubsequences: false)
             .map(String.init)
@@ -20,6 +23,61 @@ struct SingleInstanceGuardTests {
             #expect(!line.contains("= ServerStore()"), "Guard must run before ServerStore default init: \(line)")
             #expect(!line.contains("= AppSettings()"), "Guard must run before AppSettings default init: \(line)")
         }
+    }
+
+    @Test
+    func appEntryGuardPrecedesBootstrapInInitBody() throws {
+        let source = try String(contentsOf: Self.appleBridgeAppSourceURL(), encoding: .utf8)
+        guard let initStart = source.range(of: "init() {") else {
+            Issue.record("init() not found in AppleBridgeApp.swift")
+            return
+        }
+        let initBody = source[initStart.lowerBound...]
+
+        guard let guardRange = initBody.range(of: "AppleBridgeAppBootstrap.performEntry"),
+              let stateAssignRange = initBody.range(of: "_appSettings = State(initialValue:")
+        else {
+            Issue.record("Expected guard-then-State assignment sequence not found")
+            return
+        }
+
+        #expect(guardRange.lowerBound < stateAssignRange.lowerBound)
+    }
+
+    @Test
+    @MainActor
+    func performEntrySkipsStoreBootstrapOnDuplicate() {
+        let storeMaker = MockAppleBridgeAppStoreMaker()
+
+        let result = AppleBridgeAppBootstrap.performEntry(
+            isRunningUnitTests: false,
+            singleInstanceChecker: MockSingleInstanceChecker(isDuplicate: true),
+            storeMaker: storeMaker
+        )
+
+        guard case .exitDuplicate = result else {
+            Issue.record("Expected exitDuplicate, got \(result)")
+            return
+        }
+        #expect(storeMaker.makeStoresCallCount == 0)
+    }
+
+    @Test
+    @MainActor
+    func performEntryBootstrapsStoresWhenNotDuplicate() {
+        let storeMaker = MockAppleBridgeAppStoreMaker()
+
+        let result = AppleBridgeAppBootstrap.performEntry(
+            isRunningUnitTests: false,
+            singleInstanceChecker: MockSingleInstanceChecker(isDuplicate: false),
+            storeMaker: storeMaker
+        )
+
+        guard case .continued = result else {
+            Issue.record("Expected continued, got \(result)")
+            return
+        }
+        #expect(storeMaker.makeStoresCallCount == 1)
     }
 
     @Test
