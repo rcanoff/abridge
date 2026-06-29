@@ -37,7 +37,7 @@ extension EventKitDeserialization {
             if structuredLocationValue is NSNull {
                 alarm.structuredLocation = nil
             } else if let locationDictionary = structuredLocationValue as? [String: Any] {
-                alarm.structuredLocation = try structuredLocation(from: locationDictionary)
+                alarm.structuredLocation = try structuredLocationFromDictionary(from: locationDictionary)
             } else {
                 throw EventKitProviderError.invalidArguments("structured_location must be an object or null")
             }
@@ -46,7 +46,7 @@ extension EventKitDeserialization {
         return alarm
     }
 
-    private static func structuredLocation(from dictionary: [String: Any]) throws -> EKStructuredLocation {
+    static func structuredLocationFromDictionary(from dictionary: [String: Any]) throws -> EKStructuredLocation {
         let title = try optionalString(dictionary["title"]) ?? ""
         let location = EKStructuredLocation(title: title)
         if dictionary.keys.contains("radius") {

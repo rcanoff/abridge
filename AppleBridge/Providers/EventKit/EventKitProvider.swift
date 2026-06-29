@@ -42,6 +42,8 @@ protocol EventKitStoreing {
     func predicateForEvents(withStart startDate: Date, end endDate: Date, calendars: [EKCalendar]) -> NSPredicate
     func fetchEvents(matching predicate: NSPredicate) throws -> [EKEvent]
     func fetchEvent(withIdentifier id: String) throws -> EKEvent?
+    func makeEvent() -> EKEvent
+    func saveEvent(_ event: EKEvent, commit: Bool) throws
 }
 
 @MainActor
@@ -168,45 +170,13 @@ final class LiveEventKitStore: EventKitStoreing {
     func fetchEvent(withIdentifier id: String) throws -> EKEvent? {
         eventStore.event(withIdentifier: id)
     }
-}
 
-@MainActor
-enum EventKitReminderFetch {
-    /// Upper bound for blocking the main actor while EventKit delivers its callback.
-    /// Kept short so stalled fetches cannot freeze menu bar UI for extended periods.
-    static let defaultTimeout: TimeInterval = 5
-
-    /// Modes pumped while waiting so EventKit callbacks and user-input sources stay serviced.
-    static let runLoopModes: [RunLoop.Mode] = [.default, .eventTracking]
-
-    static let runLoopInterval: TimeInterval = 0.01
-
-    static func waitForCompletion(
-        timeout: TimeInterval = defaultTimeout,
-        work: (@escaping () -> Void) -> Void
-    ) throws {
-        var done = false
-        work {
-            done = true
-        }
-
-        // EventKit delivers the completion on the main run loop. Spin explicitly on `.main`
-        // (not `.current`) so this stays correct when called via `DispatchQueue.main.sync`.
-        let deadline = Date().addingTimeInterval(timeout)
-        while !done, Date() < deadline {
-            pumpRunLoop(until: Date(timeIntervalSinceNow: runLoopInterval))
-        }
-
-        guard done else {
-            throw EventKitProviderError.reminderFetchTimedOut
-        }
+    func makeEvent() -> EKEvent {
+        EKEvent(eventStore: eventStore)
     }
 
-    /// Pump common run loop modes so EventKit completions and UI events can fire during sync FFI waits.
-    static func pumpRunLoop(until date: Date) {
-        for mode in runLoopModes {
-            RunLoop.main.run(mode: mode, before: date)
-        }
+    func saveEvent(_ event: EKEvent, commit: Bool) throws {
+        try eventStore.save(event, span: .thisEvent, commit: commit)
     }
 }
 
@@ -231,7 +201,8 @@ final class EventKitProvider {
             listCalendars()
         case "list_reminders", "get_reminder", "search_reminders", "list_events", "search_events", "get_event":
             handleReadOperation(operation: operation, payloadJson: payloadJson)
-        case "create_reminder", "create_list", "create_calendar", "update_reminder", "update_calendar", "move_reminder",
+        case "create_reminder", "create_list", "create_calendar", "create_event", "update_reminder", "update_calendar",
+             "move_reminder",
              "delete_reminder",
              "delete_list", "delete_calendar", "complete_reminder", "uncomplete_reminder", "set_reminder_alarms",
              "set_reminder_recurrence":

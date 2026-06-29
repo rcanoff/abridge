@@ -14,6 +14,7 @@ pub const EVENTKIT_CALENDARS_EDIT: &str = "eventkit.calendars.edit";
 pub const EVENTKIT_CALENDARS_DELETE: &str = "eventkit.calendars.delete";
 pub const EVENTKIT_EVENTS_READ: &str = "eventkit.events.read";
 pub const EVENTKIT_EVENTS_SEARCH: &str = "eventkit.events.search";
+pub const EVENTKIT_EVENTS_CREATE: &str = "eventkit.events.create";
 pub const DIAGNOSTICS_READ: &str = "diagnostics.read";
 
 pub fn is_valid_capability_id(id: &str) -> bool {
@@ -47,6 +48,7 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
       | EVENTKIT_CALENDARS_DELETE
       | EVENTKIT_EVENTS_READ
       | EVENTKIT_EVENTS_SEARCH
+      | EVENTKIT_EVENTS_CREATE
       | DIAGNOSTICS_READ
   )
 }
@@ -55,10 +57,10 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
 mod tests {
   use super::{
     DIAGNOSTICS_READ, EVENTKIT_CALENDARS_CREATE, EVENTKIT_CALENDARS_DELETE, EVENTKIT_CALENDARS_EDIT,
-    EVENTKIT_CALENDARS_READ, EVENTKIT_EVENTS_READ, EVENTKIT_EVENTS_SEARCH, EVENTKIT_REMINDERS_ALARMS,
-    EVENTKIT_REMINDERS_COMPLETE, EVENTKIT_REMINDERS_CREATE, EVENTKIT_REMINDERS_DELETE, EVENTKIT_REMINDERS_EDIT,
-    EVENTKIT_REMINDERS_READ, EVENTKIT_REMINDERS_RECURRENCE, EVENTKIT_REMINDERS_SEARCH, is_allowed_in_v1,
-    is_valid_capability_id,
+    EVENTKIT_CALENDARS_READ, EVENTKIT_EVENTS_CREATE, EVENTKIT_EVENTS_READ, EVENTKIT_EVENTS_SEARCH,
+    EVENTKIT_REMINDERS_ALARMS, EVENTKIT_REMINDERS_COMPLETE, EVENTKIT_REMINDERS_CREATE, EVENTKIT_REMINDERS_DELETE,
+    EVENTKIT_REMINDERS_EDIT, EVENTKIT_REMINDERS_READ, EVENTKIT_REMINDERS_RECURRENCE, EVENTKIT_REMINDERS_SEARCH,
+    is_allowed_in_v1, is_valid_capability_id,
   };
 
   #[test]
@@ -98,6 +100,7 @@ mod tests {
     assert!(is_allowed_in_v1(EVENTKIT_CALENDARS_DELETE));
     assert!(is_allowed_in_v1(EVENTKIT_EVENTS_READ));
     assert!(is_allowed_in_v1(EVENTKIT_EVENTS_SEARCH));
+    assert!(is_allowed_in_v1(EVENTKIT_EVENTS_CREATE));
     assert!(!is_allowed_in_v1("eventkit.reminders.write"));
   }
 }
