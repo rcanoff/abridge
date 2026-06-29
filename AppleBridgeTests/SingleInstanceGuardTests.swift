@@ -35,7 +35,7 @@ struct SingleInstanceGuardTests {
 
     @Test
     func runningApplicationCheckerTreatsCountGreaterThanOneAsDuplicate() {
-        let checker = NSRunningApplicationSingleInstanceChecker(
+        let checker = RunningApplicationInstanceChecker(
             bundleIdentifier: { "com.applebridge.AppleBridge" },
             runningApplicationCount: { _ in 2 }
         )
@@ -45,7 +45,7 @@ struct SingleInstanceGuardTests {
 
     @Test
     func runningApplicationCheckerTreatsSingleInstanceAsNotDuplicate() {
-        let checker = NSRunningApplicationSingleInstanceChecker(
+        let checker = RunningApplicationInstanceChecker(
             bundleIdentifier: { "com.applebridge.AppleBridge" },
             runningApplicationCount: { _ in 1 }
         )

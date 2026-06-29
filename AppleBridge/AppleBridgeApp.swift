@@ -18,7 +18,7 @@ struct AppleBridgeApp: App {
     init() {
         if AppLaunchGuard.evaluate(
             isRunningUnitTests: Self.isRunningUnitTests,
-            singleInstanceChecker: NSRunningApplicationSingleInstanceChecker()
+            singleInstanceChecker: RunningApplicationInstanceChecker()
         ) == .exitDuplicate {
             exit(0)
         }

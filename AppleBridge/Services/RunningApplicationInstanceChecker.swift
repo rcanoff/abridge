@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-struct NSRunningApplicationSingleInstanceChecker: SingleInstanceChecking {
+struct RunningApplicationInstanceChecker: SingleInstanceChecking {
     private let bundleIdentifier: @Sendable () -> String?
     private let runningApplicationCount: @Sendable (String) -> Int
 
