@@ -17,8 +17,8 @@ extension EventKitProvider {
             completeReminder(payloadJson: payloadJson)
         case "uncomplete_reminder":
             uncompleteReminder(payloadJson: payloadJson)
-        case "set_reminder_alarms":
-            setReminderAlarms(payloadJson: payloadJson)
+        case "set_reminder_alarms", "set_event_alarms":
+            handleSetAlarmsMutation(operation: operation, payloadJson: payloadJson)
         case "set_reminder_recurrence":
             setReminderRecurrence(payloadJson: payloadJson)
         default:
@@ -49,6 +49,17 @@ extension EventKitProvider {
             updateCalendar(payloadJson: payloadJson)
         case "update_event":
             updateEvent(payloadJson: payloadJson)
+        default:
+            errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
+        }
+    }
+
+    private func handleSetAlarmsMutation(operation: String, payloadJson: String) -> ProviderResponse {
+        switch operation {
+        case "set_reminder_alarms":
+            setReminderAlarms(payloadJson: payloadJson)
+        case "set_event_alarms":
+            setEventAlarms(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }

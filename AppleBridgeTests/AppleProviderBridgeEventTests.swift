@@ -105,6 +105,33 @@ struct AppleProviderBridgeEventTests {
 
     @Test
     @MainActor
+    func routesEventKitSetEventAlarms() {
+        let mockStore = MockEventKitStore()
+        mockStore.eventAuthorizationStatusValue = .fullAccess
+        mockStore.eventCalendarsList = [
+            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+        ]
+        mockStore.events = [
+            EventKitTestSupport.makeEvent(
+                calendarItemIdentifier: "evt-1",
+                calendarIdentifier: "cal-work",
+                title: "Standup"
+            ),
+        ]
+        let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
+        let request = ProviderRequest(
+            provider: "eventkit",
+            operation: "set_event_alarms",
+            payloadJson: #"{"event_identifier":"evt-evt-1","alarms":[{"relative_offset":-300}]}"#
+        )
+        let response = bridge.callProvider(request: request)
+        #expect(response.ok == true)
+        #expect(response.payloadJson.contains("relative_offset"))
+        #expect(mockStore.events[0].alarms?.count == 1)
+    }
+
+    @Test
+    @MainActor
     func routesEventKitDeleteEvent() {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess

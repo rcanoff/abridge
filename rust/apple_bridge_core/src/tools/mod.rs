@@ -26,6 +26,7 @@ pub const TOOL_DELETE_LIST: &str = "eventkit.reminders.delete_list";
 pub const TOOL_COMPLETE_REMINDER: &str = "eventkit.reminders.complete_reminder";
 pub const TOOL_UNCOMPLETE_REMINDER: &str = "eventkit.reminders.uncomplete_reminder";
 pub const TOOL_SET_REMINDER_ALARMS: &str = "eventkit.reminders.set_reminder_alarms";
+pub const TOOL_SET_EVENT_ALARMS: &str = "eventkit.events.set_event_alarms";
 pub const TOOL_SET_REMINDER_RECURRENCE: &str = "eventkit.reminders.set_reminder_recurrence";
 pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 
@@ -38,7 +39,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 26] = [
+const ALL_TOOLS: [ToolDefinition; 27] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -206,6 +207,13 @@ const ALL_TOOLS: [ToolDefinition; 26] = [
     provider: "eventkit",
     operation: "set_reminder_alarms",
     description: "Replace a reminder's alarms by reminder_id; pass an empty array to remove all",
+  },
+  ToolDefinition {
+    name: TOOL_SET_EVENT_ALARMS,
+    capability: capabilities::EVENTKIT_EVENTS_ALARMS,
+    provider: "eventkit",
+    operation: "set_event_alarms",
+    description: "Replace an event's alarms by event_identifier; pass an empty array to remove all",
   },
   ToolDefinition {
     name: TOOL_SET_REMINDER_RECURRENCE,
@@ -600,6 +608,14 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["reminder_id", "alarms"]
     }),
+    TOOL_SET_EVENT_ALARMS => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "event_identifier": { "type": "string" },
+        "alarms": alarms_array_schema(false)
+      },
+      "required": ["event_identifier", "alarms"]
+    }),
     TOOL_SET_REMINDER_RECURRENCE => serde_json::json!({
       "type": "object",
       "properties": {
@@ -618,7 +634,7 @@ mod tests {
     TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_EVENT, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER,
     TOOL_DELETE_CALENDAR, TOOL_DELETE_EVENT, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER, TOOL_GET_EVENT, TOOL_GET_REMINDER,
     TOOL_GET_USAGE_LOG, TOOL_LIST_CALENDARS, TOOL_LIST_EVENTS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT,
-    TOOL_MOVE_REMINDER, TOOL_SEARCH_EVENTS, TOOL_SEARCH_REMINDERS, TOOL_SET_REMINDER_ALARMS,
+    TOOL_MOVE_REMINDER, TOOL_SEARCH_EVENTS, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_REMINDER_ALARMS,
     TOOL_SET_REMINDER_RECURRENCE, TOOL_UNCOMPLETE_REMINDER, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_EVENT,
     TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
   };
@@ -639,6 +655,17 @@ mod tests {
       .iter()
       .find(|tool| tool.name == TOOL_SET_REMINDER_ALARMS)
       .expect("set_reminder_alarms tool");
+    let schema = input_schema(tool);
+
+    assert_eq!(array_items_type(&schema, "alarms").as_deref(), Some("object"));
+  }
+
+  #[test]
+  fn set_event_alarms_schema_describes_object_array_items() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_SET_EVENT_ALARMS)
+      .expect("set_event_alarms tool");
     let schema = input_schema(tool);
 
     assert_eq!(array_items_type(&schema, "alarms").as_deref(), Some("object"));
@@ -818,6 +845,13 @@ mod tests {
     let tools = tools_for_capabilities(&["eventkit.reminders.alarms".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
     assert_eq!(names, vec![TOOL_SET_REMINDER_ALARMS]);
+  }
+
+  #[test]
+  fn lists_event_alarms_tool_when_events_alarms_capability_enabled() {
+    let tools = tools_for_capabilities(&["eventkit.events.alarms".into()]);
+    let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
+    assert_eq!(names, vec![TOOL_SET_EVENT_ALARMS]);
   }
 
   #[test]

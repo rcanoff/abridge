@@ -211,7 +211,7 @@ final class EventKitProvider {
              "move_reminder", "move_event",
              "delete_reminder",
              "delete_list", "delete_calendar", "delete_event", "complete_reminder", "uncomplete_reminder",
-             "set_reminder_alarms",
+             "set_reminder_alarms", "set_event_alarms",
              "set_reminder_recurrence":
             handleMutationOperation(operation: operation, payloadJson: payloadJson)
         default:

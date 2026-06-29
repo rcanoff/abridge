@@ -87,5 +87,11 @@ enum CapabilityCatalog {
             label: "Delete",
             shipped: true
         ),
+        CapabilityDefinition(
+            id: "events-alarms",
+            capabilityID: "eventkit.events.alarms",
+            label: "Alarms",
+            shipped: true
+        ),
     ]
 }
