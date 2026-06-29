@@ -99,6 +99,9 @@ enum CapabilityCatalog {
             label: "Recurrence",
             shipped: true
         ),
+        // accept_invitation and decline_invitation register in Rust behind this
+        // capability; live EventKit RSVP remains unshipped until macOS exposes
+        // a public invitation-response API (mock store covers CI/tests).
         CapabilityDefinition(
             id: "events-invitations",
             capabilityID: "eventkit.events.invitations",
