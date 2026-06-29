@@ -101,7 +101,7 @@ if (
   pgrep -x AppleBridge || true
 
   lsof -iTCP:3020 -sTCP:LISTEN 2>/dev/null || echo "(no listener on 3020)"
-  PORT_COUNT=$(lsof -iTCP:3020 -sTCP:LISTEN 2>/dev/null | grep -c LISTEN 2>/dev/null || echo 0)
+  PORT_COUNT=$(lsof -iTCP:3020 -sTCP:LISTEN 2>/dev/null | awk 'END { print NR+0 }')
   echo "PORT_3020_LISTENERS=$PORT_COUNT"
 
   if [ "$COUNT1" -eq 1 ] && [ "$COUNT2" -eq 1 ] && [ "$PORT_COUNT" -le 1 ]; then
