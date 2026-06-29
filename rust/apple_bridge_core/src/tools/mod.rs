@@ -823,18 +823,18 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_CREATE_CONTACT => serde_json::json!({
       "type": "object",
       "properties": {
-        "container_identifier": { "type": "string" },
+        "container_identifier": { "type": "string", "minLength": 1 },
         "contact_type": {
           "type": "string",
           "enum": ["person", "organization"]
         },
-        "given_name": { "type": "string" },
-        "family_name": { "type": "string" },
+        "given_name": { "type": "string", "minLength": 1 },
+        "family_name": { "type": "string", "minLength": 1 },
         "middle_name": { "type": "string" },
         "name_prefix": { "type": "string" },
         "name_suffix": { "type": "string" },
         "nickname": { "type": "string" },
-        "organization_name": { "type": "string" },
+        "organization_name": { "type": "string", "minLength": 1 },
         "department_name": { "type": "string" },
         "job_title": { "type": "string" },
         "phonetic_given_name": { "type": "string" },
@@ -1249,6 +1249,10 @@ mod tests {
         vec!["organization_name".to_owned()]
       ]
     );
+    assert_eq!(string_property_min_length(&schema, "container_identifier"), Some(1));
+    assert_eq!(string_property_min_length(&schema, "given_name"), Some(1));
+    assert_eq!(string_property_min_length(&schema, "family_name"), Some(1));
+    assert_eq!(string_property_min_length(&schema, "organization_name"), Some(1));
     assert_eq!(array_items_type(&schema, "phone_numbers").as_deref(), Some("object"));
     assert_eq!(array_items_type(&schema, "postal_addresses").as_deref(), Some("object"));
     assert_eq!(array_items_type(&schema, "dates").as_deref(), Some("object"));
