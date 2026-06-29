@@ -24,8 +24,8 @@ FEATURES=(
   "contacts-create-group|2026-06-29-contacts-create-group|156|100"
   "contacts-update-group|2026-06-29-contacts-update-group|157|101"
   "contacts-delete-group|2026-06-29-contacts-delete-group|158|102"
-  # link-contacts uses the same gates (a)-(d) as every other subtask; frozen run-14
-  # codex was restored after PR #164 regression (no run≥15-only special gates).
+  # link-contacts: gates (a)-(d) plus (e). Gate (e) asserts the restored run-14 frozen
+  # codex artifact (summary, Thread 1 wont-fix, no run>=15) — not a run≥15 re-run requirement.
   "contacts-link-contacts|2026-06-29-contacts-link-contacts|159|97"
   "contacts-unlink-contacts|2026-06-29-contacts-unlink-contacts|160|98"
 )
@@ -109,6 +109,50 @@ check_issue_closed() {
   return 1
 }
 
+check_link_contacts_frozen_codex() {
+  local review="docs/reviews/feat-contacts-link-contacts/codex.md"
+  local failures=()
+  local summary_line high_run open_check
+
+  if [[ ! -f "$review" ]]; then
+    echo "FAIL (missing $review)"
+    return 1
+  fi
+
+  summary_line="$(
+    awk '/^## Summary$/{found=1; next} found && /^## /{exit} found && NF{print; exit}' "$review" \
+      | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+  )"
+  if [[ "$summary_line" != "No open findings." ]]; then
+    failures+=("summary!=No open findings.")
+  fi
+
+  if ! sed -n '/^## Thread 1 —/,/^## Thread 2 —/p' "$review" | grep -q '^\*\*Status:\*\* wont-fix'; then
+    failures+=("Thread 1 status!=wont-fix")
+  fi
+
+  high_run="$(
+    grep -E '^\| [0-9]+ \|' "$review" \
+      | awk -F'|' '{gsub(/^ +| +$/,"",$2); if ($2+0 >= 15) {print $2; exit}}'
+  )"
+  if [[ -n "$high_run" ]]; then
+    failures+=("run log has run>=15 (run $high_run)")
+  fi
+
+  open_check="$(check_codex_open_zero "contacts-link-contacts")"
+  if [[ "$open_check" != PASS* ]]; then
+    failures+=("final Open!=0")
+  fi
+
+  if ((${#failures[@]} == 0)); then
+    echo "PASS (frozen run-14: summary, Thread 1 wont-fix, no run>=15, Open: 0)"
+    return 0
+  fi
+
+  echo "FAIL (${failures[*]})"
+  return 1
+}
+
 echo "verify-epic-90-orchestration-gates: repo=$(basename "$REPO_ROOT") branch=$(git branch --show-current) head=$(git rev-parse --short HEAD)"
 echo
 
@@ -117,7 +161,7 @@ for entry in "${FEATURES[@]}"; do
 
   echo "=== $slug (PR #$pr, issue #$issue) ==="
 
-  gate_a=0 gate_b=0 gate_c=0 gate_d=0
+  gate_a=0 gate_b=0 gate_c=0 gate_d=0 gate_e=1
   failures=()
 
   printf '  (a) docs on disk: '
@@ -156,7 +200,19 @@ for entry in "${FEATURES[@]}"; do
     failures+=("(d)")
   fi
 
-  if [[ "$gate_a" -eq 1 && "$gate_b" -eq 1 && "$gate_c" -eq 1 && "$gate_d" -eq 1 ]]; then
+  if [[ "$slug" == "contacts-link-contacts" ]]; then
+    gate_e=0
+    printf '  (e) frozen run-14 codex: '
+    if out="$(check_link_contacts_frozen_codex)"; then
+      printf '%s\n' "$out"
+      gate_e=1
+    else
+      printf '%s\n' "$out"
+      failures+=("(e)")
+    fi
+  fi
+
+  if [[ "$gate_a" -eq 1 && "$gate_b" -eq 1 && "$gate_c" -eq 1 && "$gate_d" -eq 1 && "$gate_e" -eq 1 ]]; then
     echo "  => PASS"
     pass_count=$((pass_count + 1))
   else
