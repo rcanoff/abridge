@@ -45,7 +45,8 @@ struct LiveContactsStoreUnlinkTests {
             return
         }
 
-        // Typed BOOL objc_msgSend bridge must not trap on primitive YES/NO returns.
+        // Verified on macOS 26: unlinkContact: encoding is v24@0:8@16 (void).
+        // Rejection surfaces via CNContactStore.execute.
         #expect(ABContactUnlinkingIsAvailable())
         do {
             try ContactsSaveRequestUnlinking.unlink(contactMutable, in: saveRequest)

@@ -10,12 +10,12 @@ BOOL ABContactUnlinkingIsAvailable(void) {
     return [CNSaveRequest instancesRespondToSelector:ABUnlinkContactSelector()];
 }
 
-BOOL ABUnlinkContact(CNSaveRequest *saveRequest, CNMutableContact *contact) {
+void ABUnlinkContact(CNSaveRequest *saveRequest, CNMutableContact *contact) {
     SEL selector = ABUnlinkContactSelector();
     if (![saveRequest respondsToSelector:selector]) {
-        return NO;
+        return;
     }
 
-    typedef BOOL (*ABUnlinkContactIMP)(id, SEL, CNMutableContact *);
-    return ((ABUnlinkContactIMP)objc_msgSend)(saveRequest, selector, contact);
+    typedef void (*ABUnlinkContactIMP)(id, SEL, CNMutableContact *);
+    ((ABUnlinkContactIMP)objc_msgSend)(saveRequest, selector, contact);
 }

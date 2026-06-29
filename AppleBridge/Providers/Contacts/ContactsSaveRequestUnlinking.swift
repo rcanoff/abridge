@@ -21,8 +21,6 @@ enum ContactsSaveRequestUnlinking {
             throw ContactsProviderError.unlinkingUnavailable
         }
 
-        guard ABUnlinkContact(saveRequest, contact) else {
-            throw ContactsProviderError.contactsError("Contacts framework rejected the unlink request")
-        }
+        ABUnlinkContact(saveRequest, contact)
     }
 }
