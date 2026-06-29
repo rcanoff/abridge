@@ -6,6 +6,17 @@ struct MenuBarPopoverView: View {
 
     @Bindable var store: AppStore
     @Bindable var serverStore: ServerStore
+    private let appQuitter: any AppQuitting
+
+    init(
+        store: AppStore,
+        serverStore: ServerStore,
+        appQuitter: any AppQuitting = NSApplicationQuitter()
+    ) {
+        self.store = store
+        self.serverStore = serverStore
+        self.appQuitter = appQuitter
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: SettingsDesign.popoverSpacing) {
@@ -62,6 +73,15 @@ struct MenuBarPopoverView: View {
             .controlSize(.large)
             .frame(maxWidth: .infinity)
 
+            Button("Quit Apple Bridge") {
+                Task { @MainActor in
+                    await MenuBarQuitCoordinator.quit(serverStore: serverStore, appQuitter: appQuitter)
+                }
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
+            .disabled(MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore))
+
             if isServerStarting {
                 ProgressView()
                     .controlSize(.small)
@@ -77,6 +97,6 @@ struct MenuBarPopoverView: View {
     }
 
     private var isServerStarting: Bool {
-        serverStore.runState == .starting || serverStore.isStarting
+        MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore)
     }
 }
