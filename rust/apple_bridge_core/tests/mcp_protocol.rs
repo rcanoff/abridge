@@ -1885,6 +1885,44 @@ fn tools_call_dispatches_estimate_travel_time() {
 }
 
 #[test]
+fn mcp_tools_list_includes_get_current_location_when_mapkit_location_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":21,"method":"tools/list","params":{}}"#;
+  let handle = create_server(
+    mapkit_config_on_port(port, vec!["mapkit.location".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+  assert_eq!(status, 200);
+  assert!(resp.contains("mapkit.get_current_location"));
+}
+
+#[test]
+fn tools_call_dispatches_get_current_location() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":22,"method":"tools/call","params":{"name":"mapkit.get_current_location","arguments":{}}}"#;
+  let handle = create_server(
+    mapkit_config_on_port(port, vec!["mapkit.location".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "mapkit");
+  assert_eq!(recorded.operation, "get_current_location");
+  assert_eq!(recorded.payload_json, "{}");
+}
+
+#[test]
 fn tools_call_unknown_tool() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();

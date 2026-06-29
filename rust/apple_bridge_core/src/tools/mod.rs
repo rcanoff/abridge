@@ -50,6 +50,7 @@ pub const TOOL_REVERSE_GEOCODE: &str = "mapkit.reverse_geocode";
 pub const TOOL_FORWARD_GEOCODE: &str = "mapkit.forward_geocode";
 pub const TOOL_CALCULATE_ROUTE: &str = "mapkit.calculate_route";
 pub const TOOL_ESTIMATE_TRAVEL_TIME: &str = "mapkit.estimate_travel_time";
+pub const TOOL_GET_CURRENT_LOCATION: &str = "mapkit.get_current_location";
 pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -61,7 +62,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 49] = [
+const ALL_TOOLS: [ToolDefinition; 50] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -397,6 +398,13 @@ const ALL_TOOLS: [ToolDefinition; 49] = [
     provider: "mapkit",
     operation: "estimate_travel_time",
     description: "Estimate travel time between source and destination coordinates",
+  },
+  ToolDefinition {
+    name: TOOL_GET_CURRENT_LOCATION,
+    capability: capabilities::MAPKIT_LOCATION,
+    provider: "mapkit",
+    operation: "get_current_location",
+    description: "Fetch the device's current GPS fix via CoreLocation",
   },
   ToolDefinition {
     name: TOOL_GET_USAGE_LOG,
@@ -1259,6 +1267,10 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["address"]
     }),
+    TOOL_GET_CURRENT_LOCATION => serde_json::json!({
+      "type": "object",
+      "properties": {}
+    }),
     TOOL_CALCULATE_ROUTE => serde_json::json!({
       "type": "object",
       "properties": {
@@ -1345,14 +1357,14 @@ mod tests {
     TOOL_ACCEPT_INVITATION, TOOL_CALCULATE_ROUTE, TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_CONTACT,
     TOOL_CREATE_EVENT, TOOL_CREATE_GROUP, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DECLINE_INVITATION,
     TOOL_DELETE_CALENDAR, TOOL_DELETE_CONTACT, TOOL_DELETE_EVENT, TOOL_DELETE_GROUP, TOOL_DELETE_LIST,
-    TOOL_DELETE_REMINDER, TOOL_ESTIMATE_TRAVEL_TIME, TOOL_FORWARD_GEOCODE, TOOL_GET_CONTACT, TOOL_GET_EVENT,
-    TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS, TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS,
-    TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER,
-    TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES,
-    TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS,
-    TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS,
-    TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools,
-    input_schema, tools_for_capabilities,
+    TOOL_DELETE_REMINDER, TOOL_ESTIMATE_TRAVEL_TIME, TOOL_FORWARD_GEOCODE, TOOL_GET_CONTACT,
+    TOOL_GET_CURRENT_LOCATION, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS,
+    TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS,
+    TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER, TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS,
+    TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS,
+    TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION,
+    TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT,
+    TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
   };
 
   fn array_items_type(schema: &serde_json::Value, property: &str) -> Option<String> {
@@ -2143,6 +2155,21 @@ mod tests {
     let tools = tools_for_capabilities(&["mapkit.routing".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
     assert_eq!(names, vec![TOOL_CALCULATE_ROUTE, TOOL_ESTIMATE_TRAVEL_TIME]);
+  }
+
+  #[test]
+  fn lists_get_current_location_tool_when_mapkit_location_capability_enabled() {
+    let tools = tools_for_capabilities(&["mapkit.location".into()]);
+    let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
+    assert_eq!(names, vec![TOOL_GET_CURRENT_LOCATION]);
+  }
+
+  #[test]
+  fn get_current_location_schema_has_no_required_fields() {
+    let tool = all_tools().iter().find(|tool| tool.name == TOOL_GET_CURRENT_LOCATION).expect("get_current_location tool");
+    let schema = input_schema(tool);
+    assert_eq!(schema.get("required").and_then(|value| value.as_array()).map(|items| items.iter().filter_map(|item| item.as_str()).collect::<Vec<_>>()), None);
+    assert_eq!(schema.get("properties").and_then(|value| value.as_object()).map(|properties| properties.len()), Some(0));
   }
 
   #[test]

@@ -43,6 +43,13 @@ struct PermissionsStoreMapKitTests {
         #expect(store.requiresAppleLocationAccess == true)
     }
 
+    @Test @MainActor func requiresAppleLocationAccessIsTrueForShippedMapKitLocationToggle() throws {
+        let suiteName = "PermissionsStoreMapKitTests.locationShipped"
+        let defaults = try #require(UserDefaults(suiteName: suiteName)); defaults.removePersistentDomain(forName: suiteName)
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults)); store.setChecked(true, for: "mapkit-location")
+        #expect(store.requiresAppleLocationAccess == true)
+    }
+
     @Test
     @MainActor
     func shouldNotApplySavedCapabilitiesAfterEnablingMapKitWithoutAuthorization() throws {

@@ -284,4 +284,47 @@ struct LiveMapKitStore: MapKitStoreing {
         polyline.getCoordinates(&coordinates, range: NSRange(location: 0, length: polyline.pointCount))
         return coordinates
     }
+
+    func getCurrentLocation() throws -> CLLocation {
+        let fetcher = OneShotLocationFetcher()
+        var location: CLLocation?
+        var locationError: Error?
+        do {
+            try MapKitSearchFetch.waitForCompletion { complete in
+                fetcher.requestLocation { result in
+                    switch result {
+                    case let .success(value): location = value
+                    case let .failure(error): locationError = error
+                    }
+                    complete()
+                }
+            }
+        } catch let error as MapKitProviderError {
+            if case let .mapkitError(message) = error, message == "MapKit search timed out" {
+                throw MapKitProviderError.mapkitError("CoreLocation request timed out")
+            }
+            throw error
+        }
+        if let locationError { throw locationError }
+        guard let location else { throw MapKitProviderError.mapkitError("CoreLocation returned no location") }
+        return location
+    }
+}
+
+@MainActor
+private final class OneShotLocationFetcher: NSObject, @preconcurrency CLLocationManagerDelegate {
+    private let manager = CLLocationManager()
+    private var completion: ((Result<CLLocation, Error>) -> Void)?
+    override init() { super.init(); manager.delegate = self }
+    func requestLocation(completion: @escaping (Result<CLLocation, Error>) -> Void) {
+        self.completion = completion; manager.requestLocation()
+    }
+    func locationManager(_: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let completion else { return }; self.completion = nil
+        if let location = locations.last { completion(.success(location)) }
+        else { completion(.failure(MapKitProviderError.mapkitError("CoreLocation returned no location"))) }
+    }
+    func locationManager(_: CLLocationManager, didFailWithError error: Error) {
+        guard let completion else { return }; self.completion = nil; completion(.failure(error))
+    }
 }

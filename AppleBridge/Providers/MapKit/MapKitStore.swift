@@ -100,4 +100,5 @@ protocol MapKitStoreing {
     func forwardGeocode(request: MapKitForwardGeocodeRequest) throws -> [MKMapItem]
     func calculateRoute(request: MapKitCalculateRouteRequest) throws -> MapKitCalculateRouteResult
     func estimateTravelTime(request: MapKitEstimateTravelTimeRequest) throws -> MapKitEstimateTravelTimeResult
+    func getCurrentLocation() throws -> CLLocation
 }
