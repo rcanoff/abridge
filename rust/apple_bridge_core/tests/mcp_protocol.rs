@@ -1308,7 +1308,31 @@ fn mcp_tools_list_includes_list_contacts_when_contacts_read_enabled() {
 
   assert_eq!(status, 200);
   assert!(resp.contains("contacts.list_contacts"));
+  assert!(resp.contains("contacts.get_contact"));
   assert!(!resp.contains("eventkit.reminders.list_reminders"));
+}
+
+#[test]
+fn tools_call_dispatches_get_contact() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"contacts.get_contact","arguments":{"contact_identifier":"contact-42"}}}"#;
+
+  let handle = create_server(
+    contacts_config_on_port(port, vec!["contacts.read".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "contacts");
+  assert_eq!(recorded.operation, "get_contact");
+  assert!(recorded.payload_json.contains("contact-42"));
 }
 
 #[test]
@@ -1352,6 +1376,7 @@ fn mcp_tools_list_includes_search_contacts_when_contacts_search_enabled() {
   assert_eq!(status, 200);
   assert!(resp.contains("contacts.search_contacts"));
   assert!(!resp.contains("contacts.list_contacts"));
+  assert!(!resp.contains("contacts.get_contact"));
 }
 
 #[test]

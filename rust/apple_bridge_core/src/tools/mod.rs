@@ -33,6 +33,7 @@ pub const TOOL_ACCEPT_INVITATION: &str = "eventkit.events.accept_invitation";
 pub const TOOL_DECLINE_INVITATION: &str = "eventkit.events.decline_invitation";
 pub const TOOL_TENTATIVE_INVITATION: &str = "eventkit.events.tentative_invitation";
 pub const TOOL_LIST_CONTACTS: &str = "contacts.list_contacts";
+pub const TOOL_GET_CONTACT: &str = "contacts.get_contact";
 pub const TOOL_SEARCH_CONTACTS: &str = "contacts.search_contacts";
 pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 
@@ -45,7 +46,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 33] = [
+const ALL_TOOLS: [ToolDefinition; 34] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -262,6 +263,13 @@ const ALL_TOOLS: [ToolDefinition; 33] = [
     provider: "contacts",
     operation: "list_contacts",
     description: "List contacts, optionally filtered by container_identifier",
+  },
+  ToolDefinition {
+    name: TOOL_GET_CONTACT,
+    capability: capabilities::CONTACTS_READ,
+    provider: "contacts",
+    operation: "get_contact",
+    description: "Get a single contact by contact_identifier",
   },
   ToolDefinition {
     name: TOOL_SEARCH_CONTACTS,
@@ -650,6 +658,13 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "container_identifier": { "type": "string" }
       }
     }),
+    TOOL_GET_CONTACT => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "contact_identifier": { "type": "string" }
+      },
+      "required": ["contact_identifier"]
+    }),
     TOOL_SEARCH_CONTACTS => serde_json::json!({
       "type": "object",
       "properties": {
@@ -711,8 +726,9 @@ mod tests {
   use super::{
     TOOL_ACCEPT_INVITATION, TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_EVENT, TOOL_CREATE_LIST,
     TOOL_CREATE_REMINDER, TOOL_DECLINE_INVITATION, TOOL_DELETE_CALENDAR, TOOL_DELETE_EVENT, TOOL_DELETE_LIST,
-    TOOL_DELETE_REMINDER, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LIST_CALENDARS,
-    TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER,
+    TOOL_DELETE_REMINDER, TOOL_GET_CONTACT, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG,
+    TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT,
+    TOOL_MOVE_REMINDER,
     TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE,
     TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER,
     TOOL_UPDATE_CALENDAR, TOOL_UPDATE_EVENT, TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
@@ -976,7 +992,29 @@ mod tests {
   fn lists_contacts_tool_when_contacts_read_capability_enabled() {
     let tools = tools_for_capabilities(&["contacts.read".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_LIST_CONTACTS]);
+    assert_eq!(names, vec![TOOL_LIST_CONTACTS, TOOL_GET_CONTACT]);
+  }
+
+  #[test]
+  fn get_contact_schema_requires_contact_identifier() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_GET_CONTACT)
+      .expect("get_contact tool");
+    let schema = input_schema(tool);
+
+    assert_eq!(
+      schema
+        .get("required")
+        .and_then(|value| value.as_array())
+        .map(|fields| {
+          fields
+            .iter()
+            .filter_map(|field| field.as_str().map(str::to_owned))
+            .collect::<Vec<_>>()
+        }),
+      Some(vec!["contact_identifier".to_owned()])
+    );
   }
 
   #[test]
