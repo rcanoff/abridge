@@ -113,7 +113,8 @@ struct PermissionsStoreIntegrationTests {
                 capabilityID: "read",
                 remindersAuthorized: true,
                 eventsAuthorized: false,
-                contactsAuthorized: false
+                contactsAuthorized: false,
+                locationAuthorized: false
             )
         )
     }
@@ -133,7 +134,8 @@ struct PermissionsStoreIntegrationTests {
                 capabilityID: "read",
                 remindersAuthorized: false,
                 eventsAuthorized: false,
-                contactsAuthorized: false
+                contactsAuthorized: false,
+                locationAuthorized: false
             ) == false
         )
     }
@@ -153,7 +155,8 @@ struct PermissionsStoreIntegrationTests {
                 capabilityID: "read",
                 remindersAuthorized: false,
                 eventsAuthorized: false,
-                contactsAuthorized: false
+                contactsAuthorized: false,
+                locationAuthorized: false
             )
         )
     }
@@ -173,7 +176,8 @@ struct PermissionsStoreIntegrationTests {
                 capabilityID: "calendars-read",
                 remindersAuthorized: false,
                 eventsAuthorized: true,
-                contactsAuthorized: false
+                contactsAuthorized: false,
+                locationAuthorized: false
             )
         )
     }
@@ -193,7 +197,8 @@ struct PermissionsStoreIntegrationTests {
                 capabilityID: "calendars-read",
                 remindersAuthorized: true,
                 eventsAuthorized: false,
-                contactsAuthorized: false
+                contactsAuthorized: false,
+                locationAuthorized: false
             ) == false
         )
     }

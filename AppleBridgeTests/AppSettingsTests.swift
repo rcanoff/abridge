@@ -214,14 +214,16 @@ struct AppSettingsTests {
             appSettings.serverEnabledMCPCapabilityIDs(
                 remindersAuthorized: false,
                 eventsAuthorized: true,
-                contactsAuthorized: false
+                contactsAuthorized: false,
+                locationAuthorized: false
             ) == ["diagnostics.read", "eventkit.calendars.read"]
         )
         #expect(
             appSettings.serverEnabledMCPCapabilityIDs(
                 remindersAuthorized: false,
                 eventsAuthorized: false,
-                contactsAuthorized: false
+                contactsAuthorized: false,
+                locationAuthorized: false
             ) == ["diagnostics.read"]
         )
     }
@@ -241,14 +243,16 @@ struct AppSettingsTests {
             appSettings.serverEnabledMCPCapabilityIDs(
                 remindersAuthorized: false,
                 eventsAuthorized: false,
-                contactsAuthorized: false
+                contactsAuthorized: false,
+                locationAuthorized: false
             ) == ["diagnostics.read"]
         )
         #expect(
             appSettings.serverEnabledMCPCapabilityIDs(
                 remindersAuthorized: true,
                 eventsAuthorized: false,
-                contactsAuthorized: false
+                contactsAuthorized: false,
+                locationAuthorized: false
             ) == ["diagnostics.read", "eventkit.reminders.read"]
         )
     }

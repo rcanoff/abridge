@@ -29,6 +29,12 @@ final class PermissionsStore {
         }
     }
 
+    var requiresAppleLocationAccess: Bool {
+        checkedCapabilityIDs.contains { id in
+            CapabilityCatalog.mapkitCapabilities.contains { $0.id == id && $0.shipped }
+        }
+    }
+
     func setChecked(_ checked: Bool, for capabilityID: String) {
         if checked {
             checkedCapabilityIDs.insert(capabilityID)
@@ -51,7 +57,8 @@ final class PermissionsStore {
         capabilityID: String,
         remindersAuthorized: Bool,
         eventsAuthorized: Bool,
-        contactsAuthorized: Bool
+        contactsAuthorized: Bool,
+        locationAuthorized: Bool
     ) -> Bool {
         guard enabling else { return true }
 
@@ -65,6 +72,10 @@ final class PermissionsStore {
 
         if CapabilityCatalog.contactsCapabilities.contains(where: { $0.id == capabilityID && $0.shipped }) {
             return contactsAuthorized
+        }
+
+        if CapabilityCatalog.mapkitCapabilities.contains(where: { $0.id == capabilityID && $0.shipped }) {
+            return locationAuthorized
         }
 
         return remindersAuthorized

@@ -97,7 +97,8 @@ struct PermissionsStoreContactsTests {
                 capabilityID: "contacts-delete",
                 remindersAuthorized: true,
                 eventsAuthorized: true,
-                contactsAuthorized: false
+                contactsAuthorized: false,
+                locationAuthorized: false
             ) == false
         )
     }
@@ -117,7 +118,8 @@ struct PermissionsStoreContactsTests {
                 capabilityID: "contacts-create",
                 remindersAuthorized: true,
                 eventsAuthorized: true,
-                contactsAuthorized: false
+                contactsAuthorized: false,
+                locationAuthorized: false
             ) == false
         )
     }
@@ -137,7 +139,8 @@ struct PermissionsStoreContactsTests {
                 capabilityID: "contacts-edit",
                 remindersAuthorized: true,
                 eventsAuthorized: true,
-                contactsAuthorized: false
+                contactsAuthorized: false,
+                locationAuthorized: false
             ) == false
         )
     }
@@ -157,7 +160,8 @@ struct PermissionsStoreContactsTests {
                 capabilityID: "contacts-search",
                 remindersAuthorized: true,
                 eventsAuthorized: true,
-                contactsAuthorized: false
+                contactsAuthorized: false,
+                locationAuthorized: false
             ) == false
         )
     }
@@ -177,7 +181,8 @@ struct PermissionsStoreContactsTests {
                 capabilityID: "contacts-read",
                 remindersAuthorized: true,
                 eventsAuthorized: true,
-                contactsAuthorized: false
+                contactsAuthorized: false,
+                locationAuthorized: false
             ) == false
         )
     }

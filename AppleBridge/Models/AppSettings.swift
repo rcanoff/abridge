@@ -120,10 +120,17 @@ final class AppSettings {
             .map(\.capabilityID)
     }
 
+    var enabledMapKitCapabilityIDs: [String] {
+        CapabilityCatalog.mapkitCapabilities
+            .filter { $0.shipped && savedCapabilityIDs.contains($0.id) }
+            .map(\.capabilityID)
+    }
+
     func serverEnabledMCPCapabilityIDs(
         remindersAuthorized: Bool,
         eventsAuthorized: Bool,
-        contactsAuthorized: Bool
+        contactsAuthorized: Bool,
+        locationAuthorized: Bool
     ) -> [String] {
         var capabilities = ["diagnostics.read"]
         if remindersAuthorized {
@@ -135,6 +142,9 @@ final class AppSettings {
         }
         if contactsAuthorized {
             capabilities.append(contentsOf: enabledContactsCapabilityIDs)
+        }
+        if locationAuthorized {
+            capabilities.append(contentsOf: enabledMapKitCapabilityIDs)
         }
         return capabilities
     }
