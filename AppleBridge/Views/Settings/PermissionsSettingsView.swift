@@ -47,6 +47,13 @@ struct PermissionsSettingsView: View {
                     onOpenSystemSettings: { appStore.openContactsPrivacySettings() },
                     onRequestPermissions: { Task { await appStore.requestContactsAccess() } }
                 )
+                AppleLocationPermissionRow(
+                    required: permissionsStore.requiresAppleLocationAccess,
+                    granted: appStore.locationPermissionStatus.grantsReadAccess,
+                    isRequestingPermission: appStore.isRequestingLocationPermission,
+                    onOpenSystemSettings: { appStore.openLocationPrivacySettings() },
+                    onRequestPermissions: { Task { await appStore.requestLocationAccess() } }
+                )
             } header: {
                 Text("Apple Permissions")
             } footer: {
@@ -64,6 +71,9 @@ struct PermissionsSettingsView: View {
                     binding(for: capabilityID)
                 }
                 ContactsMCPPermissionsGroup { capabilityID in
+                    binding(for: capabilityID)
+                }
+                MapKitMCPPermissionsGroup { capabilityID in
                     binding(for: capabilityID)
                 }
             } header: {
@@ -87,7 +97,8 @@ struct PermissionsSettingsView: View {
                 await settingsStore.applySavedCapabilities(
                     remindersAuthorized: true,
                     eventsAuthorized: appStore.calendarPermissionStatus.grantsReadAccess,
-                    contactsAuthorized: appStore.contactsPermissionStatus.grantsReadAccess
+                    contactsAuthorized: appStore.contactsPermissionStatus.grantsReadAccess,
+                    locationAuthorized: appStore.locationPermissionStatus.grantsReadAccess
                 )
             }
         }
@@ -97,7 +108,8 @@ struct PermissionsSettingsView: View {
                 await settingsStore.applySavedCapabilities(
                     remindersAuthorized: appStore.permissionStatus.grantsReadAccess,
                     eventsAuthorized: true,
-                    contactsAuthorized: appStore.contactsPermissionStatus.grantsReadAccess
+                    contactsAuthorized: appStore.contactsPermissionStatus.grantsReadAccess,
+                    locationAuthorized: appStore.locationPermissionStatus.grantsReadAccess
                 )
             }
         }
@@ -107,7 +119,19 @@ struct PermissionsSettingsView: View {
                 await settingsStore.applySavedCapabilities(
                     remindersAuthorized: appStore.permissionStatus.grantsReadAccess,
                     eventsAuthorized: appStore.calendarPermissionStatus.grantsReadAccess,
-                    contactsAuthorized: true
+                    contactsAuthorized: true,
+                    locationAuthorized: appStore.locationPermissionStatus.grantsReadAccess
+                )
+            }
+        }
+        .onChange(of: appStore.locationPermissionStatus.grantsReadAccess) { _, locationAuthorized in
+            guard locationAuthorized, permissionsStore.requiresAppleLocationAccess else { return }
+            Task {
+                await settingsStore.applySavedCapabilities(
+                    remindersAuthorized: appStore.permissionStatus.grantsReadAccess,
+                    eventsAuthorized: appStore.calendarPermissionStatus.grantsReadAccess,
+                    contactsAuthorized: appStore.contactsPermissionStatus.grantsReadAccess,
+                    locationAuthorized: true
                 )
             }
         }
@@ -130,18 +154,21 @@ struct PermissionsSettingsView: View {
                 let remindersAuthorized = appStore.permissionStatus.grantsReadAccess
                 let eventsAuthorized = appStore.calendarPermissionStatus.grantsReadAccess
                 let contactsAuthorized = appStore.contactsPermissionStatus.grantsReadAccess
+                let locationAuthorized = appStore.locationPermissionStatus.grantsReadAccess
                 guard permissionsStore.shouldApplySavedCapabilitiesAfterToggle(
                     enabling: newValue,
                     capabilityID: capabilityID,
                     remindersAuthorized: remindersAuthorized,
                     eventsAuthorized: eventsAuthorized,
-                    contactsAuthorized: contactsAuthorized
+                    contactsAuthorized: contactsAuthorized,
+                    locationAuthorized: locationAuthorized
                 ) else { return }
                 Task {
                     await settingsStore.applySavedCapabilities(
                         remindersAuthorized: remindersAuthorized,
                         eventsAuthorized: eventsAuthorized,
-                        contactsAuthorized: contactsAuthorized
+                        contactsAuthorized: contactsAuthorized,
+                        locationAuthorized: locationAuthorized
                     )
                 }
             }
@@ -159,7 +186,8 @@ struct PermissionsSettingsView: View {
             await settingsStore.applySavedCapabilities(
                 remindersAuthorized: appStore.permissionStatus.grantsReadAccess,
                 eventsAuthorized: true,
-                contactsAuthorized: appStore.contactsPermissionStatus.grantsReadAccess
+                contactsAuthorized: appStore.contactsPermissionStatus.grantsReadAccess,
+                locationAuthorized: appStore.locationPermissionStatus.grantsReadAccess
             )
         }
     }
@@ -217,6 +245,20 @@ private struct ContactsMCPPermissionsGroup: View {
             }
         } header: {
             Text("Contacts")
+        }
+    }
+}
+
+private struct MapKitMCPPermissionsGroup: View {
+    let capabilityBinding: (String) -> Binding<Bool>
+
+    var body: some View {
+        Section {
+            ForEach(CapabilityCatalog.mapkitCapabilities) { capability in
+                Toggle(capability.label, isOn: capabilityBinding(capability.id))
+            }
+        } header: {
+            Text("MapKit")
         }
     }
 }
@@ -337,6 +379,43 @@ private struct AppleContactsPermissionRow: View {
                 .buttonStyle(.borderless)
                 .accessibilityLabel("Open Contacts System Settings")
                 .help("Open Contacts System Settings")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
+    }
+}
+
+private struct AppleLocationPermissionRow: View {
+    let required: Bool
+    let granted: Bool
+    let isRequestingPermission: Bool
+    let onOpenSystemSettings: () -> Void
+    let onRequestPermissions: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Location Access")
+                ApplePermissionAccessStatusLabel(required: required, granted: granted)
+            }
+
+            Spacer(minLength: 8)
+
+            HStack(spacing: 8) {
+                Button("Request Permissions", action: onRequestPermissions)
+                    .buttonStyle(.borderless)
+                    .disabled(granted || isRequestingPermission)
+
+                Button(action: onOpenSystemSettings) {
+                    Image(nsImage: SystemSettingsIcon.image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Open Location System Settings")
+                .help("Open Location System Settings")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
