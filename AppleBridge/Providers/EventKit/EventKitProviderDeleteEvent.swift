@@ -16,7 +16,7 @@ extension EventKitProvider {
                 )
             }
 
-            let deletedIdentifier = event.eventIdentifier ?? eventIdentifier
+            let deletedIdentifier = store.eventIdentifier(for: event) ?? eventIdentifier
             try store.removeEvent(event, commit: true)
 
             let payload = try EventKitSerialization.jsonString(from: [
