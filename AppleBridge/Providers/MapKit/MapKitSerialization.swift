@@ -62,6 +62,18 @@ enum MapKitSerialization {
         ]
     }
 
+    static func estimateTravelTimeResponseJSONObject(result: MapKitEstimateTravelTimeResult) -> [String: Any] {
+        [
+            "source": mapItemJSONObject(from: result.source),
+            "destination": mapItemJSONObject(from: result.destination),
+            "expected_travel_time": result.expectedTravelTime,
+            "distance": result.distance,
+            "expected_arrival_date": iso8601String(from: result.expectedArrivalDate),
+            "expected_departure_date": iso8601String(from: result.expectedDepartureDate),
+            "transport_type": transportTypeJSONArray(from: result.transportType),
+        ]
+    }
+
     static func routeJSONObject(from route: MapKitRouteData) -> [String: Any] {
         [
             "name": route.name,
