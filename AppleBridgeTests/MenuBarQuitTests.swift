@@ -65,4 +65,12 @@ struct MenuBarQuitTests {
         #expect(MenuBarQuitCoordinator.isQuitDisabled(runState: .stopped, isStarting: false) == false)
         #expect(MenuBarQuitCoordinator.isQuitDisabled(runState: .running, isStarting: false) == false)
     }
+
+    @Test
+    @MainActor
+    func defaultLaunchDependenciesUseProductionAppQuitter() {
+        let dependencies = AppleBridgeApp.makeDefaultLaunchDependencies()
+
+        #expect(dependencies.appQuitter is NSApplicationQuitter)
+    }
 }

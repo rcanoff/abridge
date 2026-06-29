@@ -14,32 +14,34 @@ struct AppleBridgeApp: App {
     @State private var appSettings: AppSettings
     @State private var permissionsStore: PermissionsStore
     @State private var settingsStore: SettingsStore
+    private let appQuitter: any AppQuitting
 
     init() {
         let dependencies = Self.makeDefaultLaunchDependencies()
         self.init(
             isRunningUnitTests: Self.isRunningUnitTests,
             singleInstanceChecker: dependencies.singleInstanceChecker,
-            storeMaker: dependencies.storeMaker
+            storeMaker: dependencies.storeMaker,
+            appQuitter: dependencies.appQuitter
         )
     }
 
     /// Production wiring used by the no-arg `init()`; exposed for tests verifying shipped dependencies.
-    static func makeDefaultLaunchDependencies() -> (
-        singleInstanceChecker: any SingleInstanceChecking,
-        storeMaker: any AppleBridgeAppStoreMaking
-    ) {
-        (
+    static func makeDefaultLaunchDependencies() -> AppleBridgeLaunchDependencies {
+        AppleBridgeLaunchDependencies(
             singleInstanceChecker: RunningApplicationInstanceChecker(),
-            storeMaker: ProductionAppleBridgeAppStoreMaker()
+            storeMaker: ProductionAppleBridgeAppStoreMaker(),
+            appQuitter: NSApplicationQuitter()
         )
     }
 
     init(
         isRunningUnitTests: Bool,
         singleInstanceChecker: any SingleInstanceChecking,
-        storeMaker: any AppleBridgeAppStoreMaking
+        storeMaker: any AppleBridgeAppStoreMaking,
+        appQuitter: any AppQuitting = NSApplicationQuitter()
     ) {
+        self.appQuitter = appQuitter
         switch AppleBridgeAppBootstrap.performEntry(
             isRunningUnitTests: isRunningUnitTests,
             singleInstanceChecker: singleInstanceChecker,
@@ -65,7 +67,7 @@ struct AppleBridgeApp: App {
 
     var body: some Scene {
         MenuBarExtra("Apple Bridge", systemImage: "bell") {
-            MenuBarPopoverView(store: store, serverStore: serverStore)
+            MenuBarPopoverView(store: store, serverStore: serverStore, appQuitter: appQuitter)
                 .onAppear {
                     refreshAppAndServerState()
                 }
