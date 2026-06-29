@@ -5,7 +5,7 @@ import Testing
 struct AppStoreLocationTests {
     @Test
     @MainActor
-    func requestLocationAccessUpdatesStatus() async throws {
+    func requestLocationAccessUpdatesStatus() async {
         let mock = MockLocationPermissionService()
         mock.requestResult = .success(.authorizedAlways)
         let store = AppStore(locationPermissionService: mock)
