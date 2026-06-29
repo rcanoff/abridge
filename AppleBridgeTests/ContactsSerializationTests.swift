@@ -109,6 +109,13 @@ struct ContactsSerializationTests {
 enum ContactsTestSupport {
     static func makeRichContact() -> CNContact {
         let contact = CNMutableContact()
+        applyScalarFields(to: contact)
+        applyLabeledCollections(to: contact)
+        contact.birthday = DateComponents(month: 3, day: 14)
+        return contact
+    }
+
+    private static func applyScalarFields(to contact: CNMutableContact) {
         contact.givenName = "Jane"
         contact.familyName = "Doe"
         contact.middleName = "Q"
@@ -124,6 +131,9 @@ enum ContactsTestSupport {
         contact.phoneticOrganizationName = "AKMEE"
         contact.previousFamilyName = "Smith"
         contact.note = "VIP"
+    }
+
+    private static func applyLabeledCollections(to contact: CNMutableContact) {
         contact.phoneNumbers = [
             CNLabeledValue(
                 label: CNLabelHome,
@@ -133,6 +143,7 @@ enum ContactsTestSupport {
         contact.emailAddresses = [
             CNLabeledValue(label: CNLabelWork, value: "jane@example.com" as NSString),
         ]
+
         let postal = CNMutablePostalAddress()
         postal.street = "1 Infinite Loop"
         postal.city = "Cupertino"
@@ -172,7 +183,5 @@ enum ContactsTestSupport {
                 value: DateComponents(year: 2020, month: 6, day: 15) as NSDateComponents
             ),
         ]
-        contact.birthday = DateComponents(month: 3, day: 14)
-        return contact.copy() as! CNContact
     }
 }

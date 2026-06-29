@@ -31,12 +31,18 @@ enum ContactsSerialization {
                 from: contact.emailAddresses,
                 map: { jsonValueString($0 as String) }
             ),
-            "postal_addresses": labeledValueArrayJSONObject(from: contact.postalAddresses, map: postalAddressJSONObject),
+            "postal_addresses": labeledValueArrayJSONObject(
+                from: contact.postalAddresses,
+                map: postalAddressJSONObject
+            ),
             "url_addresses": labeledValueArrayJSONObject(
                 from: contact.urlAddresses,
                 map: { jsonValueString($0 as String) }
             ),
-            "contact_relations": labeledValueArrayJSONObject(from: contact.contactRelations, map: contactRelationJSONObject),
+            "contact_relations": labeledValueArrayJSONObject(
+                from: contact.contactRelations,
+                map: contactRelationJSONObject
+            ),
             "social_profiles": labeledValueArrayJSONObject(from: contact.socialProfiles, map: socialProfileJSONObject),
             "instant_message_addresses": labeledValueArrayJSONObject(
                 from: contact.instantMessageAddresses,

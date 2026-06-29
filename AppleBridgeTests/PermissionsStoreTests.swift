@@ -200,13 +200,26 @@ struct PermissionsStoreIntegrationTests {
 
     @Test
     @MainActor
+    func requiresAppleContactsAccessWhenShippedContactsReadEnabled() throws {
+        let suiteName = "PermissionsStoreTests.contactsShipped"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+        store.setChecked(true, for: "contacts-read")
+
+        #expect(store.requiresAppleContactsAccess == true)
+    }
+
+    @Test
+    @MainActor
     func requiresAppleContactsAccessOnlyForShippedCapabilities() throws {
         let suiteName = "PermissionsStoreTests.contactsUnshipped"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
 
         let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
-        store.setChecked(true, for: "contacts-read")
+        store.setChecked(true, for: "contacts-search")
 
         #expect(store.requiresAppleContactsAccess == false)
     }
@@ -223,11 +236,31 @@ struct PermissionsStoreIntegrationTests {
         #expect(
             store.shouldApplySavedCapabilitiesAfterToggle(
                 enabling: true,
-                capabilityID: "contacts-read",
+                capabilityID: "contacts-search",
                 remindersAuthorized: true,
                 eventsAuthorized: true,
                 contactsAuthorized: false
             )
+        )
+    }
+
+    @Test
+    @MainActor
+    func shouldNotApplySavedCapabilitiesAfterEnablingShippedContactsWithoutAuthorization() throws {
+        let suiteName = "PermissionsStoreTests.contactsShippedApply"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+
+        #expect(
+            store.shouldApplySavedCapabilitiesAfterToggle(
+                enabling: true,
+                capabilityID: "contacts-read",
+                remindersAuthorized: true,
+                eventsAuthorized: true,
+                contactsAuthorized: false
+            ) == false
         )
     }
 
