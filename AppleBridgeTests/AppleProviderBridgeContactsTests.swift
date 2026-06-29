@@ -38,6 +38,28 @@ struct AppleProviderBridgeContactsTests {
 
     @Test
     @MainActor
+    func callProviderContactsUpdateContactSucceedsWithMockStore() throws {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        let contact = ContactsTestSupport.makeRichContact()
+        mockStore.contacts = [contact]
+        let bridge = AppleProviderBridge(contactsProvider: ContactsProvider(store: mockStore))
+
+        let request = ProviderRequest(
+            provider: "contacts",
+            operation: "update_contact",
+            payloadJson: #"{"contact_identifier":"\#(contact.identifier)","given_name":"Updated"}"#
+        )
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        #expect(decoded?["given_name"] as? String == "Updated")
+    }
+
+    @Test
+    @MainActor
     func callProviderContactsCreateContactSucceedsWithMockStore() throws {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .authorized

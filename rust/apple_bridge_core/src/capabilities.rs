@@ -23,10 +23,16 @@ pub const EVENTKIT_EVENTS_INVITATIONS: &str = "eventkit.events.invitations";
 pub const CONTACTS_READ: &str = "contacts.read";
 pub const CONTACTS_SEARCH: &str = "contacts.search";
 pub const CONTACTS_CREATE: &str = "contacts.create";
+pub const CONTACTS_EDIT: &str = "contacts.edit";
 pub const DIAGNOSTICS_READ: &str = "diagnostics.read";
 
 pub fn is_valid_capability_id(id: &str) -> bool {
-  if id == CONTACTS_READ || id == CONTACTS_SEARCH || id == CONTACTS_CREATE || id == DIAGNOSTICS_READ {
+  if id == CONTACTS_READ
+    || id == CONTACTS_SEARCH
+    || id == CONTACTS_CREATE
+    || id == CONTACTS_EDIT
+    || id == DIAGNOSTICS_READ
+  {
     return true;
   }
 
@@ -65,6 +71,7 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
       | CONTACTS_READ
       | CONTACTS_SEARCH
       | CONTACTS_CREATE
+      | CONTACTS_EDIT
       | DIAGNOSTICS_READ
   )
 }
@@ -72,7 +79,7 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
 #[cfg(test)]
 mod tests {
   use super::{
-    CONTACTS_CREATE, CONTACTS_READ, CONTACTS_SEARCH, DIAGNOSTICS_READ, EVENTKIT_CALENDARS_CREATE,
+    CONTACTS_CREATE, CONTACTS_EDIT, CONTACTS_READ, CONTACTS_SEARCH, DIAGNOSTICS_READ, EVENTKIT_CALENDARS_CREATE,
     EVENTKIT_CALENDARS_DELETE, EVENTKIT_CALENDARS_EDIT, EVENTKIT_CALENDARS_READ, EVENTKIT_EVENTS_ALARMS,
     EVENTKIT_EVENTS_CREATE, EVENTKIT_EVENTS_DELETE, EVENTKIT_EVENTS_EDIT, EVENTKIT_EVENTS_INVITATIONS,
     EVENTKIT_EVENTS_READ, EVENTKIT_EVENTS_RECURRENCE, EVENTKIT_EVENTS_SEARCH, EVENTKIT_REMINDERS_ALARMS,
@@ -99,6 +106,11 @@ mod tests {
   #[test]
   fn accepts_contacts_create_capability_shape() {
     assert!(is_valid_capability_id(CONTACTS_CREATE));
+  }
+
+  #[test]
+  fn accepts_contacts_edit_capability_shape() {
+    assert!(is_valid_capability_id(CONTACTS_EDIT));
   }
 
   #[test]
@@ -142,6 +154,7 @@ mod tests {
     assert!(is_allowed_in_v1(CONTACTS_READ));
     assert!(is_allowed_in_v1(CONTACTS_SEARCH));
     assert!(is_allowed_in_v1(CONTACTS_CREATE));
+    assert!(is_allowed_in_v1(CONTACTS_EDIT));
     assert!(!is_allowed_in_v1("eventkit.reminders.write"));
   }
 }

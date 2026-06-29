@@ -117,6 +117,31 @@ final class LiveContactsStore: ContactsStoreing {
         return saved
     }
 
+    func updateContact(identifier: String, fields: [String: Any]) throws -> CNContact {
+        guard let existing = try fetchContact(identifier: identifier) else {
+            throw ContactsProviderError.invalidArguments("Unknown contact_identifier: \(identifier)")
+        }
+
+        guard let mutable = existing.mutableCopy() as? CNMutableContact else {
+            throw ContactsProviderError.contactsError("Failed to copy contact")
+        }
+
+        try ContactsDeserialization.applyWritableFields(from: fields, to: mutable)
+
+        let saveRequest = CNSaveRequest()
+        saveRequest.update(mutable)
+        do {
+            try contactStore.execute(saveRequest)
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
+
+        guard let saved = try fetchContact(identifier: identifier) else {
+            throw ContactsProviderError.contactsError("Failed to fetch updated contact")
+        }
+        return saved
+    }
+
     private func unifiedContacts(matching predicate: NSPredicate) throws -> [CNContact] {
         do {
             return try contactStore.unifiedContacts(
