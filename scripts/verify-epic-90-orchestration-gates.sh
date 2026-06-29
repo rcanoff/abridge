@@ -123,12 +123,17 @@ check_link_contacts_run_log_gate() {
     return 1
   fi
 
-  if [[ -n "$last_run" && "$last_run" -lt 15 ]]; then
+  if [[ -z "$last_run" || ! "$last_run" =~ ^[0-9]+$ ]]; then
+    echo "FAIL (final run number missing or non-numeric: ${last_run:-empty})"
+    return 1
+  fi
+
+  if [[ "$last_run" -lt 15 ]]; then
     echo "FAIL (final run=$last_run, expected >= 15 after post-merge Phase 4 close)"
     return 1
   fi
 
-  echo "PASS (final run=${last_run:-?} Open=0)"
+  echo "PASS (final run=${last_run} Open=0)"
   return 0
 }
 
@@ -140,7 +145,20 @@ check_link_contacts_thread1_reviewer_followup() {
     return 1
   fi
 
-  if awk '/^## Thread 1 —/{found=1} found && /^### Follow-up — run 1[5-9]/{exit 0} found && /^## Thread 2 —/{exit 1}' "$review"; then
+  if python3 - "$review" <<'PY'
+import re, sys
+text = open(sys.argv[1]).read()
+m = re.search(r"## Thread 1 —.*?(?=## Thread 2 —)", text, re.S)
+if not m:
+    sys.exit(1)
+block = m.group(0)
+for line in block.splitlines():
+    hit = re.match(r"^### Follow-up — run (\d+)", line)
+    if hit and int(hit.group(1)) >= 15:
+        sys.exit(0)
+sys.exit(1)
+PY
+  then
     echo "PASS (Thread 1 has reviewer Follow-up run >= 15)"
     return 0
   fi
