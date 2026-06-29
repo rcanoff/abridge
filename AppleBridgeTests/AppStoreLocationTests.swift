@@ -26,5 +26,38 @@ struct AppStoreLocationTests {
         await store.requestLocationAccess()
 
         #expect(store.lastError == "denied")
+        #expect(store.isRequestingLocationPermission == false)
+    }
+
+    @Test
+    @MainActor
+    func requestLocationAccessTogglesLoadingState() async {
+        let mock = BlockingLocationPermissionService()
+        let store = AppStore(locationPermissionService: mock)
+
+        let task = Task { await store.requestLocationAccess() }
+        await Task.yield()
+
+        #expect(store.isRequestingLocationPermission == true)
+
+        mock.resume(with: .success(.authorized))
+        await task.value
+
+        #expect(store.isRequestingLocationPermission == false)
+    }
+
+    @Test
+    @MainActor
+    func requestLocationAccessClearsLoadingStateOnTimeout() async {
+        let mock = MockLocationPermissionService()
+        mock.requestResult = .failure(
+            LocationPermissionError.requestFailed("Location authorization request timed out.")
+        )
+        let store = AppStore(locationPermissionService: mock)
+
+        await store.requestLocationAccess()
+
+        #expect(store.lastError == "Location authorization request timed out.")
+        #expect(store.isRequestingLocationPermission == false)
     }
 }
