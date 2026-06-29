@@ -113,6 +113,23 @@ final class MockContactsStore: ContactsStoreing {
         }
     }
 
+    func createGroup(in containerIdentifier: String, name: String) throws -> CNGroup {
+        if let fetchError {
+            throw fetchError
+        }
+
+        guard knownContainerIdentifiers.contains(containerIdentifier) else {
+            throw ContactsProviderError.invalidArguments(
+                "Unknown container_identifier: \(containerIdentifier)"
+            )
+        }
+
+        let group = CNMutableGroup()
+        group.name = name
+        groups.append(group)
+        return group
+    }
+
     func createContact(in containerIdentifier: String, contact: CNMutableContact) throws -> CNContact {
         if let fetchError {
             throw fetchError
