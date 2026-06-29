@@ -16,53 +16,42 @@ struct AppSettingsMapKitTests {
 
         #expect(appSettings.enabledMapKitCapabilityIDs == ["mapkit.search"])
         #expect(
-            appSettings.serverEnabledMCPCapabilityIDs(
-                remindersAuthorized: false,
-                eventsAuthorized: false,
-                contactsAuthorized: false,
-                locationAuthorized: false
-            ) == ["diagnostics.read"]
+            serverEnabledCapabilities(for: appSettings, locationAuthorized: false) == ["diagnostics.read"]
         )
         #expect(
-            appSettings.serverEnabledMCPCapabilityIDs(
-                remindersAuthorized: false,
-                eventsAuthorized: false,
-                contactsAuthorized: false,
-                locationAuthorized: true
-            ) == ["diagnostics.read", "mapkit.search"]
+            serverEnabledCapabilities(for: appSettings, locationAuthorized: true)
+                == ["diagnostics.read", "mapkit.search"]
         )
 
         appSettings.saveCapabilityIDs(["mapkit-geocode"])
         #expect(appSettings.enabledMapKitCapabilityIDs == ["mapkit.geocode"])
         #expect(
-            appSettings.serverEnabledMCPCapabilityIDs(
-                remindersAuthorized: false,
-                eventsAuthorized: false,
-                contactsAuthorized: false,
-                locationAuthorized: true
-            ).contains("mapkit.geocode")
+            serverEnabledCapabilities(for: appSettings, locationAuthorized: true).contains("mapkit.geocode")
         )
 
         appSettings.saveCapabilityIDs(["mapkit-routing"])
         #expect(appSettings.enabledMapKitCapabilityIDs == ["mapkit.routing"])
         #expect(
-            appSettings.serverEnabledMCPCapabilityIDs(
-                remindersAuthorized: false,
-                eventsAuthorized: false,
-                contactsAuthorized: false,
-                locationAuthorized: true
-            ).contains("mapkit.routing")
+            serverEnabledCapabilities(for: appSettings, locationAuthorized: true).contains("mapkit.routing")
         )
 
         appSettings.saveCapabilityIDs(["mapkit-navigation"])
         #expect(appSettings.enabledMapKitCapabilityIDs == ["mapkit.navigation"])
         #expect(
-            appSettings.serverEnabledMCPCapabilityIDs(
-                remindersAuthorized: false,
-                eventsAuthorized: false,
-                contactsAuthorized: false,
-                locationAuthorized: true
-            ).contains("mapkit.navigation")
+            serverEnabledCapabilities(for: appSettings, locationAuthorized: true).contains("mapkit.navigation")
+        )
+    }
+
+    @MainActor
+    private func serverEnabledCapabilities(
+        for appSettings: AppSettings,
+        locationAuthorized: Bool
+    ) -> [String] {
+        appSettings.serverEnabledMCPCapabilityIDs(
+            remindersAuthorized: false,
+            eventsAuthorized: false,
+            contactsAuthorized: false,
+            locationAuthorized: locationAuthorized
         )
     }
 }
