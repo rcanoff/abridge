@@ -81,6 +81,27 @@ struct AppleProviderBridgeContactsTests {
 
     @Test
     @MainActor
+    func callProviderContactsDeleteGroupSucceedsWithMockStore() {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        let group = ContactsTestSupport.makeGroup(name: "Family")
+        mockStore.groups = [group]
+        let bridge = AppleProviderBridge(contactsProvider: ContactsProvider(store: mockStore))
+
+        let request = ProviderRequest(
+            provider: "contacts",
+            operation: "delete_group",
+            payloadJson: #"{"group_identifier":"\#(group.identifier)"}"#
+        )
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == true)
+        #expect(response.payloadJson.contains("\"group_identifier\":\"\(group.identifier)\""))
+        #expect(mockStore.groups.isEmpty)
+    }
+
+    @Test
+    @MainActor
     func callProviderContactsUpdateGroupSucceedsWithMockStore() throws {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .authorized
