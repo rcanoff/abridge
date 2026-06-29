@@ -7,6 +7,7 @@ pub const TOOL_CREATE_CALENDAR: &str = "eventkit.calendars.create_calendar";
 pub const TOOL_UPDATE_CALENDAR: &str = "eventkit.calendars.update_calendar";
 pub const TOOL_DELETE_CALENDAR: &str = "eventkit.calendars.delete_calendar";
 pub const TOOL_LIST_EVENTS: &str = "eventkit.events.list_events";
+pub const TOOL_GET_EVENT: &str = "eventkit.events.get_event";
 pub const TOOL_SEARCH_EVENTS: &str = "eventkit.events.search_events";
 pub const TOOL_LIST_LISTS: &str = "eventkit.reminders.list_lists";
 pub const TOOL_LIST_REMINDERS: &str = "eventkit.reminders.list_reminders";
@@ -33,7 +34,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 21] = [
+const ALL_TOOLS: [ToolDefinition; 22] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -68,6 +69,13 @@ const ALL_TOOLS: [ToolDefinition; 21] = [
     provider: "eventkit",
     operation: "list_events",
     description: "List events in a date range, optionally filtered by calendar_identifier",
+  },
+  ToolDefinition {
+    name: TOOL_GET_EVENT,
+    capability: capabilities::EVENTKIT_EVENTS_READ,
+    provider: "eventkit",
+    operation: "get_event",
+    description: "Get a single event by event_identifier",
   },
   ToolDefinition {
     name: TOOL_SEARCH_EVENTS,
@@ -330,6 +338,13 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["start_date", "end_date"]
     }),
+    TOOL_GET_EVENT => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "event_identifier": { "type": "string" }
+      },
+      "required": ["event_identifier"]
+    }),
     TOOL_SEARCH_EVENTS => serde_json::json!({
       "type": "object",
       "properties": {
@@ -482,8 +497,9 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
 mod tests {
   use super::{
     TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DELETE_CALENDAR,
-    TOOL_DELETE_LIST, TOOL_DELETE_REMINDER, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LIST_CALENDARS,
-    TOOL_LIST_EVENTS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_REMINDER, TOOL_SEARCH_EVENTS,
+    TOOL_DELETE_LIST, TOOL_DELETE_REMINDER, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG,
+    TOOL_LIST_CALENDARS, TOOL_LIST_EVENTS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_REMINDER,
+    TOOL_SEARCH_EVENTS,
     TOOL_SEARCH_REMINDERS, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_UNCOMPLETE_REMINDER,
     TOOL_UPDATE_CALENDAR, TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
   };
@@ -569,7 +585,7 @@ mod tests {
   fn lists_events_tool_when_events_read_capability_enabled() {
     let tools = tools_for_capabilities(&["eventkit.events.read".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_LIST_EVENTS]);
+    assert_eq!(names, vec![TOOL_LIST_EVENTS, TOOL_GET_EVENT]);
   }
 
   #[test]

@@ -62,7 +62,7 @@ MCP tool names use dot notation (e.g. `eventkit.reminders.list_reminders`). Disc
 
 - [ ] `eventkit.events.list_events`
 - [ ] `eventkit.events.search_events`
-- [ ] `eventkit.events.get_event`
+- [x] `eventkit.events.get_event`
 - [ ] `eventkit.events.create_event`
 - [ ] `eventkit.events.update_event`
 - [ ] `eventkit.events.delete_event`

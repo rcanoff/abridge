@@ -41,6 +41,7 @@ protocol EventKitStoreing {
     func removeCalendar(_ calendar: EKCalendar, commit: Bool) throws
     func predicateForEvents(withStart startDate: Date, end endDate: Date, calendars: [EKCalendar]) -> NSPredicate
     func fetchEvents(matching predicate: NSPredicate) throws -> [EKEvent]
+    func fetchEvent(withIdentifier id: String) throws -> EKEvent?
 }
 
 @MainActor
@@ -163,6 +164,10 @@ final class LiveEventKitStore: EventKitStoreing {
     func fetchEvents(matching predicate: NSPredicate) throws -> [EKEvent] {
         eventStore.events(matching: predicate)
     }
+
+    func fetchEvent(withIdentifier id: String) throws -> EKEvent? {
+        eventStore.event(withIdentifier: id)
+    }
 }
 
 @MainActor
@@ -224,7 +229,7 @@ final class EventKitProvider {
             listLists()
         case "list_calendars":
             listCalendars()
-        case "list_reminders", "get_reminder", "search_reminders", "list_events", "search_events":
+        case "list_reminders", "get_reminder", "search_reminders", "list_events", "search_events", "get_event":
             handleReadOperation(operation: operation, payloadJson: payloadJson)
         case "create_reminder", "create_list", "create_calendar", "update_reminder", "update_calendar", "move_reminder",
              "delete_reminder",

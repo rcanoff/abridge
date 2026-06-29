@@ -123,6 +123,11 @@ final class StalledEventKitStore: EventKitStoreing {
         return []
     }
 
+    func fetchEvent(withIdentifier id: String) throws -> EKEvent? {
+        _ = id
+        return nil
+    }
+
     private static let stubReminderSource: EKSource = {
         let source = EKSource()
         source.setValue("mock-source-local", forKey: "sourceIdentifier")
