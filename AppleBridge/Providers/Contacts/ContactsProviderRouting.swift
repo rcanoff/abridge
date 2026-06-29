@@ -7,7 +7,7 @@ extension ContactsProvider {
             handleReadOperation(operation: operation, payloadJson: payloadJson)
         case "create_contact", "create_group":
             handleCreateOperation(operation: operation, payloadJson: payloadJson)
-        case "update_contact", "update_group":
+        case "update_contact", "update_group", "link_contacts":
             handleUpdateOperation(operation: operation, payloadJson: payloadJson)
         case "delete_contact", "delete_group":
             handleDeleteOperation(operation: operation, payloadJson: payloadJson)
@@ -48,6 +48,8 @@ extension ContactsProvider {
             updateContact(payloadJson: payloadJson)
         case "update_group":
             updateGroup(payloadJson: payloadJson)
+        case "link_contacts":
+            linkContacts(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown contacts operation: \(operation)")
         }

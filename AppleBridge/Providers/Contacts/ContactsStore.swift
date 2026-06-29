@@ -53,5 +53,6 @@ protocol ContactsStoreing {
     func updateGroup(identifier: String, fields: [String: Any]) throws -> CNGroup
     func updateContact(identifier: String, fields: [String: Any]) throws -> CNContact
     func deleteContact(identifier: String) throws
+    func linkContacts(fromIdentifier: String, toIdentifier: String) throws -> CNContact
     func deleteGroup(identifier: String) throws
 }

@@ -4,9 +4,14 @@ import Foundation
 @MainActor
 final class LiveContactsStore: ContactsStoreing {
     private let contactStore: CNContactStore
+    private let contactLinking: any ContactsLinkingPerforming
 
-    init(contactStore: CNContactStore = CNContactStore()) {
+    init(
+        contactStore: CNContactStore = CNContactStore(),
+        contactLinking: any ContactsLinkingPerforming = LiveContactsLinkingPerformer()
+    ) {
         self.contactStore = contactStore
+        self.contactLinking = contactLinking
     }
 
     func contactsAuthorizationStatus() -> CNAuthorizationStatus {
@@ -208,6 +213,45 @@ final class LiveContactsStore: ContactsStoreing {
         }
     }
 
+    func linkContacts(fromIdentifier: String, toIdentifier: String) throws -> CNContact {
+        if fromIdentifier == toIdentifier {
+            throw ContactsProviderError.invalidArguments(
+                "from_contact_identifier and to_contact_identifier must differ"
+            )
+        }
+
+        guard let fromContact = try fetchContact(identifier: fromIdentifier) else {
+            throw ContactsProviderError.invalidArguments(
+                "Unknown from_contact_identifier: \(fromIdentifier)"
+            )
+        }
+
+        guard let toContact = try fetchContact(identifier: toIdentifier) else {
+            throw ContactsProviderError.invalidArguments(
+                "Unknown to_contact_identifier: \(toIdentifier)"
+            )
+        }
+
+        guard let fromMutable = fromContact.mutableCopy() as? CNMutableContact,
+              let toMutable = toContact.mutableCopy() as? CNMutableContact
+        else {
+            throw ContactsProviderError.contactsError("Failed to copy contact")
+        }
+
+        do {
+            try executeLink(from: fromMutable, to: toMutable)
+        } catch let error as ContactsProviderError {
+            throw error
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
+
+        guard let linked = try fetchContact(identifier: toIdentifier) else {
+            throw ContactsProviderError.contactsError("Failed to fetch linked contact")
+        }
+        return linked
+    }
+
     func deleteGroup(identifier: String) throws {
         guard let existing = try fetchGroup(identifier: identifier) else {
             throw ContactsProviderError.invalidArguments("Unknown group_identifier: \(identifier)")
@@ -249,6 +293,12 @@ final class LiveContactsStore: ContactsStoreing {
             throw ContactsProviderError.contactsError("Failed to fetch updated contact")
         }
         return saved
+    }
+
+    func executeLink(from fromMutable: CNMutableContact, to toMutable: CNMutableContact) throws {
+        let saveRequest = CNSaveRequest()
+        try contactLinking.link(from: fromMutable, to: toMutable, in: saveRequest)
+        try contactStore.execute(saveRequest)
     }
 
     private func fetchGroup(identifier: String) throws -> CNGroup? {
