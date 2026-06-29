@@ -111,4 +111,22 @@ final class MockContactsStore: ContactsStoreing {
         contacts.append(saved)
         return saved
     }
+
+    func updateContact(identifier: String, fields: [String: Any]) throws -> CNContact {
+        if let fetchError {
+            throw fetchError
+        }
+
+        guard let index = contacts.firstIndex(where: { $0.identifier == identifier }) else {
+            throw ContactsProviderError.invalidArguments("Unknown contact_identifier: \(identifier)")
+        }
+
+        guard let mutable = contacts[index].mutableCopy() as? CNMutableContact else {
+            throw ContactsProviderError.contactsError("Failed to copy contact")
+        }
+
+        try ContactsDeserialization.applyWritableFields(from: fields, to: mutable)
+        contacts[index] = mutable
+        return mutable
+    }
 }

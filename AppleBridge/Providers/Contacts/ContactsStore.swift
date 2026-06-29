@@ -48,4 +48,5 @@ protocol ContactsStoreing {
         containerIdentifier: String?
     ) throws -> [CNContact]
     func createContact(in containerIdentifier: String, contact: CNMutableContact) throws -> CNContact
+    func updateContact(identifier: String, fields: [String: Any]) throws -> CNContact
 }
