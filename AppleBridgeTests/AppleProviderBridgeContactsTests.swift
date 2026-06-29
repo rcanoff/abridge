@@ -81,6 +81,28 @@ struct AppleProviderBridgeContactsTests {
 
     @Test
     @MainActor
+    func callProviderContactsUpdateGroupSucceedsWithMockStore() throws {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        let group = ContactsTestSupport.makeGroup(name: "Family")
+        mockStore.groups = [group]
+        let bridge = AppleProviderBridge(contactsProvider: ContactsProvider(store: mockStore))
+
+        let request = ProviderRequest(
+            provider: "contacts",
+            operation: "update_group",
+            payloadJson: #"{"group_identifier":"\#(group.identifier)","name":"Bridge Group"}"#
+        )
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        #expect(decoded?["name"] as? String == "Bridge Group")
+    }
+
+    @Test
+    @MainActor
     func callProviderContactsCreateGroupSucceedsWithMockStore() throws {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .authorized

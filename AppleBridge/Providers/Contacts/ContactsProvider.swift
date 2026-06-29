@@ -38,6 +38,8 @@ final class ContactsProvider {
             createGroup(payloadJson: payloadJson)
         case "update_contact":
             updateContact(payloadJson: payloadJson)
+        case "update_group":
+            updateGroup(payloadJson: payloadJson)
         case "delete_contact":
             deleteContact(payloadJson: payloadJson)
         default:
