@@ -493,7 +493,6 @@ fn contact_labeled_value_schema(value_schema: serde_json::Value) -> serde_json::
     "type": "object",
     "properties": {
       "label": nullable_string(),
-      "identifier": nullable_string(),
       "value": value_schema
     },
     "required": ["value"]
@@ -928,6 +927,19 @@ mod tests {
       .map(str::to_owned)
   }
 
+  fn array_item_properties(
+    schema: &serde_json::Value,
+    property: &str,
+  ) -> Option<serde_json::Map<String, serde_json::Value>> {
+    schema
+      .get("properties")
+      .and_then(|properties| properties.get(property))
+      .and_then(|property_schema| property_schema.get("items"))
+      .and_then(|items| items.get("properties"))
+      .and_then(|value| value.as_object())
+      .cloned()
+  }
+
   #[test]
   fn set_reminder_alarms_schema_describes_object_array_items() {
     let tool = all_tools()
@@ -1246,6 +1258,25 @@ mod tests {
       .expect("create_contact properties");
     assert!(properties.contains_key("image_data"));
     assert!(!properties.contains_key("thumbnail_image_data"));
+    for property in [
+      "phone_numbers",
+      "email_addresses",
+      "postal_addresses",
+      "url_addresses",
+      "contact_relations",
+      "social_profiles",
+      "instant_message_addresses",
+      "dates",
+    ] {
+      let item_properties =
+        array_item_properties(&schema, property).unwrap_or_else(|| panic!("{property} labeled-value item properties"));
+      assert!(
+        !item_properties.contains_key("identifier"),
+        "{property} must not advertise labeled-value identifier on create"
+      );
+      assert!(item_properties.contains_key("label"));
+      assert!(item_properties.contains_key("value"));
+    }
   }
 
   fn string_property_min_length(schema: &serde_json::Value, property: &str) -> Option<u64> {

@@ -89,6 +89,22 @@ struct ContactsDeserializationTests {
     }
 
     @Test
+    func dateComponentsTreatsNullCalendarIdentifierAsNilCalendar() throws {
+        let json: [String: Any] = [
+            "year": 2026,
+            "month": 6,
+            "day": 28,
+            "calendar": [
+                "identifier": NSNull(),
+            ],
+        ]
+
+        let components = try ContactsDeserialization.dateComponents(from: json)
+
+        #expect(components?.calendar == nil)
+    }
+
+    @Test
     func mutableContactRejectsInvalidContactType() {
         let json: [String: Any] = [
             "given_name": "Bad",

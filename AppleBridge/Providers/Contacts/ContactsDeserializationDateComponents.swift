@@ -39,25 +39,30 @@ extension ContactsDeserialization {
             }
         }
 
-        if let calendarValue = dictionary["calendar"] {
-            if calendarValue is NSNull {
-                components.calendar = nil
-            } else if let calendarDictionary = calendarValue as? [String: Any] {
-                components.calendar = try foundationCalendar(from: calendarDictionary)
-            } else {
-                throw ContactsProviderError.invalidArguments("calendar must be an object or null")
-            }
-        }
+        components.calendar = try optionalCalendar(dictionary["calendar"])
 
         return components
     }
 
+    static func optionalCalendar(_ value: Any?) throws -> Calendar? {
+        guard let value else { return nil }
+        if value is NSNull { return nil }
+        guard let dictionary = value as? [String: Any] else {
+            throw ContactsProviderError.invalidArguments("calendar must be an object or null")
+        }
+        if dictionary.keys.contains("identifier"),
+           dictionary["identifier"] is NSNull
+        {
+            return nil
+        }
+        return try foundationCalendar(from: dictionary)
+    }
+
     static func foundationCalendar(from dictionary: [String: Any]) throws -> Calendar {
         var calendar = Calendar.current
-        if dictionary.keys.contains("identifier") {
-            if dictionary["identifier"] is NSNull {
-                throw ContactsProviderError.invalidArguments("calendar identifier must be a string or null")
-            }
+        if dictionary.keys.contains("identifier"),
+           !(dictionary["identifier"] is NSNull)
+        {
             guard let identifierString = dictionary["identifier"] as? String,
                   let identifier = calendarIdentifier(from: identifierString)
             else {
