@@ -186,11 +186,18 @@ section "STEP 6 — merged PRs closing #120 (search)"
 gh pr list --search "120" --state merged --json number,title,url,closingIssuesReferences --limit 10 >>"$BUNDLE" 2>&1
 
 # --- Step 9: Tree scope evidence ---
-section "STEP 9 — git status (main tree clean; #120 scope)"
+section "STEP 9 — git status (tree clean; #120 scope)"
 git status --short >>"$BUNDLE"
 {
-  echo "Changed files in #120 PR stack (135–140):"
-  git log --oneline --name-only main --grep='#120' --grep='single-instance' --grep='issue-120' --grep='verify-issue-120' -i --max-count=20
+  current_branch="$(git rev-parse --abbrev-ref HEAD)"
+  if [ "$current_branch" = "main" ]; then
+    echo "Changed files in #120 PR stack on main (135–140):"
+    git log --oneline --name-only main --grep='#120' --grep='single-instance' --grep='issue-120' --grep='verify-issue-120' -i --max-count=20
+  else
+    echo "Changed files on current branch (${current_branch}) vs main:"
+    git log --oneline --name-only main..HEAD
+    git diff --stat main..HEAD
+  fi
 } >>"$BUNDLE" 2>&1
 
 # --- Step 10: Merge commit ---
