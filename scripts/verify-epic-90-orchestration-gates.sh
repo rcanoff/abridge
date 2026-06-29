@@ -109,7 +109,7 @@ check_issue_closed() {
 
 check_link_contacts_run_log_gate() {
   local review="docs/reviews/feat-contacts-link-contacts/codex.md"
-  local last_open has_summary
+  local last_open last_run
 
   if [[ ! -f "$review" ]]; then
     echo "FAIL (missing $review)"
@@ -117,26 +117,53 @@ check_link_contacts_run_log_gate() {
   fi
 
   last_open="$(grep -E '^\| [0-9]+ \|' "$review" | tail -1 | awk -F'|' '{gsub(/^ +| +$/,"",$5); print $5}' || true)"
+  last_run="$(grep -E '^\| [0-9]+ \|' "$review" | tail -1 | awk -F'|' '{gsub(/^ +| +$/,"",$2); print $2}' || true)"
   if [[ "$last_open" != "0" ]]; then
     echo "FAIL (final run log Open=${last_open:-unknown}, expected 0)"
     return 1
   fi
 
-  has_summary=0
-  if grep -qiE 'No open findings' "$review"; then
-    has_summary=1
+  if [[ -z "$last_run" || ! "$last_run" =~ ^[0-9]+$ ]]; then
+    echo "FAIL (final run number missing or non-numeric: ${last_run:-empty})"
+    return 1
   fi
 
-  if [[ "$has_summary" -eq 1 || "$last_open" == "0" ]]; then
-    if [[ "$has_summary" -eq 1 ]]; then
-      echo "PASS (final run Open=0; summary: No open findings)"
-    else
-      echo "PASS (final run log Open=0)"
-    fi
+  if [[ "$last_run" -lt 15 ]]; then
+    echo "FAIL (final run=$last_run, expected >= 15 after post-merge Phase 4 close)"
+    return 1
+  fi
+
+  echo "PASS (final run=${last_run} Open=0)"
+  return 0
+}
+
+check_link_contacts_thread1_reviewer_followup() {
+  local review="docs/reviews/feat-contacts-link-contacts/codex.md"
+
+  if [[ ! -f "$review" ]]; then
+    echo "FAIL (missing $review)"
+    return 1
+  fi
+
+  if python3 - "$review" <<'PY'
+import re, sys
+text = open(sys.argv[1]).read()
+m = re.search(r"## Thread 1 —.*?(?=## Thread 2 —)", text, re.S)
+if not m:
+    sys.exit(1)
+block = m.group(0)
+for line in block.splitlines():
+    hit = re.match(r"^### Follow-up — run (\d+)", line)
+    if hit and int(hit.group(1)) >= 15:
+        sys.exit(0)
+sys.exit(1)
+PY
+  then
+    echo "PASS (Thread 1 has reviewer Follow-up run >= 15)"
     return 0
   fi
 
-  echo "FAIL (final run Open=0 but summary missing and last run Open not confirmed)"
+  echo "FAIL (Thread 1 missing reviewer Follow-up run >= 15)"
   return 1
 }
 
@@ -175,7 +202,7 @@ for entry in "${FEATURES[@]}"; do
 
   echo "=== $slug (PR #$pr, issue #$issue) ==="
 
-  gate_a=0 gate_b=0 gate_c=0 gate_d=0 gate_e=0
+  gate_a=0 gate_b=0 gate_c=0 gate_d=0 gate_e=0 gate_f=0
   failures=()
 
   printf '  (a) docs on disk: '
@@ -223,11 +250,19 @@ for entry in "${FEATURES[@]}"; do
       printf '%s\n' "$out"
       failures+=("(e)")
     fi
+    printf '  (f) Thread 1 reviewer follow-up: '
+    if out="$(check_link_contacts_thread1_reviewer_followup)"; then
+      printf '%s\n' "$out"
+      gate_f=1
+    else
+      printf '%s\n' "$out"
+      failures+=("(f)")
+    fi
     print_link_contacts_ship_deviation_note
   fi
 
   if [[ "$slug" == "contacts-link-contacts" ]]; then
-    if [[ "$gate_a" -eq 1 && "$gate_b" -eq 1 && "$gate_c" -eq 1 && "$gate_d" -eq 1 && "$gate_e" -eq 1 ]]; then
+    if [[ "$gate_a" -eq 1 && "$gate_b" -eq 1 && "$gate_c" -eq 1 && "$gate_d" -eq 1 && "$gate_e" -eq 1 && "$gate_f" -eq 1 ]]; then
       echo "  => PASS"
       pass_count=$((pass_count + 1))
     else
