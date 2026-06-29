@@ -128,6 +128,7 @@ enum ContactsSerialization {
         guard let components else { return NSNull() }
 
         var payload: [String: Any] = [
+            "era": jsonValue(components.era),
             "year": jsonValue(components.year),
             "month": jsonValue(components.month),
             "day": jsonValue(components.day),

@@ -41,6 +41,26 @@ struct ContactsSerializationTests {
         "dates",
     ]
 
+    private static let dateComponentsReadKeys: Set<String> = [
+        "era",
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second",
+        "nanosecond",
+        "weekday",
+        "weekday_ordinal",
+        "quarter",
+        "week_of_month",
+        "week_of_year",
+        "year_for_week_of_year",
+        "is_leap_month",
+        "time_zone",
+        "calendar",
+    ]
+
     @Test
     func contactJSONObjectIncludesAllExpectedKeys() {
         let contact = ContactsTestSupport.makeRichContact()
@@ -92,6 +112,41 @@ struct ContactsSerializationTests {
 
         let payload = try ContactsSerialization.jsonString(from: [json])
         #expect(payload.contains("null"))
+    }
+
+    @Test
+    func dateComponentsJSONObjectIncludesAllRequiredKeys() {
+        let contact = CNMutableContact()
+        contact.givenName = "Era"
+        contact.birthday = DateComponents(year: 2026, month: 6, day: 28)
+
+        let json = ContactsSerialization.contactJSONObject(from: contact)
+        guard let dateComponents = json["birthday"] as? [String: Any] else {
+            Issue.record("Expected birthday date components object")
+            return
+        }
+
+        #expect(Set(dateComponents.keys) == Self.dateComponentsReadKeys)
+    }
+
+    @Test
+    func dateComponentsJSONObjectSerializesEraFaithfully() {
+        let contact = CNMutableContact()
+        contact.givenName = "Era"
+        var components = DateComponents()
+        components.era = 1
+        components.year = 2026
+        components.month = 6
+        components.day = 28
+        contact.birthday = components
+
+        let json = ContactsSerialization.contactJSONObject(from: contact)
+        guard let dateComponents = json["birthday"] as? [String: Any] else {
+            Issue.record("Expected birthday date components object")
+            return
+        }
+
+        #expect(dateComponents["era"] as? Int == 1)
     }
 
     @Test
