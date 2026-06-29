@@ -25,6 +25,7 @@ pub const CONTACTS_SEARCH: &str = "contacts.search";
 pub const CONTACTS_CREATE: &str = "contacts.create";
 pub const CONTACTS_EDIT: &str = "contacts.edit";
 pub const CONTACTS_DELETE: &str = "contacts.delete";
+pub const MAPKIT_SEARCH: &str = "mapkit.search";
 pub const DIAGNOSTICS_READ: &str = "diagnostics.read";
 
 pub fn is_valid_capability_id(id: &str) -> bool {
@@ -33,6 +34,7 @@ pub fn is_valid_capability_id(id: &str) -> bool {
     || id == CONTACTS_CREATE
     || id == CONTACTS_EDIT
     || id == CONTACTS_DELETE
+    || id == MAPKIT_SEARCH
     || id == DIAGNOSTICS_READ
   {
     return true;
@@ -75,6 +77,7 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
       | CONTACTS_CREATE
       | CONTACTS_EDIT
       | CONTACTS_DELETE
+      | MAPKIT_SEARCH
       | DIAGNOSTICS_READ
   )
 }
@@ -83,6 +86,7 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
 mod tests {
   use super::{
     CONTACTS_CREATE, CONTACTS_DELETE, CONTACTS_EDIT, CONTACTS_READ, CONTACTS_SEARCH, DIAGNOSTICS_READ,
+    MAPKIT_SEARCH,
     EVENTKIT_CALENDARS_CREATE, EVENTKIT_CALENDARS_DELETE, EVENTKIT_CALENDARS_EDIT, EVENTKIT_CALENDARS_READ,
     EVENTKIT_EVENTS_ALARMS, EVENTKIT_EVENTS_CREATE, EVENTKIT_EVENTS_DELETE, EVENTKIT_EVENTS_EDIT,
     EVENTKIT_EVENTS_INVITATIONS, EVENTKIT_EVENTS_READ, EVENTKIT_EVENTS_RECURRENCE, EVENTKIT_EVENTS_SEARCH,
@@ -127,6 +131,12 @@ mod tests {
   }
 
   #[test]
+  fn accepts_mapkit_search_capability_shape() {
+    assert!(is_valid_capability_id(MAPKIT_SEARCH));
+    assert!(is_allowed_in_v1(MAPKIT_SEARCH));
+  }
+
+  #[test]
   fn rejects_uppercase_capability() {
     assert!(!is_valid_capability_id("EventKit.Reminders.Read"));
   }
@@ -164,6 +174,7 @@ mod tests {
     assert!(is_allowed_in_v1(CONTACTS_CREATE));
     assert!(is_allowed_in_v1(CONTACTS_EDIT));
     assert!(is_allowed_in_v1(CONTACTS_DELETE));
+    assert!(is_allowed_in_v1(MAPKIT_SEARCH));
     assert!(!is_allowed_in_v1("eventkit.reminders.write"));
   }
 }
