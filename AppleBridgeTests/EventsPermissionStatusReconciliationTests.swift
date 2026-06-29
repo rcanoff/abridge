@@ -2,7 +2,7 @@
 import Testing
 
 @Suite("EventsPermissionStatusReconciliation")
-struct EventsPermissionStatusReconciliationTests {
+struct EventsPermissionReconciliationTests {
     @Test
     func preservesAuthorizedWhenEventKitStatusIsStaleAfterGrant() {
         let state = EventsPermissionStatusReconciliation.State(sessionGrantConfirmed: true)
