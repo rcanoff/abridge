@@ -15,6 +15,8 @@ extension MapKitProvider {
             calculateRoute(payloadJson: payloadJson)
         case "estimate_travel_time":
             estimateTravelTime(payloadJson: payloadJson)
+        case "get_current_location":
+            getCurrentLocation(payloadJson: payloadJson)
         case "lookup_place":
             lookupPlace(payloadJson: payloadJson)
         case "open_navigation":

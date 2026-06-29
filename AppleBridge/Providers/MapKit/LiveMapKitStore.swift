@@ -8,7 +8,7 @@ enum MapKitSearchFetch {
     static let defaultTimeout: TimeInterval = 30
     static let runLoopInterval: TimeInterval = 0.01
 
-    /// Thread-safe handoff for sync/async MapKit bridges that schedule unstructured tasks.
+    /// Thread-safe handoff for sync/async MapKit and CoreLocation bridges that schedule callbacks or tasks.
     final class AsyncBridgeResult<T>: @unchecked Sendable {
         private let lock = NSLock()
         private var value: T?

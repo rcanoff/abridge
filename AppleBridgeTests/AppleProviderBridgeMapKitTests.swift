@@ -283,7 +283,7 @@ struct AppleProviderBridgeMapKitTests {
     @MainActor
     func callProviderMapKitReturnsUnknownOperation() throws {
         let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: MockMapKitStore()))
-        let request = ProviderRequest(provider: "mapkit", operation: "get_current_location", payloadJson: "{}")
+        let request = ProviderRequest(provider: "mapkit", operation: "not_a_mapkit_operation", payloadJson: "{}")
         let response = bridge.callProvider(request: request)
         #expect(response.ok == false)
 
@@ -291,7 +291,7 @@ struct AppleProviderBridgeMapKitTests {
         let data = try #require(errorJson.data(using: .utf8))
         let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         #expect(decoded?["code"] as? String == "unknown_operation")
-        #expect((decoded?["message"] as? String)?.contains("get_current_location") == true)
+        #expect((decoded?["message"] as? String)?.contains("not_a_mapkit_operation") == true)
     }
 
     private func calculateRoutePayload(

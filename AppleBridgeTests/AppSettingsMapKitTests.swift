@@ -40,6 +40,12 @@ struct AppSettingsMapKitTests {
         #expect(
             serverEnabledCapabilities(for: appSettings, locationAuthorized: true).contains("mapkit.navigation")
         )
+
+        appSettings.saveCapabilityIDs(["mapkit-location"])
+        #expect(appSettings.enabledMapKitCapabilityIDs == ["mapkit.location"])
+        #expect(
+            serverEnabledCapabilities(for: appSettings, locationAuthorized: true).contains("mapkit.location")
+        )
     }
 
     @MainActor

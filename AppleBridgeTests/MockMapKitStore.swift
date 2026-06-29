@@ -11,6 +11,9 @@ final class MockMapKitStore: MapKitStoreing {
     var forwardGeocodeResults: [[MKMapItem]] = []
     var calculateRouteResults: [MapKitCalculateRouteResult] = []
     var estimateTravelTimeResults: [MapKitEstimateTravelTimeResult] = []
+    var getCurrentLocationResult: CLLocation?
+    var getCurrentLocationError: Error?
+    private(set) var getCurrentLocationCallCount = 0
     var lookupPlaceResults: [MKMapItem] = []
     var openNavigationResults: [MapKitOpenNavigationResult] = []
     private(set) var lastRequest: MapKitSearchRequest?
@@ -27,43 +30,24 @@ final class MockMapKitStore: MapKitStoreing {
     }
 
     func searchPlaces(request: MapKitSearchRequest) throws -> MapKitSearchResult {
-        lastRequest = request
-        if let first = results.first {
-            return first
-        }
-        return MapKitSearchResult(mapItems: [], boundingRegion: nil)
+        lastRequest = request; return results.first ?? MapKitSearchResult(mapItems: [], boundingRegion: nil)
     }
 
     func searchNearby(request: MapKitSearchNearbyRequest) throws -> MapKitSearchResult {
-        lastNearbyRequest = request
-        if let first = nearbyResults.first {
-            return first
-        }
-        return MapKitSearchResult(mapItems: [], boundingRegion: nil)
+        lastNearbyRequest = request; return nearbyResults.first ?? MapKitSearchResult(mapItems: [], boundingRegion: nil)
     }
 
     func reverseGeocode(request: MapKitReverseGeocodeRequest) throws -> [MKMapItem] {
-        lastReverseGeocodeRequest = request
-        if let first = reverseGeocodeResults.first {
-            return first
-        }
-        return []
+        lastReverseGeocodeRequest = request; return reverseGeocodeResults.first ?? []
     }
 
     func forwardGeocode(request: MapKitForwardGeocodeRequest) throws -> [MKMapItem] {
-        lastForwardGeocodeRequest = request
-        if let first = forwardGeocodeResults.first {
-            return first
-        }
-        return []
+        lastForwardGeocodeRequest = request; return forwardGeocodeResults.first ?? []
     }
 
     func calculateRoute(request: MapKitCalculateRouteRequest) throws -> MapKitCalculateRouteResult {
         lastCalculateRouteRequest = request
-        if let first = calculateRouteResults.first {
-            return first
-        }
-
+        if let first = calculateRouteResults.first { return first }
         let sourcePlacemark = MKPlacemark(coordinate: request.source.coordinate)
         let destinationPlacemark = MKPlacemark(coordinate: request.destination.coordinate)
         return MapKitCalculateRouteResult(
@@ -71,6 +55,13 @@ final class MockMapKitStore: MapKitStoreing {
             destination: MKMapItem(placemark: destinationPlacemark),
             routes: []
         )
+    }
+
+    func getCurrentLocation() throws -> CLLocation {
+        getCurrentLocationCallCount += 1
+        if let getCurrentLocationError { throw getCurrentLocationError }
+        if let getCurrentLocationResult { return getCurrentLocationResult }
+        return CLLocation(latitude: 0, longitude: 0)
     }
 
     func estimateTravelTime(request: MapKitEstimateTravelTimeRequest) throws -> MapKitEstimateTravelTimeResult {
