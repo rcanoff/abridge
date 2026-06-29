@@ -5,11 +5,17 @@ enum ContactsPermissionStatus: Equatable, CaseIterable {
     case unknown
     case notDetermined
     case authorized
+    case limited
     case denied
     case restricted
 
     var grantsReadAccess: Bool {
-        self == .authorized
+        switch self {
+        case .authorized, .limited:
+            true
+        default:
+            false
+        }
     }
 
     var displayName: String {
@@ -20,6 +26,8 @@ enum ContactsPermissionStatus: Equatable, CaseIterable {
             "Not Determined"
         case .authorized:
             "Authorized"
+        case .limited:
+            "Limited"
         case .denied:
             "Denied"
         case .restricted:
@@ -35,6 +43,8 @@ enum ContactsPermissionStatusMapper {
             .notDetermined
         case .authorized:
             .authorized
+        case .limited:
+            .limited
         case .denied:
             .denied
         case .restricted:

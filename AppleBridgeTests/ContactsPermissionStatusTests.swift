@@ -21,4 +21,13 @@ struct ContactsPermissionStatusTests {
         let status = ContactsPermissionStatusMapper.map(.denied)
         #expect(status.grantsReadAccess == false)
     }
+
+    @Test
+    func mapLimitedGrantsReadAccess() throws {
+        // CNAuthorizationStatus.limited is iOS-only in the SDK; raw value 4 exercises the mapper on macOS CI.
+        let limitedStatus = try #require(CNAuthorizationStatus(rawValue: 4))
+        let status = ContactsPermissionStatusMapper.map(limitedStatus)
+        #expect(status == .limited)
+        #expect(status.grantsReadAccess)
+    }
 }
