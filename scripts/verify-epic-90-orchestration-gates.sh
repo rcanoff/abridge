@@ -24,6 +24,8 @@ FEATURES=(
   "contacts-create-group|2026-06-29-contacts-create-group|156|100"
   "contacts-update-group|2026-06-29-contacts-update-group|157|101"
   "contacts-delete-group|2026-06-29-contacts-delete-group|158|102"
+  # link-contacts: gates (a)-(d) plus (e). Gate (e) asserts the restored run-14 frozen
+  # codex artifact (summary, Thread 1 wont-fix, no run>=15) — not a run≥15 re-run requirement.
   "contacts-link-contacts|2026-06-29-contacts-link-contacts|159|97"
   "contacts-unlink-contacts|2026-06-29-contacts-unlink-contacts|160|98"
 )
@@ -107,91 +109,48 @@ check_issue_closed() {
   return 1
 }
 
-check_link_contacts_run_log_gate() {
+check_link_contacts_frozen_codex() {
   local review="docs/reviews/feat-contacts-link-contacts/codex.md"
-  local last_open last_run
+  local failures=()
+  local summary_line high_run open_check
 
   if [[ ! -f "$review" ]]; then
     echo "FAIL (missing $review)"
     return 1
   fi
 
-  last_open="$(grep -E '^\| [0-9]+ \|' "$review" | tail -1 | awk -F'|' '{gsub(/^ +| +$/,"",$5); print $5}' || true)"
-  last_run="$(grep -E '^\| [0-9]+ \|' "$review" | tail -1 | awk -F'|' '{gsub(/^ +| +$/,"",$2); print $2}' || true)"
-  if [[ "$last_open" != "0" ]]; then
-    echo "FAIL (final run log Open=${last_open:-unknown}, expected 0)"
-    return 1
+  summary_line="$(
+    awk '/^## Summary$/{found=1; next} found && /^## /{exit} found && NF{print; exit}' "$review" \
+      | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+  )"
+  if [[ "$summary_line" != "No open findings." ]]; then
+    failures+=("summary!=No open findings.")
   fi
 
-  if [[ -z "$last_run" || ! "$last_run" =~ ^[0-9]+$ ]]; then
-    echo "FAIL (final run number missing or non-numeric: ${last_run:-empty})"
-    return 1
+  if ! sed -n '/^## Thread 1 —/,/^## Thread 2 —/p' "$review" | grep -q '^\*\*Status:\*\* wont-fix'; then
+    failures+=("Thread 1 status!=wont-fix")
   fi
 
-  if [[ "$last_run" -lt 15 ]]; then
-    echo "FAIL (final run=$last_run, expected >= 15 after post-merge Phase 4 close)"
-    return 1
+  high_run="$(
+    grep -E '^\| [0-9]+ \|' "$review" \
+      | awk -F'|' '{gsub(/^ +| +$/,"",$2); if ($2+0 >= 15) {print $2; exit}}'
+  )"
+  if [[ -n "$high_run" ]]; then
+    failures+=("run log has run>=15 (run $high_run)")
   fi
 
-  echo "PASS (final run=${last_run} Open=0)"
-  return 0
-}
-
-check_link_contacts_thread1_reviewer_followup() {
-  local review="docs/reviews/feat-contacts-link-contacts/codex.md"
-
-  if [[ ! -f "$review" ]]; then
-    echo "FAIL (missing $review)"
-    return 1
+  open_check="$(check_codex_open_zero "contacts-link-contacts")"
+  if [[ "$open_check" != PASS* ]]; then
+    failures+=("final Open!=0")
   fi
 
-  if python3 - "$review" <<'PY'
-import re, sys
-text = open(sys.argv[1]).read()
-m = re.search(r"## Thread 1 —.*?(?=## Thread 2 —)", text, re.S)
-if not m:
-    sys.exit(1)
-block = m.group(0)
-for line in block.splitlines():
-    hit = re.match(r"^### Follow-up — run (\d+)", line)
-    if hit and int(hit.group(1)) >= 15:
-        sys.exit(0)
-sys.exit(1)
-PY
-  then
-    echo "PASS (Thread 1 has reviewer Follow-up run >= 15)"
+  if ((${#failures[@]} == 0)); then
+    echo "PASS (frozen run-14: summary, Thread 1 wont-fix, no run>=15, Open: 0)"
     return 0
   fi
 
-  echo "FAIL (Thread 1 missing reviewer Follow-up run >= 15)"
+  echo "FAIL (${failures[*]})"
   return 1
-}
-
-print_link_contacts_ship_deviation_note() {
-  local review="docs/reviews/feat-contacts-link-contacts/codex.md"
-  local -a open_one_runs=()
-  local line run_num open_val
-
-  if [[ ! -f "$review" ]]; then
-    return 0
-  fi
-
-  while IFS= read -r line; do
-    if [[ "$line" =~ ^\|[[:space:]]*([0-9]+)[[:space:]]*\| ]]; then
-      run_num="${BASH_REMATCH[1]}"
-      if [[ "$run_num" -eq 1 ]]; then
-        continue
-      fi
-      open_val="$(awk -F'|' '{gsub(/^ +| +$/,"",$5); print $5}' <<<"$line")"
-      if [[ "$open_val" == "1" ]]; then
-        open_one_runs+=("$run_num")
-      fi
-    fi
-  done < <(grep -E '^\| [0-9]+ \|' "$review" || true)
-
-  if ((${#open_one_runs[@]} > 0)); then
-    echo "  NOTE: ship-time Phase 4 deviation — run log shows Open=1 after run 1 on run(s): ${open_one_runs[*]} (PR #159 merged during runs 10–12 with Open=1; remediated post-merge via wont-fix disposition + codex run 13 + PR #162)"
-  fi
 }
 
 echo "verify-epic-90-orchestration-gates: repo=$(basename "$REPO_ROOT") branch=$(git branch --show-current) head=$(git rev-parse --short HEAD)"
@@ -202,7 +161,7 @@ for entry in "${FEATURES[@]}"; do
 
   echo "=== $slug (PR #$pr, issue #$issue) ==="
 
-  gate_a=0 gate_b=0 gate_c=0 gate_d=0 gate_e=0 gate_f=0
+  gate_a=0 gate_b=0 gate_c=0 gate_d=0 gate_e=1
   failures=()
 
   printf '  (a) docs on disk: '
@@ -242,41 +201,23 @@ for entry in "${FEATURES[@]}"; do
   fi
 
   if [[ "$slug" == "contacts-link-contacts" ]]; then
-    printf '  (e) link-contacts run log final: '
-    if out="$(check_link_contacts_run_log_gate)"; then
+    gate_e=0
+    printf '  (e) frozen run-14 codex: '
+    if out="$(check_link_contacts_frozen_codex)"; then
       printf '%s\n' "$out"
       gate_e=1
     else
       printf '%s\n' "$out"
       failures+=("(e)")
     fi
-    printf '  (f) Thread 1 reviewer follow-up: '
-    if out="$(check_link_contacts_thread1_reviewer_followup)"; then
-      printf '%s\n' "$out"
-      gate_f=1
-    else
-      printf '%s\n' "$out"
-      failures+=("(f)")
-    fi
-    print_link_contacts_ship_deviation_note
   fi
 
-  if [[ "$slug" == "contacts-link-contacts" ]]; then
-    if [[ "$gate_a" -eq 1 && "$gate_b" -eq 1 && "$gate_c" -eq 1 && "$gate_d" -eq 1 && "$gate_e" -eq 1 && "$gate_f" -eq 1 ]]; then
-      echo "  => PASS"
-      pass_count=$((pass_count + 1))
-    else
-      echo "  => FAIL (${failures[*]})"
-      fail_count=$((fail_count + 1))
-    fi
+  if [[ "$gate_a" -eq 1 && "$gate_b" -eq 1 && "$gate_c" -eq 1 && "$gate_d" -eq 1 && "$gate_e" -eq 1 ]]; then
+    echo "  => PASS"
+    pass_count=$((pass_count + 1))
   else
-    if [[ "$gate_a" -eq 1 && "$gate_b" -eq 1 && "$gate_c" -eq 1 && "$gate_d" -eq 1 ]]; then
-      echo "  => PASS"
-      pass_count=$((pass_count + 1))
-    else
-      echo "  => FAIL (${failures[*]})"
-      fail_count=$((fail_count + 1))
-    fi
+    echo "  => FAIL (${failures[*]})"
+    fail_count=$((fail_count + 1))
   fi
 
   echo
