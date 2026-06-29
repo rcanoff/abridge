@@ -53,5 +53,16 @@ struct AppSettingsMapKitTests {
                 locationAuthorized: true
             ).contains("mapkit.routing")
         )
+
+        appSettings.saveCapabilityIDs(["mapkit-navigation"])
+        #expect(appSettings.enabledMapKitCapabilityIDs == ["mapkit.navigation"])
+        #expect(
+            appSettings.serverEnabledMCPCapabilityIDs(
+                remindersAuthorized: false,
+                eventsAuthorized: false,
+                contactsAuthorized: false,
+                locationAuthorized: true
+            ).contains("mapkit.navigation")
+        )
     }
 }
