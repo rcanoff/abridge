@@ -160,4 +160,87 @@ struct LiveMapKitStore: MapKitStoreing {
         }
         return mapItems
     }
+
+    func calculateRoute(request: MapKitCalculateRouteRequest) throws -> MapKitCalculateRouteResult {
+        let mkRequest = MKDirections.Request()
+        mkRequest.source = mapItem(for: request.source.coordinate)
+        mkRequest.destination = mapItem(for: request.destination.coordinate)
+        mkRequest.transportType = request.transportType
+        mkRequest.requestsAlternateRoutes = request.requestsAlternateRoutes
+        mkRequest.departureDate = request.departureDate
+        mkRequest.arrivalDate = request.arrivalDate
+        mkRequest.tollPreference = request.tollPreference
+        mkRequest.highwayPreference = request.highwayPreference
+
+        let directions = MKDirections(request: mkRequest)
+        var response: MKDirections.Response?
+        var directionsError: Error?
+
+        try MapKitSearchFetch.waitForCompletion { complete in
+            Task { @MainActor in
+                defer { complete() }
+                do {
+                    response = try await directions.calculate()
+                } catch {
+                    directionsError = error
+                }
+            }
+        }
+
+        if let directionsError {
+            throw directionsError
+        }
+        guard let response else {
+            throw MapKitProviderError.mapkitError("MapKit directions returned no response")
+        }
+
+        return MapKitCalculateRouteResult(
+            source: response.source,
+            destination: response.destination,
+            routes: response.routes.map(Self.routeData(from:))
+        )
+    }
+
+    private func mapItem(for coordinate: CLLocationCoordinate2D) -> MKMapItem {
+        MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+    }
+
+    private static func routeData(from route: MKRoute) -> MapKitRouteData {
+        MapKitRouteData(
+            name: route.name,
+            advisoryNotices: route.advisoryNotices,
+            distance: route.distance,
+            expectedTravelTime: route.expectedTravelTime,
+            transportType: route.transportType,
+            polylineCoordinates: coordinates(from: route.polyline),
+            polylineTitle: route.polyline.title,
+            polylineSubtitle: route.polyline.subtitle,
+            steps: route.steps.map(stepData(from:)),
+            hasTolls: route.hasTolls,
+            hasHighways: route.hasHighways
+        )
+    }
+
+    private static func stepData(from step: MKRoute.Step) -> MapKitRouteStepData {
+        MapKitRouteStepData(
+            instructions: step.instructions,
+            notice: step.notice,
+            distance: step.distance,
+            transportType: step.transportType,
+            polylineCoordinates: coordinates(from: step.polyline),
+            polylineTitle: step.polyline.title,
+            polylineSubtitle: step.polyline.subtitle
+        )
+    }
+
+    private static func coordinates(from polyline: MKPolyline) -> [CLLocationCoordinate2D] {
+        guard polyline.pointCount > 0 else { return [] }
+
+        var coordinates = [CLLocationCoordinate2D](
+            repeating: kCLLocationCoordinate2DInvalid,
+            count: polyline.pointCount
+        )
+        polyline.getCoordinates(&coordinates, range: NSRange(location: 0, length: polyline.pointCount))
+        return coordinates
+    }
 }

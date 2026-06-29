@@ -9,10 +9,12 @@ final class MockMapKitStore: MapKitStoreing {
     var nearbyResults: [MapKitSearchResult] = []
     var reverseGeocodeResults: [[MKMapItem]] = []
     var forwardGeocodeResults: [[MKMapItem]] = []
+    var calculateRouteResults: [MapKitCalculateRouteResult] = []
     private(set) var lastRequest: MapKitSearchRequest?
     private(set) var lastNearbyRequest: MapKitSearchNearbyRequest?
     private(set) var lastReverseGeocodeRequest: MapKitReverseGeocodeRequest?
     private(set) var lastForwardGeocodeRequest: MapKitForwardGeocodeRequest?
+    private(set) var lastCalculateRouteRequest: MapKitCalculateRouteRequest?
 
     func locationAuthorizationStatus() -> CLAuthorizationStatus {
         authorizationStatus
@@ -48,5 +50,20 @@ final class MockMapKitStore: MapKitStoreing {
             return first
         }
         return []
+    }
+
+    func calculateRoute(request: MapKitCalculateRouteRequest) throws -> MapKitCalculateRouteResult {
+        lastCalculateRouteRequest = request
+        if let first = calculateRouteResults.first {
+            return first
+        }
+
+        let sourcePlacemark = MKPlacemark(coordinate: request.source.coordinate)
+        let destinationPlacemark = MKPlacemark(coordinate: request.destination.coordinate)
+        return MapKitCalculateRouteResult(
+            source: MKMapItem(placemark: sourcePlacemark),
+            destination: MKMapItem(placemark: destinationPlacemark),
+            routes: []
+        )
     }
 }

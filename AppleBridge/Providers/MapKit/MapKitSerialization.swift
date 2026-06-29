@@ -54,6 +54,59 @@ enum MapKitSerialization {
         ]
     }
 
+    static func calculateRouteResponseJSONObject(result: MapKitCalculateRouteResult) -> [String: Any] {
+        [
+            "source": mapItemJSONObject(from: result.source),
+            "destination": mapItemJSONObject(from: result.destination),
+            "routes": result.routes.map(routeJSONObject(from:)),
+        ]
+    }
+
+    static func routeJSONObject(from route: MapKitRouteData) -> [String: Any] {
+        [
+            "name": route.name,
+            "advisory_notices": route.advisoryNotices,
+            "distance": route.distance,
+            "expected_travel_time": route.expectedTravelTime,
+            "transport_type": transportTypeJSONArray(from: route.transportType),
+            "polyline": polylineJSONObject(
+                coordinates: route.polylineCoordinates,
+                title: route.polylineTitle,
+                subtitle: route.polylineSubtitle
+            ),
+            "steps": route.steps.map(routeStepJSONObject(from:)),
+            "has_tolls": route.hasTolls,
+            "has_highways": route.hasHighways,
+        ]
+    }
+
+    static func routeStepJSONObject(from step: MapKitRouteStepData) -> [String: Any] {
+        [
+            "instructions": step.instructions,
+            "notice": jsonValue(step.notice),
+            "distance": step.distance,
+            "transport_type": transportTypeJSONArray(from: step.transportType),
+            "polyline": polylineJSONObject(
+                coordinates: step.polylineCoordinates,
+                title: step.polylineTitle,
+                subtitle: step.polylineSubtitle
+            ),
+        ]
+    }
+
+    static func polylineJSONObject(
+        coordinates: [CLLocationCoordinate2D],
+        title: String?,
+        subtitle: String?
+    ) -> [String: Any] {
+        [
+            "title": jsonValue(title),
+            "subtitle": jsonValue(subtitle),
+            "point_count": coordinates.count,
+            "coordinates": coordinates.map(coordinateJSONObject(from:)),
+        ]
+    }
+
     // MARK: - Nested types
 
     static func locationJSONObject(from location: CLLocation?) -> Any {
@@ -229,5 +282,26 @@ enum MapKitSerialization {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
         return formatter.string(from: date)
+    }
+
+    private static func transportTypeJSONArray(from transportType: MKDirectionsTransportType) -> [String] {
+        if transportType == .any {
+            return ["any"]
+        }
+
+        var values: [String] = []
+        if transportType.contains(.automobile) {
+            values.append("automobile")
+        }
+        if transportType.contains(.walking) {
+            values.append("walking")
+        }
+        if transportType.contains(.transit) {
+            values.append("transit")
+        }
+        if transportType.contains(.cycling) {
+            values.append("cycling")
+        }
+        return values.isEmpty ? ["any"] : values
     }
 }

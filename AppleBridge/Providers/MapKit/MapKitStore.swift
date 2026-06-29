@@ -28,6 +28,51 @@ struct MapKitForwardGeocodeRequest {
     let preferredLocale: Locale?
 }
 
+struct MapKitRouteEndpoint {
+    let coordinate: CLLocationCoordinate2D
+}
+
+struct MapKitCalculateRouteRequest {
+    let source: MapKitRouteEndpoint
+    let destination: MapKitRouteEndpoint
+    let transportType: MKDirectionsTransportType
+    let requestsAlternateRoutes: Bool
+    let departureDate: Date?
+    let arrivalDate: Date?
+    let tollPreference: MKDirections.RoutePreference
+    let highwayPreference: MKDirections.RoutePreference
+}
+
+struct MapKitRouteStepData {
+    let instructions: String
+    let notice: String?
+    let distance: CLLocationDistance
+    let transportType: MKDirectionsTransportType
+    let polylineCoordinates: [CLLocationCoordinate2D]
+    let polylineTitle: String?
+    let polylineSubtitle: String?
+}
+
+struct MapKitRouteData {
+    let name: String
+    let advisoryNotices: [String]
+    let distance: CLLocationDistance
+    let expectedTravelTime: TimeInterval
+    let transportType: MKDirectionsTransportType
+    let polylineCoordinates: [CLLocationCoordinate2D]
+    let polylineTitle: String?
+    let polylineSubtitle: String?
+    let steps: [MapKitRouteStepData]
+    let hasTolls: Bool
+    let hasHighways: Bool
+}
+
+struct MapKitCalculateRouteResult {
+    let source: MKMapItem
+    let destination: MKMapItem
+    let routes: [MapKitRouteData]
+}
+
 @MainActor
 protocol MapKitStoreing {
     func locationAuthorizationStatus() -> CLAuthorizationStatus
@@ -35,4 +80,5 @@ protocol MapKitStoreing {
     func searchNearby(request: MapKitSearchNearbyRequest) throws -> MapKitSearchResult
     func reverseGeocode(request: MapKitReverseGeocodeRequest) throws -> [MKMapItem]
     func forwardGeocode(request: MapKitForwardGeocodeRequest) throws -> [MKMapItem]
+    func calculateRoute(request: MapKitCalculateRouteRequest) throws -> MapKitCalculateRouteResult
 }

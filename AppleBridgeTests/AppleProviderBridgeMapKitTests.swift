@@ -108,6 +108,61 @@ struct AppleProviderBridgeMapKitTests {
 
     @Test
     @MainActor
+    func callProviderMapKitCalculateRouteSucceedsWithMockStore() throws {
+        let sourcePlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
+        let destinationPlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(
+            latitude: 37.7749,
+            longitude: -122.4194
+        ))
+        let sourceItem = MKMapItem(placemark: sourcePlacemark)
+        sourceItem.name = "Route Source"
+        let destinationItem = MKMapItem(placemark: destinationPlacemark)
+        destinationItem.name = "Route Destination"
+        let route = MapKitRouteData(
+            name: "Mock Route",
+            advisoryNotices: [],
+            distance: 1000,
+            expectedTravelTime: 600,
+            transportType: .automobile,
+            polylineCoordinates: [sourcePlacemark.coordinate, destinationPlacemark.coordinate],
+            polylineTitle: nil,
+            polylineSubtitle: nil,
+            steps: [],
+            hasTolls: false,
+            hasHighways: false
+        )
+        let store = MockMapKitStore()
+        store.authorizationStatus = .authorized
+        store.calculateRouteResults = [
+            MapKitCalculateRouteResult(
+                source: sourceItem,
+                destination: destinationItem,
+                routes: [route]
+            ),
+        ]
+        let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: store))
+
+        let request = ProviderRequest(
+            provider: "mapkit",
+            operation: "calculate_route",
+            payloadJson: calculateRoutePayload(
+                sourceLatitude: 37.3346,
+                sourceLongitude: -122.0090,
+                destinationLatitude: 37.7749,
+                destinationLongitude: -122.4194
+            )
+        )
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let routes = decoded?["routes"] as? [[String: Any]]
+        #expect(routes?.first?["name"] as? String == "Mock Route")
+    }
+
+    @Test
+    @MainActor
     func callProviderMapKitReturnsUnknownOperation() throws {
         let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: MockMapKitStore()))
         let request = ProviderRequest(provider: "mapkit", operation: "lookup_place", payloadJson: "{}")
@@ -119,5 +174,16 @@ struct AppleProviderBridgeMapKitTests {
         let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         #expect(decoded?["code"] as? String == "unknown_operation")
         #expect((decoded?["message"] as? String)?.contains("lookup_place") == true)
+    }
+
+    private func calculateRoutePayload(
+        sourceLatitude: Double,
+        sourceLongitude: Double,
+        destinationLatitude: Double,
+        destinationLongitude: Double
+    ) -> String {
+        "{\"source\":{\"coordinate\":{\"latitude\":\(sourceLatitude),\"longitude\":\(sourceLongitude)}},"
+            + "\"destination\":{\"coordinate\":{\"latitude\":\(destinationLatitude),"
+            + "\"longitude\":\(destinationLongitude)}}}"
     }
 }
