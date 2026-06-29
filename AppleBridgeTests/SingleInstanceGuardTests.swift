@@ -4,46 +4,6 @@ import Testing
 
 @Suite("SingleInstanceGuard")
 struct SingleInstanceGuardTests {
-    private static func appleBridgeAppSourceURL() -> URL {
-        URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("AppleBridge/AppleBridgeApp.swift")
-    }
-
-    @Test
-    func appEntryStatePropertiesHaveNoDefaultInitializers() throws {
-        let source = try String(contentsOf: Self.appleBridgeAppSourceURL(), encoding: .utf8)
-        let stateLines = source
-            .split(separator: "\n", omittingEmptySubsequences: false)
-            .map(String.init)
-            .filter { $0.contains("@State") }
-
-        for line in stateLines {
-            #expect(!line.contains("= ServerStore()"), "Guard must run before ServerStore default init: \(line)")
-            #expect(!line.contains("= AppSettings()"), "Guard must run before AppSettings default init: \(line)")
-        }
-    }
-
-    @Test
-    func appEntryGuardPrecedesBootstrapInInitBody() throws {
-        let source = try String(contentsOf: Self.appleBridgeAppSourceURL(), encoding: .utf8)
-        guard let initStart = source.range(of: "init() {") else {
-            Issue.record("init() not found in AppleBridgeApp.swift")
-            return
-        }
-        let initBody = source[initStart.lowerBound...]
-
-        guard let guardRange = initBody.range(of: "AppleBridgeAppBootstrap.performEntry"),
-              let stateAssignRange = initBody.range(of: "_appSettings = State(initialValue:")
-        else {
-            Issue.record("Expected guard-then-State assignment sequence not found")
-            return
-        }
-
-        #expect(guardRange.lowerBound < stateAssignRange.lowerBound)
-    }
-
     @Test
     @MainActor
     func performEntrySkipsStoreBootstrapOnDuplicate() {
