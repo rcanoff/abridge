@@ -19,8 +19,8 @@ extension EventKitProvider {
             handleSetAlarmsMutation(operation: operation, payloadJson: payloadJson)
         case "set_reminder_recurrence", "set_event_recurrence":
             handleSetRecurrenceMutation(operation: operation, payloadJson: payloadJson)
-        case "accept_invitation":
-            acceptInvitation(payloadJson: payloadJson)
+        case "accept_invitation", "decline_invitation":
+            handleInvitationMutation(operation: operation, payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }
@@ -82,6 +82,17 @@ extension EventKitProvider {
             completeReminder(payloadJson: payloadJson)
         case "uncomplete_reminder":
             uncompleteReminder(payloadJson: payloadJson)
+        default:
+            errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
+        }
+    }
+
+    private func handleInvitationMutation(operation: String, payloadJson: String) -> ProviderResponse {
+        switch operation {
+        case "accept_invitation":
+            acceptInvitation(payloadJson: payloadJson)
+        case "decline_invitation":
+            declineInvitation(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }
