@@ -113,6 +113,24 @@ final class MockContactsStore: ContactsStoreing {
         }
     }
 
+    func updateGroup(identifier: String, fields: [String: Any]) throws -> CNGroup {
+        if let fetchError {
+            throw fetchError
+        }
+
+        guard let index = groups.firstIndex(where: { $0.identifier == identifier }) else {
+            throw ContactsProviderError.invalidArguments("Unknown group_identifier: \(identifier)")
+        }
+
+        guard let mutable = groups[index].mutableCopy() as? CNMutableGroup else {
+            throw ContactsProviderError.contactsError("Failed to copy group")
+        }
+
+        try ContactsGroupDeserialization.applyWritableFields(from: fields, to: mutable)
+        groups[index] = mutable
+        return mutable
+    }
+
     func createGroup(in containerIdentifier: String, name: String) throws -> CNGroup {
         if let fetchError {
             throw fetchError

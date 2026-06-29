@@ -50,6 +50,7 @@ protocol ContactsStoreing {
     ) throws -> [CNContact]
     func createContact(in containerIdentifier: String, contact: CNMutableContact) throws -> CNContact
     func createGroup(in containerIdentifier: String, name: String) throws -> CNGroup
+    func updateGroup(identifier: String, fields: [String: Any]) throws -> CNGroup
     func updateContact(identifier: String, fields: [String: Any]) throws -> CNContact
     func deleteContact(identifier: String) throws
 }
