@@ -73,7 +73,8 @@ section "STEP 7 — double-launch (kill-first, PRE must be 0)"
 kill_apple_bridge_processes || true
 sleep 2
 PRE_COUNT=$(pgrep -x AppleBridge 2>/dev/null | wc -l | tr -d ' ')
-{
+DOUBLE_LAUNCH_OK=0
+(
   echo "PRE_COUNT=$PRE_COUNT"
   if [ "$PRE_COUNT" -ne 0 ]; then
     echo "FAIL: expected PRE_COUNT=0 after kill"
@@ -104,13 +105,18 @@ PRE_COUNT=$(pgrep -x AppleBridge 2>/dev/null | wc -l | tr -d ' ')
 
   if [ "$COUNT1" -eq 1 ] && [ "$COUNT2" -eq 1 ] && [ "$PORT_COUNT" -le 1 ]; then
     echo "PASS: PRE=0, launch1→1 instance, launch2→still 1, port listeners ≤1"
-  else
-    echo "FAIL: COUNT1=$COUNT1 COUNT2=$COUNT2 PORT=$PORT_COUNT"
-    exit 1
+    exit 0
   fi
-} >>"$BUNDLE" 2>&1
+  echo "FAIL: COUNT1=$COUNT1 COUNT2=$COUNT2 PORT=$PORT_COUNT"
+  exit 1
+) >>"$BUNDLE" 2>&1 && DOUBLE_LAUNCH_OK=1
 
 kill_apple_bridge_processes || true
+
+if [ "$DOUBLE_LAUNCH_OK" -ne 1 ]; then
+  echo "verify-issue-120: double-launch check failed (see STEP 7 in bundle)" >&2
+  exit 1
+fi
 
 # --- Step 8: Plans, specs, reviewer conversations ---
 section "STEP 8 — ls docs/superpowers/specs/ | cat"
