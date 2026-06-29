@@ -8,6 +8,37 @@ enum MapKitSearchFetch {
     static let defaultTimeout: TimeInterval = 30
     static let runLoopInterval: TimeInterval = 0.01
 
+    /// Thread-safe handoff for sync/async MapKit bridges that schedule unstructured tasks.
+    final class AsyncBridgeResult<T>: @unchecked Sendable {
+        private let lock = NSLock()
+        private var value: T?
+        private var error: Error?
+
+        func setValue(_ value: T) {
+            lock.lock()
+            defer { lock.unlock() }
+            self.value = value
+        }
+
+        func setError(_ error: Error) {
+            lock.lock()
+            defer { lock.unlock() }
+            self.error = error
+        }
+
+        func get() throws -> T {
+            lock.lock()
+            defer { lock.unlock() }
+            if let error {
+                throw error
+            }
+            guard let value else {
+                throw MapKitProviderError.mapkitError("MapKit async bridge returned no result")
+            }
+            return value
+        }
+    }
+
     static func waitForCompletion(
         timeout: TimeInterval = defaultTimeout,
         work: (@escaping () -> Void) -> Void
@@ -248,8 +279,7 @@ struct LiveMapKitStore: MapKitStoreing {
         }
 
         let mkRequest = MKMapItemRequest(mapItemIdentifier: identifier)
-        var mapItem: MKMapItem?
-        var lookupError: Error?
+        let result = MapKitSearchFetch.AsyncBridgeResult<MKMapItem>()
 
         try MapKitSearchFetch.waitForCompletion { complete in
             // Schedule via GCD so run-loop pumping can deliver work while this @MainActor
@@ -258,21 +288,15 @@ struct LiveMapKitStore: MapKitStoreing {
                 Task {
                     defer { complete() }
                     do {
-                        mapItem = try await mkRequest.mapItem
+                        try await result.setValue(mkRequest.mapItem)
                     } catch {
-                        lookupError = error
+                        result.setError(error)
                     }
                 }
             }
         }
 
-        if let lookupError {
-            throw lookupError
-        }
-        guard let mapItem else {
-            throw MapKitProviderError.mapkitError("MapKit lookup returned no map item")
-        }
-        return mapItem
+        return try result.get()
     }
 
     private func mapItem(for coordinate: CLLocationCoordinate2D) -> MKMapItem {
