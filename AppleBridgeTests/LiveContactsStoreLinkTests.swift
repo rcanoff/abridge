@@ -59,7 +59,8 @@ struct LiveContactsStoreLinkTests {
             return
         }
 
-        // Typed BOOL objc_msgSend bridge must not trap on primitive YES/NO returns.
+        // Verified on macOS 26: linkContact:toContact: encoding is v32@0:8@16@24 (void).
+        // Rejection surfaces via CNContactStore.execute.
         #expect(ABContactLinkingIsAvailable())
         do {
             try ContactsSaveRequestLinking.link(from: fromMutable, to: toMutable, in: saveRequest)

@@ -10,16 +10,16 @@ BOOL ABContactLinkingIsAvailable(void) {
     return [CNSaveRequest instancesRespondToSelector:ABLinkContactSelector()];
 }
 
-BOOL ABLinkContactToContact(
+void ABLinkContactToContact(
     CNSaveRequest *saveRequest,
     CNMutableContact *contact,
     CNMutableContact *unifiedContact
 ) {
     SEL selector = ABLinkContactSelector();
     if (![saveRequest respondsToSelector:selector]) {
-        return NO;
+        return;
     }
 
-    typedef BOOL (*ABLinkContactIMP)(id, SEL, CNMutableContact *, CNMutableContact *);
-    return ((ABLinkContactIMP)objc_msgSend)(saveRequest, selector, contact, unifiedContact);
+    typedef void (*ABLinkContactIMP)(id, SEL, CNMutableContact *, CNMutableContact *);
+    ((ABLinkContactIMP)objc_msgSend)(saveRequest, selector, contact, unifiedContact);
 }
