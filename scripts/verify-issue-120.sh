@@ -32,7 +32,7 @@ append_cmd() {
 
 kill_apple_bridge_processes() {
   for _ in 1 2 3 4 5; do
-    pgrep -x AppleBridge 2>/dev/null | while read -r pid; do kill -9 "$pid" 2>/dev/null || true; done
+    while read -r pid; do kill -9 "$pid" 2>/dev/null || true; done < <(pgrep -x AppleBridge 2>/dev/null || true)
     pkill -f "debugserver.*AppleBridge" 2>/dev/null || true
     sleep 1
     pgrep -x AppleBridge >/dev/null 2>&1 || return 0
@@ -72,9 +72,10 @@ xcrun xcresulttool get test-results summary --path "$RESULT_BUNDLE" >>"$BUNDLE" 
 section "STEP 7 — double-launch (kill-first, PRE must be 0)"
 kill_apple_bridge_processes || true
 sleep 2
-PRE_COUNT=$(pgrep -x AppleBridge 2>/dev/null | wc -l | tr -d ' ')
+PRE_COUNT=$( (pgrep -x AppleBridge 2>/dev/null || true) | wc -l | tr -d ' ')
 DOUBLE_LAUNCH_OK=0
-(
+set +e
+if (
   echo "PRE_COUNT=$PRE_COUNT"
   if [ "$PRE_COUNT" -ne 0 ]; then
     echo "FAIL: expected PRE_COUNT=0 after kill"
@@ -100,7 +101,7 @@ DOUBLE_LAUNCH_OK=0
   pgrep -x AppleBridge || true
 
   lsof -iTCP:3020 -sTCP:LISTEN 2>/dev/null || echo "(no listener on 3020)"
-  PORT_COUNT=$(lsof -iTCP:3020 -sTCP:LISTEN 2>/dev/null | grep -c LISTEN || echo 0)
+  PORT_COUNT=$(lsof -iTCP:3020 -sTCP:LISTEN 2>/dev/null | grep -c LISTEN 2>/dev/null || echo 0)
   echo "PORT_3020_LISTENERS=$PORT_COUNT"
 
   if [ "$COUNT1" -eq 1 ] && [ "$COUNT2" -eq 1 ] && [ "$PORT_COUNT" -le 1 ]; then
@@ -109,7 +110,10 @@ DOUBLE_LAUNCH_OK=0
   fi
   echo "FAIL: COUNT1=$COUNT1 COUNT2=$COUNT2 PORT=$PORT_COUNT"
   exit 1
-) >>"$BUNDLE" 2>&1 && DOUBLE_LAUNCH_OK=1
+) >>"$BUNDLE" 2>&1; then
+  DOUBLE_LAUNCH_OK=1
+fi
+set -e
 
 kill_apple_bridge_processes || true
 
