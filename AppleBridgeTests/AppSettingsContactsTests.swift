@@ -33,6 +33,19 @@ struct AppSettingsContactsTests {
 
     @Test
     @MainActor
+    func enabledContactsCapabilityIDsIncludesCheckedContactsDeleteCapability() throws {
+        let suiteName = "AppSettingsContactsTests.contactsDeleteCapability"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.saveCapabilityIDs(["contacts-delete"])
+
+        #expect(appSettings.enabledContactsCapabilityIDs == ["contacts.delete"])
+    }
+
+    @Test
+    @MainActor
     func serverEnabledMCPCapabilityIDsIncludesContactsSearchWhenAuthorized() throws {
         let suiteName = "AppSettingsContactsTests.contactsSearchServerGating"
         let defaults = try #require(UserDefaults(suiteName: suiteName))

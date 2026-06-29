@@ -7,7 +7,7 @@ import Testing
 struct ContactsProviderDeleteContactTests {
     @Test
     @MainActor
-    func deleteContactReturnsIdentifierEnvelope() throws {
+    func deleteContactReturnsIdentifierEnvelope() {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .authorized
         let contact = ContactsTestSupport.makeRichContact()

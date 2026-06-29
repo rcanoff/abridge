@@ -60,7 +60,7 @@ struct AppleProviderBridgeContactsTests {
 
     @Test
     @MainActor
-    func callProviderContactsDeleteContactSucceedsWithMockStore() throws {
+    func callProviderContactsDeleteContactSucceedsWithMockStore() {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .authorized
         let contact = ContactsTestSupport.makeRichContact()
