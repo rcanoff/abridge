@@ -39,4 +39,44 @@ struct MenuBarNativeMenuTests {
     func endpointURLUsesConfiguredPort() {
         #expect(MenuBarEndpointFormatting.endpointURL(port: 4242) == "http://127.0.0.1:4242/mcp")
     }
+
+    @Test
+    @MainActor
+    func quitIsDisabledWhenServerStoreReportsStarting() async {
+        let mock = MockServerService()
+        await mock.setRefreshResult(.starting)
+        let serverStore = ServerStore(serverService: mock)
+
+        await serverStore.refreshStatus()
+
+        #expect(MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore))
+    }
+
+    @Test
+    @MainActor
+    func quitIsDisabledWhileServerStoreIsStartingServer() async {
+        let mock = MockServerService()
+        await mock.setStartDelayNanoseconds(200_000_000)
+        await mock.setRefreshResult(.running)
+        let serverStore = ServerStore(serverService: mock)
+        let startTask = Task { await serverStore.startServer(port: 3020, enabledCapabilities: []) }
+
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        #expect(MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore))
+
+        await startTask.value
+        #expect(MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore) == false)
+    }
+
+    @Test(arguments: [ServerRunState.stopped, ServerRunState.running])
+    @MainActor
+    func quitIsEnabledWhenServerStoreIsIdle(runState: ServerRunState) async {
+        let mock = MockServerService()
+        await mock.setRefreshResult(runState)
+        let serverStore = ServerStore(serverService: mock)
+
+        await serverStore.refreshStatus()
+
+        #expect(MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore) == false)
+    }
 }

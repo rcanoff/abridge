@@ -6,12 +6,6 @@
       "env": {
         "XCODEBUILDMCP_CWD": "${workspaceFolder}"
       }
-    },
-    "AppleBridge": {
-      "url": "http://127.0.0.1:3020/mcp",
-      "headers": {
-        "Authorization": "Bearer ${env:APPLEBRIDGE_MCP_TOKEN}"
-      }
     }
   }
 }

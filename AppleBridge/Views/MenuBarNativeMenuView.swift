@@ -6,17 +6,7 @@ struct MenuBarNativeMenuView: View {
 
     @Bindable var serverStore: ServerStore
     @Bindable var settingsStore: SettingsStore
-    private let appQuitter: any AppQuitting
-
-    init(
-        serverStore: ServerStore,
-        settingsStore: SettingsStore,
-        appQuitter: any AppQuitting
-    ) {
-        self.serverStore = serverStore
-        self.settingsStore = settingsStore
-        self.appQuitter = appQuitter
-    }
+    let appQuitter: any AppQuitting
 
     var body: some View {
         Button("Open Apple Bridge") {

@@ -8,6 +8,7 @@ actor MockServerService: ServerServing {
     var startError: ServerOperationError?
     var stopError: ServerOperationError?
     var resetBearerTokenError: ServerOperationError?
+    var startDelayNanoseconds: UInt64 = 0
 
     private(set) var startCallCount = 0
     private(set) var stopCallCount = 0
@@ -50,6 +51,10 @@ actor MockServerService: ServerServing {
 
         if let startError {
             throw startError
+        }
+
+        if startDelayNanoseconds > 0 {
+            try await Task.sleep(nanoseconds: startDelayNanoseconds)
         }
 
         usageLoggingEnabledState = usageLoggingEnabled
@@ -118,5 +123,9 @@ actor MockServerService: ServerServing {
 
     func setBearerTokenResult(_ token: String) {
         bearerTokenResult = token
+    }
+
+    func setStartDelayNanoseconds(_ delay: UInt64) {
+        startDelayNanoseconds = delay
     }
 }
