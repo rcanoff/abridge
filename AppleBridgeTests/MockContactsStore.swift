@@ -8,6 +8,7 @@ final class MockContactsStore: ContactsStoreing {
     var contacts: [CNContact] = []
     var knownContainerIdentifiers: Set<String> = ["container-1"]
     var fetchError: ContactsProviderError?
+    private var nextContactID = 1
 
     func contactsAuthorizationStatus() -> CNAuthorizationStatus {
         authorizationStatus
@@ -91,5 +92,27 @@ final class MockContactsStore: ContactsStoreing {
         contact.phoneNumbers.contains { labeledValue in
             labeledValue.value.stringValue.localizedCaseInsensitiveContains(phoneNumber)
         }
+    }
+
+    func createContact(in containerIdentifier: String, contact: CNMutableContact) throws -> CNContact {
+        if let fetchError {
+            throw fetchError
+        }
+
+        guard knownContainerIdentifiers.contains(containerIdentifier) else {
+            throw ContactsProviderError.invalidArguments(
+                "Unknown container_identifier: \(containerIdentifier)"
+            )
+        }
+
+        guard let saved = contact.mutableCopy() as? CNMutableContact else {
+            throw ContactsProviderError.contactsError("Failed to copy contact")
+        }
+
+        let generatedID = "mock-contact-\(nextContactID)"
+        nextContactID += 1
+        saved.setValue(generatedID, forKey: "identifier")
+        contacts.append(saved)
+        return saved
     }
 }
