@@ -14,12 +14,14 @@ final class MockMapKitStore: MapKitStoreing {
     var getCurrentLocationResult: CLLocation?
     var getCurrentLocationError: Error?
     private(set) var getCurrentLocationCallCount = 0
+    var openNavigationResults: [MapKitOpenNavigationResult] = []
     private(set) var lastRequest: MapKitSearchRequest?
     private(set) var lastNearbyRequest: MapKitSearchNearbyRequest?
     private(set) var lastReverseGeocodeRequest: MapKitReverseGeocodeRequest?
     private(set) var lastForwardGeocodeRequest: MapKitForwardGeocodeRequest?
     private(set) var lastCalculateRouteRequest: MapKitCalculateRouteRequest?
     private(set) var lastEstimateTravelTimeRequest: MapKitEstimateTravelTimeRequest?
+    private(set) var lastOpenNavigationRequest: MapKitOpenNavigationRequest?
 
     func locationAuthorizationStatus() -> CLAuthorizationStatus {
         authorizationStatus
@@ -77,6 +79,23 @@ final class MockMapKitStore: MapKitStoreing {
             expectedArrivalDate: now,
             expectedDepartureDate: now,
             transportType: request.transportType
+        )
+    }
+
+    func openNavigation(request: MapKitOpenNavigationRequest) throws -> MapKitOpenNavigationResult {
+        lastOpenNavigationRequest = request
+        if let first = openNavigationResults.first {
+            return first
+        }
+
+        let sourcePlacemark = MKPlacemark(coordinate: request.source.coordinate)
+        let destinationPlacemark = MKPlacemark(coordinate: request.destination.coordinate)
+        return MapKitOpenNavigationResult(
+            source: MKMapItem(placemark: sourcePlacemark),
+            destination: MKMapItem(placemark: destinationPlacemark),
+            transportType: request.transportType,
+            directionsMode: nil,
+            opened: true
         )
     }
 }

@@ -17,6 +17,8 @@ extension MapKitProvider {
             estimateTravelTime(payloadJson: payloadJson)
         case "get_current_location":
             getCurrentLocation(payloadJson: payloadJson)
+        case "open_navigation":
+            openNavigation(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown mapkit operation: \(operation)")
         }

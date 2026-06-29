@@ -32,6 +32,19 @@ struct PermissionsStoreMapKitTests {
 
     @Test
     @MainActor
+    func requiresAppleLocationAccessIsTrueForShippedMapKitNavigationToggle() throws {
+        let suiteName = "PermissionsStoreMapKitTests.navigationShipped"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+        store.setChecked(true, for: "mapkit-navigation")
+
+        #expect(store.requiresAppleLocationAccess == true)
+    }
+
+    @Test
+    @MainActor
     func requiresAppleLocationAccessIsTrueForShippedMapKitGeocodeToggle() throws {
         let suiteName = "PermissionsStoreMapKitTests.geocodeShipped"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
