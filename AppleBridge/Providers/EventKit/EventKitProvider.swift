@@ -389,14 +389,4 @@ final class EventKitProvider {
     func providerError(from error: Error) -> ProviderResponse {
         errorResponse(code: "eventkit_error", message: error.localizedDescription)
     }
-
-    func serializedEventJSONObject(from event: EKEvent) -> [String: Any] {
-        var payload = EventKitSerialization.eventJSONObject(from: event)
-        if let eventIdentifier = store.eventIdentifier(for: event) {
-            payload["event_identifier"] = eventIdentifier
-        } else {
-            payload["event_identifier"] = NSNull()
-        }
-        return payload
-    }
 }
