@@ -1,4 +1,4 @@
-import Contacts
+@preconcurrency import Contacts
 import Foundation
 
 @MainActor

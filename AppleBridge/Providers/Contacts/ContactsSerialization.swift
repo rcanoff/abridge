@@ -1,4 +1,4 @@
-import Contacts
+@preconcurrency import Contacts
 import Foundation
 
 enum ContactsSerialization {
@@ -27,16 +27,25 @@ enum ContactsSerialization {
             "birthday": dateComponentsJSONObject(from: contact.birthday),
             "non_gregorian_birthday": dateComponentsJSONObject(from: contact.nonGregorianBirthday),
             "phone_numbers": labeledValueArrayJSONObject(from: contact.phoneNumbers, map: phoneNumberJSONObject),
-            "email_addresses": labeledValueArrayJSONObject(from: contact.emailAddresses, map: jsonValueString),
+            "email_addresses": labeledValueArrayJSONObject(
+                from: contact.emailAddresses,
+                map: { jsonValueString($0 as String) }
+            ),
             "postal_addresses": labeledValueArrayJSONObject(from: contact.postalAddresses, map: postalAddressJSONObject),
-            "url_addresses": labeledValueArrayJSONObject(from: contact.urlAddresses, map: jsonValueString),
+            "url_addresses": labeledValueArrayJSONObject(
+                from: contact.urlAddresses,
+                map: { jsonValueString($0 as String) }
+            ),
             "contact_relations": labeledValueArrayJSONObject(from: contact.contactRelations, map: contactRelationJSONObject),
             "social_profiles": labeledValueArrayJSONObject(from: contact.socialProfiles, map: socialProfileJSONObject),
             "instant_message_addresses": labeledValueArrayJSONObject(
                 from: contact.instantMessageAddresses,
                 map: instantMessageAddressJSONObject
             ),
-            "dates": labeledValueArrayJSONObject(from: contact.dates, map: dateComponentsJSONObject),
+            "dates": labeledValueArrayJSONObject(
+                from: contact.dates,
+                map: { dateComponentsJSONObject(from: $0 as DateComponents) }
+            ),
         ]
     }
 
@@ -141,7 +150,7 @@ enum ContactsSerialization {
 
     private static func foundationCalendarJSONObject(from calendar: Calendar) -> [String: Any] {
         [
-            "identifier": calendarIdentifierString(calendar.identifier),
+            "identifier": EventKitSerialization.calendarIdentifierString(calendar.identifier),
             "locale": jsonValue(calendar.locale?.identifier),
             "time_zone": calendar.timeZone.identifier,
             "first_weekday": calendar.firstWeekday,
@@ -178,45 +187,6 @@ enum ContactsSerialization {
             "person"
         case .organization:
             "organization"
-        @unknown default:
-            "unknown"
-        }
-    }
-
-    private static func calendarIdentifierString(_ identifier: Calendar.Identifier) -> String {
-        switch identifier {
-        case .buddhist:
-            "buddhist"
-        case .chinese:
-            "chinese"
-        case .coptic:
-            "coptic"
-        case .ethiopicAmeteMihret:
-            "ethiopic_amete_mihret"
-        case .ethiopicAmeteAlem:
-            "ethiopic_amete_alem"
-        case .gregorian:
-            "gregorian"
-        case .hebrew:
-            "hebrew"
-        case .indian:
-            "indian"
-        case .islamic:
-            "islamic"
-        case .islamicCivil:
-            "islamic_civil"
-        case .islamicTabular:
-            "islamic_tabular"
-        case .islamicUmmAlQura:
-            "islamic_umm_al_qura"
-        case .japanese:
-            "japanese"
-        case .persian:
-            "persian"
-        case .republicOfChina:
-            "republic_of_china"
-        case .iso8601:
-            "iso8601"
         @unknown default:
             "unknown"
         }

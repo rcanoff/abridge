@@ -1,8 +1,8 @@
-import Contacts
+@preconcurrency import Contacts
 import Foundation
 
 enum ContactsKeyDescriptors {
-    static let all: [CNKeyDescriptor] = [
+    nonisolated(unsafe) static let all: [CNKeyDescriptor] = [
         CNContactIdentifierKey as CNKeyDescriptor,
         CNContactTypeKey as CNKeyDescriptor,
         CNContactGivenNameKey as CNKeyDescriptor,

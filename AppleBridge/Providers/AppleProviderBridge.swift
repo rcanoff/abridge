@@ -5,11 +5,18 @@ import Foundation
 /// main thread before touching EventKit.
 final class AppleProviderBridge: ProviderBridge, Sendable {
     private let makeEventKitProvider: @MainActor @Sendable () -> EventKitProvider
+    private let makeContactsProvider: @MainActor @Sendable () -> ContactsProvider
 
-    init(makeEventKitProvider: @escaping @MainActor @Sendable ()
-        -> EventKitProvider = { LiveEventKitEnvironment.sharedProvider })
-    {
+    init(
+        makeEventKitProvider: @escaping @MainActor @Sendable () -> EventKitProvider = {
+            LiveEventKitEnvironment.sharedProvider
+        },
+        makeContactsProvider: @escaping @MainActor @Sendable () -> ContactsProvider = {
+            LiveContactsEnvironment.sharedProvider
+        }
+    ) {
         self.makeEventKitProvider = makeEventKitProvider
+        self.makeContactsProvider = makeContactsProvider
     }
 
     /// Test seam: capture the injected provider on the main actor; the factory runs only inside
@@ -17,6 +24,12 @@ final class AppleProviderBridge: ProviderBridge, Sendable {
     @MainActor
     convenience init(eventKitProvider: EventKitProvider) {
         self.init(makeEventKitProvider: { [eventKitProvider] in eventKitProvider })
+    }
+
+    /// Test seam: capture the injected contacts provider on the main actor.
+    @MainActor
+    convenience init(contactsProvider: ContactsProvider) {
+        self.init(makeContactsProvider: { [contactsProvider] in contactsProvider })
     }
 
     func callProvider(request: ProviderRequest) -> ProviderResponse {
@@ -27,8 +40,9 @@ final class AppleProviderBridge: ProviderBridge, Sendable {
                 return provider.handle(operation: request.operation, payloadJson: request.payloadJson)
             }
         case "contacts":
-            return Self.performOnMainActor {
-                ContactsProvider().handle(operation: request.operation, payloadJson: request.payloadJson)
+            return Self.performOnMainActor { [makeContactsProvider] in
+                let provider = makeContactsProvider()
+                return provider.handle(operation: request.operation, payloadJson: request.payloadJson)
             }
         default:
             let payload: [String: String] = [

@@ -88,7 +88,7 @@ struct ContactsSerializationTests {
         #expect(json["family_name"] as? String == "")
         #expect(json["image_data"] is NSNull)
         #expect(json["birthday"] is NSNull)
-        #expect(json["phone_numbers"] as? [Any] == [])
+        #expect((json["phone_numbers"] as? [Any])?.isEmpty == true)
 
         let payload = try ContactsSerialization.jsonString(from: [json])
         #expect(payload.contains("null"))
