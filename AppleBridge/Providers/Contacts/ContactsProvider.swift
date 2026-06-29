@@ -5,6 +5,7 @@ enum ContactsProviderError: Error, Equatable {
     case permissionDenied
     case serializationFailed
     case contactsError(String)
+    case linkingUnavailable
     case unknownOperation(String)
     case invalidArguments(String)
 }
@@ -72,6 +73,11 @@ final class ContactsProvider {
             errorResponse(code: "contacts_error", message: "Failed to serialize contacts")
         case let .contactsError(message):
             errorResponse(code: "contacts_error", message: message)
+        case .linkingUnavailable:
+            errorResponse(
+                code: "contacts_error",
+                message: "Linking contacts is unavailable: no public Contacts framework link API on this macOS version"
+            )
         case let .unknownOperation(message):
             errorResponse(code: "unknown_operation", message: message)
         }

@@ -4,9 +4,14 @@ import Foundation
 @MainActor
 final class LiveContactsStore: ContactsStoreing {
     private let contactStore: CNContactStore
+    private let contactLinking: any ContactsLinkingPerforming
 
-    init(contactStore: CNContactStore = CNContactStore()) {
+    init(
+        contactStore: CNContactStore = CNContactStore(),
+        contactLinking: any ContactsLinkingPerforming = LiveContactsLinkingPerformer()
+    ) {
         self.contactStore = contactStore
+        self.contactLinking = contactLinking
     }
 
     func contactsAuthorizationStatus() -> CNAuthorizationStatus {
@@ -160,10 +165,10 @@ final class LiveContactsStore: ContactsStoreing {
             throw ContactsProviderError.contactsError("Failed to copy contact")
         }
 
-        let saveRequest = CNSaveRequest()
-        saveRequest.link(fromMutable, to: toMutable)
         do {
-            try contactStore.execute(saveRequest)
+            try executeLink(from: fromMutable, to: toMutable)
+        } catch let error as ContactsProviderError {
+            throw error
         } catch {
             throw ContactsProviderError.contactsError(error.localizedDescription)
         }
@@ -197,6 +202,12 @@ final class LiveContactsStore: ContactsStoreing {
             throw ContactsProviderError.contactsError("Failed to fetch updated contact")
         }
         return saved
+    }
+
+    func executeLink(from fromMutable: CNMutableContact, to toMutable: CNMutableContact) throws {
+        let saveRequest = CNSaveRequest()
+        try contactLinking.link(from: fromMutable, to: toMutable, in: saveRequest)
+        try contactStore.execute(saveRequest)
     }
 
     private func unifiedContacts(matching predicate: NSPredicate) throws -> [CNContact] {

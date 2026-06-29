@@ -194,6 +194,24 @@ struct ContactsProviderLinkContactsTests {
 
     @Test
     @MainActor
+    func linkContactsLinkingUnavailableReturnsContactsError() {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        mockStore.linkingUnavailable = true
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "link_contacts",
+            payloadJson: #"{"from_contact_identifier":"contact-from","to_contact_identifier":"contact-to"}"#
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("contacts_error") == true)
+        #expect(response.errorJson?.contains("no public Contacts framework link API") == true)
+    }
+
+    @Test
+    @MainActor
     func linkContactsPermissionDeniedWithLimitedAuthorization() throws {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = try #require(CNAuthorizationStatus(rawValue: 4))

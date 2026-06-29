@@ -8,6 +8,7 @@ final class MockContactsStore: ContactsStoreing {
     var contacts: [CNContact] = []
     var knownContainerIdentifiers: Set<String> = ["container-1"]
     var fetchError: ContactsProviderError?
+    var linkingUnavailable = false
 
     func contactsAuthorizationStatus() -> CNAuthorizationStatus {
         authorizationStatus
@@ -145,6 +146,10 @@ final class MockContactsStore: ContactsStoreing {
     func linkContacts(fromIdentifier: String, toIdentifier: String) throws -> CNContact {
         if let fetchError {
             throw fetchError
+        }
+
+        if linkingUnavailable {
+            throw ContactsProviderError.linkingUnavailable
         }
 
         if fromIdentifier == toIdentifier {
