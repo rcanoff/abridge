@@ -67,17 +67,21 @@ struct AppleBridgeApp: App {
 
     var body: some Scene {
         MenuBarExtra("Apple Bridge", systemImage: "bell") {
-            MenuBarPopoverView(store: store, serverStore: serverStore, appQuitter: appQuitter)
-                .onAppear {
-                    refreshAppAndServerState()
-                }
-                .onReceive(NotificationCenter.default.publisher(
-                    for: NSApplication.didBecomeActiveNotification
-                )) { _ in
-                    refreshAppAndServerState()
-                }
+            MenuBarNativeMenuView(
+                serverStore: serverStore,
+                settingsStore: settingsStore,
+                appQuitter: appQuitter
+            )
+            .onAppear {
+                refreshAppAndServerState()
+            }
+            .onReceive(NotificationCenter.default.publisher(
+                for: NSApplication.didBecomeActiveNotification
+            )) { _ in
+                refreshAppAndServerState()
+            }
         }
-        .menuBarExtraStyle(.window)
+        .menuBarExtraStyle(.menu)
 
         Window("Settings", id: "settings") {
             SettingsWindowView(
