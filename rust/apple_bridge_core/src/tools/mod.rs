@@ -10,6 +10,7 @@ pub const TOOL_LIST_EVENTS: &str = "eventkit.events.list_events";
 pub const TOOL_GET_EVENT: &str = "eventkit.events.get_event";
 pub const TOOL_SEARCH_EVENTS: &str = "eventkit.events.search_events";
 pub const TOOL_CREATE_EVENT: &str = "eventkit.events.create_event";
+pub const TOOL_UPDATE_EVENT: &str = "eventkit.events.update_event";
 pub const TOOL_LIST_LISTS: &str = "eventkit.reminders.list_lists";
 pub const TOOL_LIST_REMINDERS: &str = "eventkit.reminders.list_reminders";
 pub const TOOL_GET_REMINDER: &str = "eventkit.reminders.get_reminder";
@@ -35,7 +36,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 23] = [
+const ALL_TOOLS: [ToolDefinition; 24] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -91,6 +92,13 @@ const ALL_TOOLS: [ToolDefinition; 23] = [
     provider: "eventkit",
     operation: "create_event",
     description: "Create an event in the given calendar with optional EventKit fields",
+  },
+  ToolDefinition {
+    name: TOOL_UPDATE_EVENT,
+    capability: capabilities::EVENTKIT_EVENTS_EDIT,
+    provider: "eventkit",
+    operation: "update_event",
+    description: "Update an existing event by event_identifier with optional EventKit fields",
   },
   ToolDefinition {
     name: TOOL_LIST_LISTS,
@@ -412,6 +420,29 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["calendar_identifier", "title", "start_date", "end_date"]
     }),
+    TOOL_UPDATE_EVENT => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "event_identifier": { "type": "string" },
+        "calendar_identifier": { "type": "string" },
+        "title": { "type": "string" },
+        "notes": { "type": ["string", "null"] },
+        "location": { "type": ["string", "null"] },
+        "url": { "type": ["string", "null"] },
+        "time_zone": { "type": ["string", "null"] },
+        "start_date": { "type": "string", "format": "date-time" },
+        "end_date": { "type": "string", "format": "date-time" },
+        "is_all_day": { "type": "boolean" },
+        "availability": {
+          "type": ["string", "null"],
+          "enum": ["not_supported", "busy", "free", "tentative", "unavailable", null]
+        },
+        "structured_location": structured_location_schema(true),
+        "alarms": alarms_array_schema(true),
+        "recurrence_rules": recurrence_rules_array_schema(true)
+      },
+      "required": ["event_identifier"]
+    }),
     TOOL_CREATE_CALENDAR | TOOL_CREATE_LIST => serde_json::json!({
       "type": "object",
       "properties": {
@@ -557,8 +588,8 @@ mod tests {
     TOOL_DELETE_CALENDAR, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER, TOOL_GET_EVENT, TOOL_GET_REMINDER,
     TOOL_GET_USAGE_LOG, TOOL_LIST_CALENDARS, TOOL_LIST_EVENTS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS,
     TOOL_MOVE_REMINDER, TOOL_SEARCH_EVENTS, TOOL_SEARCH_REMINDERS, TOOL_SET_REMINDER_ALARMS,
-    TOOL_SET_REMINDER_RECURRENCE, TOOL_UNCOMPLETE_REMINDER, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_REMINDER, all_tools,
-    input_schema, tools_for_capabilities,
+    TOOL_SET_REMINDER_RECURRENCE, TOOL_UNCOMPLETE_REMINDER, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_EVENT,
+    TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
   };
 
   fn array_items_type(schema: &serde_json::Value, property: &str) -> Option<String> {
@@ -665,6 +696,25 @@ mod tests {
       .iter()
       .find(|tool| tool.name == TOOL_CREATE_EVENT)
       .expect("create_event tool");
+    let schema = input_schema(tool);
+
+    assert_eq!(array_items_type(&schema, "alarms").as_deref(), Some("object"));
+    assert_eq!(array_items_type(&schema, "recurrence_rules").as_deref(), Some("object"));
+  }
+
+  #[test]
+  fn lists_update_event_tool_when_events_edit_capability_enabled() {
+    let tools = tools_for_capabilities(&["eventkit.events.edit".into()]);
+    let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
+    assert_eq!(names, vec![TOOL_UPDATE_EVENT]);
+  }
+
+  #[test]
+  fn update_event_schema_describes_object_array_items() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_UPDATE_EVENT)
+      .expect("update_event tool");
     let schema = input_schema(tool);
 
     assert_eq!(array_items_type(&schema, "alarms").as_deref(), Some("object"));

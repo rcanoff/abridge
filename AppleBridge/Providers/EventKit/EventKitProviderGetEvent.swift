@@ -26,7 +26,7 @@ extension EventKitProvider {
         }
     }
 
-    private func parseEventIdentifierArguments(_ payloadJson: String) throws -> String {
+    func parseEventIdentifierArguments(_ payloadJson: String) throws -> String {
         guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw EventKitProviderError.invalidArguments("event_identifier is required")
         }

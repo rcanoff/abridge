@@ -48,4 +48,30 @@ struct AppleProviderBridgeEventTests {
         #expect(response.ok == true)
         #expect(response.payloadJson.contains("\"title\":\"Standup\""))
     }
+
+    @Test
+    @MainActor
+    func routesEventKitUpdateEvent() {
+        let mockStore = MockEventKitStore()
+        mockStore.eventAuthorizationStatusValue = .fullAccess
+        mockStore.eventCalendarsList = [
+            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+        ]
+        mockStore.events = [
+            EventKitTestSupport.makeEvent(
+                calendarItemIdentifier: "evt-1",
+                calendarIdentifier: "cal-work",
+                title: "Standup"
+            ),
+        ]
+        let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
+        let request = ProviderRequest(
+            provider: "eventkit",
+            operation: "update_event",
+            payloadJson: #"{"event_identifier":"evt-evt-1","title":"Updated Standup"}"#
+        )
+        let response = bridge.callProvider(request: request)
+        #expect(response.ok == true)
+        #expect(response.payloadJson.contains("\"title\":\"Updated Standup\""))
+    }
 }

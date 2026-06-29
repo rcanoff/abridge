@@ -28,4 +28,20 @@ extension EventKitDeserialization {
         }
         return try structuredLocationFromDictionary(from: dictionary)
     }
+
+    static func optionalPresentEventAvailability(
+        _ dictionary: [String: Any],
+        key: String
+    ) throws -> OptionalField<EKEventAvailability> {
+        guard dictionary.keys.contains(key) else { return .absent }
+        return try .present(eventAvailability(from: dictionary[key]))
+    }
+
+    static func optionalPresentStructuredLocation(
+        _ dictionary: [String: Any],
+        key: String
+    ) throws -> OptionalField<EKStructuredLocation> {
+        guard dictionary.keys.contains(key) else { return .absent }
+        return try .present(structuredLocation(from: dictionary[key]))
+    }
 }
