@@ -191,7 +191,12 @@ final class LiveEventKitStore: EventKitStoreing {
     }
 
     func acceptEventInvitation(_ event: EKEvent) throws {
-        try EventKitInvitationResponse.accept(on: event)
+        guard EventKitInvitationResponse.canRespond(to: event) else {
+            throw EventKitProviderError.invalidArguments("Event has no invitation for the current user")
+        }
+        throw EventKitProviderError.eventKitError(
+            "Accepting calendar invitations is not supported via public EventKit API on macOS"
+        )
     }
 }
 
