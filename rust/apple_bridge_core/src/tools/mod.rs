@@ -1211,11 +1211,10 @@ mod tests {
     TOOL_GET_CONTACT, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS, TOOL_LIST_CALENDARS,
     TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT,
     TOOL_MOVE_REMINDER, TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY,
-    TOOL_SEARCH_PLACES,
-    TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS,
-    TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS,
-    TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools,
-    input_schema, tools_for_capabilities,
+    TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE,
+    TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER,
+    TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP,
+    TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
   };
 
   fn array_items_type(schema: &serde_json::Value, property: &str) -> Option<String> {
@@ -1981,10 +1980,7 @@ mod tests {
         .map(|items| items.iter().filter_map(|item| item.as_str()).collect::<Vec<_>>()),
       Some(vec!["coordinate"])
     );
-    assert!(schema
-      .get("properties")
-      .and_then(|p| p.get("coordinate"))
-      .is_some());
+    assert!(schema.get("properties").and_then(|p| p.get("coordinate")).is_some());
   }
 
   #[test]
