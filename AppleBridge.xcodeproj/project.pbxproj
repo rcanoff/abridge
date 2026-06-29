@@ -65,6 +65,7 @@
 		2D2DB4C45C969B8B0AA10BAB /* EventKitProviderGetEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6AA7BD4CD9EFDCFE5A909F8 /* EventKitProviderGetEventTests.swift */; };
 		2D6FE262167FCE0B27023A27 /* ContactsDeserializationCollections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BC81EED9B7227381379871 /* ContactsDeserializationCollections.swift */; };
 		30D42E256C69B5C0CCCCDB13 /* LiveMapKitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 060D01EA883FF58ABFE7F5E7 /* LiveMapKitStore.swift */; };
+		E14AC57987A143599514B191 /* LiveMapKitStoreGetCurrentLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 966E389D5C3142358CA11BB6 /* LiveMapKitStoreGetCurrentLocation.swift */; };
 		332F91499F2FF03A49F0D207 /* EventKitProviderUpdateEventValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D102C3F21E2E6956E4E36E7C /* EventKitProviderUpdateEventValidationTests.swift */; };
 		35D9BD56598AB3F89133F078 /* SMAppLaunchAtLoginService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F5667783ACEA479011AB5F /* SMAppLaunchAtLoginService.swift */; };
 		3717B0B73ADD7E1E469AFB13 /* ContactsRuntimeLinking.m in Sources */ = {isa = PBXBuildFile; fileRef = F585AB906D4A5D0F0C0EEDB9 /* ContactsRuntimeLinking.m */; };
@@ -75,6 +76,7 @@
 		3C276DF61BE311108068B3C9 /* EventKitProviderSetEventRecurrence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E6819F262FD83E8907E9C9 /* EventKitProviderSetEventRecurrence.swift */; };
 		3C9039BAF14801E60327D524 /* ContactsProviderUpdateContactTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D16FC4CF1159F8A6F43219 /* ContactsProviderUpdateContactTests.swift */; };
 		3D03FFAF47CF4A91D2DEF056 /* AppleProviderBridgeMapKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A1D8F628AB82FD7413B17B /* AppleProviderBridgeMapKitTests.swift */; };
+		E078926252C74DE8A47C2F84 /* AppleProviderBridgeMapKitLocationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A48EF4F813C4A8D943F2F26 /* AppleProviderBridgeMapKitLocationTests.swift */; };
 		3DB130E0186406D6924C4A25 /* AppSettingsMapKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47370556210969E4B3A1E6C5 /* AppSettingsMapKitTests.swift */; };
 		3F8851FDC8D3A68CDE1A429E /* EventKitProviderListEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACFBEE0223231412B9E7B9ED /* EventKitProviderListEvents.swift */; };
 		40A49CF67208468F10F2F686 /* EventsPermissionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 771729BE30517069205B688E /* EventsPermissionStatusTests.swift */; };
@@ -307,12 +309,14 @@
 		011AEAD34D48F0F8C0069AEE /* BearerTokenStoreFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BearerTokenStoreFactory.swift; sourceTree = "<group>"; };
 		0157FC066C71802B00A6F481 /* URLOpening.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLOpening.swift; sourceTree = "<group>"; };
 		02A1D8F628AB82FD7413B17B /* AppleProviderBridgeMapKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleProviderBridgeMapKitTests.swift; sourceTree = "<group>"; };
+		6A48EF4F813C4A8D943F2F26 /* AppleProviderBridgeMapKitLocationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleProviderBridgeMapKitLocationTests.swift; sourceTree = "<group>"; };
 		02B065B605C800213EF61640 /* apple_bridge_core.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = apple_bridge_core.swift; sourceTree = "<group>"; };
 		046FE7CE9A79EDD06049F8F4 /* ContactsProviderLinkContacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsProviderLinkContacts.swift; sourceTree = "<group>"; };
 		04B331D45BCC4BD36027AFD5 /* EventKitProviderDeleteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderDeleteTests.swift; sourceTree = "<group>"; };
 		058574C854AB33862481AC61 /* MockSingleInstanceChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSingleInstanceChecker.swift; sourceTree = "<group>"; };
 		05D37BAEC8A9B5B70BE008DE /* PermissionsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsStoreTests.swift; sourceTree = "<group>"; };
 		060D01EA883FF58ABFE7F5E7 /* LiveMapKitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveMapKitStore.swift; sourceTree = "<group>"; };
+		966E389D5C3142358CA11BB6 /* LiveMapKitStoreGetCurrentLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveMapKitStoreGetCurrentLocation.swift; sourceTree = "<group>"; };
 		061BA2725CA72D643E140494 /* AppleProviderBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleProviderBridgeTests.swift; sourceTree = "<group>"; };
 		081813B141909245E342F20A /* AppleBridgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AppleBridgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		08682110130482DF003C975D /* LiveContactsStoreUnlinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveContactsStoreUnlinkTests.swift; sourceTree = "<group>"; };
@@ -636,6 +640,7 @@
 				C040AB5B7D9582371C5B5FDA /* AppleProviderBridgeEventTests.swift */,
 				732F11CED2185A9CC3DDE300 /* AppleProviderBridgeListCalendarsTests.swift */,
 				02A1D8F628AB82FD7413B17B /* AppleProviderBridgeMapKitTests.swift */,
+				6A48EF4F813C4A8D943F2F26 /* AppleProviderBridgeMapKitLocationTests.swift */,
 				50CE5059348156C983077237 /* AppleProviderBridgeRecurrenceTests.swift */,
 				061BA2725CA72D643E140494 /* AppleProviderBridgeTests.swift */,
 				C7B21810D7F6BE5D5A2CD1F6 /* AppSettingsContactsTests.swift */,
@@ -836,6 +841,7 @@
 			isa = PBXGroup;
 			children = (
 				060D01EA883FF58ABFE7F5E7 /* LiveMapKitStore.swift */,
+				966E389D5C3142358CA11BB6 /* LiveMapKitStoreGetCurrentLocation.swift */,
 				90C1E1DBD882FE978A68445D /* MapKitProvider.swift */,
 				197FFE5325452F5E62AF3B59 /* MapKitProviderCalculateRoute.swift */,
 				A41C6338982199AEC496DA5A /* MapKitProviderEstimateTravelTime.swift */,
@@ -1177,6 +1183,7 @@
 				CDB8FE57FF4FF9ECC5A4D951 /* LiveContactsStore.swift in Sources */,
 				9E04CD5BDD7A4ADFBEE42806 /* LiveEventKitStoreInvitations.swift in Sources */,
 				30D42E256C69B5C0CCCCDB13 /* LiveMapKitStore.swift in Sources */,
+				E14AC57987A143599514B191 /* LiveMapKitStoreGetCurrentLocation.swift in Sources */,
 				55B21BB6F1773E8CE46BF5F6 /* LocationPermissionChecking.swift in Sources */,
 				2470AEE6A03578DB96CE2C91 /* LocationPermissionService.swift in Sources */,
 				FDB9391C69284F1A767A19AC /* LocationPermissionStatus.swift in Sources */,
@@ -1237,6 +1244,7 @@
 				87962E31A738295AA4E9EC58 /* AppleProviderBridgeEventTests.swift in Sources */,
 				946E8C9D3E412127B69C8AE9 /* AppleProviderBridgeListCalendarsTests.swift in Sources */,
 				3D03FFAF47CF4A91D2DEF056 /* AppleProviderBridgeMapKitTests.swift in Sources */,
+				E078926252C74DE8A47C2F84 /* AppleProviderBridgeMapKitLocationTests.swift in Sources */,
 				18F58483DBF8A35A79732600 /* AppleProviderBridgeRecurrenceTests.swift in Sources */,
 				DBEBE88FE028C1FF9AD723B4 /* AppleProviderBridgeTests.swift in Sources */,
 				B66E1BBBCDCB37A806C439A6 /* Arm64OnlyBuildConfigurationTests.swift in Sources */,
