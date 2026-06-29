@@ -24,6 +24,7 @@
 		0BD7CBFEBB80387242C0139A /* AppleProviderBridgeDeleteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A38731056AA8C2298134E5C0 /* AppleProviderBridgeDeleteTests.swift */; };
 		0D6D7BFF9BD7812A798E0C75 /* EventKitProviderUpdateEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865CFF7F36678A7CF913AE3C /* EventKitProviderUpdateEventTests.swift */; };
 		0E12501559A311E0D34E21D1 /* ContactsSaveRequestLinking.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0BC5BD2C3BB145BC7B87B52 /* ContactsSaveRequestLinking.swift */; };
+		5E6F7890ABCDEF0123456789 /* ContactsSaveRequestUnlinking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D5E6F7890ABCDEF01234567 /* ContactsSaveRequestUnlinking.swift */; };
 		0FAFA18D86664E5D04AD8DBA /* EventKitProviderCreateCalendarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DAD79CB0F0D15F4FB3AB40B /* EventKitProviderCreateCalendarTests.swift */; };
 		0FF39115817D3F4FDA50D54F /* RemindersPermissionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */; };
 		119907917585EF7AD727A7BB /* ContactsProviderSearchContactsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F8D4C70EAFE6B9EF46C2B2 /* ContactsProviderSearchContactsTests.swift */; };
@@ -59,6 +60,7 @@
 		332F91499F2FF03A49F0D207 /* EventKitProviderUpdateEventValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D102C3F21E2E6956E4E36E7C /* EventKitProviderUpdateEventValidationTests.swift */; };
 		35D9BD56598AB3F89133F078 /* SMAppLaunchAtLoginService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F5667783ACEA479011AB5F /* SMAppLaunchAtLoginService.swift */; };
 		3717B0B73ADD7E1E469AFB13 /* ContactsRuntimeLinking.m in Sources */ = {isa = PBXBuildFile; fileRef = F585AB906D4A5D0F0C0EEDB9 /* ContactsRuntimeLinking.m */; };
+		3C4D5E6F7890ABCDEF012345 /* ContactsRuntimeUnlinking.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B3C4D5E6F7890ABCDEF0123 /* ContactsRuntimeUnlinking.m */; };
 		386B54535CE151F8279BB68A /* RunningApplicationInstanceChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08A103CD7E384CFE00B8F8B9 /* RunningApplicationInstanceChecker.swift */; };
 		3BB438EA6EEC4146B49CC5B7 /* EventKitProviderDelete.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38486672883F96441F42D87 /* EventKitProviderDelete.swift */; };
 		3C276DF61BE311108068B3C9 /* EventKitProviderSetEventRecurrence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E6819F262FD83E8907E9C9 /* EventKitProviderSetEventRecurrence.swift */; };
@@ -164,10 +166,12 @@
 		AC6AC48EB492A21A34C302F3 /* ContactsProviderListGroups.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FAC6B57755DE0AB1BB76A02 /* ContactsProviderListGroups.swift */; };
 		ADC046FA741ED5A45DA96737 /* EventKitProviderComplete.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1049F7ED134ECF8E2E7B5419 /* EventKitProviderComplete.swift */; };
 		ADE364A3D9B4876B5BCB7095 /* MockContactsStoreLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE733B4827C638E3F2D8031 /* MockContactsStoreLinkTests.swift */; };
+		ABCDEF0123456789ABCDE0123 /* MockContactsStoreUnlinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ABCDEF0123456789ABCDE012 /* MockContactsStoreUnlinkTests.swift */; };
 		ADF773404AC5521CCA4C2942 /* SettingsStoreKeychainStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1E9700385019087ADB5531 /* SettingsStoreKeychainStorageTests.swift */; };
 		AE4477865F7B0D003BC3B530 /* MockBearerTokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F9E835DF7BD9E1609D3DBF9 /* MockBearerTokenStore.swift */; };
 		AEB9B5EF550B836B5DF13EF4 /* ServerConfigCapabilitiesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D3CEABF33D27B04DBE589C /* ServerConfigCapabilitiesTests.swift */; };
 		AFE0DC9B34CF3CDEEF5D2EEA /* LiveContactsStoreLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B13FFA54DE646F0722E357 /* LiveContactsStoreLinkTests.swift */; };
+		CDEF0123456789ABCDE012345 /* LiveContactsStoreUnlinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCDEF0123456789ABCDE01234 /* LiveContactsStoreUnlinkTests.swift */; };
 		B0344707C8232ADA9C0E9CF8 /* MockContactsStoreUpdateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D325A21673843EF10B7B02C /* MockContactsStoreUpdateTests.swift */; };
 		B057C584FF5A253D5248B577 /* ContactsProviderCreateGroupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40F9B3B1A88B82120FA3C66B /* ContactsProviderCreateGroupTests.swift */; };
 		B093734CB3D64AC488A72A1C /* AppStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E67E426EFAB33A7A23E90338 /* AppStoreTests.swift */; };
@@ -436,6 +440,11 @@
 		C453F98EBE5CA0E0631FE443 /* SettingsWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowView.swift; sourceTree = "<group>"; };
 		C4CE8A393E6A9E8C1B568FDD /* LiveEventKitStoreInvitationContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveEventKitStoreInvitationContractTests.swift; sourceTree = "<group>"; };
 		C6D6F91117573DF21D7C70E9 /* ContactsRuntimeLinking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContactsRuntimeLinking.h; sourceTree = "<group>"; };
+		1A2B3C4D5E6F7890ABCDEF01 /* ContactsRuntimeUnlinking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContactsRuntimeUnlinking.h; sourceTree = "<group>"; };
+		2B3C4D5E6F7890ABCDEF0123 /* ContactsRuntimeUnlinking.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ContactsRuntimeUnlinking.m; sourceTree = "<group>"; };
+		4D5E6F7890ABCDEF01234567 /* ContactsSaveRequestUnlinking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsSaveRequestUnlinking.swift; sourceTree = "<group>"; };
+		0ABCDEF0123456789ABCDE012 /* MockContactsStoreUnlinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockContactsStoreUnlinkTests.swift; sourceTree = "<group>"; };
+		BCDEF0123456789ABCDE01234 /* LiveContactsStoreUnlinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveContactsStoreUnlinkTests.swift; sourceTree = "<group>"; };
 		C723EF9225492B1A29DD1228 /* EventKitTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitTestSupport.swift; sourceTree = "<group>"; };
 		C74034B4461DB8E6CA8815C1 /* EventKitProviderMoveValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderMoveValidationTests.swift; sourceTree = "<group>"; };
 		C7B21810D7F6BE5D5A2CD1F6 /* AppSettingsContactsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsContactsTests.swift; sourceTree = "<group>"; };
@@ -609,6 +618,7 @@
 				25BBB7814D8D53FCC5498939 /* FileBearerTokenStoreTests.swift */,
 				5EBBF81C3509780ADC778473 /* KeychainServiceIntegrationTests.swift */,
 				F4B13FFA54DE646F0722E357 /* LiveContactsStoreLinkTests.swift */,
+				BCDEF0123456789ABCDE01234 /* LiveContactsStoreUnlinkTests.swift */,
 				C4CE8A393E6A9E8C1B568FDD /* LiveEventKitStoreInvitationContractTests.swift */,
 				11A1C6EFB21BDE0193DEC904 /* MenuBarQuitTests.swift */,
 				772B92620CCC71A3BCD31E20 /* MockAppleBridgeAppStoreMaker.swift */,
@@ -620,6 +630,7 @@
 				34388819C93666C7CAFE9389 /* MockContactsStoreCreateTests.swift */,
 				CDB96505693629F0B4394D66 /* MockContactsStoreDeleteTests.swift */,
 				CBE733B4827C638E3F2D8031 /* MockContactsStoreLinkTests.swift */,
+				0ABCDEF0123456789ABCDE012 /* MockContactsStoreUnlinkTests.swift */,
 				5E2CF258EAAD0B11CA761567 /* MockContactsStoreListGroupsTests.swift */,
 				46953451DF14970396C1A61F /* MockContactsStoreUpdateGroupTests.swift */,
 				8D325A21673843EF10B7B02C /* MockContactsStoreUpdateTests.swift */,
@@ -693,6 +704,8 @@
 				0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */,
 				C6D6F91117573DF21D7C70E9 /* ContactsRuntimeLinking.h */,
 				F585AB906D4A5D0F0C0EEDB9 /* ContactsRuntimeLinking.m */,
+				1A2B3C4D5E6F7890ABCDEF01 /* ContactsRuntimeUnlinking.h */,
+				2B3C4D5E6F7890ABCDEF0123 /* ContactsRuntimeUnlinking.m */,
 				B85F46CDAA3C988BFBBC89D3 /* Models */,
 				82FE345540F8405EE8D7D776 /* Providers */,
 				343C8CBBD7B246AD442FE5A5 /* Services */,
@@ -839,6 +852,7 @@
 				B5A8D8D675536723E6C0C262 /* ContactsProviderUpdateContact.swift */,
 				801E768B9113CDD711DD95EF /* ContactsProviderUpdateGroup.swift */,
 				C0BC5BD2C3BB145BC7B87B52 /* ContactsSaveRequestLinking.swift */,
+				4D5E6F7890ABCDEF01234567 /* ContactsSaveRequestUnlinking.swift */,
 				8258D6C7F2304FE4C0CC56FC /* ContactsSearchSupport.swift */,
 				568BC5D3D30FC2B32C481093 /* ContactsSerialization.swift */,
 				63B342191C50AAA2B40A3E31 /* ContactsStore.swift */,
@@ -958,7 +972,9 @@
 				2091575066C359950ABBEC2E /* ContactsProviderUpdateContact.swift in Sources */,
 				0755B94537D684B5D27FC61E /* ContactsProviderUpdateGroup.swift in Sources */,
 				3717B0B73ADD7E1E469AFB13 /* ContactsRuntimeLinking.m in Sources */,
+				3C4D5E6F7890ABCDEF012345 /* ContactsRuntimeUnlinking.m in Sources */,
 				0E12501559A311E0D34E21D1 /* ContactsSaveRequestLinking.swift in Sources */,
+				5E6F7890ABCDEF0123456789 /* ContactsSaveRequestUnlinking.swift in Sources */,
 				ED793D3F8D2922FB135E2A43 /* ContactsSearchSupport.swift in Sources */,
 				9D9999D84395C014B18FD7AF /* ContactsSerialization.swift in Sources */,
 				F39DD3340DA21A75AC020C7F /* ContactsStore.swift in Sources */,
@@ -1121,6 +1137,7 @@
 				48D557D303FF6141C846C1F5 /* FileBearerTokenStoreTests.swift in Sources */,
 				5C432A6AE607A30E352C4192 /* KeychainServiceIntegrationTests.swift in Sources */,
 				AFE0DC9B34CF3CDEEF5D2EEA /* LiveContactsStoreLinkTests.swift in Sources */,
+				CDEF0123456789ABCDE012345 /* LiveContactsStoreUnlinkTests.swift in Sources */,
 				63B3EBFFB2102926231C70DF /* LiveEventKitStoreInvitationContractTests.swift in Sources */,
 				80DEB353922E6068D8BF69A3 /* MenuBarQuitTests.swift in Sources */,
 				A1F055BEFC0924845D3CA1E9 /* MockAppQuitter.swift in Sources */,
@@ -1132,6 +1149,7 @@
 				BCB2CF0B64E6DF2A7DB64D4B /* MockContactsStoreCreateTests.swift in Sources */,
 				FAC4FCA9EE145965938A49B9 /* MockContactsStoreDeleteTests.swift in Sources */,
 				ADE364A3D9B4876B5BCB7095 /* MockContactsStoreLinkTests.swift in Sources */,
+				ABCDEF0123456789ABCDE0123 /* MockContactsStoreUnlinkTests.swift in Sources */,
 				D29357588FE721F9C76A2C51 /* MockContactsStoreListGroupsTests.swift in Sources */,
 				8354EF4DE08EF021E4F2AED0 /* MockContactsStoreUpdateGroupTests.swift in Sources */,
 				B0344707C8232ADA9C0E9CF8 /* MockContactsStoreUpdateTests.swift in Sources */,
