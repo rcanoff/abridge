@@ -58,14 +58,9 @@ struct EventKitSerializationEventTests {
             title: "Meeting"
         )
 
-        let payload = EventKitSerialization.eventJSONObject(
-            from: event,
-            eventIdentifier: EventKitTestSupport.syntheticEventIdentifier(
-                forCalendarItemIdentifier: "evt-1"
-            )
-        )
+        let payload = EventKitSerialization.eventJSONObject(from: event)
 
-        #expect(payload["event_identifier"] as? String == "evt-evt-1")
+        #expect(payload["event_identifier"] is NSNull)
     }
 
     @Test
