@@ -22,7 +22,7 @@ enum MapKitSerialization {
             "is_current_location": item.isCurrentLocation,
             "identifier": jsonValueMapItemIdentifier(item.identifier),
             "location": locationJSONObject(from: item.location),
-            "placemark": placemarkJSONObject(from: item.placemark),
+            "placemark": mapItemPlacemarkJSONObject(from: item),
             "address": addressJSONObject(from: item.address),
             "address_representations": addressRepresentationsJSONArray(from: item.addressRepresentations),
         ]
@@ -155,6 +155,15 @@ enum MapKitSerialization {
         ]
     }
 
+    static func mapItemPlacemarkJSONObject(from item: MKMapItem) -> [String: Any] {
+        let placemark = item.placemark
+        if hasEnrichedPlacemarkData(placemark) {
+            return placemarkJSONObject(from: placemark)
+        }
+
+        return placemarkJSONObjectFromMapItemFields(item)
+    }
+
     static func placemarkJSONObject(from placemark: MKPlacemark) -> [String: Any] {
         [
             "coordinate": coordinateJSONObject(from: placemark.coordinate),
@@ -169,6 +178,48 @@ enum MapKitSerialization {
             "postal_address": postalAddressJSONObject(from: placemark.postalAddress),
             "address_dictionary": addressDictionaryJSONObject(from: placemark.addressDictionary),
         ]
+    }
+
+    private static func placemarkJSONObjectFromMapItemFields(_ item: MKMapItem) -> [String: Any] {
+        let location = item.location
+
+        return [
+            "coordinate": coordinateJSONObject(from: location.coordinate),
+            "altitude": location.altitude,
+            "ellipsoidal_altitude": location.ellipsoidalAltitude,
+            "region": NSNull(),
+            "time_zone": jsonValueTimeZone(item.timeZone),
+            "country_code": NSNull(),
+            "inland_water": NSNull(),
+            "ocean": NSNull(),
+            "areas_of_interest": NSNull(),
+            "postal_address": NSNull(),
+            "address_dictionary": NSNull(),
+        ]
+    }
+
+    private static func hasEnrichedPlacemarkData(_ placemark: MKPlacemark) -> Bool {
+        placemark.countryCode != nil
+            || placemark.isoCountryCode != nil
+            || placemark.inlandWater != nil
+            || placemark.ocean != nil
+            || placemark.areasOfInterest != nil
+            || placemark.addressDictionary != nil
+            || placemark.timeZone != nil
+            || hasMeaningfulPostalAddress(placemark.postalAddress)
+    }
+
+    private static func hasMeaningfulPostalAddress(_ address: CNPostalAddress?) -> Bool {
+        guard let address else { return false }
+
+        return !address.street.isEmpty
+            || !address.subLocality.isEmpty
+            || !address.city.isEmpty
+            || !address.subAdministrativeArea.isEmpty
+            || !address.state.isEmpty
+            || !address.postalCode.isEmpty
+            || !address.country.isEmpty
+            || !address.isoCountryCode.isEmpty
     }
 
     static func addressJSONObject(from address: MKAddress?) -> Any {

@@ -63,6 +63,27 @@ struct MapKitSerializationTests {
     }
 
     @Test
+    func mapItemPlacemarkJSONObjectBuildsFromLocationWhenPlacemarkUnavailable() {
+        let location = CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090),
+            altitude: 12.3,
+            horizontalAccuracy: 5.0,
+            verticalAccuracy: 3.0,
+            timestamp: Date(timeIntervalSince1970: 1_751_280_000)
+        )
+        let item = MKMapItem(location: location, address: nil)
+
+        let json = MapKitSerialization.mapItemPlacemarkJSONObject(from: item)
+        let coordinate = json["coordinate"] as? [String: Any]
+        #expect(coordinate?["latitude"] as? Double == 37.3346)
+        #expect(coordinate?["longitude"] as? Double == -122.0090)
+        #expect(json.keys.contains("altitude"))
+        #expect(json.keys.contains("ellipsoidal_altitude"))
+        #expect((json["address_dictionary"] is NSNull) == true)
+        #expect((json["postal_address"] is NSNull) == true)
+    }
+
+    @Test
     func coordinateRegionJSONObjectPreservesSpan() {
         let region = MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 1, longitude: 2),

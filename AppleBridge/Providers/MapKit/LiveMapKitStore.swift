@@ -6,6 +6,10 @@ import MapKit
 enum MapKitSearchFetch {
     /// Upper bound for blocking the main actor while MapKit delivers its callback.
     static let defaultTimeout: TimeInterval = 30
+
+    /// Modes pumped while waiting so MapKit callbacks and user-input sources stay serviced.
+    static let runLoopModes: [RunLoop.Mode] = [.default, .eventTracking]
+
     static let runLoopInterval: TimeInterval = 0.01
 
     /// Thread-safe handoff for sync/async MapKit and CoreLocation bridges that schedule callbacks or tasks.
@@ -40,6 +44,7 @@ enum MapKitSearchFetch {
     }
 
     static func waitForCompletion(
+        operation: String,
         timeout: TimeInterval = defaultTimeout,
         work: (@escaping () -> Void) -> Void
     ) throws {
@@ -52,11 +57,18 @@ enum MapKitSearchFetch {
         // (not `.current`) so this stays correct when called via `DispatchQueue.main.sync`.
         let deadline = Date().addingTimeInterval(timeout)
         while !done, Date() < deadline {
-            EventKitReminderFetch.pumpRunLoop(until: Date(timeIntervalSinceNow: runLoopInterval))
+            pumpRunLoop(until: Date(timeIntervalSinceNow: runLoopInterval))
         }
 
         guard done else {
-            throw MapKitProviderError.mapkitError("MapKit search timed out")
+            throw MapKitProviderError.mapkitError("\(operation) timed out")
+        }
+    }
+
+    /// Pump common run loop modes so MapKit completions and UI events can fire during sync FFI waits.
+    static func pumpRunLoop(until date: Date) {
+        for mode in runLoopModes {
+            RunLoop.main.run(mode: mode, before: date)
         }
     }
 }
@@ -82,7 +94,7 @@ struct LiveMapKitStore: MapKitStoreing {
         var response: MKLocalSearch.Response?
         var searchError: Error?
 
-        try MapKitSearchFetch.waitForCompletion { complete in
+        try MapKitSearchFetch.waitForCompletion(operation: "MapKit search") { complete in
             search.start { result, error in
                 response = result
                 searchError = error
@@ -110,7 +122,7 @@ struct LiveMapKitStore: MapKitStoreing {
         var response: MKLocalSearch.Response?
         var searchError: Error?
 
-        try MapKitSearchFetch.waitForCompletion { complete in
+        try MapKitSearchFetch.waitForCompletion(operation: "MapKit nearby search") { complete in
             search.start { result, error in
                 response = result
                 searchError = error
@@ -139,7 +151,7 @@ struct LiveMapKitStore: MapKitStoreing {
         var mapItems: [MKMapItem]?
         var geocodeError: Error?
 
-        try MapKitSearchFetch.waitForCompletion { complete in
+        try MapKitSearchFetch.waitForCompletion(operation: "MapKit reverse geocode") { complete in
             Task { @MainActor in
                 defer { complete() }
                 do {
@@ -172,7 +184,7 @@ struct LiveMapKitStore: MapKitStoreing {
         var mapItems: [MKMapItem]?
         var geocodeError: Error?
 
-        try MapKitSearchFetch.waitForCompletion { complete in
+        try MapKitSearchFetch.waitForCompletion(operation: "MapKit forward geocode") { complete in
             Task { @MainActor in
                 defer { complete() }
                 do {
@@ -207,7 +219,7 @@ struct LiveMapKitStore: MapKitStoreing {
         var response: MKDirections.Response?
         var directionsError: Error?
 
-        try MapKitSearchFetch.waitForCompletion { complete in
+        try MapKitSearchFetch.waitForCompletion(operation: "MapKit directions") { complete in
             Task { @MainActor in
                 defer { complete() }
                 do {
@@ -244,7 +256,7 @@ struct LiveMapKitStore: MapKitStoreing {
         var response: MKDirections.ETAResponse?
         var directionsError: Error?
 
-        try MapKitSearchFetch.waitForCompletion { complete in
+        try MapKitSearchFetch.waitForCompletion(operation: "MapKit ETA") { complete in
             Task { @MainActor in
                 defer { complete() }
                 do {
@@ -281,7 +293,7 @@ struct LiveMapKitStore: MapKitStoreing {
         let mkRequest = MKMapItemRequest(mapItemIdentifier: identifier)
         let result = MapKitSearchFetch.AsyncBridgeResult<MKMapItem>()
 
-        try MapKitSearchFetch.waitForCompletion { complete in
+        try MapKitSearchFetch.waitForCompletion(operation: "MapKit place lookup") { complete in
             // Schedule via GCD so run-loop pumping can deliver work while this @MainActor
             // method blocks synchronously (Task { @MainActor } alone can deadlock here).
             DispatchQueue.main.async {
@@ -321,7 +333,10 @@ struct LiveMapKitStore: MapKitStoreing {
     }
 
     private func mapItem(for coordinate: CLLocationCoordinate2D) -> MKMapItem {
-        MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+        MKMapItem(
+            location: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude),
+            address: nil
+        )
     }
 
     private static func routeData(from route: MKRoute) -> MapKitRouteData {
