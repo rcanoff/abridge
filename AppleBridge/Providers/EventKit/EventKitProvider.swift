@@ -49,6 +49,13 @@ protocol EventKitStoreing {
     func acceptEventInvitation(_ event: EKEvent) throws
     func declineEventInvitation(_ event: EKEvent) throws
     func tentativeEventInvitation(_ event: EKEvent) throws
+    func eventIdentifier(for event: EKEvent) -> String?
+}
+
+extension EventKitStoreing {
+    func eventIdentifier(for event: EKEvent) -> String? {
+        event.eventIdentifier
+    }
 }
 
 @MainActor

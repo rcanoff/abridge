@@ -65,6 +65,10 @@ enum EventKitTestSupport {
         return calendar
     }
 
+    static func syntheticEventIdentifier(forCalendarItemIdentifier calendarItemIdentifier: String) -> String {
+        "evt-\(calendarItemIdentifier)"
+    }
+
     static func makeEvent(
         eventStore: EKEventStore = EKEventStore(),
         calendarItemIdentifier: String,

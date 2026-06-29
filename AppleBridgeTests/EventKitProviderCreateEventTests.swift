@@ -63,6 +63,7 @@ struct EventKitProviderCreateEventTests {
         #expect(Set(event.keys) == Self.eventReadKeys)
         #expect(event["title"] as? String == "Standup")
         #expect((event["calendar"] as? [String: Any])?["calendar_identifier"] as? String == "cal-work")
+        #expect((event["event_identifier"] as? String)?.isEmpty == false)
     }
 
     @Test
