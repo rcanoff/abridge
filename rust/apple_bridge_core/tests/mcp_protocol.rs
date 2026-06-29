@@ -1757,6 +1757,48 @@ fn tools_call_dispatches_reverse_geocode() {
 }
 
 #[test]
+fn mcp_tools_list_includes_forward_geocode_when_mapkit_geocode_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":15,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    mapkit_config_on_port(port, vec!["mapkit.geocode".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("mapkit.forward_geocode"));
+}
+
+#[test]
+fn tools_call_dispatches_forward_geocode() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"mapkit.forward_geocode","arguments":{"address":"1 Apple Park Way, Cupertino, CA"}}}"#;
+
+  let handle = create_server(
+    mapkit_config_on_port(port, vec!["mapkit.geocode".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "mapkit");
+  assert_eq!(recorded.operation, "forward_geocode");
+  assert!(recorded.payload_json.contains("1 Apple Park Way"));
+}
+
+#[test]
 fn tools_call_unknown_tool() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
