@@ -118,6 +118,31 @@ final class LiveContactsStore: ContactsStoreing {
         return ContactsSearchSupport.intersectContacts(contactSets)
     }
 
+    func createGroup(in containerIdentifier: String, name: String) throws -> CNGroup {
+        let containers = try contactStore.containers(matching: nil)
+        guard containers.contains(where: { $0.identifier == containerIdentifier }) else {
+            throw ContactsProviderError.invalidArguments(
+                "Unknown container_identifier: \(containerIdentifier)"
+            )
+        }
+
+        let group = CNMutableGroup()
+        group.name = name
+        let saveRequest = CNSaveRequest()
+        saveRequest.add(group, toContainerWithIdentifier: containerIdentifier)
+        do {
+            try contactStore.execute(saveRequest)
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
+
+        let groups = try fetchGroups(containerIdentifier: containerIdentifier)
+        guard let saved = groups.first(where: { $0.identifier == group.identifier }) else {
+            throw ContactsProviderError.contactsError("Failed to fetch created group")
+        }
+        return saved
+    }
+
     func createContact(in containerIdentifier: String, contact: CNMutableContact) throws -> CNContact {
         let containers = try contactStore.containers(matching: nil)
         guard containers.contains(where: { $0.identifier == containerIdentifier }) else {

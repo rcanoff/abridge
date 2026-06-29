@@ -34,6 +34,8 @@ final class ContactsProvider {
             getContact(payloadJson: payloadJson)
         case "create_contact":
             createContact(payloadJson: payloadJson)
+        case "create_group":
+            createGroup(payloadJson: payloadJson)
         case "update_contact":
             updateContact(payloadJson: payloadJson)
         case "delete_contact":

@@ -37,6 +37,7 @@ pub const TOOL_LIST_GROUPS: &str = "contacts.list_groups";
 pub const TOOL_GET_CONTACT: &str = "contacts.get_contact";
 pub const TOOL_SEARCH_CONTACTS: &str = "contacts.search_contacts";
 pub const TOOL_CREATE_CONTACT: &str = "contacts.create_contact";
+pub const TOOL_CREATE_GROUP: &str = "contacts.create_group";
 pub const TOOL_UPDATE_CONTACT: &str = "contacts.update_contact";
 pub const TOOL_DELETE_CONTACT: &str = "contacts.delete_contact";
 pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
@@ -50,7 +51,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 38] = [
+const ALL_TOOLS: [ToolDefinition; 39] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -295,6 +296,13 @@ const ALL_TOOLS: [ToolDefinition; 38] = [
     provider: "contacts",
     operation: "create_contact",
     description: "Create a contact in the given container with optional CNContact fields",
+  },
+  ToolDefinition {
+    name: TOOL_CREATE_GROUP,
+    capability: capabilities::CONTACTS_CREATE,
+    provider: "contacts",
+    operation: "create_group",
+    description: "Create a contact group in the given container",
   },
   ToolDefinition {
     name: TOOL_UPDATE_CONTACT,
@@ -901,6 +909,14 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         { "required": ["phone_number"] }
       ]
     }),
+    TOOL_CREATE_GROUP => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "container_identifier": non_whitespace_string(),
+        "name": non_whitespace_string()
+      },
+      "required": ["container_identifier", "name"]
+    }),
     TOOL_CREATE_CONTACT => serde_json::json!({
       "type": "object",
       "properties": {
@@ -998,13 +1014,14 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
 mod tests {
   use super::{
     TOOL_ACCEPT_INVITATION, TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_CONTACT, TOOL_CREATE_EVENT,
-    TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DECLINE_INVITATION, TOOL_DELETE_CALENDAR, TOOL_DELETE_CONTACT,
-    TOOL_DELETE_EVENT, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER, TOOL_GET_CONTACT, TOOL_GET_EVENT, TOOL_GET_REMINDER,
-    TOOL_GET_USAGE_LOG, TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS,
-    TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS,
-    TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS,
-    TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER, TOOL_UPDATE_CALENDAR,
-    TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
+    TOOL_CREATE_GROUP, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DECLINE_INVITATION, TOOL_DELETE_CALENDAR,
+    TOOL_DELETE_CONTACT, TOOL_DELETE_EVENT, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER, TOOL_GET_CONTACT, TOOL_GET_EVENT,
+    TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS,
+    TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER, TOOL_SEARCH_CONTACTS,
+    TOOL_SEARCH_EVENTS, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE,
+    TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER,
+    TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_REMINDER, all_tools, input_schema,
+    tools_for_capabilities,
   };
 
   fn array_items_type(schema: &serde_json::Value, property: &str) -> Option<String> {
@@ -1331,7 +1348,31 @@ mod tests {
   fn lists_create_contact_tool_when_contacts_create_capability_enabled() {
     let tools = tools_for_capabilities(&["contacts.create".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_CREATE_CONTACT]);
+    assert_eq!(names, vec![TOOL_CREATE_CONTACT, TOOL_CREATE_GROUP]);
+  }
+
+  #[test]
+  fn create_group_schema_requires_container_identifier_and_name() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_CREATE_GROUP)
+      .expect("create_group tool");
+    let schema = input_schema(tool);
+
+    assert_eq!(
+      schema.get("required").and_then(|value| value.as_array()).map(|fields| {
+        fields
+          .iter()
+          .filter_map(|field| field.as_str().map(str::to_owned))
+          .collect::<Vec<_>>()
+      }),
+      Some(vec!["container_identifier".to_owned(), "name".to_owned()])
+    );
+    assert_eq!(
+      string_property_pattern(&schema, "container_identifier").as_deref(),
+      Some(r".*\S.*")
+    );
+    assert_eq!(string_property_pattern(&schema, "name").as_deref(), Some(r".*\S.*"));
   }
 
   #[test]
