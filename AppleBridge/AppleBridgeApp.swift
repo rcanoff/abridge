@@ -16,6 +16,13 @@ struct AppleBridgeApp: App {
     @State private var settingsStore: SettingsStore
 
     init() {
+        if AppLaunchGuard.evaluate(
+            isRunningUnitTests: Self.isRunningUnitTests,
+            singleInstanceChecker: NSRunningApplicationSingleInstanceChecker()
+        ) == .exitDuplicate {
+            exit(0)
+        }
+
         let appSettings = AppSettings()
         let serverStore = ServerStore(
             serverService: ServerService(
@@ -37,14 +44,10 @@ struct AppleBridgeApp: App {
 
         guard !Self.isRunningUnitTests else { return }
 
-        // Restore persisted MCP server at process launch. MenuBarExtra content is not
-        // mounted until the popover opens, so this must not live in view onAppear.
-        Task(priority: .userInitiated) { @MainActor in
-            await settingsStore.performLaunchAtLoginReconcileIfNeeded()
-            await settingsStore.performLaunchRestoreIfNeeded()
-            await serverStore.refreshBearerToken()
-            await serverStore.refreshStatus()
-        }
+        AppleBridgeAppLaunchSupport.scheduleLaunchRestore(
+            settingsStore: settingsStore,
+            serverStore: serverStore
+        )
     }
 
     var body: some Scene {
