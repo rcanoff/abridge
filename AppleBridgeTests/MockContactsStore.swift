@@ -179,6 +179,18 @@ final class MockContactsStore: ContactsStoreing {
         contacts.remove(at: index)
     }
 
+    func deleteGroup(identifier: String) throws {
+        if let fetchError {
+            throw fetchError
+        }
+
+        guard let index = groups.firstIndex(where: { $0.identifier == identifier }) else {
+            throw ContactsProviderError.invalidArguments("Unknown group_identifier: \(identifier)")
+        }
+
+        groups.remove(at: index)
+    }
+
     func updateContact(identifier: String, fields: [String: Any]) throws -> CNContact {
         if let fetchError {
             throw fetchError

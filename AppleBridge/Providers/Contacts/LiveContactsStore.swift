@@ -208,6 +208,24 @@ final class LiveContactsStore: ContactsStoreing {
         }
     }
 
+    func deleteGroup(identifier: String) throws {
+        guard let existing = try fetchGroup(identifier: identifier) else {
+            throw ContactsProviderError.invalidArguments("Unknown group_identifier: \(identifier)")
+        }
+
+        guard let mutable = existing.mutableCopy() as? CNMutableGroup else {
+            throw ContactsProviderError.contactsError("Failed to copy group")
+        }
+
+        let saveRequest = CNSaveRequest()
+        saveRequest.delete(mutable)
+        do {
+            try contactStore.execute(saveRequest)
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
+    }
+
     func updateContact(identifier: String, fields: [String: Any]) throws -> CNContact {
         guard let existing = try fetchContact(identifier: identifier) else {
             throw ContactsProviderError.invalidArguments("Unknown contact_identifier: \(identifier)")
