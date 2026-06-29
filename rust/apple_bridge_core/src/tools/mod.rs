@@ -326,9 +326,10 @@ fn structured_location_schema(nullable: bool) -> serde_json::Value {
       "geo_location": {
         "type": ["object", "null"],
         "properties": {
-          "latitude": nullable_number(),
-          "longitude": nullable_number()
-        }
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" }
+        },
+        "required": ["latitude", "longitude"]
       }
     }
   });
