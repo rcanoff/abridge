@@ -18,6 +18,13 @@ struct PermissionsSettingsView: View {
                     onOpenSystemSettings: { appStore.openRemindersPrivacySettings() },
                     onRequestPermissions: { Task { await appStore.requestAccess() } }
                 )
+                AppleContactsPermissionRow(
+                    required: permissionsStore.requiresAppleContactsAccess,
+                    granted: appStore.contactsPermissionStatus.grantsReadAccess,
+                    isRequestingPermission: appStore.isRequestingContactsPermission,
+                    onOpenSystemSettings: { appStore.openContactsPrivacySettings() },
+                    onRequestPermissions: { Task { await appStore.requestContactsAccess() } }
+                )
             } header: {
                 Text("Apple Permissions")
             } footer: {
@@ -32,6 +39,9 @@ struct PermissionsSettingsView: View {
                     binding(for: capabilityID)
                 }
                 EventsMCPPermissionsGroup { capabilityID in
+                    binding(for: capabilityID)
+                }
+                ContactsMCPPermissionsGroup { capabilityID in
                     binding(for: capabilityID)
                 }
             } header: {
@@ -54,7 +64,18 @@ struct PermissionsSettingsView: View {
             Task {
                 await settingsStore.applySavedCapabilities(
                     remindersAuthorized: true,
-                    eventsAuthorized: PermissionsEventKitAuthorization.eventsReadAuthorized
+                    eventsAuthorized: PermissionsEventKitAuthorization.eventsReadAuthorized,
+                    contactsAuthorized: appStore.contactsPermissionStatus.grantsReadAccess
+                )
+            }
+        }
+        .onChange(of: appStore.contactsPermissionStatus.grantsReadAccess) { _, contactsAuthorized in
+            guard contactsAuthorized, permissionsStore.requiresAppleContactsAccess else { return }
+            Task {
+                await settingsStore.applySavedCapabilities(
+                    remindersAuthorized: appStore.permissionStatus.grantsReadAccess,
+                    eventsAuthorized: PermissionsEventKitAuthorization.eventsReadAuthorized,
+                    contactsAuthorized: true
                 )
             }
         }
@@ -76,16 +97,19 @@ struct PermissionsSettingsView: View {
                 permissionsStore.setChecked(newValue, for: capabilityID)
                 let remindersAuthorized = appStore.permissionStatus.grantsReadAccess
                 let eventsAuthorized = PermissionsEventKitAuthorization.eventsReadAuthorized
+                let contactsAuthorized = appStore.contactsPermissionStatus.grantsReadAccess
                 guard permissionsStore.shouldApplySavedCapabilitiesAfterToggle(
                     enabling: newValue,
                     capabilityID: capabilityID,
                     remindersAuthorized: remindersAuthorized,
-                    eventsAuthorized: eventsAuthorized
+                    eventsAuthorized: eventsAuthorized,
+                    contactsAuthorized: contactsAuthorized
                 ) else { return }
                 Task {
                     await settingsStore.applySavedCapabilities(
                         remindersAuthorized: remindersAuthorized,
-                        eventsAuthorized: eventsAuthorized
+                        eventsAuthorized: eventsAuthorized,
+                        contactsAuthorized: contactsAuthorized
                     )
                 }
             }
@@ -102,7 +126,8 @@ struct PermissionsSettingsView: View {
         Task {
             await settingsStore.applySavedCapabilities(
                 remindersAuthorized: appStore.permissionStatus.grantsReadAccess,
-                eventsAuthorized: current
+                eventsAuthorized: current,
+                contactsAuthorized: appStore.contactsPermissionStatus.grantsReadAccess
             )
         }
     }
@@ -156,6 +181,20 @@ private struct EventsMCPPermissionsGroup: View {
     }
 }
 
+private struct ContactsMCPPermissionsGroup: View {
+    let capabilityBinding: (String) -> Binding<Bool>
+
+    var body: some View {
+        Section {
+            ForEach(CapabilityCatalog.contactsCapabilities) { capability in
+                Toggle(capability.label, isOn: capabilityBinding(capability.id))
+            }
+        } header: {
+            Text("Contacts")
+        }
+    }
+}
+
 private enum SystemSettingsIcon {
     static let image: NSImage = {
         let workspace = NSWorkspace.shared
@@ -179,7 +218,7 @@ private struct AppleRemindersPermissionRow: View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Reminders Full Access")
-                AppleRemindersAccessStatusLabel(required: required, granted: granted)
+                ApplePermissionAccessStatusLabel(required: required, granted: granted)
             }
 
             Spacer(minLength: 8)
@@ -205,7 +244,44 @@ private struct AppleRemindersPermissionRow: View {
     }
 }
 
-private struct AppleRemindersAccessStatusLabel: View {
+private struct AppleContactsPermissionRow: View {
+    let required: Bool
+    let granted: Bool
+    let isRequestingPermission: Bool
+    let onOpenSystemSettings: () -> Void
+    let onRequestPermissions: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Contacts Access")
+                ApplePermissionAccessStatusLabel(required: required, granted: granted)
+            }
+
+            Spacer(minLength: 8)
+
+            HStack(spacing: 8) {
+                Button("Request Permissions", action: onRequestPermissions)
+                    .buttonStyle(.borderless)
+                    .disabled(granted || isRequestingPermission)
+
+                Button(action: onOpenSystemSettings) {
+                    Image(nsImage: SystemSettingsIcon.image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Open Contacts System Settings")
+                .help("Open Contacts System Settings")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
+    }
+}
+
+private struct ApplePermissionAccessStatusLabel: View {
     let required: Bool
     let granted: Bool
 
