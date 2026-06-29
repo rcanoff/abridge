@@ -95,10 +95,12 @@ struct PermissionsStoreContactsTests {
             store.shouldApplySavedCapabilitiesAfterToggle(
                 enabling: true,
                 capabilityID: "contacts-delete",
-                remindersAuthorized: true,
-                eventsAuthorized: true,
-                contactsAuthorized: false,
-                locationAuthorized: false
+                authorization: ApplePermissionAuthorization(
+                    remindersAuthorized: true,
+                    eventsAuthorized: true,
+                    contactsAuthorized: false,
+                    locationAuthorized: false
+                )
             ) == false
         )
     }
@@ -116,10 +118,12 @@ struct PermissionsStoreContactsTests {
             store.shouldApplySavedCapabilitiesAfterToggle(
                 enabling: true,
                 capabilityID: "contacts-create",
-                remindersAuthorized: true,
-                eventsAuthorized: true,
-                contactsAuthorized: false,
-                locationAuthorized: false
+                authorization: ApplePermissionAuthorization(
+                    remindersAuthorized: true,
+                    eventsAuthorized: true,
+                    contactsAuthorized: false,
+                    locationAuthorized: false
+                )
             ) == false
         )
     }
@@ -137,10 +141,12 @@ struct PermissionsStoreContactsTests {
             store.shouldApplySavedCapabilitiesAfterToggle(
                 enabling: true,
                 capabilityID: "contacts-edit",
-                remindersAuthorized: true,
-                eventsAuthorized: true,
-                contactsAuthorized: false,
-                locationAuthorized: false
+                authorization: ApplePermissionAuthorization(
+                    remindersAuthorized: true,
+                    eventsAuthorized: true,
+                    contactsAuthorized: false,
+                    locationAuthorized: false
+                )
             ) == false
         )
     }
@@ -158,10 +164,12 @@ struct PermissionsStoreContactsTests {
             store.shouldApplySavedCapabilitiesAfterToggle(
                 enabling: true,
                 capabilityID: "contacts-search",
-                remindersAuthorized: true,
-                eventsAuthorized: true,
-                contactsAuthorized: false,
-                locationAuthorized: false
+                authorization: ApplePermissionAuthorization(
+                    remindersAuthorized: true,
+                    eventsAuthorized: true,
+                    contactsAuthorized: false,
+                    locationAuthorized: false
+                )
             ) == false
         )
     }
@@ -179,10 +187,12 @@ struct PermissionsStoreContactsTests {
             store.shouldApplySavedCapabilitiesAfterToggle(
                 enabling: true,
                 capabilityID: "contacts-read",
-                remindersAuthorized: true,
-                eventsAuthorized: true,
-                contactsAuthorized: false,
-                locationAuthorized: false
+                authorization: ApplePermissionAuthorization(
+                    remindersAuthorized: true,
+                    eventsAuthorized: true,
+                    contactsAuthorized: false,
+                    locationAuthorized: false
+                )
             ) == false
         )
     }

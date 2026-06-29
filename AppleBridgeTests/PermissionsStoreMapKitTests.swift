@@ -30,10 +30,12 @@ struct PermissionsStoreMapKitTests {
             store.shouldApplySavedCapabilitiesAfterToggle(
                 enabling: true,
                 capabilityID: "mapkit-search",
-                remindersAuthorized: true,
-                eventsAuthorized: true,
-                contactsAuthorized: true,
-                locationAuthorized: false
+                authorization: ApplePermissionAuthorization(
+                    remindersAuthorized: true,
+                    eventsAuthorized: true,
+                    contactsAuthorized: true,
+                    locationAuthorized: false
+                )
             )
         )
     }

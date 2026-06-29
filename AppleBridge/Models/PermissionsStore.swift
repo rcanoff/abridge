@@ -55,30 +55,27 @@ final class PermissionsStore {
     func shouldApplySavedCapabilitiesAfterToggle(
         enabling: Bool,
         capabilityID: String,
-        remindersAuthorized: Bool,
-        eventsAuthorized: Bool,
-        contactsAuthorized: Bool,
-        locationAuthorized: Bool
+        authorization: ApplePermissionAuthorization
     ) -> Bool {
         guard enabling else { return true }
 
         if CapabilityCatalog.calendarsCapabilities.contains(where: { $0.id == capabilityID && $0.shipped }) {
-            return eventsAuthorized
+            return authorization.eventsAuthorized
         }
 
         if CapabilityCatalog.eventsCapabilities.contains(where: { $0.id == capabilityID && $0.shipped }) {
-            return eventsAuthorized
+            return authorization.eventsAuthorized
         }
 
         if CapabilityCatalog.contactsCapabilities.contains(where: { $0.id == capabilityID && $0.shipped }) {
-            return contactsAuthorized
+            return authorization.contactsAuthorized
         }
 
         if CapabilityCatalog.mapkitCapabilities.contains(where: { $0.id == capabilityID && $0.shipped }) {
-            return locationAuthorized
+            return authorization.locationAuthorized
         }
 
-        return remindersAuthorized
+        return authorization.remindersAuthorized
     }
 
     var requiresCalendarAccess: Bool {
