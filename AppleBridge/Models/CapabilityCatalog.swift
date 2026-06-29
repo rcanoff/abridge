@@ -121,7 +121,7 @@ enum CapabilityCatalog {
 
     static let mapkitCapabilities: [CapabilityDefinition] = [
         CapabilityDefinition(id: "mapkit-search", capabilityID: "mapkit.search", label: "Search", shipped: true),
-        CapabilityDefinition(id: "mapkit-geocode", capabilityID: "mapkit.geocode", label: "Geocode", shipped: false),
+        CapabilityDefinition(id: "mapkit-geocode", capabilityID: "mapkit.geocode", label: "Geocode", shipped: true),
         CapabilityDefinition(id: "mapkit-routing", capabilityID: "mapkit.routing", label: "Routing", shipped: false),
         CapabilityDefinition(
             id: "mapkit-navigation",

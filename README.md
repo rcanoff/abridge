@@ -98,7 +98,7 @@ MCP tool names use dot notation (e.g. `eventkit.reminders.list_reminders`). Disc
 
 - [x] `mapkit.search_places`
 - [x] `mapkit.search_nearby`
-- [ ] `mapkit.reverse_geocode`
+- [x] `mapkit.reverse_geocode`
 - [ ] `mapkit.forward_geocode`
 - [ ] `mapkit.calculate_route`
 - [ ] `mapkit.estimate_travel_time`

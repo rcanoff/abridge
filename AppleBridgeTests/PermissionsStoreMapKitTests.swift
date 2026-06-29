@@ -19,6 +19,19 @@ struct PermissionsStoreMapKitTests {
 
     @Test
     @MainActor
+    func requiresAppleLocationAccessIsTrueForShippedMapKitGeocodeToggle() throws {
+        let suiteName = "PermissionsStoreMapKitTests.geocodeShipped"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+        store.setChecked(true, for: "mapkit-geocode")
+
+        #expect(store.requiresAppleLocationAccess == true)
+    }
+
+    @Test
+    @MainActor
     func shouldNotApplySavedCapabilitiesAfterEnablingMapKitWithoutAuthorization() throws {
         let suiteName = "PermissionsStoreMapKitTests.shippedApply"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
