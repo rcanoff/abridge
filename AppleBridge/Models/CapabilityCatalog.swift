@@ -118,4 +118,18 @@ enum CapabilityCatalog {
         CapabilityDefinition(id: "contacts-edit", capabilityID: "contacts.edit", label: "Edit", shipped: true),
         CapabilityDefinition(id: "contacts-delete", capabilityID: "contacts.delete", label: "Delete", shipped: true),
     ]
+
+    static let mapkitCapabilities: [CapabilityDefinition] = [
+        CapabilityDefinition(id: "mapkit-search", capabilityID: "mapkit.search", label: "Search", shipped: false),
+        CapabilityDefinition(id: "mapkit-geocode", capabilityID: "mapkit.geocode", label: "Geocode", shipped: false),
+        CapabilityDefinition(id: "mapkit-routing", capabilityID: "mapkit.routing", label: "Routing", shipped: false),
+        CapabilityDefinition(
+            id: "mapkit-navigation",
+            capabilityID: "mapkit.navigation",
+            label: "Navigation",
+            shipped: false
+        ),
+        CapabilityDefinition(id: "mapkit-location", capabilityID: "mapkit.location", label: "Location", shipped: false),
+        CapabilityDefinition(id: "mapkit-read", capabilityID: "mapkit.read", label: "Read", shipped: false),
+    ]
 }
