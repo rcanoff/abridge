@@ -16,7 +16,7 @@ extension EventKitProvider {
                 )
             }
             let payload = try EventKitSerialization.jsonString(
-                from: EventKitSerialization.eventJSONObject(from: event)
+                from: serializedEventJSONObject(from: event)
             )
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as EventKitProviderError {

@@ -51,6 +51,25 @@ struct EventKitSerializationEventTests {
 
     @Test
     @MainActor
+    func eventJSONObjectSerializesEventIdentifier() {
+        let event = EventKitTestSupport.makeEvent(
+            calendarItemIdentifier: "evt-1",
+            calendarIdentifier: "cal-work",
+            title: "Meeting"
+        )
+
+        let payload = EventKitSerialization.eventJSONObject(
+            from: event,
+            eventIdentifier: EventKitTestSupport.syntheticEventIdentifier(
+                forCalendarItemIdentifier: "evt-1"
+            )
+        )
+
+        #expect(payload["event_identifier"] as? String == "evt-evt-1")
+    }
+
+    @Test
+    @MainActor
     func eventJSONObjectIsJSONSerializable() throws {
         let event = EventKitTestSupport.makeEvent(
             calendarItemIdentifier: "evt-1",

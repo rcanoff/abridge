@@ -32,7 +32,13 @@ extension MockEventKitStore {
     }
 
     static func syntheticEventIdentifier(for event: EKEvent) -> String {
-        "evt-\(event.calendarItemIdentifier)"
+        EventKitTestSupport.syntheticEventIdentifier(
+            forCalendarItemIdentifier: event.calendarItemIdentifier
+        )
+    }
+
+    func eventIdentifier(for event: EKEvent) -> String? {
+        event.eventIdentifier ?? Self.syntheticEventIdentifier(for: event)
     }
 
     func makeEvent() -> EKEvent {

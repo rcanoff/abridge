@@ -49,6 +49,13 @@ protocol EventKitStoreing {
     func acceptEventInvitation(_ event: EKEvent) throws
     func declineEventInvitation(_ event: EKEvent) throws
     func tentativeEventInvitation(_ event: EKEvent) throws
+    func eventIdentifier(for event: EKEvent) -> String?
+}
+
+extension EventKitStoreing {
+    func eventIdentifier(for event: EKEvent) -> String? {
+        event.eventIdentifier
+    }
 }
 
 @MainActor
@@ -381,5 +388,12 @@ final class EventKitProvider {
 
     func providerError(from error: Error) -> ProviderResponse {
         errorResponse(code: "eventkit_error", message: error.localizedDescription)
+    }
+
+    func serializedEventJSONObject(from event: EKEvent) -> [String: Any] {
+        EventKitSerialization.eventJSONObject(
+            from: event,
+            eventIdentifier: store.eventIdentifier(for: event)
+        )
     }
 }

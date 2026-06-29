@@ -19,9 +19,9 @@ enum EventKitSerialization {
         return payload
     }
 
-    static func eventJSONObject(from event: EKEvent) -> [String: Any] {
+    static func eventJSONObject(from event: EKEvent, eventIdentifier override: String? = nil) -> [String: Any] {
         var payload = calendarItemJSONObject(from: event)
-        payload["event_identifier"] = jsonValue(event.eventIdentifier)
+        payload["event_identifier"] = jsonValue(override ?? event.eventIdentifier)
         payload["availability"] = eventAvailabilityString(event.availability)
         payload["start_date"] = iso8601String(from: event.startDate)
         payload["end_date"] = iso8601String(from: event.endDate)

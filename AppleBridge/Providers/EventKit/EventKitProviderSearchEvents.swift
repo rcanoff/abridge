@@ -24,7 +24,7 @@ extension EventKitProvider {
             )
             let events = try store.fetchEvents(matching: predicate)
                 .filter { matchesQuery($0, query: arguments.query) }
-            let payloadObjects = events.map(EventKitSerialization.eventJSONObject)
+            let payloadObjects = events.map { serializedEventJSONObject(from: $0) }
             let payload = try EventKitSerialization.jsonString(from: payloadObjects)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as EventKitProviderError {

@@ -40,34 +40,40 @@ struct EventKitProviderGetEventTests {
     func getEventReturnsFaithfulEventShape() throws {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
-        let start = Date(timeIntervalSince1970: 1_700_000_000)
-        let end = Date(timeIntervalSince1970: 1_700_086_400)
-        mockStore.events = [
-            mockStore.makeTestEvent(
-                calendarItemIdentifier: "evt-1",
-                calendarIdentifier: "cal-work",
-                title: "Standup",
-                startDate: start,
-                endDate: end
-            ),
+        mockStore.eventCalendarsList = [
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
         ]
         let provider = EventKitProvider(store: mockStore)
 
-        let response = provider.handle(
-            operation: "get_event",
-            payloadJson: #"{"event_identifier":"evt-evt-1"}"#
+        let createResponse = provider.handle(
+            operation: "create_event",
+            payloadJson: """
+            {"calendar_identifier":"cal-work","title":"Standup",\
+            "start_date":"2023-11-14T22:13:20Z","end_date":"2023-11-14T23:13:20Z"}
+            """
         )
+        #expect(createResponse.ok == true)
 
-        #expect(response.ok == true)
+        let createData = try #require(createResponse.payloadJson.data(using: .utf8))
+        let created = try #require(
+            try JSONSerialization.jsonObject(with: createData) as? [String: Any]
+        )
+        let eventIdentifier = try #require(created["event_identifier"] as? String)
 
-        let data = try #require(response.payloadJson.data(using: .utf8))
+        let getResponse = provider.handle(
+            operation: "get_event",
+            payloadJson: #"{"event_identifier":"\#(eventIdentifier)"}"#
+        )
+        #expect(getResponse.ok == true)
+
+        let data = try #require(getResponse.payloadJson.data(using: .utf8))
         let decoded = try JSONSerialization.jsonObject(with: data)
         let event = try #require(decoded as? [String: Any])
 
         #expect(Set(event.keys) == Self.eventReadKeys)
-        #expect(event["calendar_item_identifier"] as? String == "evt-1")
-        #expect(event["event_identifier"] is NSNull)
+        #expect(event["event_identifier"] as? String == eventIdentifier)
         #expect(event["title"] as? String == "Standup")
+        #expect((event["calendar"] as? [String: Any])?["calendar_identifier"] as? String == "cal-work")
     }
 
     @Test
