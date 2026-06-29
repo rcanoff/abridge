@@ -5,13 +5,16 @@ import Foundation
 final class LiveContactsStore: ContactsStoreing {
     private let contactStore: CNContactStore
     private let contactLinking: any ContactsLinkingPerforming
+    private let contactUnlinking: any ContactsUnlinkingPerforming
 
     init(
         contactStore: CNContactStore = CNContactStore(),
-        contactLinking: any ContactsLinkingPerforming = LiveContactsLinkingPerformer()
+        contactLinking: any ContactsLinkingPerforming = LiveContactsLinkingPerformer(),
+        contactUnlinking: any ContactsUnlinkingPerforming = LiveContactsUnlinkingPerformer()
     ) {
         self.contactStore = contactStore
         self.contactLinking = contactLinking
+        self.contactUnlinking = contactUnlinking
     }
 
     func contactsAuthorizationStatus() -> CNAuthorizationStatus {
@@ -295,9 +298,38 @@ final class LiveContactsStore: ContactsStoreing {
         return saved
     }
 
+    func unlinkContact(identifier: String) throws -> CNContact {
+        guard let contact = try fetchContact(identifier: identifier) else {
+            throw ContactsProviderError.invalidArguments("Unknown contact_identifier: \(identifier)")
+        }
+
+        guard let mutable = contact.mutableCopy() as? CNMutableContact else {
+            throw ContactsProviderError.contactsError("Failed to copy contact")
+        }
+
+        do {
+            try executeUnlink(mutable)
+        } catch let error as ContactsProviderError {
+            throw error
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
+
+        guard let unlinked = try fetchContact(identifier: identifier) else {
+            throw ContactsProviderError.contactsError("Failed to fetch unlinked contact")
+        }
+        return unlinked
+    }
+
     func executeLink(from fromMutable: CNMutableContact, to toMutable: CNMutableContact) throws {
         let saveRequest = CNSaveRequest()
         try contactLinking.link(from: fromMutable, to: toMutable, in: saveRequest)
+        try contactStore.execute(saveRequest)
+    }
+
+    func executeUnlink(_ contactMutable: CNMutableContact) throws {
+        let saveRequest = CNSaveRequest()
+        try contactUnlinking.unlink(contactMutable, in: saveRequest)
         try contactStore.execute(saveRequest)
     }
 

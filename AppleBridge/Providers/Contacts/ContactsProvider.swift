@@ -6,6 +6,7 @@ enum ContactsProviderError: Error, Equatable {
     case serializationFailed
     case contactsError(String)
     case linkingUnavailable
+    case unlinkingUnavailable
     case unknownOperation(String)
     case invalidArguments(String)
 }
@@ -56,6 +57,12 @@ final class ContactsProvider {
             errorResponse(
                 code: "contacts_error",
                 message: "Linking contacts is unavailable: no public Contacts framework link API on this macOS version"
+            )
+        case .unlinkingUnavailable:
+            errorResponse(
+                code: "contacts_error",
+                message: "Unlinking contacts is unavailable: "
+                    + "no public Contacts framework unlink API on this macOS version"
             )
         case let .unknownOperation(message):
             errorResponse(code: "unknown_operation", message: message)

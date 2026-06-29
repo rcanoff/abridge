@@ -10,6 +10,7 @@ final class MockContactsStore: ContactsStoreing {
     var knownContainerIdentifiers: Set<String> = ["container-1"]
     var fetchError: ContactsProviderError?
     var linkingUnavailable = false
+    var unlinkingUnavailable = false
     var lastFetchGroupsContainerIdentifier: String?
 
     func contactsAuthorizationStatus() -> CNAuthorizationStatus {
@@ -239,5 +240,21 @@ final class MockContactsStore: ContactsStoreing {
 
         contacts.remove(at: fromIndex)
         return toContact
+    }
+
+    func unlinkContact(identifier: String) throws -> CNContact {
+        if let fetchError {
+            throw fetchError
+        }
+
+        if unlinkingUnavailable {
+            throw ContactsProviderError.unlinkingUnavailable
+        }
+
+        guard let contact = try fetchContact(identifier: identifier) else {
+            throw ContactsProviderError.invalidArguments("Unknown contact_identifier: \(identifier)")
+        }
+
+        return contact
     }
 }
