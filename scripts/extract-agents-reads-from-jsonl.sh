@@ -54,9 +54,26 @@ scratch = Path(os.environ["SCRATCH"])
 
 AGENTS_PATHS = {
     "/Users/rcanoff/.grok/AGENTS.md": "global",
-    "/Users/rcanoff/Projects/apple-bridge/Agents.md": "project",
+    "/Users/rcanoff/Projects/apple-bridge/AGENTS.md": "project",
     "/Users/rcanoff/Projects/apple-bridge/rust/AGENTS.md": "rust",
 }
+
+# Session jsonl uses Agents.md; repo/docs use AGENTS.md — normalize before matching.
+PATH_ALIASES = {
+    "/Users/rcanoff/Projects/apple-bridge/Agents.md": "/Users/rcanoff/Projects/apple-bridge/AGENTS.md",
+}
+
+
+def canonical_path(path: str) -> str:
+    return PATH_ALIASES.get(path, path)
+
+
+def is_partial_read(offset, limit) -> bool:
+    if limit is not None:
+        return True
+    if offset is not None and offset != 0:
+        return True
+    return False
 
 EPIC_PRS = [
     ("145", "144", "feat/contacts-permissions-foundation"),
@@ -100,6 +117,7 @@ def safe_filename(tool_call_id: str) -> str:
 
 pending = {}
 reads = []
+logs_written = 0
 per_path_counts = {path: 0 for path in AGENTS_PATHS}
 
 for line in session_jsonl.read_text().splitlines():
@@ -118,10 +136,11 @@ for line in session_jsonl.read_text().splitlines():
         raw = upd.get("rawInput") or {}
         path = raw.get("path")
         tool_call_id = upd.get("toolCallId")
-        if path in AGENTS_PATHS and tool_call_id:
+        canon = canonical_path(path) if path else None
+        if canon in AGENTS_PATHS and tool_call_id:
             pending[tool_call_id] = {
                 "ts": ts,
-                "path": path,
+                "path": canon,
                 "offset": raw.get("offset"),
                 "limit": raw.get("limit"),
             }
@@ -136,10 +155,16 @@ for line in session_jsonl.read_text().splitlines():
 
     raw = upd.get("rawInput") or {}
     raw_path = raw.get("path")
-    if raw_path in AGENTS_PATHS:
+    canon_path = canonical_path(raw_path) if raw_path else None
+    if canon_path in AGENTS_PATHS:
         meta = pending.setdefault(
             tool_call_id,
-            {"ts": ts, "path": raw_path, "offset": raw.get("offset"), "limit": raw.get("limit")},
+            {
+                "ts": ts,
+                "path": canon_path,
+                "offset": raw.get("offset"),
+                "limit": raw.get("limit"),
+            },
         )
     elif tool_call_id not in pending:
         continue
@@ -162,28 +187,34 @@ for line in session_jsonl.read_text().splitlines():
     out_name = f"agents-refresh-{safe_filename(tool_call_id)}.log"
     out_path = scratch / out_name
 
+    partial = is_partial_read(meta.get("offset"), meta.get("limit"))
+
     header_lines = [
         f"read_utc: {iso_utc(read_ts)}",
         f"path: {meta['path']}",
         f"toolCallId: {tool_call_id}",
     ]
+    if partial:
+        header_lines.append("partial: true")
     if meta.get("offset") is not None or meta.get("limit") is not None:
         header_lines.append(f"offset: {meta.get('offset')}")
         header_lines.append(f"limit: {meta.get('limit')}")
     header_lines.append("---")
 
     out_path.write_text("\n".join(header_lines) + "\n" + body + "\n", encoding="utf-8")
+    logs_written += 1
 
-    reads.append(
-        {
-            "ts": read_ts,
-            "path": meta["path"],
-            "toolCallId": tool_call_id,
-            "log": out_name,
-            "bytes": len(body.encode("utf-8")),
-        }
-    )
-    per_path_counts[meta["path"]] += 1
+    if not partial:
+        reads.append(
+            {
+                "ts": read_ts,
+                "path": meta["path"],
+                "toolCallId": tool_call_id,
+                "log": out_name,
+                "bytes": len(body.encode("utf-8")),
+            }
+        )
+        per_path_counts[meta["path"]] += 1
     pending.pop(tool_call_id, None)
 
 reads.sort(key=lambda r: (r["ts"], r["path"], r["toolCallId"]))
@@ -257,7 +288,7 @@ merge_path.write_text("\n".join(merge_lines) + "\n", encoding="utf-8")
 print(f"extract-agents-reads-from-jsonl")
 print(f"  SESSION_JSONL: {session_jsonl}")
 print(f"  SCRATCH: {scratch}")
-print(f"  log files written: {len(reads)}")
+print(f"  log files written: {logs_written} ({len(reads)} full reads for merge mapping)")
 for path, label in AGENTS_PATHS.items():
     print(f"  {label} ({path}): {per_path_counts[path]} reads")
 print(f"  merge mapping: {merge_path}")

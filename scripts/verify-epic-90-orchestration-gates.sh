@@ -24,6 +24,8 @@ FEATURES=(
   "contacts-create-group|2026-06-29-contacts-create-group|156|100"
   "contacts-update-group|2026-06-29-contacts-update-group|157|101"
   "contacts-delete-group|2026-06-29-contacts-delete-group|158|102"
+  # link-contacts uses the same gates (a)-(d) as every other subtask; frozen run-14
+  # codex was restored after PR #164 regression (no run≥15-only special gates).
   "contacts-link-contacts|2026-06-29-contacts-link-contacts|159|97"
   "contacts-unlink-contacts|2026-06-29-contacts-unlink-contacts|160|98"
 )
