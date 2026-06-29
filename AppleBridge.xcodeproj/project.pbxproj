@@ -1399,6 +1399,7 @@
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Apple Bridge needs full access to your calendars and events to expose them through the local MCP bridge.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "Apple Bridge needs access to your calendars and events to expose them through the local MCP bridge.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "Apple Bridge needs access to your contacts to expose them through the local MCP bridge.";
+				INFOPLIST_KEY_NSLocationUsageDescription = "Apple Bridge needs access to your location to expose MapKit capabilities such as nearby search, routing, and current location through the local MCP bridge.";
 				INFOPLIST_KEY_NSRemindersUsageDescription = "Apple Bridge needs access to your reminders to expose them through the local MCP bridge.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1425,6 +1426,7 @@
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Apple Bridge needs full access to your calendars and events to expose them through the local MCP bridge.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "Apple Bridge needs access to your calendars and events to expose them through the local MCP bridge.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "Apple Bridge needs access to your contacts to expose them through the local MCP bridge.";
+				INFOPLIST_KEY_NSLocationUsageDescription = "Apple Bridge needs access to your location to expose MapKit capabilities such as nearby search, routing, and current location through the local MCP bridge.";
 				INFOPLIST_KEY_NSRemindersUsageDescription = "Apple Bridge needs access to your reminders to expose them through the local MCP bridge.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
