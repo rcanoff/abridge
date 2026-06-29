@@ -1,7 +1,7 @@
 #import <Contacts/Contacts.h>
 #import <Foundation/Foundation.h>
 
-BOOL ABLinkContactToContact(
+void ABLinkContactToContact(
     CNSaveRequest *saveRequest,
     CNMutableContact *contact,
     CNMutableContact *unifiedContact

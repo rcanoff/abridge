@@ -33,8 +33,6 @@ enum ContactsSaveRequestLinking {
             throw ContactsProviderError.linkingUnavailable
         }
 
-        guard ABLinkContactToContact(saveRequest, contact, unifiedContact) else {
-            throw ContactsProviderError.contactsError("Contacts framework rejected the link request")
-        }
+        ABLinkContactToContact(saveRequest, contact, unifiedContact)
     }
 }
