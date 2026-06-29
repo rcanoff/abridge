@@ -212,7 +212,7 @@ final class EventKitProvider {
              "delete_reminder",
              "delete_list", "delete_calendar", "delete_event", "complete_reminder", "uncomplete_reminder",
              "set_reminder_alarms", "set_event_alarms",
-             "set_reminder_recurrence":
+             "set_reminder_recurrence", "set_event_recurrence":
             handleMutationOperation(operation: operation, payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")

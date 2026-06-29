@@ -5,6 +5,7 @@ import Foundation
 @MainActor
 final class MockEventKitStore: EventKitStoreing {
     private let eventStore = EKEventStore()
+
     private var nextReminderID = 1
     private var nextCalendarID = 1
     private var nextEventID = 1
@@ -228,7 +229,16 @@ final class MockEventKitStore: EventKitStoreing {
     }
 
     func fetchEvent(withIdentifier id: String) throws -> EKEvent? {
-        events.first { $0.eventIdentifier == id }
+        events.first { event in
+            if event.eventIdentifier == id {
+                return true
+            }
+            return Self.syntheticEventIdentifier(for: event) == id
+        }
+    }
+
+    private static func syntheticEventIdentifier(for event: EKEvent) -> String {
+        "evt-\(event.calendarItemIdentifier)"
     }
 
     func makeEvent() -> EKEvent {
@@ -242,10 +252,6 @@ final class MockEventKitStore: EventKitStoreing {
         if existingID.isEmpty {
             event.setValue("mock-evt-\(nextEventID)", forKey: "calendarItemIdentifier")
             nextEventID += 1
-        }
-
-        if event.eventIdentifier == nil || event.eventIdentifier?.isEmpty == true {
-            event.setValue("evt-\(event.calendarItemIdentifier)", forKey: "eventIdentifier")
         }
 
         if let index = events.firstIndex(where: { $0.calendarItemIdentifier == event.calendarItemIdentifier }) {
@@ -278,6 +284,31 @@ final class MockEventKitStore: EventKitStoreing {
             eventStore: eventStore,
             calendarIdentifier: calendarIdentifier,
             title: title
+        )
+    }
+
+    func makeTestEventCalendar(calendarIdentifier: String, title: String = "Test Calendar") -> EKCalendar {
+        EventKitTestSupport.makeEventCalendar(
+            eventStore: eventStore,
+            calendarIdentifier: calendarIdentifier,
+            title: title
+        )
+    }
+
+    func makeTestEvent(
+        calendarItemIdentifier: String,
+        calendarIdentifier: String? = nil,
+        title: String? = nil,
+        startDate: Date = Date(timeIntervalSince1970: 1_700_000_000),
+        endDate: Date = Date(timeIntervalSince1970: 1_700_003_600)
+    ) -> EKEvent {
+        EventKitTestSupport.makeEvent(
+            eventStore: eventStore,
+            calendarItemIdentifier: calendarItemIdentifier,
+            calendarIdentifier: calendarIdentifier,
+            title: title,
+            startDate: startDate,
+            endDate: endDate
         )
     }
 

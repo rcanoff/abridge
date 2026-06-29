@@ -11,10 +11,10 @@ struct EventKitProviderEventAlarmsTests {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-alarms"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-alarms"),
         ]
         mockStore.events = [
-            EventKitTestSupport.makeEvent(
+            mockStore.makeTestEvent(
                 calendarItemIdentifier: "evt-alarms-1",
                 calendarIdentifier: "cal-alarms",
                 title: "Alarm event",
@@ -44,9 +44,9 @@ struct EventKitProviderEventAlarmsTests {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-clear"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-clear"),
         ]
-        let event = EventKitTestSupport.makeEvent(
+        let event = mockStore.makeTestEvent(
             calendarItemIdentifier: "evt-clear-1",
             calendarIdentifier: "cal-clear",
             title: "Clear alarms"

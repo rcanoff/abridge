@@ -8,17 +8,17 @@ struct EventKitProviderMoveEventTests {
     private func providerWithEvent() -> (EventKitProvider, MockEventKitStore) {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
-        let sourceCalendar = EventKitTestSupport.makeEventCalendar(
+        let sourceCalendar = mockStore.makeTestEventCalendar(
             calendarIdentifier: "cal-source",
             title: "Source"
         )
-        let targetCalendar = EventKitTestSupport.makeEventCalendar(
+        let targetCalendar = mockStore.makeTestEventCalendar(
             calendarIdentifier: "cal-target",
             title: "Target"
         )
         mockStore.eventCalendarsList = [sourceCalendar, targetCalendar]
         mockStore.events = [
-            EventKitTestSupport.makeEvent(
+            mockStore.makeTestEvent(
                 calendarItemIdentifier: "evt-move-1",
                 calendarIdentifier: "cal-source",
                 title: "Move me",

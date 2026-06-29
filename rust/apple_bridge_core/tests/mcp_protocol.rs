@@ -1049,6 +1049,54 @@ fn tools_call_dispatches_set_reminder_recurrence() {
 }
 
 #[test]
+fn mcp_tools_list_includes_set_event_recurrence_when_events_recurrence_capability_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":29,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.events.recurrence".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("eventkit.events.set_event_recurrence"));
+  assert!(!resp.contains("eventkit.events.update_event"));
+  assert_eq!(
+    tool_input_property_items_type(&resp, "eventkit.events.set_event_recurrence", "recurrence_rules").as_deref(),
+    Some("object")
+  );
+}
+
+#[test]
+fn tools_call_dispatches_set_event_recurrence() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":30,"method":"tools/call","params":{"name":"eventkit.events.set_event_recurrence","arguments":{"event_identifier":"evt-42","recurrence_rules":[{"frequency":"daily","interval":1}]}}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.events.recurrence".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "eventkit");
+  assert_eq!(recorded.operation, "set_event_recurrence");
+  assert!(recorded.payload_json.contains("evt-42"));
+  assert!(recorded.payload_json.contains("recurrence_rules"));
+}
+
+#[test]
 fn mcp_tools_list_includes_delete_reminder_when_delete_capability_enabled() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();

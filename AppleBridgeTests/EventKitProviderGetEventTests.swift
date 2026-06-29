@@ -43,7 +43,7 @@ struct EventKitProviderGetEventTests {
         let start = Date(timeIntervalSince1970: 1_700_000_000)
         let end = Date(timeIntervalSince1970: 1_700_086_400)
         mockStore.events = [
-            EventKitTestSupport.makeEvent(
+            mockStore.makeTestEvent(
                 calendarItemIdentifier: "evt-1",
                 calendarIdentifier: "cal-work",
                 title: "Standup",
@@ -66,7 +66,7 @@ struct EventKitProviderGetEventTests {
 
         #expect(Set(event.keys) == Self.eventReadKeys)
         #expect(event["calendar_item_identifier"] as? String == "evt-1")
-        #expect(event["event_identifier"] as? String == "evt-evt-1")
+        #expect(event["event_identifier"] is NSNull)
         #expect(event["title"] as? String == "Standup")
     }
 
