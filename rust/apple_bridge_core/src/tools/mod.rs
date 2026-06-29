@@ -845,7 +845,6 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "previous_family_name": { "type": "string" },
         "note": { "type": "string" },
         "image_data": { "type": "string" },
-        "thumbnail_image_data": { "type": "string" },
         "birthday": contact_date_components_schema(),
         "non_gregorian_birthday": contact_date_components_schema(),
         "phone_numbers": contact_phone_numbers_schema(),
@@ -1241,6 +1240,12 @@ mod tests {
     assert_eq!(array_items_type(&schema, "phone_numbers").as_deref(), Some("object"));
     assert_eq!(array_items_type(&schema, "postal_addresses").as_deref(), Some("object"));
     assert_eq!(array_items_type(&schema, "dates").as_deref(), Some("object"));
+    let properties = schema
+      .get("properties")
+      .and_then(|value| value.as_object())
+      .expect("create_contact properties");
+    assert!(properties.contains_key("image_data"));
+    assert!(!properties.contains_key("thumbnail_image_data"));
   }
 
   fn string_property_min_length(schema: &serde_json::Value, property: &str) -> Option<u64> {
