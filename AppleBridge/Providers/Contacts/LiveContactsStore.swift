@@ -117,6 +117,24 @@ final class LiveContactsStore: ContactsStoreing {
         return saved
     }
 
+    func deleteContact(identifier: String) throws {
+        guard let existing = try fetchContact(identifier: identifier) else {
+            throw ContactsProviderError.invalidArguments("Unknown contact_identifier: \(identifier)")
+        }
+
+        guard let mutable = existing.mutableCopy() as? CNMutableContact else {
+            throw ContactsProviderError.contactsError("Failed to copy contact")
+        }
+
+        let saveRequest = CNSaveRequest()
+        saveRequest.delete(mutable)
+        do {
+            try contactStore.execute(saveRequest)
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
+    }
+
     func updateContact(identifier: String, fields: [String: Any]) throws -> CNContact {
         guard let existing = try fetchContact(identifier: identifier) else {
             throw ContactsProviderError.invalidArguments("Unknown contact_identifier: \(identifier)")

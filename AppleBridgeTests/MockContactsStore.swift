@@ -112,6 +112,18 @@ final class MockContactsStore: ContactsStoreing {
         return saved
     }
 
+    func deleteContact(identifier: String) throws {
+        if let fetchError {
+            throw fetchError
+        }
+
+        guard let index = contacts.firstIndex(where: { $0.identifier == identifier }) else {
+            throw ContactsProviderError.invalidArguments("Unknown contact_identifier: \(identifier)")
+        }
+
+        contacts.remove(at: index)
+    }
+
     func updateContact(identifier: String, fields: [String: Any]) throws -> CNContact {
         if let fetchError {
             throw fetchError
