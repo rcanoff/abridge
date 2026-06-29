@@ -57,7 +57,7 @@ enum MapKitSearchFetch {
         // (not `.current`) so this stays correct when called via `DispatchQueue.main.sync`.
         let deadline = Date().addingTimeInterval(timeout)
         while !done, Date() < deadline {
-            pumpRunLoop(until: Date(timeIntervalSinceNow: runLoopInterval))
+            pumpRunLoop(for: runLoopInterval)
         }
 
         guard done else {
@@ -66,9 +66,10 @@ enum MapKitSearchFetch {
     }
 
     /// Pump common run loop modes so MapKit completions and UI events can fire during sync FFI waits.
-    static func pumpRunLoop(until date: Date) {
+    static func pumpRunLoop(for interval: TimeInterval) {
+        let perModeInterval = interval / Double(runLoopModes.count)
         for mode in runLoopModes {
-            RunLoop.main.run(mode: mode, before: date)
+            RunLoop.main.run(mode: mode, before: Date(timeIntervalSinceNow: perModeInterval))
         }
     }
 }

@@ -21,7 +21,7 @@ enum MapKitSerialization {
             "point_of_interest_category": jsonValuePOICategory(item.pointOfInterestCategory),
             "is_current_location": item.isCurrentLocation,
             "identifier": jsonValueMapItemIdentifier(item.identifier),
-            "location": locationJSONObject(from: item.location),
+            "location": locationJSONObject(from: optionalLocation(from: item)),
             "placemark": mapItemPlacemarkJSONObject(from: item),
             "address": addressJSONObject(from: item.address),
             "address_representations": addressRepresentationsJSONArray(from: item.addressRepresentations),
@@ -181,12 +181,25 @@ enum MapKitSerialization {
     }
 
     private static func placemarkJSONObjectFromMapItemFields(_ item: MKMapItem) -> [String: Any] {
-        let location = item.location
+        let placemark = item.placemark
+        let coordinate: CLLocationCoordinate2D
+        let altitude: Any
+        let ellipsoidalAltitude: Any
+
+        if let location = optionalLocation(from: item) {
+            coordinate = location.coordinate
+            altitude = location.altitude
+            ellipsoidalAltitude = location.ellipsoidalAltitude
+        } else {
+            coordinate = placemark.coordinate
+            altitude = NSNull()
+            ellipsoidalAltitude = NSNull()
+        }
 
         return [
-            "coordinate": coordinateJSONObject(from: location.coordinate),
-            "altitude": location.altitude,
-            "ellipsoidal_altitude": location.ellipsoidalAltitude,
+            "coordinate": coordinateJSONObject(from: coordinate),
+            "altitude": altitude,
+            "ellipsoidal_altitude": ellipsoidalAltitude,
             "region": NSNull(),
             "time_zone": jsonValueTimeZone(item.timeZone),
             "country_code": NSNull(),
@@ -196,6 +209,11 @@ enum MapKitSerialization {
             "postal_address": NSNull(),
             "address_dictionary": NSNull(),
         ]
+    }
+
+    /// Sparse MapKit items can surface a nil ObjC `location` at runtime despite the non-optional Swift type.
+    private static func optionalLocation(from item: MKMapItem) -> CLLocation? {
+        (item as AnyObject).value(forKey: "location") as? CLLocation
     }
 
     private static func hasEnrichedPlacemarkData(_ placemark: MKPlacemark) -> Bool {
