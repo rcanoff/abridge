@@ -91,6 +91,10 @@ struct MapKitEstimateTravelTimeResult {
     let transportType: MKDirectionsTransportType
 }
 
+struct MapKitLookupPlaceRequest {
+    let identifier: String
+}
+
 struct MapKitOpenNavigationRequest {
     let source: MapKitRouteEndpoint
     let destination: MapKitRouteEndpoint
@@ -114,5 +118,6 @@ protocol MapKitStoreing {
     func forwardGeocode(request: MapKitForwardGeocodeRequest) throws -> [MKMapItem]
     func calculateRoute(request: MapKitCalculateRouteRequest) throws -> MapKitCalculateRouteResult
     func estimateTravelTime(request: MapKitEstimateTravelTimeRequest) throws -> MapKitEstimateTravelTimeResult
+    func lookupPlace(request: MapKitLookupPlaceRequest) throws -> MKMapItem
     func openNavigation(request: MapKitOpenNavigationRequest) throws -> MapKitOpenNavigationResult
 }

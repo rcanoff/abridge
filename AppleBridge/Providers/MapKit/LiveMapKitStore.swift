@@ -8,6 +8,37 @@ enum MapKitSearchFetch {
     static let defaultTimeout: TimeInterval = 30
     static let runLoopInterval: TimeInterval = 0.01
 
+    /// Thread-safe handoff for sync/async MapKit bridges that schedule unstructured tasks.
+    final class AsyncBridgeResult<T>: @unchecked Sendable {
+        private let lock = NSLock()
+        private var value: T?
+        private var error: Error?
+
+        func setValue(_ value: T) {
+            lock.lock()
+            defer { lock.unlock() }
+            self.value = value
+        }
+
+        func setError(_ error: Error) {
+            lock.lock()
+            defer { lock.unlock() }
+            self.error = error
+        }
+
+        func get() throws -> T {
+            lock.lock()
+            defer { lock.unlock() }
+            if let error {
+                throw error
+            }
+            guard let value else {
+                throw MapKitProviderError.mapkitError("MapKit async bridge returned no result")
+            }
+            return value
+        }
+    }
+
     static func waitForCompletion(
         timeout: TimeInterval = defaultTimeout,
         work: (@escaping () -> Void) -> Void
@@ -240,6 +271,32 @@ struct LiveMapKitStore: MapKitStoreing {
             expectedDepartureDate: response.expectedDepartureDate,
             transportType: response.transportType
         )
+    }
+
+    func lookupPlace(request: MapKitLookupPlaceRequest) throws -> MKMapItem {
+        guard let identifier = MKMapItem.Identifier(rawValue: request.identifier) else {
+            throw MapKitProviderError.invalidArguments("identifier is not a valid MapKit place identifier")
+        }
+
+        let mkRequest = MKMapItemRequest(mapItemIdentifier: identifier)
+        let result = MapKitSearchFetch.AsyncBridgeResult<MKMapItem>()
+
+        try MapKitSearchFetch.waitForCompletion { complete in
+            // Schedule via GCD so run-loop pumping can deliver work while this @MainActor
+            // method blocks synchronously (Task { @MainActor } alone can deadlock here).
+            DispatchQueue.main.async {
+                Task {
+                    defer { complete() }
+                    do {
+                        try await result.setValue(mkRequest.mapItem)
+                    } catch {
+                        result.setError(error)
+                    }
+                }
+            }
+        }
+
+        return try result.get()
     }
 
     func openNavigation(request: MapKitOpenNavigationRequest) throws -> MapKitOpenNavigationResult {

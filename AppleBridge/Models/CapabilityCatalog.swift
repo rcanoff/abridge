@@ -130,6 +130,6 @@ enum CapabilityCatalog {
             shipped: true
         ),
         CapabilityDefinition(id: "mapkit-location", capabilityID: "mapkit.location", label: "Location", shipped: false),
-        CapabilityDefinition(id: "mapkit-read", capabilityID: "mapkit.read", label: "Read", shipped: false),
+        CapabilityDefinition(id: "mapkit-read", capabilityID: "mapkit.read", label: "Read", shipped: true),
     ]
 }
