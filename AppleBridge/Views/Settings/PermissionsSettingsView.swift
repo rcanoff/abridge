@@ -5,7 +5,18 @@ struct PermissionsSettingsView: View {
     @Bindable var permissionsStore: PermissionsStore
     @Bindable var settingsStore: SettingsStore
     @Bindable var appStore: AppStore
-    @State private var calendarReadAuthorized = false
+    @State private var calendarReadAuthorized: Bool
+
+    init(
+        permissionsStore: PermissionsStore,
+        settingsStore: SettingsStore,
+        appStore: AppStore
+    ) {
+        self.permissionsStore = permissionsStore
+        self.settingsStore = settingsStore
+        self.appStore = appStore
+        _calendarReadAuthorized = State(initialValue: appStore.calendarPermissionStatus.grantsReadAccess)
+    }
 
     var body: some View {
         Form {
