@@ -5,6 +5,7 @@ struct PermissionsSettingsView: View {
     @Bindable var permissionsStore: PermissionsStore
     @Bindable var settingsStore: SettingsStore
     @Bindable var appStore: AppStore
+    @State private var calendarReadAuthorized = false
 
     var body: some View {
         Form {
@@ -132,8 +133,11 @@ struct PermissionsSettingsView: View {
     }
 
     private func reapplyCapabilitiesIfCalendarAccessGranted() {
-        guard appStore.calendarPermissionStatus.grantsReadAccess,
-              permissionsStore.requiresCalendarAccess else { return }
+        let current = appStore.calendarPermissionStatus.grantsReadAccess
+        let becameAuthorized = current && !calendarReadAuthorized
+        calendarReadAuthorized = current
+
+        guard becameAuthorized, permissionsStore.requiresCalendarAccess else { return }
 
         Task {
             await settingsStore.applySavedCapabilities(

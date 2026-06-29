@@ -59,6 +59,22 @@ struct EventsPermissionServiceTests {
 
     @Test
     @MainActor
+    func currentStatusClearsSessionGrantWhenEventKitReportsWriteOnly() async throws {
+        var eventKitStatus: EKAuthorizationStatus = .notDetermined
+        let service = EventsPermissionService(
+            authorizationStatusProvider: { eventKitStatus },
+            requestAccessHandler: { .authorized }
+        )
+
+        _ = try await service.requestAccess()
+        eventKitStatus = .writeOnly
+
+        #expect(service.currentStatus() == .writeOnly)
+        #expect(service.currentStatus().grantsReadAccess == false)
+    }
+
+    @Test
+    @MainActor
     func requestAccessReturnsHandlerResult() async throws {
         let service = EventsPermissionService(
             authorizationStatusProvider: { .notDetermined },

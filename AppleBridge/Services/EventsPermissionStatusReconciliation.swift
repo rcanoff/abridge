@@ -14,7 +14,7 @@ enum EventsPermissionStatusReconciliation {
         }
 
         switch eventKitStatus {
-        case .denied, .restricted:
+        case .denied, .restricted, .writeOnly:
             return (eventKitStatus, State(sessionGrantConfirmed: false))
         default:
             if state.sessionGrantConfirmed {

@@ -43,6 +43,19 @@ struct EventsPermissionStatusReconciliationTests {
     }
 
     @Test
+    func clearsSessionGrantWhenEventKitReportsWriteOnly() {
+        let state = EventsPermissionStatusReconciliation.State(sessionGrantConfirmed: true)
+
+        let resolved = EventsPermissionStatusReconciliation.resolve(
+            eventKitStatus: .writeOnly,
+            state: state
+        )
+
+        #expect(resolved.status == .writeOnly)
+        #expect(resolved.state.sessionGrantConfirmed == false)
+    }
+
+    @Test
     func afterRequestRecordsGrantedReadAccess() {
         let state = EventsPermissionStatusReconciliation.afterRequest(
             result: .authorized,
