@@ -30,4 +30,31 @@ struct AppSettingsContactsTests {
             ) == ["diagnostics.read", "contacts.read"]
         )
     }
+
+    @Test
+    @MainActor
+    func serverEnabledMCPCapabilityIDsIncludesContactsSearchWhenAuthorized() throws {
+        let suiteName = "AppSettingsContactsTests.contactsSearchServerGating"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.saveCapabilityIDs(["contacts-search"])
+
+        #expect(appSettings.enabledContactsCapabilityIDs == ["contacts.search"])
+        #expect(
+            appSettings.serverEnabledMCPCapabilityIDs(
+                remindersAuthorized: false,
+                eventsAuthorized: false,
+                contactsAuthorized: false
+            ) == ["diagnostics.read"]
+        )
+        #expect(
+            appSettings.serverEnabledMCPCapabilityIDs(
+                remindersAuthorized: false,
+                eventsAuthorized: false,
+                contactsAuthorized: true
+            ) == ["diagnostics.read", "contacts.search"]
+        )
+    }
 }

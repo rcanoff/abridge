@@ -40,4 +40,10 @@ enum ContactsKeyDescriptors {
 protocol ContactsStoreing {
     func contactsAuthorizationStatus() -> CNAuthorizationStatus
     func fetchContacts(containerIdentifier: String?) throws -> [CNContact]
+    func searchContacts(
+        name: String?,
+        emailAddress: String?,
+        phoneNumber: String?,
+        containerIdentifier: String?
+    ) throws -> [CNContact]
 }

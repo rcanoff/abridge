@@ -1,0 +1,151 @@
+@testable import AppleBridge
+import Contacts
+import Foundation
+import Testing
+
+@Suite("ContactsProviderSearchContacts")
+struct ContactsProviderSearchContactsTests {
+    @Test
+    @MainActor
+    func searchContactsReturnsPermissionDeniedWhenUnauthorized() {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .denied
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "search_contacts",
+            payloadJson: #"{"name":"Jane"}"#
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("permission_denied") == true)
+    }
+
+    @Test
+    @MainActor
+    func searchContactsRejectsMissingSearchCriteria() {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(operation: "search_contacts", payloadJson: "{}")
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("at least one search field required") == true)
+    }
+
+    @Test
+    @MainActor
+    func searchContactsRejectsAllNullSearchCriteria() {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "search_contacts",
+            payloadJson: #"{"name":null,"email_address":null,"phone_number":null}"#
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("at least one search field required") == true)
+    }
+
+    @Test
+    @MainActor
+    func searchContactsRejectsEmptyName() {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(operation: "search_contacts", payloadJson: #"{"name":""}"#)
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("name must not be empty") == true)
+    }
+
+    @Test
+    @MainActor
+    func searchContactsRejectsWhitespaceOnlyName() {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(operation: "search_contacts", payloadJson: #"{"name":"   "}"#)
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("name must not be empty") == true)
+    }
+
+    @Test
+    @MainActor
+    func searchContactsRejectsEmptyEmailAddress() {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(operation: "search_contacts", payloadJson: #"{"email_address":""}"#)
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("email_address must not be empty") == true)
+    }
+
+    @Test
+    @MainActor
+    func searchContactsRejectsEmptyPhoneNumber() {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(operation: "search_contacts", payloadJson: #"{"phone_number":""}"#)
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("phone_number must not be empty") == true)
+    }
+
+    @Test
+    @MainActor
+    func searchContactsTrimsSearchFieldsBeforeLookup() throws {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        mockStore.contacts = [ContactsTestSupport.makeRichContact()]
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "search_contacts",
+            payloadJson: #"{"name":"  Jane  "}"#
+        )
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let decoded = try JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+        let contacts = try #require(decoded)
+        #expect(contacts.count == 1)
+    }
+
+    @Test
+    @MainActor
+    func searchContactsSucceedsWithMockStore() throws {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        mockStore.contacts = [ContactsTestSupport.makeRichContact()]
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "search_contacts",
+            payloadJson: #"{"name":"Jane","email_address":"jane@example.com"}"#
+        )
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let decoded = try JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+        let contacts = try #require(decoded)
+        #expect(contacts.count == 1)
+        #expect(contacts.first?["given_name"] as? String == "Jane")
+    }
+}

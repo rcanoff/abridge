@@ -26,6 +26,8 @@ final class ContactsProvider {
         switch operation {
         case "list_contacts":
             listContacts(payloadJson: payloadJson)
+        case "search_contacts":
+            searchContacts(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown contacts operation: \(operation)")
         }

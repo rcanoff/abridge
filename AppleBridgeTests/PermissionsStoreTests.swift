@@ -213,13 +213,26 @@ struct PermissionsStoreIntegrationTests {
 
     @Test
     @MainActor
+    func requiresAppleContactsAccessWhenShippedContactsSearchEnabled() throws {
+        let suiteName = "PermissionsStoreTests.contactsSearchShipped"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+        store.setChecked(true, for: "contacts-search")
+
+        #expect(store.requiresAppleContactsAccess == true)
+    }
+
+    @Test
+    @MainActor
     func requiresAppleContactsAccessOnlyForShippedCapabilities() throws {
         let suiteName = "PermissionsStoreTests.contactsUnshipped"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
 
         let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
-        store.setChecked(true, for: "contacts-search")
+        store.setChecked(true, for: "contacts-create")
 
         #expect(store.requiresAppleContactsAccess == false)
     }
@@ -236,11 +249,31 @@ struct PermissionsStoreIntegrationTests {
         #expect(
             store.shouldApplySavedCapabilitiesAfterToggle(
                 enabling: true,
-                capabilityID: "contacts-search",
+                capabilityID: "contacts-create",
                 remindersAuthorized: true,
                 eventsAuthorized: true,
                 contactsAuthorized: false
             )
+        )
+    }
+
+    @Test
+    @MainActor
+    func shouldNotApplySavedCapabilitiesAfterEnablingShippedContactsSearchWithoutAuthorization() throws {
+        let suiteName = "PermissionsStoreTests.contactsSearchShippedApply"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+
+        #expect(
+            store.shouldApplySavedCapabilitiesAfterToggle(
+                enabling: true,
+                capabilityID: "contacts-search",
+                remindersAuthorized: true,
+                eventsAuthorized: true,
+                contactsAuthorized: false
+            ) == false
         )
     }
 
