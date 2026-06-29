@@ -1650,6 +1650,25 @@ fn mcp_tools_list_includes_search_places_when_mapkit_search_enabled() {
 }
 
 #[test]
+fn mcp_tools_list_includes_search_nearby_when_mapkit_search_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":3,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    mapkit_config_on_port(port, vec!["mapkit.search".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("mapkit.search_nearby"));
+}
+
+#[test]
 fn tools_call_dispatches_search_places() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
@@ -1670,6 +1689,29 @@ fn tools_call_dispatches_search_places() {
   assert_eq!(recorded.provider, "mapkit");
   assert_eq!(recorded.operation, "search_places");
   assert!(recorded.payload_json.contains("coffee"));
+}
+
+#[test]
+fn tools_call_dispatches_search_nearby() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"mapkit.search_nearby","arguments":{"coordinate":{"latitude":37.3346,"longitude":-122.0090},"radius_meters":500}}}"#;
+
+  let handle = create_server(
+    mapkit_config_on_port(port, vec!["mapkit.search".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "mapkit");
+  assert_eq!(recorded.operation, "search_nearby");
+  assert!(recorded.payload_json.contains("37.3346"));
 }
 
 #[test]
