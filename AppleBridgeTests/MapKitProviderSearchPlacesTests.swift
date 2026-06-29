@@ -1,7 +1,7 @@
+@testable import AppleBridge
 import CoreLocation
 import MapKit
 import Testing
-@testable import AppleBridge
 
 @Suite("MapKitProviderSearchPlaces")
 struct MapKitProviderSearchPlacesTests {

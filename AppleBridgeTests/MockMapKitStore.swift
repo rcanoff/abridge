@@ -1,6 +1,6 @@
+@testable import AppleBridge
 import CoreLocation
 import MapKit
-@testable import AppleBridge
 
 @MainActor
 final class MockMapKitStore: MapKitStoreing {

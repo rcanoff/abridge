@@ -1,13 +1,13 @@
+@testable import AppleBridge
 import CoreLocation
 import Foundation
 import MapKit
 import Testing
-@testable import AppleBridge
 
 @Suite("MapKitSerialization")
 struct MapKitSerializationTests {
     @Test
-    func mapItemJSONObjectIncludesTopLevelKeys() throws {
+    func mapItemJSONObjectIncludesTopLevelKeys() {
         let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
         let item = MKMapItem(placemark: placemark)
         item.name = "Test Place"
@@ -97,7 +97,7 @@ private final class NegativeAltitudeTestLocation: CLLocation, @unchecked Sendabl
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
@@ -115,7 +115,7 @@ private final class PlacemarkWithLocationTestDouble: MKPlacemark, @unchecked Sen
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
