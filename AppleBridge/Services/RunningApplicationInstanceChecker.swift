@@ -23,12 +23,7 @@ struct RunningApplicationInstanceChecker: SingleInstanceChecking {
 
     /// Production duplicate detection via `NSRunningApplication`.
     static func detectOtherRunningInstance(bundleID: String, currentPID: pid_t) -> Bool {
-        #if DEBUG
-        if ProcessInfo.processInfo.environment["APPLE_BRIDGE_TEST_DUPLICATE_LAUNCH"] == "1" {
-            return true
-        }
-        #endif
-        return NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+        NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
             .contains { $0.processIdentifier != currentPID }
     }
 }

@@ -10,18 +10,17 @@ SCRATCH="${SCRATCH:-/var/folders/j1/79r1s5wn54gdrjpc78k08g5h0000gn/T/grok-goal-b
 BUNDLE="${SCRATCH}/verification-bundle.txt"
 RESULT_DIR="${SCRATCH}/issue-120-xcresult"
 RESULT_BUNDLE="${RESULT_DIR}/test-results.xcresult"
-TEST_LOG="${SCRATCH}/issue-120-test-verbose.log"
-GUARD_LOG="${SCRATCH}/single-instance-guard-suite.log"
-GH_PR_SHIP_LOG="${SCRATCH}/gh-pr-ship.log"
+TEST_LOG="$(mktemp "${TMPDIR:-/tmp}/issue-120-test-verbose.XXXXXX")"
+trap 'rm -f "$TEST_LOG"' EXIT
 
 mkdir -p "$SCRATCH" "$RESULT_DIR"
 
 # Remove stale artifacts that misrepresent guard coverage or ship evidence.
 rm -f \
   "$BUNDLE" \
-  "$TEST_LOG" \
-  "$GUARD_LOG" \
-  "$GH_PR_SHIP_LOG" \
+  "$SCRATCH/issue-120-test-verbose.log" \
+  "$SCRATCH/single-instance-guard-suite.log" \
+  "$SCRATCH/gh-pr-ship.log" \
   "$SCRATCH/single-instance-guard-tests.log" \
   "$SCRATCH/double-launch-check.log" \
   "$SCRATCH/double-launch-check-v2.log" \
@@ -95,10 +94,8 @@ TZ=UTC xcodebuild test-without-building -project AppleBridge.xcodeproj -scheme A
   -destination 'platform=macOS,arch=arm64' -parallel-testing-enabled NO \
   -resultBundlePath "$RESULT_BUNDLE" 2>&1 | tee "$TEST_LOG" >>"$BUNDLE"
 
-extract_guard_suite | tee "$GUARD_LOG"
-
 section "GUARD SUITE — SingleInstanceGuard block only"
-cat "$GUARD_LOG" >>"$BUNDLE"
+extract_guard_suite >>"$BUNDLE"
 
 section "GUARD SUITE — xcresult summary"
 xcrun xcresulttool get test-results summary --path "$RESULT_BUNDLE" >>"$BUNDLE" 2>&1
@@ -170,6 +167,7 @@ ISSUE_120_REVIEW_DIRS=(
   feat-single-instance-guard-order-fix
   fix-issue-120-verification-gaps
   fix-verify-issue-120-port-count
+  fix-issue-120-verification-evidence
 )
 for review_dir in "${ISSUE_120_REVIEW_DIRS[@]}"; do
   append_codex_review "$review_dir"
@@ -182,7 +180,7 @@ section "STEP 6 — gh pr ship log (all #120 PRs)"
     echo "--- PR #${pr} ---"
     gh pr view "$pr" --json number,title,url,state,mergedAt,closingIssuesReferences
   done
-} | tee "$GH_PR_SHIP_LOG" >>"$BUNDLE"
+} >>"$BUNDLE"
 
 section "STEP 6 — merged PRs closing #120 (search)"
 gh pr list --search "120" --state merged --json number,title,url,closingIssuesReferences --limit 10 >>"$BUNDLE" 2>&1
