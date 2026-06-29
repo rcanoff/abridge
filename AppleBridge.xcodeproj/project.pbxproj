@@ -48,6 +48,7 @@
 		211C63E134B8A7F93CE38338 /* RemindersPermissionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4D56A8BE9577545A4ACEF9 /* RemindersPermissionServiceTests.swift */; };
 		2147E9DA5D4499B72B2E4628 /* EventKitProviderMoveEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7123568FF31477E464AF0185 /* EventKitProviderMoveEvent.swift */; };
 		22A1A27010210BCA212E7589 /* MockRemindersPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63792628A5888C7C9A103AFA /* MockRemindersPermissionService.swift */; };
+		23D906B3D8E7DAE3E535D3F5 /* LocationPermissionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D0F8A8E5FBE1D62FC42E532 /* LocationPermissionStatusTests.swift */; };
 		2498F41A8DA71959BBD8576B /* EventKitProviderMove.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76CF5BE2271C76FA3399537A /* EventKitProviderMove.swift */; };
 		25C86A4A6DB63CE2F2ADBE95 /* AppleBridgeAppStoreMaking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A8023EBC0B79296B6028F35 /* AppleBridgeAppStoreMaking.swift */; };
 		2628538BB01EFFB95EC15DB3 /* SingleInstanceChecking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81A80134291BC796CD15880C /* SingleInstanceChecking.swift */; };
@@ -250,6 +251,7 @@
 		FC7D1D3E33193EEA048BA73A /* ContactsPermissionChecking.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4E4B0199BC23795F30B18A7 /* ContactsPermissionChecking.swift */; };
 		FCA112F243D053F7ABC56028 /* ContactsProviderUnlinkContactsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A335DC3EABB7C2953847F3 /* ContactsProviderUnlinkContactsTests.swift */; };
 		FD2EEC5DB48DB67B41F811FB /* AppSettingsContactsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B21810D7F6BE5D5A2CD1F6 /* AppSettingsContactsTests.swift */; };
+		FDB9391C69284F1A767A19AC /* LocationPermissionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E38357E39F350E47984A490 /* LocationPermissionStatus.swift */; };
 		FE55257F189C3C1D51D32FA5 /* ContactsDeserialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9ED1A98BD823F88B66D4489 /* ContactsDeserialization.swift */; };
 		FEBAB791F0B64675601FE504 /* EventKitProviderEventRecurrenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BA0935ACEEE5E8CF44B7032 /* EventKitProviderEventRecurrenceTests.swift */; };
 		FF2FF22DF4DBCF348B3E9B14 /* EventKitSerialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CD184989F652AAD52E9C87E /* EventKitSerialization.swift */; };
@@ -281,6 +283,8 @@
 		0B39750CFA69109FBBE0899B /* MockServerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockServerService.swift; sourceTree = "<group>"; };
 		0B83D2B99D34B0585BE4B7A5 /* MenuBarNativeMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarNativeMenuTests.swift; sourceTree = "<group>"; };
 		0C696B0C27BEC9AF36E99825 /* MockAppQuitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockAppQuitter.swift; sourceTree = "<group>"; };
+		0D0F8A8E5FBE1D62FC42E532 /* LocationPermissionStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPermissionStatusTests.swift; sourceTree = "<group>"; };
+		0E38357E39F350E47984A490 /* LocationPermissionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPermissionStatus.swift; sourceTree = "<group>"; };
 		0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBridgeApp.swift; sourceTree = "<group>"; };
 		0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionStatusTests.swift; sourceTree = "<group>"; };
 		1049F7ED134ECF8E2E7B5419 /* EventKitProviderComplete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderComplete.swift; sourceTree = "<group>"; };
@@ -639,6 +643,7 @@
 				F4B13FFA54DE646F0722E357 /* LiveContactsStoreLinkTests.swift */,
 				08682110130482DF003C975D /* LiveContactsStoreUnlinkTests.swift */,
 				C4CE8A393E6A9E8C1B568FDD /* LiveEventKitStoreInvitationContractTests.swift */,
+				0D0F8A8E5FBE1D62FC42E532 /* LocationPermissionStatusTests.swift */,
 				0B83D2B99D34B0585BE4B7A5 /* MenuBarNativeMenuTests.swift */,
 				11A1C6EFB21BDE0193DEC904 /* MenuBarQuitTests.swift */,
 				772B92620CCC71A3BCD31E20 /* MockAppleBridgeAppStoreMaker.swift */,
@@ -810,6 +815,7 @@
 				BA6F7802E2EB5A93A94519D5 /* CapabilityCatalog.swift */,
 				82D0F4C011D1329EE80C8067 /* ContactsPermissionStatus.swift */,
 				9ADA2DBCC17021D67E96E20F /* EventsPermissionStatus.swift */,
+				0E38357E39F350E47984A490 /* LocationPermissionStatus.swift */,
 				66DA7F4D02C9262AFF9E3C32 /* MenuBarMenuFormatting.swift */,
 				5E2D8AFFF6004C50652089B5 /* PermissionsStore.swift */,
 				3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */,
@@ -1053,6 +1059,7 @@
 				93A813E1503316FF142C1B8A /* LaunchAtLoginManaging.swift in Sources */,
 				CDB8FE57FF4FF9ECC5A4D951 /* LiveContactsStore.swift in Sources */,
 				9E04CD5BDD7A4ADFBEE42806 /* LiveEventKitStoreInvitations.swift in Sources */,
+				FDB9391C69284F1A767A19AC /* LocationPermissionStatus.swift in Sources */,
 				166364FE12D879C775551542 /* MCPSettingsView.swift in Sources */,
 				E3E0157FE3592EA0B75D7A2B /* MenuBarMenuFormatting.swift in Sources */,
 				F23EAA242DD672D19A3F961A /* MenuBarNativeMenuView.swift in Sources */,
@@ -1170,6 +1177,7 @@
 				AFE0DC9B34CF3CDEEF5D2EEA /* LiveContactsStoreLinkTests.swift in Sources */,
 				1F8EC5B6A7059E89C4A5ABDA /* LiveContactsStoreUnlinkTests.swift in Sources */,
 				63B3EBFFB2102926231C70DF /* LiveEventKitStoreInvitationContractTests.swift in Sources */,
+				23D906B3D8E7DAE3E535D3F5 /* LocationPermissionStatusTests.swift in Sources */,
 				5C210FD0D445BAC26A99E537 /* MenuBarNativeMenuTests.swift in Sources */,
 				80DEB353922E6068D8BF69A3 /* MenuBarQuitTests.swift in Sources */,
 				A1F055BEFC0924845D3CA1E9 /* MockAppQuitter.swift in Sources */,
