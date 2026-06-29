@@ -9,6 +9,9 @@ actor MockServerService: ServerServing {
     var stopError: ServerOperationError?
     var resetBearerTokenError: ServerOperationError?
 
+    private var startEnteredYield: (() -> Void)?
+    private var startProceedContinuation: CheckedContinuation<Void, Never>?
+
     private(set) var startCallCount = 0
     private(set) var stopCallCount = 0
     private(set) var lastStartHost: String?
@@ -50,6 +53,12 @@ actor MockServerService: ServerServing {
 
         if let startError {
             throw startError
+        }
+
+        if let startEnteredYield {
+            startEnteredYield()
+            self.startEnteredYield = nil
+            await withCheckedContinuation { startProceedContinuation = $0 }
         }
 
         usageLoggingEnabledState = usageLoggingEnabled
@@ -118,5 +127,16 @@ actor MockServerService: ServerServing {
 
     func setBearerTokenResult(_ token: String) {
         bearerTokenResult = token
+    }
+
+    func enableStartHold() -> AsyncStream<Void> {
+        AsyncStream { continuation in
+            startEnteredYield = { continuation.yield(()) }
+        }
+    }
+
+    func releaseHeldStart() {
+        startProceedContinuation?.resume()
+        startProceedContinuation = nil
     }
 }
