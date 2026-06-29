@@ -39,6 +39,7 @@ pub const TOOL_SEARCH_CONTACTS: &str = "contacts.search_contacts";
 pub const TOOL_CREATE_CONTACT: &str = "contacts.create_contact";
 pub const TOOL_CREATE_GROUP: &str = "contacts.create_group";
 pub const TOOL_UPDATE_CONTACT: &str = "contacts.update_contact";
+pub const TOOL_UPDATE_GROUP: &str = "contacts.update_group";
 pub const TOOL_DELETE_CONTACT: &str = "contacts.delete_contact";
 pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 
@@ -51,7 +52,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 39] = [
+  const ALL_TOOLS: [ToolDefinition; 40] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -310,6 +311,13 @@ const ALL_TOOLS: [ToolDefinition; 39] = [
     provider: "contacts",
     operation: "update_contact",
     description: "Update an existing contact by contact_identifier with optional CNContact fields",
+  },
+  ToolDefinition {
+    name: TOOL_UPDATE_GROUP,
+    capability: capabilities::CONTACTS_EDIT,
+    provider: "contacts",
+    operation: "update_group",
+    description: "Update an existing contact group by group_identifier with optional name",
   },
   ToolDefinition {
     name: TOOL_DELETE_CONTACT,
@@ -968,6 +976,17 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "required": ["contact_identifier"]
       })
     }
+    TOOL_UPDATE_GROUP => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "group_identifier": { "type": "string" },
+        "name": {
+          "type": ["string", "null"],
+          "pattern": r".*\S.*"
+        }
+      },
+      "required": ["group_identifier"]
+    }),
     TOOL_GET_USAGE_LOG => serde_json::json!({
       "type": "object",
       "properties": {
@@ -1020,7 +1039,8 @@ mod tests {
     TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER, TOOL_SEARCH_CONTACTS,
     TOOL_SEARCH_EVENTS, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE,
     TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER,
-    TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_REMINDER, all_tools, input_schema,
+    TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER,
+    all_tools, input_schema,
     tools_for_capabilities,
   };
 
@@ -1379,7 +1399,31 @@ mod tests {
   fn lists_update_contact_tool_when_contacts_edit_capability_enabled() {
     let tools = tools_for_capabilities(&["contacts.edit".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_UPDATE_CONTACT]);
+    assert_eq!(names, vec![TOOL_UPDATE_CONTACT, TOOL_UPDATE_GROUP]);
+  }
+
+  #[test]
+  fn update_group_schema_requires_group_identifier_and_allows_optional_name() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_UPDATE_GROUP)
+      .expect("update_group tool");
+    let schema = input_schema(tool);
+
+    assert_eq!(
+      schema.get("required").and_then(|value| value.as_array()).map(|fields| {
+        fields
+          .iter()
+          .filter_map(|field| field.as_str().map(str::to_owned))
+          .collect::<Vec<_>>()
+      }),
+      Some(vec!["group_identifier".to_owned()])
+    );
+    assert_eq!(
+      nullable_property_types(&schema, "name"),
+      vec!["string".to_owned(), "null".to_owned()]
+    );
+    assert_eq!(string_property_pattern(&schema, "name").as_deref(), Some(r".*\S.*"));
   }
 
   #[test]
