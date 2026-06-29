@@ -83,7 +83,7 @@ MCP tool names use dot notation (e.g. `eventkit.reminders.list_reminders`). Disc
 - [x] `contacts.get_contact`
 - [x] `contacts.create_contact`
 - [x] `contacts.update_contact`
-- [ ] `contacts.delete_contact`
+- [x] `contacts.delete_contact`
 - [ ] `contacts.link_contacts`
 - [ ] `contacts.unlink_contacts`
 - [ ] `contacts.list_groups`

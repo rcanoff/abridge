@@ -116,6 +116,6 @@ enum CapabilityCatalog {
         CapabilityDefinition(id: "contacts-search", capabilityID: "contacts.search", label: "Search", shipped: true),
         CapabilityDefinition(id: "contacts-create", capabilityID: "contacts.create", label: "Create", shipped: true),
         CapabilityDefinition(id: "contacts-edit", capabilityID: "contacts.edit", label: "Edit", shipped: true),
-        CapabilityDefinition(id: "contacts-delete", capabilityID: "contacts.delete", label: "Delete", shipped: false),
+        CapabilityDefinition(id: "contacts-delete", capabilityID: "contacts.delete", label: "Delete", shipped: true),
     ]
 }

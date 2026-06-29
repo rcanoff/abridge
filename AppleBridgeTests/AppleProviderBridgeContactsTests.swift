@@ -60,6 +60,27 @@ struct AppleProviderBridgeContactsTests {
 
     @Test
     @MainActor
+    func callProviderContactsDeleteContactSucceedsWithMockStore() {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        let contact = ContactsTestSupport.makeRichContact()
+        mockStore.contacts = [contact]
+        let bridge = AppleProviderBridge(contactsProvider: ContactsProvider(store: mockStore))
+
+        let request = ProviderRequest(
+            provider: "contacts",
+            operation: "delete_contact",
+            payloadJson: #"{"contact_identifier":"\#(contact.identifier)"}"#
+        )
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == true)
+        #expect(response.payloadJson.contains("\"contact_identifier\":\"\(contact.identifier)\""))
+        #expect(mockStore.contacts.isEmpty)
+    }
+
+    @Test
+    @MainActor
     func callProviderContactsCreateContactSucceedsWithMockStore() throws {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .authorized

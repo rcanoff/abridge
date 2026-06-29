@@ -1380,6 +1380,51 @@ fn mcp_tools_list_includes_search_contacts_when_contacts_search_enabled() {
 }
 
 #[test]
+fn mcp_tools_list_includes_delete_contact_when_contacts_delete_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":4,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    contacts_config_on_port(port, vec!["contacts.delete".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("contacts.delete_contact"));
+  assert!(!resp.contains("contacts.list_contacts"));
+  assert!(!resp.contains("contacts.get_contact"));
+  assert!(!resp.contains("contacts.update_contact"));
+}
+
+#[test]
+fn tools_call_dispatches_delete_contact() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"contacts.delete_contact","arguments":{"contact_identifier":"contact-42"}}}"#;
+
+  let handle = create_server(
+    contacts_config_on_port(port, vec!["contacts.delete".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "contacts");
+  assert_eq!(recorded.operation, "delete_contact");
+  assert!(recorded.payload_json.contains("contact-42"));
+}
+
+#[test]
 fn tools_call_dispatches_search_contacts() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();

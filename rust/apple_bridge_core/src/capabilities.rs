@@ -24,6 +24,7 @@ pub const CONTACTS_READ: &str = "contacts.read";
 pub const CONTACTS_SEARCH: &str = "contacts.search";
 pub const CONTACTS_CREATE: &str = "contacts.create";
 pub const CONTACTS_EDIT: &str = "contacts.edit";
+pub const CONTACTS_DELETE: &str = "contacts.delete";
 pub const DIAGNOSTICS_READ: &str = "diagnostics.read";
 
 pub fn is_valid_capability_id(id: &str) -> bool {
@@ -31,6 +32,7 @@ pub fn is_valid_capability_id(id: &str) -> bool {
     || id == CONTACTS_SEARCH
     || id == CONTACTS_CREATE
     || id == CONTACTS_EDIT
+    || id == CONTACTS_DELETE
     || id == DIAGNOSTICS_READ
   {
     return true;
@@ -72,6 +74,7 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
       | CONTACTS_SEARCH
       | CONTACTS_CREATE
       | CONTACTS_EDIT
+      | CONTACTS_DELETE
       | DIAGNOSTICS_READ
   )
 }
@@ -79,13 +82,13 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
 #[cfg(test)]
 mod tests {
   use super::{
-    CONTACTS_CREATE, CONTACTS_EDIT, CONTACTS_READ, CONTACTS_SEARCH, DIAGNOSTICS_READ, EVENTKIT_CALENDARS_CREATE,
-    EVENTKIT_CALENDARS_DELETE, EVENTKIT_CALENDARS_EDIT, EVENTKIT_CALENDARS_READ, EVENTKIT_EVENTS_ALARMS,
-    EVENTKIT_EVENTS_CREATE, EVENTKIT_EVENTS_DELETE, EVENTKIT_EVENTS_EDIT, EVENTKIT_EVENTS_INVITATIONS,
-    EVENTKIT_EVENTS_READ, EVENTKIT_EVENTS_RECURRENCE, EVENTKIT_EVENTS_SEARCH, EVENTKIT_REMINDERS_ALARMS,
-    EVENTKIT_REMINDERS_COMPLETE, EVENTKIT_REMINDERS_CREATE, EVENTKIT_REMINDERS_DELETE, EVENTKIT_REMINDERS_EDIT,
-    EVENTKIT_REMINDERS_READ, EVENTKIT_REMINDERS_RECURRENCE, EVENTKIT_REMINDERS_SEARCH, is_allowed_in_v1,
-    is_valid_capability_id,
+    CONTACTS_CREATE, CONTACTS_DELETE, CONTACTS_EDIT, CONTACTS_READ, CONTACTS_SEARCH, DIAGNOSTICS_READ,
+    EVENTKIT_CALENDARS_CREATE, EVENTKIT_CALENDARS_DELETE, EVENTKIT_CALENDARS_EDIT, EVENTKIT_CALENDARS_READ,
+    EVENTKIT_EVENTS_ALARMS, EVENTKIT_EVENTS_CREATE, EVENTKIT_EVENTS_DELETE, EVENTKIT_EVENTS_EDIT,
+    EVENTKIT_EVENTS_INVITATIONS, EVENTKIT_EVENTS_READ, EVENTKIT_EVENTS_RECURRENCE, EVENTKIT_EVENTS_SEARCH,
+    EVENTKIT_REMINDERS_ALARMS, EVENTKIT_REMINDERS_COMPLETE, EVENTKIT_REMINDERS_CREATE, EVENTKIT_REMINDERS_DELETE,
+    EVENTKIT_REMINDERS_EDIT, EVENTKIT_REMINDERS_READ, EVENTKIT_REMINDERS_RECURRENCE, EVENTKIT_REMINDERS_SEARCH,
+    is_allowed_in_v1, is_valid_capability_id,
   };
 
   #[test]
@@ -111,6 +114,11 @@ mod tests {
   #[test]
   fn accepts_contacts_edit_capability_shape() {
     assert!(is_valid_capability_id(CONTACTS_EDIT));
+  }
+
+  #[test]
+  fn accepts_contacts_delete_capability_shape() {
+    assert!(is_valid_capability_id(CONTACTS_DELETE));
   }
 
   #[test]
@@ -155,6 +163,7 @@ mod tests {
     assert!(is_allowed_in_v1(CONTACTS_SEARCH));
     assert!(is_allowed_in_v1(CONTACTS_CREATE));
     assert!(is_allowed_in_v1(CONTACTS_EDIT));
+    assert!(is_allowed_in_v1(CONTACTS_DELETE));
     assert!(!is_allowed_in_v1("eventkit.reminders.write"));
   }
 }
