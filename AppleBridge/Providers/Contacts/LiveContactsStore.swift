@@ -136,7 +136,11 @@ final class LiveContactsStore: ContactsStoreing {
             throw ContactsProviderError.contactsError(error.localizedDescription)
         }
 
-        return group
+        let groups = try fetchGroups(containerIdentifier: containerIdentifier)
+        guard let saved = groups.first(where: { $0.identifier == group.identifier }) else {
+            throw ContactsProviderError.contactsError("Failed to fetch created group")
+        }
+        return saved
     }
 
     func createContact(in containerIdentifier: String, contact: CNMutableContact) throws -> CNContact {
