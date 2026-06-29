@@ -39,6 +39,7 @@ final class SettingsStore {
     private let permissionService: any RemindersPermissionChecking
     private let eventsPermissionService: any EventsPermissionChecking
     private let contactsPermissionService: any ContactsPermissionChecking
+    private let locationPermissionService: any LocationPermissionChecking
     private let launchAtLoginService: any LaunchAtLoginManaging
     private let migrateTokenStorage: @Sendable (Bool, Bool) throws -> Void
     private var didPerformLaunchRestore = false
@@ -50,6 +51,7 @@ final class SettingsStore {
         permissionService: any RemindersPermissionChecking = RemindersPermissionService(),
         eventsPermissionService: any EventsPermissionChecking = EventsPermissionService(),
         contactsPermissionService: any ContactsPermissionChecking = ContactsPermissionService(),
+        locationPermissionService: any LocationPermissionChecking = LocationPermissionService(),
         launchAtLoginService: any LaunchAtLoginManaging = SMAppLaunchAtLoginService(),
         migrateTokenStorage: @escaping @Sendable (Bool, Bool) throws -> Void = { useKeychain, fromKeychainEnabled in
             try BearerTokenMigrator.migrate(useKeychain: useKeychain, fromKeychainEnabled: fromKeychainEnabled)
@@ -60,6 +62,7 @@ final class SettingsStore {
         self.permissionService = permissionService
         self.eventsPermissionService = eventsPermissionService
         self.contactsPermissionService = contactsPermissionService
+        self.locationPermissionService = locationPermissionService
         self.launchAtLoginService = launchAtLoginService
         self.migrateTokenStorage = migrateTokenStorage
     }
@@ -165,7 +168,8 @@ final class SettingsStore {
     func applySavedCapabilities(
         remindersAuthorized: Bool,
         eventsAuthorized: Bool,
-        contactsAuthorized: Bool
+        contactsAuthorized: Bool,
+        locationAuthorized: Bool
     ) async {
         tokenResetNotice = nil
         guard appSettings.mcpEnabled else { return }
@@ -175,7 +179,8 @@ final class SettingsStore {
             enabledCapabilities: appSettings.serverEnabledMCPCapabilityIDs(
                 remindersAuthorized: remindersAuthorized,
                 eventsAuthorized: eventsAuthorized,
-                contactsAuthorized: contactsAuthorized
+                contactsAuthorized: contactsAuthorized,
+                locationAuthorized: locationAuthorized
             ),
             usageLoggingEnabled: appSettings.usageLoggingEnabled
         )
@@ -185,7 +190,8 @@ final class SettingsStore {
         appSettings.serverEnabledMCPCapabilityIDs(
             remindersAuthorized: permissionService.currentStatus().grantsReadAccess,
             eventsAuthorized: eventsPermissionService.currentStatus().grantsReadAccess,
-            contactsAuthorized: contactsPermissionService.currentStatus().grantsReadAccess
+            contactsAuthorized: contactsPermissionService.currentStatus().grantsReadAccess,
+            locationAuthorized: locationPermissionService.currentStatus().grantsReadAccess
         )
     }
 

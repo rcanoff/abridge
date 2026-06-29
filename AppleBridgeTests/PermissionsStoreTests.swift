@@ -111,9 +111,12 @@ struct PermissionsStoreIntegrationTests {
             store.shouldApplySavedCapabilitiesAfterToggle(
                 enabling: true,
                 capabilityID: "read",
-                remindersAuthorized: true,
-                eventsAuthorized: false,
-                contactsAuthorized: false
+                authorization: ApplePermissionAuthorization(
+                    remindersAuthorized: true,
+                    eventsAuthorized: false,
+                    contactsAuthorized: false,
+                    locationAuthorized: false
+                )
             )
         )
     }
@@ -131,9 +134,12 @@ struct PermissionsStoreIntegrationTests {
             store.shouldApplySavedCapabilitiesAfterToggle(
                 enabling: true,
                 capabilityID: "read",
-                remindersAuthorized: false,
-                eventsAuthorized: false,
-                contactsAuthorized: false
+                authorization: ApplePermissionAuthorization(
+                    remindersAuthorized: false,
+                    eventsAuthorized: false,
+                    contactsAuthorized: false,
+                    locationAuthorized: false
+                )
             ) == false
         )
     }
@@ -151,9 +157,12 @@ struct PermissionsStoreIntegrationTests {
             store.shouldApplySavedCapabilitiesAfterToggle(
                 enabling: false,
                 capabilityID: "read",
-                remindersAuthorized: false,
-                eventsAuthorized: false,
-                contactsAuthorized: false
+                authorization: ApplePermissionAuthorization(
+                    remindersAuthorized: false,
+                    eventsAuthorized: false,
+                    contactsAuthorized: false,
+                    locationAuthorized: false
+                )
             )
         )
     }
@@ -171,9 +180,12 @@ struct PermissionsStoreIntegrationTests {
             store.shouldApplySavedCapabilitiesAfterToggle(
                 enabling: true,
                 capabilityID: "calendars-read",
-                remindersAuthorized: false,
-                eventsAuthorized: true,
-                contactsAuthorized: false
+                authorization: ApplePermissionAuthorization(
+                    remindersAuthorized: false,
+                    eventsAuthorized: true,
+                    contactsAuthorized: false,
+                    locationAuthorized: false
+                )
             )
         )
     }
@@ -191,9 +203,12 @@ struct PermissionsStoreIntegrationTests {
             store.shouldApplySavedCapabilitiesAfterToggle(
                 enabling: true,
                 capabilityID: "calendars-read",
-                remindersAuthorized: true,
-                eventsAuthorized: false,
-                contactsAuthorized: false
+                authorization: ApplePermissionAuthorization(
+                    remindersAuthorized: true,
+                    eventsAuthorized: false,
+                    contactsAuthorized: false,
+                    locationAuthorized: false
+                )
             ) == false
         )
     }

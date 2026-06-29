@@ -20,17 +20,20 @@ final class MockAppleBridgeAppStoreMaker: AppleBridgeAppStoreMaking, @unchecked 
         let permissionService = RemindersPermissionService()
         let eventsPermissionService = EventsPermissionService()
         let contactsPermissionService = ContactsPermissionService()
+        let locationPermissionService = LocationPermissionService()
         let store = AppStore(
             permissionService: permissionService,
             eventsPermissionService: eventsPermissionService,
-            contactsPermissionService: contactsPermissionService
+            contactsPermissionService: contactsPermissionService,
+            locationPermissionService: locationPermissionService
         )
         let settingsStore = SettingsStore(
             appSettings: appSettings,
             serverStore: serverStore,
             permissionService: permissionService,
             eventsPermissionService: eventsPermissionService,
-            contactsPermissionService: contactsPermissionService
+            contactsPermissionService: contactsPermissionService,
+            locationPermissionService: locationPermissionService
         )
         let permissionsStore = PermissionsStore(appSettings: appSettings)
         return AppleBridgeAppBootstrap.Stores(
