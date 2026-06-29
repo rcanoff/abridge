@@ -145,7 +145,7 @@
 		DBEBE88FE028C1FF9AD723B4 /* AppleProviderBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 061BA2725CA72D643E140494 /* AppleProviderBridgeTests.swift */; };
 		DDA894C58581E8032244F83E /* UsageAuditExportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DD0D0D3E9DB88F6F3340E34 /* UsageAuditExportTests.swift */; };
 		E00E370F1BA717E092582F2B /* EventKitInvitationResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27239CDC73EEB0DA0B205F2C /* EventKitInvitationResponseTests.swift */; };
-		A1B2C3D4E5F60718293A4C1 /* LiveEventKitStoreInvitationContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F60718293A4C1D2 /* LiveEventKitStoreInvitationContractTests.swift */; };
+		F3A4B5C6D7E8F90123456789 /* LiveEventKitStoreInvitationContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B5C6D7E8F9012345678901 /* LiveEventKitStoreInvitationContractTests.swift */; };
 		F1A2B3C4D5E6F708192A3B4C /* EventKitMockParticipantSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8A1B2C3D4E5F60718293A4B /* EventKitMockParticipantSupport.swift */; };
 		E20E6013FFEDFAC9D6BCF8DF /* EventKitProviderEventAlarmsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F4CEBDC49640FB447035B90 /* EventKitProviderEventAlarmsTests.swift */; };
 		E5898D3B4EE13617A2532557 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45B580B922B7E847CC513FC1 /* ServiceManagement.framework */; };
@@ -200,7 +200,7 @@
 		2129FE8EDB586593AB94360F /* EventKitProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderTests.swift; sourceTree = "<group>"; };
 		258AB58BDB3B042D0FF6E698 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		27239CDC73EEB0DA0B205F2C /* EventKitInvitationResponseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitInvitationResponseTests.swift; sourceTree = "<group>"; };
-		B2C3D4E5F60718293A4C1D2 /* LiveEventKitStoreInvitationContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveEventKitStoreInvitationContractTests.swift; sourceTree = "<group>"; };
+		A4B5C6D7E8F9012345678901 /* LiveEventKitStoreInvitationContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveEventKitStoreInvitationContractTests.swift; sourceTree = "<group>"; };
 		27D3CEABF33D27B04DBE589C /* ServerConfigCapabilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerConfigCapabilitiesTests.swift; sourceTree = "<group>"; };
 		2DFB3FA8EB87511511E3F5E9 /* EventKitProviderUpdateCalendarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderUpdateCalendarTests.swift; sourceTree = "<group>"; };
 		2EBE8594105150B6E2239FFF /* Arm64OnlyBuildConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Arm64OnlyBuildConfigurationTests.swift; sourceTree = "<group>"; };
@@ -386,7 +386,7 @@
 				5E28A832B6850DD201DF12F8 /* BlockingRemindersPermissionService.swift */,
 				3DBC31419078564A176C2D4A /* EventKitEventRecurrenceValidationTests.swift */,
 				27239CDC73EEB0DA0B205F2C /* EventKitInvitationResponseTests.swift */,
-				B2C3D4E5F60718293A4C1D2 /* LiveEventKitStoreInvitationContractTests.swift */,
+				A4B5C6D7E8F9012345678901 /* LiveEventKitStoreInvitationContractTests.swift */,
 				5A04BC282628F5763B7A7FEB /* EventKitProviderAcceptInvitationTests.swift */,
 				5CDC70FFD130AF7BE5A9960B /* EventKitProviderAcceptInvitationValidationTests.swift */,
 				8659E1DA31D65D3506F10F7F /* EventKitProviderAlarmsTests.swift */,
@@ -771,7 +771,7 @@
 				1E6CD3CB40F8C514854108E6 /* BlockingRemindersPermissionService.swift in Sources */,
 				C77F1AA397C9434134BC6A38 /* EventKitEventRecurrenceValidationTests.swift in Sources */,
 				E00E370F1BA717E092582F2B /* EventKitInvitationResponseTests.swift in Sources */,
-				A1B2C3D4E5F60718293A4C1 /* LiveEventKitStoreInvitationContractTests.swift in Sources */,
+				F3A4B5C6D7E8F90123456789 /* LiveEventKitStoreInvitationContractTests.swift in Sources */,
 				CDAB05794EDC6DA92D904694 /* EventKitProviderAcceptInvitationTests.swift in Sources */,
 				ED65FAEB6191CAF1252A6A3B /* EventKitProviderAcceptInvitationValidationTests.swift in Sources */,
 				C4E63EE6AA1423B9718AE67C /* EventKitProviderAlarmsTests.swift in Sources */,
