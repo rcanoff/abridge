@@ -226,6 +226,10 @@ final class MockEventKitStore: EventKitStoreing {
         }
     }
 
+    func fetchEvent(withIdentifier id: String) throws -> EKEvent? {
+        events.first { $0.eventIdentifier == id }
+    }
+
     func removeCalendar(_ calendar: EKCalendar, commit: Bool) throws {
         guard commit else { return }
         if isEventCalendar(calendar) {

@@ -13,6 +13,8 @@ extension EventKitProvider {
             listEvents(payloadJson: payloadJson)
         case "search_events":
             searchEvents(payloadJson: payloadJson)
+        case "get_event":
+            getEvent(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }
