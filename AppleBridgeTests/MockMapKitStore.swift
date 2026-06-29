@@ -8,9 +8,11 @@ final class MockMapKitStore: MapKitStoreing {
     var results: [MapKitSearchResult] = []
     var nearbyResults: [MapKitSearchResult] = []
     var reverseGeocodeResults: [[MKMapItem]] = []
+    var forwardGeocodeResults: [[MKMapItem]] = []
     private(set) var lastRequest: MapKitSearchRequest?
     private(set) var lastNearbyRequest: MapKitSearchNearbyRequest?
     private(set) var lastReverseGeocodeRequest: MapKitReverseGeocodeRequest?
+    private(set) var lastForwardGeocodeRequest: MapKitForwardGeocodeRequest?
 
     func locationAuthorizationStatus() -> CLAuthorizationStatus {
         authorizationStatus
@@ -35,6 +37,14 @@ final class MockMapKitStore: MapKitStoreing {
     func reverseGeocode(request: MapKitReverseGeocodeRequest) throws -> [MKMapItem] {
         lastReverseGeocodeRequest = request
         if let first = reverseGeocodeResults.first {
+            return first
+        }
+        return []
+    }
+
+    func forwardGeocode(request: MapKitForwardGeocodeRequest) throws -> [MKMapItem] {
+        lastForwardGeocodeRequest = request
+        if let first = forwardGeocodeResults.first {
             return first
         }
         return []
