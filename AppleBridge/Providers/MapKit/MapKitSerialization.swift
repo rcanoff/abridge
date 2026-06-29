@@ -68,8 +68,8 @@ enum MapKitSerialization {
     static func placemarkJSONObject(from placemark: MKPlacemark) -> [String: Any] {
         [
             "coordinate": coordinateJSONObject(from: placemark.coordinate),
-            "altitude": jsonValue(placemark.location?.altitude),
-            "ellipsoidal_altitude": jsonValue(placemark.location?.ellipsoidalAltitude),
+            "altitude": placemark.location?.altitude ?? NSNull(),
+            "ellipsoidal_altitude": placemark.location?.ellipsoidalAltitude ?? NSNull(),
             "region": regionJSONObject(from: placemark.region),
             "time_zone": jsonValueTimeZone(placemark.timeZone),
             "country_code": jsonValue(placemark.countryCode ?? placemark.isoCountryCode),

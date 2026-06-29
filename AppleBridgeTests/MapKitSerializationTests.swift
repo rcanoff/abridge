@@ -47,6 +47,22 @@ struct MapKitSerializationTests {
     }
 
     @Test
+    func placemarkJSONObjectPreservesNegativeAltitudeValues() {
+        let location = NegativeAltitudeTestLocation(
+            coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0),
+            altitude: -50,
+            ellipsoidalAltitude: -30
+        )
+        let placemark = PlacemarkWithLocationTestDouble(location: location)
+
+        let json = MapKitSerialization.placemarkJSONObject(from: placemark)
+        #expect(json["altitude"] as? Double == -50)
+        #expect(json["ellipsoidal_altitude"] as? Double == -30)
+        #expect((json["altitude"] is NSNull) == false)
+        #expect((json["ellipsoidal_altitude"] is NSNull) == false)
+    }
+
+    @Test
     func coordinateRegionJSONObjectPreservesSpan() {
         let region = MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 1, longitude: 2),
@@ -59,5 +75,51 @@ struct MapKitSerializationTests {
         let span = json["span"] as? [String: Any]
         #expect(span?["latitude_delta"] as? Double == 0.1)
         #expect(span?["longitude_delta"] as? Double == 0.2)
+    }
+}
+
+private final class NegativeAltitudeTestLocation: CLLocation, @unchecked Sendable {
+    private let testEllipsoidalAltitude: Double
+
+    init(
+        coordinate: CLLocationCoordinate2D,
+        altitude: Double,
+        ellipsoidalAltitude: Double
+    ) {
+        testEllipsoidalAltitude = ellipsoidalAltitude
+        super.init(
+            coordinate: coordinate,
+            altitude: altitude,
+            horizontalAccuracy: 5,
+            verticalAccuracy: 5,
+            timestamp: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override var ellipsoidalAltitude: CLLocationDistance {
+        testEllipsoidalAltitude
+    }
+}
+
+private final class PlacemarkWithLocationTestDouble: MKPlacemark, @unchecked Sendable {
+    private let testLocation: CLLocation
+
+    init(location: CLLocation) {
+        testLocation = location
+        super.init(coordinate: location.coordinate)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override var location: CLLocation? {
+        testLocation
     }
 }
