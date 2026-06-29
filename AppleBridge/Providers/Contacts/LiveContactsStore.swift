@@ -50,11 +50,10 @@ final class LiveContactsStore: ContactsStoreing {
             }
         }
 
-        let predicate: NSPredicate?
-        if let containerIdentifier {
-            predicate = CNGroup.predicateForGroupsInContainer(withIdentifier: containerIdentifier)
+        let predicate: NSPredicate? = if let containerIdentifier {
+            CNGroup.predicateForGroupsInContainer(withIdentifier: containerIdentifier)
         } else {
-            predicate = nil
+            nil
         }
 
         do {
