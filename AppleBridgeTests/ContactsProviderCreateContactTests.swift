@@ -64,7 +64,7 @@ struct ContactsProviderCreateContactTests {
 
     @Test
     @MainActor
-    func createContactAppliesOptionalFields() throws {
+    func createContactAppliesOptionalFields() {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .authorized
         let provider = ContactsProvider(store: mockStore)
@@ -197,7 +197,7 @@ struct ContactsProviderCreateContactTests {
 
     @Test
     @MainActor
-    func createContactAcceptsOrganizationNameOnly() throws {
+    func createContactAcceptsOrganizationNameOnly() {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .authorized
         let provider = ContactsProvider(store: mockStore)
