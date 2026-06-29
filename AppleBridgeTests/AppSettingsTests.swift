@@ -123,6 +123,19 @@ struct AppSettingsTests {
 
     @Test
     @MainActor
+    func enabledMCPCapabilityIDsIncludesCheckedEventsRecurrenceCapability() throws {
+        let suiteName = "AppSettingsTests.eventsRecurrenceCapability"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.saveCapabilityIDs(["events-recurrence"])
+
+        #expect(appSettings.enabledEventsCapabilityIDs == ["eventkit.events.recurrence"])
+    }
+
+    @Test
+    @MainActor
     func enabledMCPCapabilityIDsIncludesCheckedEventsReadCapability() throws {
         let suiteName = "AppSettingsTests.eventsReadCapability"
         let defaults = try #require(UserDefaults(suiteName: suiteName))

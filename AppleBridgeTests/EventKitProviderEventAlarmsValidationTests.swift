@@ -9,10 +9,10 @@ struct EventKitEventAlarmsValidationTests {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-val"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-val"),
         ]
         mockStore.events = [
-            EventKitTestSupport.makeEvent(
+            mockStore.makeTestEvent(
                 calendarItemIdentifier: "evt-val",
                 calendarIdentifier: "cal-val",
                 title: "Original"

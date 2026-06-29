@@ -75,7 +75,6 @@ enum EventKitTestSupport {
     ) -> EKEvent {
         let event = EKEvent(eventStore: eventStore)
         event.setValue(calendarItemIdentifier, forKey: "calendarItemIdentifier")
-        event.setValue("evt-\(calendarItemIdentifier)", forKey: "eventIdentifier")
         if let title {
             event.title = title
         }

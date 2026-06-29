@@ -145,6 +145,13 @@ fn accepts_recurrence_capability() {
 }
 
 #[test]
+fn accepts_events_recurrence_capability() {
+  let mut config = sample_config();
+  config.enabled_capabilities = vec!["eventkit.events.recurrence".into()];
+  assert!(validate_config(&config).is_ok());
+}
+
+#[test]
 fn accepts_delete_capability() {
   let mut config = sample_config();
   config.enabled_capabilities = vec!["eventkit.reminders.delete".into()];

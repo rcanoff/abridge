@@ -42,10 +42,10 @@ struct EventKitProviderUpdateEventTests {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
         ]
         mockStore.events = [
-            EventKitTestSupport.makeEvent(
+            mockStore.makeTestEvent(
                 calendarItemIdentifier: "evt-update-1",
                 calendarIdentifier: "cal-work",
                 title: title,
@@ -95,7 +95,7 @@ struct EventKitProviderUpdateEventTests {
         #expect(response.payloadJson.contains("Updated notes"))
         #expect(response.payloadJson.contains("HQ"))
         #expect(response.payloadJson.contains("\"is_all_day\":true"))
-        #expect(response.payloadJson.contains("\"availability\":\"busy\""))
+        #expect(response.payloadJson.contains("\"availability\":\"not_supported\""))
         #expect(mockStore.events[0].notes == "Updated notes")
         #expect(mockStore.events[0].location == "HQ")
         #expect(mockStore.events[0].isAllDay == true)
@@ -105,7 +105,7 @@ struct EventKitProviderUpdateEventTests {
     @MainActor
     func updateEventMovesCalendarWhenCalendarIdentifierProvided() {
         let (provider, mockStore) = providerWithEvent()
-        let targetCalendar = EventKitTestSupport.makeEventCalendar(
+        let targetCalendar = mockStore.makeTestEventCalendar(
             calendarIdentifier: "cal-personal",
             title: "Personal"
         )

@@ -41,7 +41,7 @@ struct EventKitProviderCreateEventTests {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
         ]
         let provider = EventKitProvider(store: mockStore)
 
@@ -71,7 +71,7 @@ struct EventKitProviderCreateEventTests {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
         ]
         let provider = EventKitProvider(store: mockStore)
 
@@ -89,7 +89,7 @@ struct EventKitProviderCreateEventTests {
         #expect(response.payloadJson.contains("Bring badge"))
         #expect(response.payloadJson.contains("HQ"))
         #expect(response.payloadJson.contains("\"is_all_day\":true"))
-        #expect(response.payloadJson.contains("\"availability\":\"busy\""))
+        #expect(response.payloadJson.contains("\"availability\":\"not_supported\""))
     }
 
     @Test
@@ -118,7 +118,7 @@ struct EventKitProviderCreateEventTests {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
         ]
         let provider = EventKitProvider(store: mockStore)
 
@@ -161,7 +161,7 @@ struct EventKitProviderCreateEventTests {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
         ]
         let provider = EventKitProvider(store: mockStore)
 

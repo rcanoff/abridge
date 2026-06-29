@@ -93,5 +93,11 @@ enum CapabilityCatalog {
             label: "Alarms",
             shipped: true
         ),
+        CapabilityDefinition(
+            id: "events-recurrence",
+            capabilityID: "eventkit.events.recurrence",
+            label: "Recurrence",
+            shipped: true
+        ),
     ]
 }

@@ -10,7 +10,7 @@ struct AppleProviderBridgeEventTests {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.events = [
-            EventKitTestSupport.makeEvent(
+            mockStore.makeTestEvent(
                 calendarItemIdentifier: "evt-1",
                 calendarIdentifier: "cal-work",
                 title: "Standup"
@@ -33,7 +33,7 @@ struct AppleProviderBridgeEventTests {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
         ]
         let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
         let request = ProviderRequest(
@@ -55,10 +55,10 @@ struct AppleProviderBridgeEventTests {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
         ]
         mockStore.events = [
-            EventKitTestSupport.makeEvent(
+            mockStore.makeTestEvent(
                 calendarItemIdentifier: "evt-1",
                 calendarIdentifier: "cal-work",
                 title: "Standup"
@@ -81,11 +81,11 @@ struct AppleProviderBridgeEventTests {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-personal", title: "Personal"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-personal", title: "Personal"),
         ]
         mockStore.events = [
-            EventKitTestSupport.makeEvent(
+            mockStore.makeTestEvent(
                 calendarItemIdentifier: "evt-1",
                 calendarIdentifier: "cal-work",
                 title: "Standup"
@@ -109,10 +109,10 @@ struct AppleProviderBridgeEventTests {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
         ]
         mockStore.events = [
-            EventKitTestSupport.makeEvent(
+            mockStore.makeTestEvent(
                 calendarItemIdentifier: "evt-1",
                 calendarIdentifier: "cal-work",
                 title: "Standup"
@@ -132,14 +132,41 @@ struct AppleProviderBridgeEventTests {
 
     @Test
     @MainActor
+    func routesEventKitSetEventRecurrence() {
+        let mockStore = MockEventKitStore()
+        mockStore.eventAuthorizationStatusValue = .fullAccess
+        mockStore.eventCalendarsList = [
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+        ]
+        mockStore.events = [
+            mockStore.makeTestEvent(
+                calendarItemIdentifier: "evt-1",
+                calendarIdentifier: "cal-work",
+                title: "Standup"
+            ),
+        ]
+        let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
+        let request = ProviderRequest(
+            provider: "eventkit",
+            operation: "set_event_recurrence",
+            payloadJson: #"{"event_identifier":"evt-evt-1","recurrence_rules":[{"frequency":"daily","interval":1}]}"#
+        )
+        let response = bridge.callProvider(request: request)
+        #expect(response.ok == true)
+        #expect(response.payloadJson.contains("frequency"))
+        #expect(mockStore.events[0].recurrenceRules?.count == 1)
+    }
+
+    @Test
+    @MainActor
     func routesEventKitDeleteEvent() {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
         ]
         mockStore.events = [
-            EventKitTestSupport.makeEvent(
+            mockStore.makeTestEvent(
                 calendarItemIdentifier: "evt-1",
                 calendarIdentifier: "cal-work",
                 title: "Gone"

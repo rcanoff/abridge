@@ -36,7 +36,7 @@ struct EventKitProviderListCalendarsTests {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
         ]
         let provider = EventKitProvider(store: mockStore)
 

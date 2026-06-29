@@ -10,8 +10,8 @@ struct EventKitProviderDeleteCalendarTests {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-delete", title: "Delete Me"),
-            EventKitTestSupport.makeEventCalendar(calendarIdentifier: "cal-keep", title: "Keep"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-delete", title: "Delete Me"),
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-keep", title: "Keep"),
         ]
         let provider = EventKitProvider(store: mockStore)
 
