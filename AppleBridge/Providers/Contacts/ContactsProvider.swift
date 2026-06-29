@@ -26,6 +26,8 @@ final class ContactsProvider {
         switch operation {
         case "list_contacts":
             listContacts(payloadJson: payloadJson)
+        case "list_groups":
+            listGroups(payloadJson: payloadJson)
         case "search_contacts":
             searchContacts(payloadJson: payloadJson)
         case "get_contact":

@@ -6,8 +6,10 @@ import Foundation
 final class MockContactsStore: ContactsStoreing {
     var authorizationStatus: CNAuthorizationStatus = .authorized
     var contacts: [CNContact] = []
+    var groups: [CNGroup] = []
     var knownContainerIdentifiers: Set<String> = ["container-1"]
     var fetchError: ContactsProviderError?
+    var lastFetchGroupsContainerIdentifier: String?
 
     func contactsAuthorizationStatus() -> CNAuthorizationStatus {
         authorizationStatus
@@ -27,6 +29,24 @@ final class MockContactsStore: ContactsStoreing {
         }
 
         return contacts
+    }
+
+    func fetchGroups(containerIdentifier: String?) throws -> [CNGroup] {
+        lastFetchGroupsContainerIdentifier = containerIdentifier
+
+        if let fetchError {
+            throw fetchError
+        }
+
+        if let containerIdentifier {
+            guard knownContainerIdentifiers.contains(containerIdentifier) else {
+                throw ContactsProviderError.invalidArguments(
+                    "Unknown container_identifier: \(containerIdentifier)"
+                )
+            }
+        }
+
+        return groups
     }
 
     func fetchContact(identifier: String) throws -> CNContact? {
