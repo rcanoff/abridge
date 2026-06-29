@@ -68,6 +68,11 @@ struct EventKitProviderDeclineInvitationTests {
         let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
         #expect(Set(object.keys) == Self.eventReadKeys)
         #expect(object["title"] as? String == "Team sync")
+        #expect(object["has_attendees"] as? Bool == true)
+        let attendees = try #require(object["attendees"] as? [[String: Any]])
+        #expect(attendees.count == 1)
+        #expect(attendees[0]["participant_status"] as? String == "declined")
+        #expect(attendees[0]["is_current_user"] as? Bool == true)
     }
 
     @Test
