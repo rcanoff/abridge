@@ -255,6 +255,11 @@ final class MockEventKitStore: EventKitStoreing {
         }
     }
 
+    func removeEvent(_ event: EKEvent, commit: Bool) throws {
+        guard commit else { return }
+        events.removeAll { $0.calendarItemIdentifier == event.calendarItemIdentifier }
+    }
+
     func removeCalendar(_ calendar: EKCalendar, commit: Bool) throws {
         guard commit else { return }
         if isEventCalendar(calendar) {
