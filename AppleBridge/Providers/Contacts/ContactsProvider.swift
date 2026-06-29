@@ -1,5 +1,13 @@
 import Foundation
 
+enum ContactsProviderError: Error, Equatable {
+    case permissionDenied
+    case serializationFailed
+    case contactsError(String)
+    case unknownOperation(String)
+    case invalidArguments(String)
+}
+
 @MainActor
 struct ContactsProvider {
     func handle(operation: String, payloadJson _: String) -> ProviderResponse {
