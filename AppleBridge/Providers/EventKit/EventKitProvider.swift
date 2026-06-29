@@ -44,6 +44,7 @@ protocol EventKitStoreing {
     func fetchEvent(withIdentifier id: String) throws -> EKEvent?
     func makeEvent() -> EKEvent
     func saveEvent(_ event: EKEvent, commit: Bool) throws
+    func removeEvent(_ event: EKEvent, commit: Bool) throws
 }
 
 @MainActor
@@ -178,6 +179,10 @@ final class LiveEventKitStore: EventKitStoreing {
     func saveEvent(_ event: EKEvent, commit: Bool) throws {
         try eventStore.save(event, span: .thisEvent, commit: commit)
     }
+
+    func removeEvent(_ event: EKEvent, commit: Bool) throws {
+        try eventStore.remove(event, span: .thisEvent, commit: commit)
+    }
 }
 
 @MainActor
@@ -205,7 +210,8 @@ final class EventKitProvider {
              "update_event",
              "move_reminder",
              "delete_reminder",
-             "delete_list", "delete_calendar", "complete_reminder", "uncomplete_reminder", "set_reminder_alarms",
+             "delete_list", "delete_calendar", "delete_event", "complete_reminder", "uncomplete_reminder",
+             "set_reminder_alarms",
              "set_reminder_recurrence":
             handleMutationOperation(operation: operation, payloadJson: payloadJson)
         default:

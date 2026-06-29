@@ -137,6 +137,11 @@ final class StalledEventKitStore: EventKitStoreing {
         _ = commit
     }
 
+    func removeEvent(_ event: EKEvent, commit: Bool) throws {
+        _ = event
+        _ = commit
+    }
+
     private static let stubReminderSource: EKSource = {
         let source = EKSource()
         source.setValue("mock-source-local", forKey: "sourceIdentifier")
