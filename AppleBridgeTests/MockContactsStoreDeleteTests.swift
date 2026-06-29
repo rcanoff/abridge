@@ -26,4 +26,26 @@ struct MockContactsStoreDeleteTests {
             try store.deleteContact(identifier: "missing")
         }
     }
+
+    @Test
+    @MainActor
+    func deleteGroupRemovesGroupByIdentifier() throws {
+        let store = MockContactsStore()
+        let group = ContactsTestSupport.makeGroup(name: "Family")
+        store.groups = [group]
+
+        try store.deleteGroup(identifier: group.identifier)
+
+        #expect(store.groups.isEmpty)
+    }
+
+    @Test
+    @MainActor
+    func deleteGroupRejectsUnknownIdentifier() {
+        let store = MockContactsStore()
+
+        #expect(throws: ContactsProviderError.self) {
+            try store.deleteGroup(identifier: "missing")
+        }
+    }
 }

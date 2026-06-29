@@ -2,6 +2,13 @@
 import Foundation
 
 enum ContactsSerialization {
+    static func groupJSONObject(from group: CNGroup) -> [String: Any] {
+        [
+            "identifier": group.identifier,
+            "name": group.name,
+        ]
+    }
+
     static func contactJSONObject(from contact: CNContact) -> [String: Any] {
         [
             "identifier": contact.identifier,

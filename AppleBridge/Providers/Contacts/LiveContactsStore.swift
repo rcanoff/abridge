@@ -45,6 +45,29 @@ final class LiveContactsStore: ContactsStoreing {
         return fetched
     }
 
+    func fetchGroups(containerIdentifier: String?) throws -> [CNGroup] {
+        if let containerIdentifier {
+            let containers = try contactStore.containers(matching: nil)
+            guard containers.contains(where: { $0.identifier == containerIdentifier }) else {
+                throw ContactsProviderError.invalidArguments(
+                    "Unknown container_identifier: \(containerIdentifier)"
+                )
+            }
+        }
+
+        let predicate: NSPredicate? = if let containerIdentifier {
+            CNGroup.predicateForGroupsInContainer(withIdentifier: containerIdentifier)
+        } else {
+            nil
+        }
+
+        do {
+            return try contactStore.groups(matching: predicate)
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
+    }
+
     func fetchContact(identifier: String) throws -> CNContact? {
         do {
             return try contactStore.unifiedContact(
@@ -98,6 +121,56 @@ final class LiveContactsStore: ContactsStoreing {
         }
 
         return ContactsSearchSupport.intersectContacts(contactSets)
+    }
+
+    func updateGroup(identifier: String, fields: [String: Any]) throws -> CNGroup {
+        guard let existing = try fetchGroup(identifier: identifier) else {
+            throw ContactsProviderError.invalidArguments("Unknown group_identifier: \(identifier)")
+        }
+
+        guard let mutable = existing.mutableCopy() as? CNMutableGroup else {
+            throw ContactsProviderError.contactsError("Failed to copy group")
+        }
+
+        try ContactsGroupDeserialization.applyWritableFields(from: fields, to: mutable)
+
+        let saveRequest = CNSaveRequest()
+        saveRequest.update(mutable)
+        do {
+            try contactStore.execute(saveRequest)
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
+
+        guard let saved = try fetchGroup(identifier: identifier) else {
+            throw ContactsProviderError.contactsError("Failed to fetch updated group")
+        }
+        return saved
+    }
+
+    func createGroup(in containerIdentifier: String, name: String) throws -> CNGroup {
+        let containers = try contactStore.containers(matching: nil)
+        guard containers.contains(where: { $0.identifier == containerIdentifier }) else {
+            throw ContactsProviderError.invalidArguments(
+                "Unknown container_identifier: \(containerIdentifier)"
+            )
+        }
+
+        let group = CNMutableGroup()
+        group.name = name
+        let saveRequest = CNSaveRequest()
+        saveRequest.add(group, toContainerWithIdentifier: containerIdentifier)
+        do {
+            try contactStore.execute(saveRequest)
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
+
+        let groups = try fetchGroups(containerIdentifier: containerIdentifier)
+        guard let saved = groups.first(where: { $0.identifier == group.identifier }) else {
+            throw ContactsProviderError.contactsError("Failed to fetch created group")
+        }
+        return saved
     }
 
     func createContact(in containerIdentifier: String, contact: CNMutableContact) throws -> CNContact {
@@ -179,6 +252,24 @@ final class LiveContactsStore: ContactsStoreing {
         return linked
     }
 
+    func deleteGroup(identifier: String) throws {
+        guard let existing = try fetchGroup(identifier: identifier) else {
+            throw ContactsProviderError.invalidArguments("Unknown group_identifier: \(identifier)")
+        }
+
+        guard let mutable = existing.mutableCopy() as? CNMutableGroup else {
+            throw ContactsProviderError.contactsError("Failed to copy group")
+        }
+
+        let saveRequest = CNSaveRequest()
+        saveRequest.delete(mutable)
+        do {
+            try contactStore.execute(saveRequest)
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
+    }
+
     func updateContact(identifier: String, fields: [String: Any]) throws -> CNContact {
         guard let existing = try fetchContact(identifier: identifier) else {
             throw ContactsProviderError.invalidArguments("Unknown contact_identifier: \(identifier)")
@@ -208,6 +299,17 @@ final class LiveContactsStore: ContactsStoreing {
         let saveRequest = CNSaveRequest()
         try contactLinking.link(from: fromMutable, to: toMutable, in: saveRequest)
         try contactStore.execute(saveRequest)
+    }
+
+    private func fetchGroup(identifier: String) throws -> CNGroup? {
+        do {
+            let groups = try contactStore.groups(
+                matching: CNGroup.predicateForGroups(withIdentifiers: [identifier])
+            )
+            return groups.first
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
     }
 
     private func unifiedContacts(matching predicate: NSPredicate) throws -> [CNContact] {

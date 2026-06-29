@@ -1308,8 +1308,80 @@ fn mcp_tools_list_includes_list_contacts_when_contacts_read_enabled() {
 
   assert_eq!(status, 200);
   assert!(resp.contains("contacts.list_contacts"));
+  assert!(resp.contains("contacts.list_groups"));
   assert!(resp.contains("contacts.get_contact"));
   assert!(!resp.contains("eventkit.reminders.list_reminders"));
+}
+
+#[test]
+fn tools_call_dispatches_list_groups() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"contacts.list_groups","arguments":{"container_identifier":"container-1"}}}"#;
+
+  let handle = create_server(
+    contacts_config_on_port(port, vec!["contacts.read".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "contacts");
+  assert_eq!(recorded.operation, "list_groups");
+  assert!(recorded.payload_json.contains("container-1"));
+}
+
+#[test]
+fn tools_call_dispatches_update_group() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"contacts.update_group","arguments":{"group_identifier":"group-1","name":"Friends"}}}"#;
+
+  let handle = create_server(
+    contacts_config_on_port(port, vec!["contacts.edit".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "contacts");
+  assert_eq!(recorded.operation, "update_group");
+  assert!(recorded.payload_json.contains("group-1"));
+  assert!(recorded.payload_json.contains("Friends"));
+}
+
+#[test]
+fn tools_call_dispatches_create_group() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"contacts.create_group","arguments":{"container_identifier":"container-1","name":"Family"}}}"#;
+
+  let handle = create_server(
+    contacts_config_on_port(port, vec!["contacts.create".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "contacts");
+  assert_eq!(recorded.operation, "create_group");
+  assert!(recorded.payload_json.contains("container-1"));
+  assert!(recorded.payload_json.contains("Family"));
 }
 
 #[test]
@@ -1396,6 +1468,7 @@ fn mcp_tools_list_includes_delete_contact_when_contacts_delete_enabled() {
 
   assert_eq!(status, 200);
   assert!(resp.contains("contacts.delete_contact"));
+  assert!(resp.contains("contacts.delete_group"));
   assert!(!resp.contains("contacts.list_contacts"));
   assert!(!resp.contains("contacts.get_contact"));
   assert!(!resp.contains("contacts.update_contact"));
@@ -1469,6 +1542,29 @@ fn tools_call_dispatches_delete_contact() {
   assert_eq!(recorded.provider, "contacts");
   assert_eq!(recorded.operation, "delete_contact");
   assert!(recorded.payload_json.contains("contact-42"));
+}
+
+#[test]
+fn tools_call_dispatches_delete_group() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"contacts.delete_group","arguments":{"group_identifier":"group-42"}}}"#;
+
+  let handle = create_server(
+    contacts_config_on_port(port, vec!["contacts.delete".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "contacts");
+  assert_eq!(recorded.operation, "delete_group");
+  assert!(recorded.payload_json.contains("group-42"));
 }
 
 #[test]

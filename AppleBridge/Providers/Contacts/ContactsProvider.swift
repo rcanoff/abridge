@@ -23,27 +23,6 @@ final class ContactsProvider {
         self.store = store
     }
 
-    func handle(operation: String, payloadJson: String) -> ProviderResponse {
-        switch operation {
-        case "list_contacts":
-            listContacts(payloadJson: payloadJson)
-        case "search_contacts":
-            searchContacts(payloadJson: payloadJson)
-        case "get_contact":
-            getContact(payloadJson: payloadJson)
-        case "create_contact":
-            createContact(payloadJson: payloadJson)
-        case "update_contact":
-            updateContact(payloadJson: payloadJson)
-        case "link_contacts":
-            linkContacts(payloadJson: payloadJson)
-        case "delete_contact":
-            deleteContact(payloadJson: payloadJson)
-        default:
-            errorResponse(code: "unknown_operation", message: "Unknown contacts operation: \(operation)")
-        }
-    }
-
     var isAuthorized: Bool {
         ContactsPermissionStatusMapper.map(store.contactsAuthorizationStatus()).grantsReadAccess
     }

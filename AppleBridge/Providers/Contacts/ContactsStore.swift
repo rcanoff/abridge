@@ -40,6 +40,7 @@ enum ContactsKeyDescriptors {
 protocol ContactsStoreing {
     func contactsAuthorizationStatus() -> CNAuthorizationStatus
     func fetchContacts(containerIdentifier: String?) throws -> [CNContact]
+    func fetchGroups(containerIdentifier: String?) throws -> [CNGroup]
     func fetchContact(identifier: String) throws -> CNContact?
     func searchContacts(
         name: String?,
@@ -48,7 +49,10 @@ protocol ContactsStoreing {
         containerIdentifier: String?
     ) throws -> [CNContact]
     func createContact(in containerIdentifier: String, contact: CNMutableContact) throws -> CNContact
+    func createGroup(in containerIdentifier: String, name: String) throws -> CNGroup
+    func updateGroup(identifier: String, fields: [String: Any]) throws -> CNGroup
     func updateContact(identifier: String, fields: [String: Any]) throws -> CNContact
     func deleteContact(identifier: String) throws
     func linkContacts(fromIdentifier: String, toIdentifier: String) throws -> CNContact
+    func deleteGroup(identifier: String) throws
 }

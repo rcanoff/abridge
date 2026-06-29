@@ -6,9 +6,11 @@ import Foundation
 final class MockContactsStore: ContactsStoreing {
     var authorizationStatus: CNAuthorizationStatus = .authorized
     var contacts: [CNContact] = []
+    var groups: [CNGroup] = []
     var knownContainerIdentifiers: Set<String> = ["container-1"]
     var fetchError: ContactsProviderError?
     var linkingUnavailable = false
+    var lastFetchGroupsContainerIdentifier: String?
 
     func contactsAuthorizationStatus() -> CNAuthorizationStatus {
         authorizationStatus
@@ -28,6 +30,24 @@ final class MockContactsStore: ContactsStoreing {
         }
 
         return contacts
+    }
+
+    func fetchGroups(containerIdentifier: String?) throws -> [CNGroup] {
+        lastFetchGroupsContainerIdentifier = containerIdentifier
+
+        if let fetchError {
+            throw fetchError
+        }
+
+        if let containerIdentifier {
+            guard knownContainerIdentifiers.contains(containerIdentifier) else {
+                throw ContactsProviderError.invalidArguments(
+                    "Unknown container_identifier: \(containerIdentifier)"
+                )
+            }
+        }
+
+        return groups
     }
 
     func fetchContact(identifier: String) throws -> CNContact? {
@@ -94,6 +114,41 @@ final class MockContactsStore: ContactsStoreing {
         }
     }
 
+    func updateGroup(identifier: String, fields: [String: Any]) throws -> CNGroup {
+        if let fetchError {
+            throw fetchError
+        }
+
+        guard let index = groups.firstIndex(where: { $0.identifier == identifier }) else {
+            throw ContactsProviderError.invalidArguments("Unknown group_identifier: \(identifier)")
+        }
+
+        guard let mutable = groups[index].mutableCopy() as? CNMutableGroup else {
+            throw ContactsProviderError.contactsError("Failed to copy group")
+        }
+
+        try ContactsGroupDeserialization.applyWritableFields(from: fields, to: mutable)
+        groups[index] = mutable
+        return mutable
+    }
+
+    func createGroup(in containerIdentifier: String, name: String) throws -> CNGroup {
+        if let fetchError {
+            throw fetchError
+        }
+
+        guard knownContainerIdentifiers.contains(containerIdentifier) else {
+            throw ContactsProviderError.invalidArguments(
+                "Unknown container_identifier: \(containerIdentifier)"
+            )
+        }
+
+        let group = CNMutableGroup()
+        group.name = name
+        groups.append(group)
+        return group
+    }
+
     func createContact(in containerIdentifier: String, contact: CNMutableContact) throws -> CNContact {
         if let fetchError {
             throw fetchError
@@ -123,6 +178,18 @@ final class MockContactsStore: ContactsStoreing {
         }
 
         contacts.remove(at: index)
+    }
+
+    func deleteGroup(identifier: String) throws {
+        if let fetchError {
+            throw fetchError
+        }
+
+        guard let index = groups.firstIndex(where: { $0.identifier == identifier }) else {
+            throw ContactsProviderError.invalidArguments("Unknown group_identifier: \(identifier)")
+        }
+
+        groups.remove(at: index)
     }
 
     func updateContact(identifier: String, fields: [String: Any]) throws -> CNContact {
