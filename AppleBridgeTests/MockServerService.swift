@@ -108,6 +108,10 @@ actor MockServerService: ServerServing {
         startError = error
     }
 
+    func setStopError(_ error: ServerOperationError?) {
+        stopError = error
+    }
+
     func setResetBearerTokenError(_ error: ServerOperationError?) {
         resetBearerTokenError = error
     }
