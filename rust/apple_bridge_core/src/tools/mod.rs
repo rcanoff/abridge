@@ -435,7 +435,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "is_all_day": { "type": "boolean" },
         "availability": {
           "type": ["string", "null"],
-          "enum": ["not_supported", "busy", "free", "tentative", "unavailable"]
+          "enum": ["not_supported", "busy", "free", "tentative", "unavailable", null]
         },
         "structured_location": structured_location_schema(true),
         "alarms": alarms_array_schema(true),
