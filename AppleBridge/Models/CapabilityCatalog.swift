@@ -99,5 +99,11 @@ enum CapabilityCatalog {
             label: "Recurrence",
             shipped: true
         ),
+        CapabilityDefinition(
+            id: "events-invitations",
+            capabilityID: "eventkit.events.invitations",
+            label: "Invitations",
+            shipped: false
+        ),
     ]
 }

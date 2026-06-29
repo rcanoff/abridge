@@ -45,6 +45,8 @@ protocol EventKitStoreing {
     func makeEvent() -> EKEvent
     func saveEvent(_ event: EKEvent, commit: Bool) throws
     func removeEvent(_ event: EKEvent, commit: Bool) throws
+    func canRespondToInvitation(for event: EKEvent) -> Bool
+    func acceptEventInvitation(_ event: EKEvent) throws
 }
 
 @MainActor
@@ -183,6 +185,14 @@ final class LiveEventKitStore: EventKitStoreing {
     func removeEvent(_ event: EKEvent, commit: Bool) throws {
         try eventStore.remove(event, span: .thisEvent, commit: commit)
     }
+
+    func canRespondToInvitation(for event: EKEvent) -> Bool {
+        EventKitInvitationResponse.canRespond(to: event)
+    }
+
+    func acceptEventInvitation(_ event: EKEvent) throws {
+        try EventKitInvitationResponse.accept(on: event)
+    }
 }
 
 @MainActor
@@ -212,7 +222,8 @@ final class EventKitProvider {
              "delete_reminder",
              "delete_list", "delete_calendar", "delete_event", "complete_reminder", "uncomplete_reminder",
              "set_reminder_alarms", "set_event_alarms",
-             "set_reminder_recurrence", "set_event_recurrence":
+             "set_reminder_recurrence", "set_event_recurrence",
+             "accept_invitation":
             handleMutationOperation(operation: operation, payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")

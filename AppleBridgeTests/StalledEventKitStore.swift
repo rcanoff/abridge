@@ -142,6 +142,16 @@ final class StalledEventKitStore: EventKitStoreing {
         _ = commit
     }
 
+    func canRespondToInvitation(for event: EKEvent) -> Bool {
+        _ = event
+        return false
+    }
+
+    func acceptEventInvitation(_ event: EKEvent) throws {
+        _ = event
+        throw EventKitProviderError.invalidArguments("Event has no invitation for the current user")
+    }
+
     private static let stubReminderSource: EKSource = {
         let source = EKSource()
         source.setValue("mock-source-local", forKey: "sourceIdentifier")
