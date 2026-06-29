@@ -116,6 +116,8 @@
 		8A919456F8A579AE70C1143E /* EventKitProviderSetEventAlarms.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8619B82D0F51DDA20F931D9 /* EventKitProviderSetEventAlarms.swift */; };
 		8C37D37C9BCB35C5B9E10735 /* BearerTokenMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F6BCA67AFCEE63192B87840 /* BearerTokenMigrationTests.swift */; };
 		8C744DE0ECED980784822061 /* ContactsProviderSearchContacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF47816BE5824BF9534F861 /* ContactsProviderSearchContacts.swift */; };
+		F1A2B3C41D5E678901234A03 /* ContactsSaveRequestLinking.m in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C41D5E678901234A02 /* ContactsSaveRequestLinking.m */; };
+		F1A2B3C41D5E678901234A05 /* ContactsSaveRequestLinking.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C41D5E678901234A04 /* ContactsSaveRequestLinking.swift */; };
 		F1A2B3C41D5E678901234A08 /* LiveContactsStoreLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C41D5E678901234A07 /* LiveContactsStoreLinkTests.swift */; };
 		8F2E496FC5DFA996CF0A4AB5 /* EventKitDeserializationAlarms.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C810FA4ED893ADE6FF771DC /* EventKitDeserializationAlarms.swift */; };
 		90AA332828739C6C842BC667 /* FileBearerTokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 509CCDB850B501DB6CADAA09 /* FileBearerTokenStore.swift */; };
@@ -253,6 +255,10 @@
 		0B39750CFA69109FBBE0899B /* MockServerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockServerService.swift; sourceTree = "<group>"; };
 		0C696B0C27BEC9AF36E99825 /* MockAppQuitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockAppQuitter.swift; sourceTree = "<group>"; };
 		0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBridgeApp.swift; sourceTree = "<group>"; };
+		F1A2B3C41D5E678901234A01 /* ContactsSaveRequestLinking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContactsSaveRequestLinking.h; sourceTree = "<group>"; };
+		F1A2B3C41D5E678901234A02 /* ContactsSaveRequestLinking.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ContactsSaveRequestLinking.m; sourceTree = "<group>"; };
+		F1A2B3C41D5E678901234A04 /* ContactsSaveRequestLinking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsSaveRequestLinking.swift; sourceTree = "<group>"; };
+		F1A2B3C41D5E678901234A06 /* AppleBridge-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AppleBridge-Bridging-Header.h"; sourceTree = "<group>"; };
 		F1A2B3C41D5E678901234A07 /* LiveContactsStoreLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveContactsStoreLinkTests.swift; sourceTree = "<group>"; };
 		0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionStatusTests.swift; sourceTree = "<group>"; };
 		1049F7ED134ECF8E2E7B5419 /* EventKitProviderComplete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderComplete.swift; sourceTree = "<group>"; };
@@ -650,6 +656,7 @@
 		63ABDAABA163B13CA550021A /* AppleBridge */ = {
 			isa = PBXGroup;
 			children = (
+				F1A2B3C41D5E678901234A06 /* AppleBridge-Bridging-Header.h */,
 				0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */,
 				B85F46CDAA3C988BFBBC89D3 /* Models */,
 				82FE345540F8405EE8D7D776 /* Providers */,
@@ -778,6 +785,9 @@
 		EAE7F540365652EAA360522A /* Contacts */ = {
 			isa = PBXGroup;
 			children = (
+				F1A2B3C41D5E678901234A01 /* ContactsSaveRequestLinking.h */,
+				F1A2B3C41D5E678901234A02 /* ContactsSaveRequestLinking.m */,
+				F1A2B3C41D5E678901234A04 /* ContactsSaveRequestLinking.swift */,
 				A9ED1A98BD823F88B66D4489 /* ContactsDeserialization.swift */,
 				49BC81EED9B7227381379871 /* ContactsDeserializationCollections.swift */,
 				6180923D705A2F8F73CD2C4C /* ContactsDeserializationDateComponents.swift */,
@@ -886,6 +896,8 @@
 				443320E7C46B01BAAA95E468 /* AppleProviderBridge.swift in Sources */,
 				51069B47DA59F1A0B491A502 /* BearerTokenMigrator.swift in Sources */,
 				EB7C94E53C737BF797AB894A /* BearerTokenStoreFactory.swift in Sources */,
+				F1A2B3C41D5E678901234A03 /* ContactsSaveRequestLinking.m in Sources */,
+				F1A2B3C41D5E678901234A05 /* ContactsSaveRequestLinking.swift in Sources */,
 				F66991A94B9311BEADDAAAAA /* CapabilityCatalog.swift in Sources */,
 				FE55257F189C3C1D51D32FA5 /* ContactsDeserialization.swift in Sources */,
 				2D6FE262167FCE0B27023A27 /* ContactsDeserializationCollections.swift in Sources */,
@@ -1290,6 +1302,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.applebridge.AppleBridge;
 				SDKROOT = macosx;
+				SWIFT_OBJC_BRIDGING_HEADER = "AppleBridge/AppleBridge-Bridging-Header.h";
 			};
 			name = Release;
 		};
@@ -1313,6 +1326,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.applebridge.AppleBridge;
 				SDKROOT = macosx;
+				SWIFT_OBJC_BRIDGING_HEADER = "AppleBridge/AppleBridge-Bridging-Header.h";
 			};
 			name = Debug;
 		};
