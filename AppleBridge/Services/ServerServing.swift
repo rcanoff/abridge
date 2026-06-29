@@ -15,4 +15,5 @@ protocol ServerServing: Sendable {
     func setUsageLoggingEnabled(_ enabled: Bool) async
     func usageLoggingEnabled() async -> Bool
     func usageAuditEntries() async -> [UsageAuditEntry]
+    func replaceTokenStore(_ store: any BearerTokenStoring) async
 }

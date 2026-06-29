@@ -311,6 +311,50 @@ struct SettingsStoreTests {
 
     @Test
     @MainActor
+    func applyKeychainStorageChangeRestartsRunningServer() async throws {
+        let suiteName = "SettingsStoreTests.keychainStorageRestart"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = true
+        appSettings.useKeychainForAPIKey = true
+
+        let mock = MockServerService()
+        await mock.setRefreshResult(.running)
+        let serverStore = ServerStore(serverService: mock)
+        await serverStore.startServer(port: 3020, enabledCapabilities: [])
+        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+
+        await settingsStore.applyKeychainStorageChange(false)
+
+        #expect(appSettings.useKeychainForAPIKey == false)
+        #expect(await mock.stopCallCount == 1)
+        #expect(await mock.startCallCount == 2)
+    }
+
+    @Test
+    @MainActor
+    func applyKeychainStorageChangePersistsWithoutRestartWhenServerStopped() async throws {
+        let suiteName = "SettingsStoreTests.keychainStorageStopped"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = false
+        appSettings.useKeychainForAPIKey = true
+
+        let mock = MockServerService()
+        let serverStore = ServerStore(serverService: mock)
+        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+
+        await settingsStore.applyKeychainStorageChange(false)
+
+        #expect(appSettings.useKeychainForAPIKey == false)
+        #expect(await mock.stopCallCount == 0)
+        #expect(await mock.startCallCount == 0)
+    }
+
+    @Test
+    @MainActor
     func applyMCPEnabledChangeDoesNotDoubleStartAfterLaunchRestore() async throws {
         let suiteName = "SettingsStoreTests.launchRestoreNoDoubleStart"
         let defaults = try #require(UserDefaults(suiteName: suiteName))

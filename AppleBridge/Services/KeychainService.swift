@@ -10,7 +10,13 @@ protocol BearerTokenStoring: Sendable {
     func rotateBearerToken() throws -> String
 }
 
-struct KeychainService: BearerTokenStoring {
+protocol BearerTokenPersisting: BearerTokenStoring {
+    func loadBearerToken() throws -> String?
+    func saveBearerToken(_ token: String) throws
+    func deleteBearerToken() throws
+}
+
+struct KeychainService: BearerTokenPersisting {
     private let service: String
     private let account: String
 

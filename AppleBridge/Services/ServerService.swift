@@ -13,7 +13,7 @@ actor ServerService: ServerServing {
     private var hasInitializedLogging = false
 
     private let providerBridge: AppleProviderBridge
-    private let tokenStore: any BearerTokenStoring
+    private var tokenStore: any BearerTokenStoring
 
     init(
         providerBridge: AppleProviderBridge = AppleProviderBridge(),
@@ -21,6 +21,11 @@ actor ServerService: ServerServing {
     ) {
         self.providerBridge = providerBridge
         self.tokenStore = tokenStore
+    }
+
+    func replaceTokenStore(_ store: any BearerTokenStoring) async {
+        tokenStore = store
+        currentBearerToken = nil
     }
 
     func refreshStatus() async -> ServerRunState {
@@ -41,6 +46,8 @@ actor ServerService: ServerServing {
         do {
             return try tokenStore.loadOrCreateBearerToken()
         } catch let error as KeychainError {
+            throw ServerOperationError(message: "Failed to load bearer token: \(error.message)")
+        } catch let error as FileBearerTokenError {
             throw ServerOperationError(message: "Failed to load bearer token: \(error.message)")
         }
     }
@@ -127,6 +134,8 @@ actor ServerService: ServerServing {
             currentBearerToken = token
             return token
         } catch let error as KeychainError {
+            throw ServerOperationError(message: "Failed to reset bearer token: \(error.message)")
+        } catch let error as FileBearerTokenError {
             throw ServerOperationError(message: "Failed to reset bearer token: \(error.message)")
         }
     }

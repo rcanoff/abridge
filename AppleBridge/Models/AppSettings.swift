@@ -10,6 +10,7 @@ final class AppSettings {
         static let usageLoggingEnabled = "usageLoggingEnabled"
         static let launchAtLogin = "launchAtLogin"
         static let savedCapabilityIDs = "savedCapabilityIDs"
+        static let useKeychainForAPIKey = "useKeychainForAPIKey"
     }
 
     private let defaults: UserDefaults
@@ -42,6 +43,13 @@ final class AppSettings {
         }
     }
 
+    var useKeychainForAPIKey: Bool {
+        didSet {
+            guard useKeychainForAPIKey != oldValue else { return }
+            defaults.set(useKeychainForAPIKey, forKey: Keys.useKeychainForAPIKey)
+        }
+    }
+
     private(set) var savedCapabilityIDs: Set<String> {
         didSet {
             defaults.set(Array(savedCapabilityIDs), forKey: Keys.savedCapabilityIDs)
@@ -64,6 +72,11 @@ final class AppSettings {
             usageLoggingEnabled = true
         }
         launchAtLogin = defaults.bool(forKey: Keys.launchAtLogin)
+        if defaults.object(forKey: Keys.useKeychainForAPIKey) != nil {
+            useKeychainForAPIKey = defaults.bool(forKey: Keys.useKeychainForAPIKey)
+        } else {
+            useKeychainForAPIKey = true
+        }
 
         if let stored = defaults.stringArray(forKey: Keys.savedCapabilityIDs) {
             savedCapabilityIDs = Set(stored)

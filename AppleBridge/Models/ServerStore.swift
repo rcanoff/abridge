@@ -11,10 +11,14 @@ final class ServerStore {
 
     let host = "127.0.0.1"
 
-    private let serverService: any ServerServing
+    private var serverService: any ServerServing
 
     init(serverService: any ServerServing = ServerService()) {
         self.serverService = serverService
+    }
+
+    func reconfigureTokenStore(useKeychain: Bool) async {
+        await serverService.replaceTokenStore(BearerTokenStoreFactory.make(useKeychain: useKeychain))
     }
 
     func refreshStatus() async {

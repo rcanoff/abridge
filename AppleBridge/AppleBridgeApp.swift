@@ -17,7 +17,11 @@ struct AppleBridgeApp: App {
 
     init() {
         let appSettings = AppSettings()
-        let serverStore = ServerStore()
+        let serverStore = ServerStore(
+            serverService: ServerService(
+                tokenStore: BearerTokenStoreFactory.make(useKeychain: appSettings.useKeychainForAPIKey)
+            )
+        )
         let permissionService = RemindersPermissionService()
         let store = AppStore(permissionService: permissionService)
         let settingsStore = SettingsStore(

@@ -30,6 +30,8 @@ struct SettingsWindowView: View {
                     )
                 case .diagnostics:
                     DiagnosticsSettingsView(settingsStore: settingsStore)
+                case .developer:
+                    DeveloperSettingsView(settingsStore: settingsStore)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
