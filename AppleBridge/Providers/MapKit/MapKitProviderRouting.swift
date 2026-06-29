@@ -11,6 +11,8 @@ extension MapKitProvider {
             reverseGeocode(payloadJson: payloadJson)
         case "forward_geocode":
             forwardGeocode(payloadJson: payloadJson)
+        case "calculate_route":
+            calculateRoute(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown mapkit operation: \(operation)")
         }
