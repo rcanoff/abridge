@@ -600,11 +600,11 @@ fn contact_dates_schema() -> serde_json::Value {
 }
 
 fn nullable_contact_date_components_schema() -> serde_json::Value {
-  let base = contact_date_components_schema();
-  serde_json::json!({
-    "type": ["object", "null"],
-    "properties": base.get("properties").cloned().unwrap_or_default()
-  })
+  let mut base = contact_date_components_schema();
+  if let Some(schema) = base.as_object_mut() {
+    schema.insert("type".to_owned(), serde_json::json!(["object", "null"]));
+  }
+  base
 }
 
 fn nullable_contact_array_schema(base: &serde_json::Value) -> serde_json::Value {
@@ -1334,6 +1334,19 @@ mod tests {
       nullable_property_types(&schema, "birthday"),
       vec!["object".to_owned(), "null".to_owned()]
     );
+    let create_schema = input_schema(
+      all_tools()
+        .iter()
+        .find(|tool| tool.name == TOOL_CREATE_CONTACT)
+        .expect("create_contact tool"),
+    );
+    for property in ["birthday", "non_gregorian_birthday"] {
+      assert_eq!(
+        nullable_date_component_schema_matches_create(&schema, &create_schema, property),
+        true,
+        "{property} must preserve the shared date component schema and only widen type to include null"
+      );
+    }
     assert_eq!(array_items_type(&schema, "phone_numbers").as_deref(), Some("object"));
     assert_eq!(array_items_type(&schema, "postal_addresses").as_deref(), Some("object"));
     assert_eq!(array_items_type(&schema, "dates").as_deref(), Some("object"));
@@ -1414,6 +1427,33 @@ mod tests {
       );
       assert!(item_properties.contains_key("label"));
       assert!(item_properties.contains_key("value"));
+    }
+  }
+
+  fn nullable_date_component_schema_matches_create(
+    update_schema: &serde_json::Value,
+    create_schema: &serde_json::Value,
+    property: &str,
+  ) -> bool {
+    let create_property = create_schema
+      .get("properties")
+      .and_then(|properties| properties.get(property));
+    let update_property = update_schema
+      .get("properties")
+      .and_then(|properties| properties.get(property));
+    match (create_property, update_property) {
+      (Some(create_property), Some(update_property)) => {
+        nullable_property_types(update_schema, property) == vec!["object".to_owned(), "null".to_owned()]
+          && update_property.get("properties") == create_property.get("properties")
+          && {
+            let mut normalized = update_property.clone();
+            if let Some(schema) = normalized.as_object_mut() {
+              schema.insert("type".to_owned(), serde_json::json!("object"));
+            }
+            normalized == *create_property
+          }
+      }
+      _ => false,
     }
   }
 
