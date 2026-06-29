@@ -24,6 +24,31 @@ struct SingleInstanceGuardTests {
 
     @Test
     @MainActor
+    func appInitBootstrapsStoresOnContinuePath() {
+        let storeMaker = MockAppleBridgeAppStoreMaker()
+
+        _ = AppleBridgeApp(
+            isRunningUnitTests: true,
+            singleInstanceChecker: MockSingleInstanceChecker(isDuplicate: false),
+            storeMaker: storeMaker
+        )
+
+        #expect(storeMaker.makeStoresCallCount == 1)
+    }
+
+    @Test
+    func appInitExitsOnDuplicateLaunch() async {
+        await #expect(processExitsWith: .success) {
+            _ = AppleBridgeApp(
+                isRunningUnitTests: false,
+                singleInstanceChecker: MockSingleInstanceChecker(isDuplicate: true),
+                storeMaker: MockAppleBridgeAppStoreMaker()
+            )
+        }
+    }
+
+    @Test
+    @MainActor
     func performEntryBootstrapsStoresWhenNotDuplicate() {
         let storeMaker = MockAppleBridgeAppStoreMaker()
 
@@ -70,20 +95,22 @@ struct SingleInstanceGuardTests {
     }
 
     @Test
-    func runningApplicationCheckerTreatsCountGreaterThanOneAsDuplicate() {
+    func runningApplicationCheckerTreatsOtherInstanceAsDuplicate() {
         let checker = RunningApplicationInstanceChecker(
             bundleIdentifier: { "com.applebridge.AppleBridge" },
-            runningApplicationCount: { _ in 2 }
+            currentProcessIdentifier: { 100 },
+            hasOtherRunningInstance: { _, _ in true }
         )
 
         #expect(checker.isDuplicateLaunch())
     }
 
     @Test
-    func runningApplicationCheckerTreatsSingleInstanceAsNotDuplicate() {
+    func runningApplicationCheckerTreatsOnlyCurrentInstanceAsNotDuplicate() {
         let checker = RunningApplicationInstanceChecker(
             bundleIdentifier: { "com.applebridge.AppleBridge" },
-            runningApplicationCount: { _ in 1 }
+            currentProcessIdentifier: { 100 },
+            hasOtherRunningInstance: { _, _ in false }
         )
 
         #expect(checker.isDuplicateLaunch() == false)
