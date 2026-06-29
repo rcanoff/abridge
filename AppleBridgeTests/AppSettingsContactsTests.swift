@@ -14,7 +14,7 @@ struct AppSettingsContactsTests {
         let appSettings = AppSettings(defaults: defaults)
         appSettings.saveCapabilityIDs(["contacts-read"])
 
-        #expect(appSettings.enabledContactsCapabilityIDs.isEmpty)
+        #expect(appSettings.enabledContactsCapabilityIDs == ["contacts.read"])
         #expect(
             appSettings.serverEnabledMCPCapabilityIDs(
                 remindersAuthorized: false,
@@ -27,7 +27,7 @@ struct AppSettingsContactsTests {
                 remindersAuthorized: false,
                 eventsAuthorized: false,
                 contactsAuthorized: true
-            ) == ["diagnostics.read"]
+            ) == ["diagnostics.read", "contacts.read"]
         )
     }
 }
