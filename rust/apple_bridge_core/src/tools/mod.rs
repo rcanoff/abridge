@@ -451,6 +451,14 @@ fn route_endpoint_schema() -> serde_json::Value {
   })
 }
 
+/// Optional `transport_type`; Swift treats omitted or null as `.automobile`.
+fn nullable_transport_type_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": ["string", "null"],
+    "enum": ["automobile", "walking", "transit", "cycling", "any", null]
+  })
+}
+
 /// `departure_date` and `arrival_date` are optional but mutually exclusive (Swift rejects both).
 fn route_eta_date_constraints() -> serde_json::Value {
   serde_json::json!({
@@ -1310,10 +1318,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "properties": {
         "source": route_endpoint_schema(),
         "destination": route_endpoint_schema(),
-        "transport_type": {
-          "type": "string",
-          "enum": ["automobile", "walking", "transit", "cycling", "any"]
-        }
+        "transport_type": nullable_transport_type_schema()
       },
       "required": ["source", "destination"]
     }),
@@ -2260,6 +2265,37 @@ mod tests {
     assert!(schema.get("properties").and_then(|p| p.get("source")).is_some());
     assert!(schema.get("properties").and_then(|p| p.get("destination")).is_some());
     assert!(schema.get("properties").and_then(|p| p.get("transport_type")).is_some());
+  }
+
+  #[test]
+  fn open_navigation_schema_allows_null_transport_type() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_OPEN_NAVIGATION)
+      .expect("open_navigation tool");
+    let schema = input_schema(tool);
+    let transport_type = schema
+      .get("properties")
+      .and_then(|properties| properties.get("transport_type"))
+      .expect("transport_type property");
+    assert_eq!(
+      transport_type
+        .get("type")
+        .and_then(|value| value.as_array())
+        .map(|types| {
+          types
+            .iter()
+            .filter_map(|entry| entry.as_str().map(str::to_owned))
+            .collect::<Vec<_>>()
+        }),
+      Some(vec!["string".to_owned(), "null".to_owned()])
+    );
+    assert!(
+      transport_type
+        .get("enum")
+        .and_then(|value| value.as_array())
+        .is_some_and(|values| values.iter().any(|entry| entry.is_null()))
+    );
   }
 
   #[test]
