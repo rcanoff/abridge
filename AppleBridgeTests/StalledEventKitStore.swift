@@ -152,6 +152,11 @@ final class StalledEventKitStore: EventKitStoreing {
         throw EventKitProviderError.invalidArguments("Event has no invitation for the current user")
     }
 
+    func tentativeEventInvitation(_ event: EKEvent) throws {
+        _ = event
+        throw EventKitProviderError.invalidArguments("Event has no invitation for the current user")
+    }
+
     private static let stubReminderSource: EKSource = {
         let source = EKSource()
         source.setValue("mock-source-local", forKey: "sourceIdentifier")
