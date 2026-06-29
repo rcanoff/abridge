@@ -61,7 +61,8 @@ final class ContactsProvider {
         case .unlinkingUnavailable:
             errorResponse(
                 code: "contacts_error",
-                message: "Unlinking contacts is unavailable: no public Contacts framework unlink API on this macOS version"
+                message: "Unlinking contacts is unavailable: "
+                    + "no public Contacts framework unlink API on this macOS version"
             )
         case let .unknownOperation(message):
             errorResponse(code: "unknown_operation", message: message)
