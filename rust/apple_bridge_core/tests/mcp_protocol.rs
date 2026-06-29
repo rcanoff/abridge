@@ -953,6 +953,54 @@ fn tools_call_dispatches_set_reminder_alarms() {
 }
 
 #[test]
+fn mcp_tools_list_includes_set_event_alarms_when_events_alarms_capability_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":27,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.events.alarms".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("eventkit.events.set_event_alarms"));
+  assert!(!resp.contains("eventkit.events.update_event"));
+  assert_eq!(
+    tool_input_property_items_type(&resp, "eventkit.events.set_event_alarms", "alarms").as_deref(),
+    Some("object")
+  );
+}
+
+#[test]
+fn tools_call_dispatches_set_event_alarms() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":28,"method":"tools/call","params":{"name":"eventkit.events.set_event_alarms","arguments":{"event_identifier":"evt-42","alarms":[{"relative_offset":-300}]}}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.events.alarms".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "eventkit");
+  assert_eq!(recorded.operation, "set_event_alarms");
+  assert!(recorded.payload_json.contains("evt-42"));
+  assert!(recorded.payload_json.contains("relative_offset"));
+}
+
+#[test]
 fn mcp_tools_list_includes_set_reminder_recurrence_when_recurrence_capability_enabled() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
