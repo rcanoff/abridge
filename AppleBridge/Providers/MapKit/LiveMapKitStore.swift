@@ -127,4 +127,37 @@ struct LiveMapKitStore: MapKitStoreing {
         }
         return mapItems
     }
+
+    func forwardGeocode(request: MapKitForwardGeocodeRequest) throws -> [MKMapItem] {
+        guard let mkRequest = MKGeocodingRequest(addressString: request.address) else {
+            throw MapKitProviderError.mapkitError("MapKit forward geocode request could not be created")
+        }
+        if let region = request.region {
+            mkRequest.region = region
+        }
+        if let preferredLocale = request.preferredLocale {
+            mkRequest.preferredLocale = preferredLocale
+        }
+        var mapItems: [MKMapItem]?
+        var geocodeError: Error?
+
+        try MapKitSearchFetch.waitForCompletion { complete in
+            Task { @MainActor in
+                defer { complete() }
+                do {
+                    mapItems = try await mkRequest.mapItems
+                } catch {
+                    geocodeError = error
+                }
+            }
+        }
+
+        if let geocodeError {
+            throw geocodeError
+        }
+        guard let mapItems else {
+            throw MapKitProviderError.mapkitError("MapKit forward geocode returned no response")
+        }
+        return mapItems
+    }
 }

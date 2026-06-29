@@ -251,7 +251,9 @@
 		1A2B3C4D5E6F7890ABCDEF01 /* MapKitProviderSearchArguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3C4D5E6F7890ABCDEF0101 /* MapKitProviderSearchArguments.swift */; };
 		3C4D5E6F7890ABCDEF010203 /* MapKitProviderSearchNearby.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D5E6F7890ABCDEF01020304 /* MapKitProviderSearchNearby.swift */; };
 		C3D4E5F6789012345603AB /* MapKitProviderReverseGeocode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6789012345601 /* MapKitProviderReverseGeocode.swift */; };
+		E5F6789012345605ABCD /* MapKitProviderForwardGeocode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6789012345606ABCDEF01 /* MapKitProviderForwardGeocode.swift */; };
 		D4E5F6789012345604AB /* MapKitProviderReverseGeocodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6789012345602 /* MapKitProviderReverseGeocodeTests.swift */; };
+		F6789012345607ABCDEF02 /* MapKitProviderForwardGeocodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789012345608ABCDEF0103 /* MapKitProviderForwardGeocodeTests.swift */; };
 		5E6F7890ABCDEF0102030405 /* MapKitProviderSearchNearbyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7890ABCDEF010203040506 /* MapKitProviderSearchNearbyTests.swift */; };
 		EA990306E4F9DDE0B831798D /* MapKitProviderSearchPlaces.swift in Sources */ = {isa = PBXBuildFile; fileRef = 839CD089FF3B9AEB7804E072 /* MapKitProviderSearchPlaces.swift */; };
 		EA9A6791225C7818ABFB94C0 /* EventKitRecurrenceValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD56CCFE11280BE3CA9EAC63 /* EventKitRecurrenceValidationTests.swift */; };
@@ -430,7 +432,9 @@
 		2B3C4D5E6F7890ABCDEF0101 /* MapKitProviderSearchArguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderSearchArguments.swift; sourceTree = "<group>"; };
 		4D5E6F7890ABCDEF01020304 /* MapKitProviderSearchNearby.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderSearchNearby.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6789012345601 /* MapKitProviderReverseGeocode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderReverseGeocode.swift; sourceTree = "<group>"; };
+		F6789012345606ABCDEF01 /* MapKitProviderForwardGeocode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderForwardGeocode.swift; sourceTree = "<group>"; };
 		B2C3D4E5F6789012345602 /* MapKitProviderReverseGeocodeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderReverseGeocodeTests.swift; sourceTree = "<group>"; };
+		789012345608ABCDEF0103 /* MapKitProviderForwardGeocodeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderForwardGeocodeTests.swift; sourceTree = "<group>"; };
 		6F7890ABCDEF010203040506 /* MapKitProviderSearchNearbyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderSearchNearbyTests.swift; sourceTree = "<group>"; };
 		839CD089FF3B9AEB7804E072 /* MapKitProviderSearchPlaces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderSearchPlaces.swift; sourceTree = "<group>"; };
 		8407D017E658DEEBFF2AB94A /* LiveContactsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveContactsStore.swift; sourceTree = "<group>"; };
@@ -704,6 +708,7 @@
 				C300045AD0E6C11D011B1368 /* MapKitProviderSearchPlacesTests.swift */,
 				6F7890ABCDEF010203040506 /* MapKitProviderSearchNearbyTests.swift */,
 				B2C3D4E5F6789012345602 /* MapKitProviderReverseGeocodeTests.swift */,
+				789012345608ABCDEF0103 /* MapKitProviderForwardGeocodeTests.swift */,
 				4E1FA9BB71235368F306261F /* MapKitSerializationTests.swift */,
 				0B83D2B99D34B0585BE4B7A5 /* MenuBarNativeMenuTests.swift */,
 				11A1C6EFB21BDE0193DEC904 /* MenuBarQuitTests.swift */,
@@ -816,6 +821,7 @@
 				2B3C4D5E6F7890ABCDEF0101 /* MapKitProviderSearchArguments.swift */,
 				4D5E6F7890ABCDEF01020304 /* MapKitProviderSearchNearby.swift */,
 				A1B2C3D4E5F6789012345601 /* MapKitProviderReverseGeocode.swift */,
+				F6789012345606ABCDEF01 /* MapKitProviderForwardGeocode.swift */,
 				839CD089FF3B9AEB7804E072 /* MapKitProviderSearchPlaces.swift */,
 				545D4FD78C540A925D85002E /* MapKitSerialization.swift */,
 				E8F73911524E60277A9F269D /* MapKitStore.swift */,
@@ -1156,6 +1162,7 @@
 				1A2B3C4D5E6F7890ABCDEF01 /* MapKitProviderSearchArguments.swift in Sources */,
 				3C4D5E6F7890ABCDEF010203 /* MapKitProviderSearchNearby.swift in Sources */,
 				C3D4E5F6789012345603AB /* MapKitProviderReverseGeocode.swift in Sources */,
+				E5F6789012345605ABCD /* MapKitProviderForwardGeocode.swift in Sources */,
 				EA990306E4F9DDE0B831798D /* MapKitProviderSearchPlaces.swift in Sources */,
 				5906B705F03864924E8EE261 /* MapKitSerialization.swift in Sources */,
 				6CFABF004CB2C9BFAE312393 /* MapKitStore.swift in Sources */,
@@ -1285,6 +1292,7 @@
 				9338B3153375C11BF9AA721D /* MapKitProviderSearchPlacesTests.swift in Sources */,
 				5E6F7890ABCDEF0102030405 /* MapKitProviderSearchNearbyTests.swift in Sources */,
 				D4E5F6789012345604AB /* MapKitProviderReverseGeocodeTests.swift in Sources */,
+				F6789012345607ABCDEF02 /* MapKitProviderForwardGeocodeTests.swift in Sources */,
 				1FCD37E8A37F3357B23A265B /* MapKitSerializationTests.swift in Sources */,
 				5C210FD0D445BAC26A99E537 /* MenuBarNativeMenuTests.swift in Sources */,
 				80DEB353922E6068D8BF69A3 /* MenuBarQuitTests.swift in Sources */,

@@ -47,6 +47,7 @@ pub const TOOL_DELETE_GROUP: &str = "contacts.delete_group";
 pub const TOOL_SEARCH_PLACES: &str = "mapkit.search_places";
 pub const TOOL_SEARCH_NEARBY: &str = "mapkit.search_nearby";
 pub const TOOL_REVERSE_GEOCODE: &str = "mapkit.reverse_geocode";
+pub const TOOL_FORWARD_GEOCODE: &str = "mapkit.forward_geocode";
 pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -58,7 +59,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 46] = [
+const ALL_TOOLS: [ToolDefinition; 47] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -373,6 +374,13 @@ const ALL_TOOLS: [ToolDefinition; 46] = [
     provider: "mapkit",
     operation: "reverse_geocode",
     description: "Resolve a coordinate to address representations",
+  },
+  ToolDefinition {
+    name: TOOL_FORWARD_GEOCODE,
+    capability: capabilities::MAPKIT_GEOCODE,
+    provider: "mapkit",
+    operation: "forward_geocode",
+    description: "Resolve an address string to place representations",
   },
   ToolDefinition {
     name: TOOL_GET_USAGE_LOG,
@@ -1160,6 +1168,36 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["coordinate"]
     }),
+    TOOL_FORWARD_GEOCODE => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "address": { "type": "string", "minLength": 1 },
+        "region": {
+          "type": "object",
+          "properties": {
+            "center": {
+              "type": "object",
+              "properties": {
+                "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+                "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
+              },
+              "required": ["latitude", "longitude"]
+            },
+            "span": {
+              "type": "object",
+              "properties": {
+                "latitude_delta": { "type": "number", "exclusiveMinimum": 0 },
+                "longitude_delta": { "type": "number", "exclusiveMinimum": 0 }
+              },
+              "required": ["latitude_delta", "longitude_delta"]
+            }
+          },
+          "required": ["center", "span"]
+        },
+        "preferred_locale": { "type": "string", "minLength": 1 }
+      },
+      "required": ["address"]
+    }),
     TOOL_GET_USAGE_LOG => serde_json::json!({
       "type": "object",
       "properties": {
@@ -1208,10 +1246,10 @@ mod tests {
     TOOL_ACCEPT_INVITATION, TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_CONTACT, TOOL_CREATE_EVENT,
     TOOL_CREATE_GROUP, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DECLINE_INVITATION, TOOL_DELETE_CALENDAR,
     TOOL_DELETE_CONTACT, TOOL_DELETE_EVENT, TOOL_DELETE_GROUP, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER,
-    TOOL_GET_CONTACT, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS, TOOL_LIST_CALENDARS,
-    TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT,
-    TOOL_MOVE_REMINDER, TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY,
-    TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE,
+    TOOL_FORWARD_GEOCODE, TOOL_GET_CONTACT, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS,
+    TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS,
+    TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER, TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS,
+    TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE,
     TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER,
     TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP,
     TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
@@ -1960,10 +1998,27 @@ mod tests {
   }
 
   #[test]
-  fn lists_reverse_geocode_tool_when_mapkit_geocode_capability_enabled() {
+  fn lists_geocode_tools_when_mapkit_geocode_capability_enabled() {
     let tools = tools_for_capabilities(&["mapkit.geocode".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_REVERSE_GEOCODE]);
+    assert_eq!(names, vec![TOOL_REVERSE_GEOCODE, TOOL_FORWARD_GEOCODE]);
+  }
+
+  #[test]
+  fn forward_geocode_schema_requires_address() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_FORWARD_GEOCODE)
+      .expect("forward_geocode tool");
+    let schema = input_schema(tool);
+    assert_eq!(
+      schema
+        .get("required")
+        .and_then(|value| value.as_array())
+        .map(|items| items.iter().filter_map(|item| item.as_str()).collect::<Vec<_>>()),
+      Some(vec!["address"])
+    );
+    assert!(schema.get("properties").and_then(|p| p.get("address")).is_some());
   }
 
   #[test]

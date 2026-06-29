@@ -22,10 +22,17 @@ struct MapKitReverseGeocodeRequest {
     let coordinate: CLLocationCoordinate2D
 }
 
+struct MapKitForwardGeocodeRequest {
+    let address: String
+    let region: MKCoordinateRegion?
+    let preferredLocale: Locale?
+}
+
 @MainActor
 protocol MapKitStoreing {
     func locationAuthorizationStatus() -> CLAuthorizationStatus
     func searchPlaces(request: MapKitSearchRequest) throws -> MapKitSearchResult
     func searchNearby(request: MapKitSearchNearbyRequest) throws -> MapKitSearchResult
     func reverseGeocode(request: MapKitReverseGeocodeRequest) throws -> [MKMapItem]
+    func forwardGeocode(request: MapKitForwardGeocodeRequest) throws -> [MKMapItem]
 }

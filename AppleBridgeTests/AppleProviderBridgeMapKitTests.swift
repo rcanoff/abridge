@@ -83,6 +83,31 @@ struct AppleProviderBridgeMapKitTests {
 
     @Test
     @MainActor
+    func callProviderMapKitForwardGeocodeSucceedsWithMockStore() throws {
+        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
+        let item = MKMapItem(placemark: placemark)
+        item.name = "Forward Mock Address"
+        let store = MockMapKitStore()
+        store.authorizationStatus = .authorized
+        store.forwardGeocodeResults = [[item]]
+        let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: store))
+
+        let request = ProviderRequest(
+            provider: "mapkit",
+            operation: "forward_geocode",
+            payloadJson: #"{"address":"1 Apple Park Way, Cupertino, CA"}"#
+        )
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let mapItems = decoded?["map_items"] as? [[String: Any]]
+        #expect(mapItems?.first?["name"] as? String == "Forward Mock Address")
+    }
+
+    @Test
+    @MainActor
     func callProviderMapKitReturnsUnknownOperation() throws {
         let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: MockMapKitStore()))
         let request = ProviderRequest(provider: "mapkit", operation: "lookup_place", payloadJson: "{}")
