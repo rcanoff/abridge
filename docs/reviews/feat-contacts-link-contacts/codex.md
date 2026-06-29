@@ -24,6 +24,7 @@
 | 12 | 2026-06-29 | 6f48fc5 | 1 | 3 | 0 |
 | 13 | 2026-06-29 | 6f48fc5 | 0 | 3 | 0 |
 | 14 | 2026-06-29 | 6f48fc5 | 0 | 3 | 0 |
+| 15 | 2026-06-29 | 6f48fc5 | 0 | 3 | 0 |
 
 ## Thread 1 — Private Contacts SPI used for linking
 
@@ -110,6 +111,11 @@
 - **Disposition:** wont-fix
 - **Why:** Issue #97 AC requires `contacts.link_contacts` with faithful Contacts linking; `docs/superpowers/specs/2026-06-29-contacts-link-contacts-design.md` documents runtime `linkContact:toContact:` as the only production path (no public API in macOS 26.5 SDK). Accepted policy — not a code defect.
 
+### Follow-up — run 15 · 2026-06-29 · reviewer
+- **Disposition:** still-open
+- **Evidence:** The current diff still constructs and invokes the undocumented selector in `AppleBridge/ContactsRuntimeLinking.m`: `NSSelectorFromString(@"linkContact:toContact:")`, `[CNSaveRequest instancesRespondToSelector:ABLinkContactSelector()]`, and `((ABLinkContactIMP)objc_msgSend)(saveRequest, selector, contact, unifiedContact)`. `AppleBridge/Providers/Contacts/ContactsSaveRequestLinking.swift` still routes production linking through `ABContactLinkingIsAvailable()` and `ABLinkContactToContact(saveRequest, contact, unifiedContact)`. `rust/apple_bridge_core/src/tools/mod.rs` still registers `TOOL_LINK_CONTACTS`, and `README.md` still marks `contacts.link_contacts` as `[x]`.
+- **Note:** The implementer has recorded this as an accepted wont-fix policy decision; the current diff still contains the same private-selector dependency, so there is no code evidence to resolve or withdraw the original finding.
+
 ## Thread 2 — Link tool is advertised but cannot succeed in production
 
 **Status:** resolved
@@ -168,7 +174,7 @@
 - **Note:** The primitive return is now called through a matching C function pointer signature.
 
 ## Summary
-No open findings.
+No new findings in run 15. Thread 1 remains disputed by reviewer evidence but is recorded by the implementer as wont-fix/accepted policy.
 
 ## Verification Note
 Reviewed only the provided branch diff, diff inventory, existing context, and inlined skills. I did not run tests, builds, linters, shell commands, or inspect files outside the prompt.
