@@ -242,6 +242,39 @@ struct LiveMapKitStore: MapKitStoreing {
         )
     }
 
+    func lookupPlace(request: MapKitLookupPlaceRequest) throws -> MKMapItem {
+        guard let identifier = MKMapItem.Identifier(rawValue: request.identifier) else {
+            throw MapKitProviderError.invalidArguments("identifier is not a valid MapKit place identifier")
+        }
+
+        let mkRequest = MKMapItemRequest(mapItemIdentifier: identifier)
+        var mapItem: MKMapItem?
+        var lookupError: Error?
+
+        try MapKitSearchFetch.waitForCompletion { complete in
+            // Schedule via GCD so run-loop pumping can deliver work while this @MainActor
+            // method blocks synchronously (Task { @MainActor } alone can deadlock here).
+            DispatchQueue.main.async {
+                Task {
+                    defer { complete() }
+                    do {
+                        mapItem = try await mkRequest.mapItem
+                    } catch {
+                        lookupError = error
+                    }
+                }
+            }
+        }
+
+        if let lookupError {
+            throw lookupError
+        }
+        guard let mapItem else {
+            throw MapKitProviderError.mapkitError("MapKit lookup returned no map item")
+        }
+        return mapItem
+    }
+
     private func mapItem(for coordinate: CLLocationCoordinate2D) -> MKMapItem {
         MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
     }

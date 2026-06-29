@@ -15,6 +15,8 @@ extension MapKitProvider {
             calculateRoute(payloadJson: payloadJson)
         case "estimate_travel_time":
             estimateTravelTime(payloadJson: payloadJson)
+        case "lookup_place":
+            lookupPlace(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown mapkit operation: \(operation)")
         }

@@ -11,12 +11,14 @@ final class MockMapKitStore: MapKitStoreing {
     var forwardGeocodeResults: [[MKMapItem]] = []
     var calculateRouteResults: [MapKitCalculateRouteResult] = []
     var estimateTravelTimeResults: [MapKitEstimateTravelTimeResult] = []
+    var lookupPlaceResults: [MKMapItem] = []
     private(set) var lastRequest: MapKitSearchRequest?
     private(set) var lastNearbyRequest: MapKitSearchNearbyRequest?
     private(set) var lastReverseGeocodeRequest: MapKitReverseGeocodeRequest?
     private(set) var lastForwardGeocodeRequest: MapKitForwardGeocodeRequest?
     private(set) var lastCalculateRouteRequest: MapKitCalculateRouteRequest?
     private(set) var lastEstimateTravelTimeRequest: MapKitEstimateTravelTimeRequest?
+    private(set) var lastLookupPlaceRequest: MapKitLookupPlaceRequest?
 
     func locationAuthorizationStatus() -> CLAuthorizationStatus {
         authorizationStatus
@@ -87,5 +89,15 @@ final class MockMapKitStore: MapKitStoreing {
             expectedDepartureDate: now,
             transportType: request.transportType
         )
+    }
+
+    func lookupPlace(request: MapKitLookupPlaceRequest) throws -> MKMapItem {
+        lastLookupPlaceRequest = request
+        if let first = lookupPlaceResults.first {
+            return first
+        }
+
+        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 0, longitude: 0))
+        return MKMapItem(placemark: placemark)
     }
 }

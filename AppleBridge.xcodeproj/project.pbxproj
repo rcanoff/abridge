@@ -168,6 +168,7 @@
 		99F42DD440BE28C0E7BAFB46 /* MockContactsStoreUnlinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD2FA39E5AEBB797AC55306E /* MockContactsStoreUnlinkTests.swift */; };
 		9A16751A7CE45D7FE794A4DA /* EventKitProviderDeclineInvitationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9694E2FA2117F05B1BDD8C75 /* EventKitProviderDeclineInvitationTests.swift */; };
 		9A4FBB19B2D1FD3D35609914 /* ServerRunState.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDFB66A9507777E0046175CD /* ServerRunState.swift */; };
+		9BAE1991761F618E719C83D0 /* MapKitProviderLookupPlace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F23006B35E1741859FE4EDF /* MapKitProviderLookupPlace.swift */; };
 		9BD92CCD16EE90EEC938EF97 /* MockEventKitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97D1FABE02F2CD00445E6D0C /* MockEventKitStore.swift */; };
 		9CAF8C50D871F9BCCDC77676 /* PermissionsStoreMapKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F1EDF2067BE05FE4B3E0D1 /* PermissionsStoreMapKitTests.swift */; };
 		9D86470277D630C802BC1216 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C224AE2776660B310EFD1C9 /* AppSettings.swift */; };
@@ -267,6 +268,7 @@
 		ED65FAEB6191CAF1252A6A3B /* EventKitProviderAcceptInvitationValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CDC70FFD130AF7BE5A9960B /* EventKitProviderAcceptInvitationValidationTests.swift */; };
 		ED793D3F8D2922FB135E2A43 /* ContactsSearchSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8258D6C7F2304FE4C0CC56FC /* ContactsSearchSupport.swift */; };
 		EF1B1BAC4BA4A86B5511104C /* EventKitProviderUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3F7B23B42E794085F6CB25B /* EventKitProviderUpdate.swift */; };
+		F0CBE9E8B8E0058957ED7750 /* MapKitProviderLookupPlaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C5DED88821173D83CB7D4A /* MapKitProviderLookupPlaceTests.swift */; };
 		F1FEFB2989D7C1F3489A6D8B /* APIKeyFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CEB0E9A615144A5BD9EAA05 /* APIKeyFormattingTests.swift */; };
 		F23EAA242DD672D19A3F961A /* MenuBarNativeMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59052E79D19C92B0B857E5C /* MenuBarNativeMenuView.swift */; };
 		F2D8E0D6F84F3D116343430B /* DiagnosticsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B889DDADD64B031F0AE6CE1C /* DiagnosticsSettingsView.swift */; };
@@ -352,6 +354,7 @@
 		30375CA7B5D62108DE8085BC /* ContactsSerializationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsSerializationTests.swift; sourceTree = "<group>"; };
 		30514C710B02364703AB8BEE /* ContactsProviderDeleteGroupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsProviderDeleteGroupTests.swift; sourceTree = "<group>"; };
 		32A79D84706744C840F4647C /* EventsPermissionChecking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsPermissionChecking.swift; sourceTree = "<group>"; };
+		33C5DED88821173D83CB7D4A /* MapKitProviderLookupPlaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderLookupPlaceTests.swift; sourceTree = "<group>"; };
 		34388819C93666C7CAFE9389 /* MockContactsStoreCreateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockContactsStoreCreateTests.swift; sourceTree = "<group>"; };
 		34B9FE77E5C0721B14E910AC /* AppleProviderBridgeContactsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleProviderBridgeContactsTests.swift; sourceTree = "<group>"; };
 		34F173AAC105177E71E9A236 /* ServerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerService.swift; sourceTree = "<group>"; };
@@ -361,6 +364,7 @@
 		3AFB1828189CCF89B41F86AC /* MockLocationPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockLocationPermissionService.swift; sourceTree = "<group>"; };
 		3DBC31419078564A176C2D4A /* EventKitEventRecurrenceValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitEventRecurrenceValidationTests.swift; sourceTree = "<group>"; };
 		3DD0D0D3E9DB88F6F3340E34 /* UsageAuditExportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageAuditExportTests.swift; sourceTree = "<group>"; };
+		3F23006B35E1741859FE4EDF /* MapKitProviderLookupPlace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderLookupPlace.swift; sourceTree = "<group>"; };
 		3FC6C532EED545584294C1CC /* EventKitProviderSearchEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderSearchEvents.swift; sourceTree = "<group>"; };
 		40F9B3B1A88B82120FA3C66B /* ContactsProviderCreateGroupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsProviderCreateGroupTests.swift; sourceTree = "<group>"; };
 		449918B5D20FD9DDA194BA73 /* EventKitProviderUpdateEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderUpdateEvent.swift; sourceTree = "<group>"; };
@@ -716,6 +720,7 @@
 				85AAD750C8A5D8134CA4BCCB /* MapKitProviderCalculateRouteTests.swift */,
 				B31960DD8109950F6A3C3DB2 /* MapKitProviderEstimateTravelTimeTests.swift */,
 				5F966A8ECAE7A108241B925C /* MapKitProviderForwardGeocodeTests.swift */,
+				33C5DED88821173D83CB7D4A /* MapKitProviderLookupPlaceTests.swift */,
 				E9019F0DDE56016680873D65 /* MapKitProviderReverseGeocodeTests.swift */,
 				B8485970B3C31DF6BD9C434D /* MapKitProviderSearchNearbyTests.swift */,
 				C300045AD0E6C11D011B1368 /* MapKitProviderSearchPlacesTests.swift */,
@@ -830,6 +835,7 @@
 				197FFE5325452F5E62AF3B59 /* MapKitProviderCalculateRoute.swift */,
 				A41C6338982199AEC496DA5A /* MapKitProviderEstimateTravelTime.swift */,
 				9C7F582A48BB588D0B4C22BD /* MapKitProviderForwardGeocode.swift */,
+				3F23006B35E1741859FE4EDF /* MapKitProviderLookupPlace.swift */,
 				FE3CBCB059A9C96EFB6FAF93 /* MapKitProviderReverseGeocode.swift */,
 				CB50741275C75B8775FDBBB1 /* MapKitProviderRouting.swift */,
 				23B47919010B7951C8809C18 /* MapKitProviderSearchArguments.swift */,
@@ -1173,6 +1179,7 @@
 				7DA5ED78B27250851820DBFF /* MapKitProviderCalculateRoute.swift in Sources */,
 				15DCFA8BDE7077BA571D3946 /* MapKitProviderEstimateTravelTime.swift in Sources */,
 				6E058C2AE61C3FE9FBFB4AC7 /* MapKitProviderForwardGeocode.swift in Sources */,
+				9BAE1991761F618E719C83D0 /* MapKitProviderLookupPlace.swift in Sources */,
 				67355CE5D1CAE71037DE07F3 /* MapKitProviderReverseGeocode.swift in Sources */,
 				B60C22C6469CE6AE41AB9818 /* MapKitProviderRouting.swift in Sources */,
 				13472DD5771973A3E563B90E /* MapKitProviderSearchArguments.swift in Sources */,
@@ -1306,6 +1313,7 @@
 				F9EBF5B1CA5AC1BA8AFA208E /* MapKitProviderCalculateRouteTests.swift in Sources */,
 				E8D59ADBB4E3D2BDAECFD67C /* MapKitProviderEstimateTravelTimeTests.swift in Sources */,
 				E176DE1F396022B5C008EC9F /* MapKitProviderForwardGeocodeTests.swift in Sources */,
+				F0CBE9E8B8E0058957ED7750 /* MapKitProviderLookupPlaceTests.swift in Sources */,
 				B2E19E51022A85349B3B8F87 /* MapKitProviderReverseGeocodeTests.swift in Sources */,
 				376E793804067E48493AF2F3 /* MapKitProviderSearchNearbyTests.swift in Sources */,
 				9338B3153375C11BF9AA721D /* MapKitProviderSearchPlacesTests.swift in Sources */,

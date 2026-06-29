@@ -91,6 +91,10 @@ struct MapKitEstimateTravelTimeResult {
     let transportType: MKDirectionsTransportType
 }
 
+struct MapKitLookupPlaceRequest {
+    let identifier: String
+}
+
 @MainActor
 protocol MapKitStoreing {
     func locationAuthorizationStatus() -> CLAuthorizationStatus
@@ -100,4 +104,5 @@ protocol MapKitStoreing {
     func forwardGeocode(request: MapKitForwardGeocodeRequest) throws -> [MKMapItem]
     func calculateRoute(request: MapKitCalculateRouteRequest) throws -> MapKitCalculateRouteResult
     func estimateTravelTime(request: MapKitEstimateTravelTimeRequest) throws -> MapKitEstimateTravelTimeResult
+    func lookupPlace(request: MapKitLookupPlaceRequest) throws -> MKMapItem
 }
