@@ -8,6 +8,37 @@ enum MapKitSearchFetch {
     static let defaultTimeout: TimeInterval = 30
     static let runLoopInterval: TimeInterval = 0.01
 
+    /// Thread-safe handoff for sync/async CoreLocation bridges that schedule delegate callbacks.
+    final class AsyncBridgeResult<T>: @unchecked Sendable {
+        private let lock = NSLock()
+        private var value: T?
+        private var error: Error?
+
+        func setValue(_ value: T) {
+            lock.lock()
+            defer { lock.unlock() }
+            self.value = value
+        }
+
+        func setError(_ error: Error) {
+            lock.lock()
+            defer { lock.unlock() }
+            self.error = error
+        }
+
+        func get() throws -> T {
+            lock.lock()
+            defer { lock.unlock() }
+            if let error {
+                throw error
+            }
+            guard let value else {
+                throw MapKitProviderError.mapkitError("MapKit async bridge returned no result")
+            }
+            return value
+        }
+    }
+
     static func waitForCompletion(
         timeout: TimeInterval = defaultTimeout,
         work: (@escaping () -> Void) -> Void
@@ -286,17 +317,20 @@ struct LiveMapKitStore: MapKitStoreing {
     }
 
     func getCurrentLocation() throws -> CLLocation {
-        let fetcher = OneShotLocationFetcher()
-        var location: CLLocation?
-        var locationError: Error?
+        let result = MapKitSearchFetch.AsyncBridgeResult<CLLocation>()
         do {
             try MapKitSearchFetch.waitForCompletion { complete in
-                fetcher.requestLocation { result in
-                    switch result {
-                    case let .success(value): location = value
-                    case let .failure(error): locationError = error
+                // Schedule via GCD so run-loop pumping can deliver delegate callbacks while this
+                // @MainActor method blocks synchronously.
+                DispatchQueue.main.async {
+                    let fetcher = OneShotLocationFetcher()
+                    fetcher.requestLocation { outcome in
+                        switch outcome {
+                        case let .success(value): result.setValue(value)
+                        case let .failure(error): result.setError(error)
+                        }
+                        complete()
                     }
-                    complete()
                 }
             }
         } catch let error as MapKitProviderError {
@@ -305,9 +339,7 @@ struct LiveMapKitStore: MapKitStoreing {
             }
             throw error
         }
-        if let locationError { throw locationError }
-        guard let location else { throw MapKitProviderError.mapkitError("CoreLocation returned no location") }
-        return location
+        return try result.get()
     }
 }
 
