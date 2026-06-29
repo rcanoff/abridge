@@ -16,6 +16,7 @@
 		0742CAA27E3D55663E694ACF /* EventKitProviderTentativeInvitation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A43691591D75809613F12854 /* EventKitProviderTentativeInvitation.swift */; };
 		0755B94537D684B5D27FC61E /* ContactsProviderUpdateGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801E768B9113CDD711DD95EF /* ContactsProviderUpdateGroup.swift */; };
 		07942084DFE07C69E7B5AABB /* ContactsProviderLinkContactsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AA4B163FBF9D18481CA0F6B /* ContactsProviderLinkContactsTests.swift */; };
+		890ABCDEF0123456789ABCDE0 /* ContactsProviderUnlinkContactsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90ABCDEF0123456789ABCDE01 /* ContactsProviderUnlinkContactsTests.swift */; };
 		0855DC366B8B2B13BF0E4ED3 /* EventKitProviderSetReminderAlarms.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02946BC8373CE8BE1CFA884 /* EventKitProviderSetReminderAlarms.swift */; };
 		0975DFE84207458F265DBC65 /* ContactsProviderListGroupsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69ED74B3615E1E0FC2359E98 /* ContactsProviderListGroupsTests.swift */; };
 		09FECCEC7212D91FFCD4B0C1 /* ContactsProviderUpdateGroupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72B7804328FDA1CA70B2BFB0 /* ContactsProviderUpdateGroupTests.swift */; };
@@ -69,6 +70,7 @@
 		41E7D796EF24A3239CBCD1BA /* EventKitProviderCreateList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BD928B033E86D4CD99874FD /* EventKitProviderCreateList.swift */; };
 		42863111892B7945435D4B75 /* MenuBarPopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F44E65FBBCEB4E6825FCE03C /* MenuBarPopoverView.swift */; };
 		430D89DF4A3CB7C36B948554 /* ContactsProviderLinkContacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 046FE7CE9A79EDD06049F8F4 /* ContactsProviderLinkContacts.swift */; };
+		6F7890ABCDEF0123456789AB /* ContactsProviderUnlinkContacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7890ABCDEF0123456789ABCD /* ContactsProviderUnlinkContacts.swift */; };
 		443320E7C46B01BAAA95E468 /* AppleProviderBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC41FD68BF0BAD78C417BECE /* AppleProviderBridge.swift */; };
 		47BE5793E0D566CCC6407996 /* EventKitInvitationResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D68D6C14A028B9798D87748 /* EventKitInvitationResponse.swift */; };
 		481046DDF735B66C25CAB542 /* EventKitProviderDeleteEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4591092F08ED8B5524427429 /* EventKitProviderDeleteEventTests.swift */; };
@@ -262,6 +264,8 @@
 		0157FC066C71802B00A6F481 /* URLOpening.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLOpening.swift; sourceTree = "<group>"; };
 		02B065B605C800213EF61640 /* apple_bridge_core.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = apple_bridge_core.swift; sourceTree = "<group>"; };
 		046FE7CE9A79EDD06049F8F4 /* ContactsProviderLinkContacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsProviderLinkContacts.swift; sourceTree = "<group>"; };
+		7890ABCDEF0123456789ABCD /* ContactsProviderUnlinkContacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsProviderUnlinkContacts.swift; sourceTree = "<group>"; };
+		90ABCDEF0123456789ABCDE01 /* ContactsProviderUnlinkContactsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsProviderUnlinkContactsTests.swift; sourceTree = "<group>"; };
 		04B331D45BCC4BD36027AFD5 /* EventKitProviderDeleteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderDeleteTests.swift; sourceTree = "<group>"; };
 		058574C854AB33862481AC61 /* MockSingleInstanceChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSingleInstanceChecker.swift; sourceTree = "<group>"; };
 		05D37BAEC8A9B5B70BE008DE /* PermissionsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsStoreTests.swift; sourceTree = "<group>"; };
@@ -561,6 +565,7 @@
 				30514C710B02364703AB8BEE /* ContactsProviderDeleteGroupTests.swift */,
 				652180AD01285AE58B9349FC /* ContactsProviderGetContactTests.swift */,
 				9AA4B163FBF9D18481CA0F6B /* ContactsProviderLinkContactsTests.swift */,
+				90ABCDEF0123456789ABCDE01 /* ContactsProviderUnlinkContactsTests.swift */,
 				A355268390679541EB0E89C9 /* ContactsProviderListContactsTests.swift */,
 				69ED74B3615E1E0FC2359E98 /* ContactsProviderListGroupsTests.swift */,
 				B5F8D4C70EAFE6B9EF46C2B2 /* ContactsProviderSearchContactsTests.swift */,
@@ -845,6 +850,7 @@
 				5CC06B6EA433027C3373E504 /* ContactsProviderDeleteGroup.swift */,
 				AF14FFC011F3FC28FEF642B0 /* ContactsProviderGetContact.swift */,
 				046FE7CE9A79EDD06049F8F4 /* ContactsProviderLinkContacts.swift */,
+				7890ABCDEF0123456789ABCD /* ContactsProviderUnlinkContacts.swift */,
 				FFF30426DD27F169A58AB68E /* ContactsProviderListContacts.swift */,
 				4FAC6B57755DE0AB1BB76A02 /* ContactsProviderListGroups.swift */,
 				48092A064A9995535E8903E3 /* ContactsProviderRouting.swift */,
@@ -965,6 +971,7 @@
 				BC8C38F0B782560E191796EB /* ContactsProviderDeleteGroup.swift in Sources */,
 				795B341A36F843DFD05CE9C8 /* ContactsProviderGetContact.swift in Sources */,
 				430D89DF4A3CB7C36B948554 /* ContactsProviderLinkContacts.swift in Sources */,
+				6F7890ABCDEF0123456789AB /* ContactsProviderUnlinkContacts.swift in Sources */,
 				60865998CF18D67794C93684 /* ContactsProviderListContacts.swift in Sources */,
 				AC6AC48EB492A21A34C302F3 /* ContactsProviderListGroups.swift in Sources */,
 				281ABBA91EB5719259B40FF0 /* ContactsProviderRouting.swift in Sources */,
@@ -1080,6 +1087,7 @@
 				1F447509DE5829F28760B589 /* ContactsProviderDeleteGroupTests.swift in Sources */,
 				828F4F6D5CAB850AC87EF60A /* ContactsProviderGetContactTests.swift in Sources */,
 				07942084DFE07C69E7B5AABB /* ContactsProviderLinkContactsTests.swift in Sources */,
+				890ABCDEF0123456789ABCDE0 /* ContactsProviderUnlinkContactsTests.swift in Sources */,
 				A408BD2E5E62219D0B58FB33 /* ContactsProviderListContactsTests.swift in Sources */,
 				0975DFE84207458F265DBC65 /* ContactsProviderListGroupsTests.swift in Sources */,
 				119907917585EF7AD727A7BB /* ContactsProviderSearchContactsTests.swift in Sources */,

@@ -86,6 +86,29 @@ struct AppleProviderBridgeContactsTests {
 
     @Test
     @MainActor
+    func callProviderContactsUnlinkContactsSucceedsWithMockStore() throws {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        let contact = ContactsTestSupport.makeRichContact()
+        mockStore.contacts = [contact]
+        let bridge = AppleProviderBridge(contactsProvider: ContactsProvider(store: mockStore))
+
+        let request = ProviderRequest(
+            provider: "contacts",
+            operation: "unlink_contacts",
+            payloadJson: #"{"contact_identifier":"\#(contact.identifier)"}"#
+        )
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        #expect(decoded?["identifier"] as? String == contact.identifier)
+        #expect(mockStore.contacts.count == 1)
+    }
+
+    @Test
+    @MainActor
     func callProviderContactsDeleteContactSucceedsWithMockStore() {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .authorized
