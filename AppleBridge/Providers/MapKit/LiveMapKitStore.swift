@@ -67,4 +67,32 @@ struct LiveMapKitStore: MapKitStoreing {
         }
         return MapKitSearchResult(mapItems: response.mapItems, boundingRegion: response.boundingRegion)
     }
+
+    func searchNearby(request: MapKitSearchNearbyRequest) throws -> MapKitSearchResult {
+        let mkRequest = MKLocalSearch.Request()
+        mkRequest.region = request.region
+        mkRequest.regionPriority = .required
+        mkRequest.resultTypes = .pointOfInterest
+        mkRequest.pointOfInterestFilter = request.pointOfInterestFilter
+
+        let search = MKLocalSearch(request: mkRequest)
+        var response: MKLocalSearch.Response?
+        var searchError: Error?
+
+        try MapKitSearchFetch.waitForCompletion { complete in
+            search.start { result, error in
+                response = result
+                searchError = error
+                complete()
+            }
+        }
+
+        if let searchError {
+            throw searchError
+        }
+        guard let response else {
+            throw MapKitProviderError.mapkitError("MapKit search returned no response")
+        }
+        return MapKitSearchResult(mapItems: response.mapItems, boundingRegion: response.boundingRegion)
+    }
 }
