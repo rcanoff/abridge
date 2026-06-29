@@ -18,6 +18,12 @@ verify-epic-90:
     chmod +x scripts/verify-epic-90-orchestration-gates.sh
     scripts/verify-epic-90-orchestration-gates.sh
 
+verify-epic-90-phase4-order:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    chmod +x scripts/verify-epic-90-phase4-order.sh
+    scripts/verify-epic-90-phase4-order.sh
+
 test-swift:
     #!/usr/bin/env bash
     set -euo pipefail
