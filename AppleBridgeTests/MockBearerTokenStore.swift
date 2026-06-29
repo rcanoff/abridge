@@ -1,8 +1,8 @@
 @testable import AppleBridge
 import Foundation
 
-/// In-memory `BearerTokenStoring` for unit tests. Avoids macOS Keychain access prompts.
-final class MockBearerTokenStore: BearerTokenStoring, @unchecked Sendable {
+/// In-memory `BearerTokenPersisting` for unit tests. Avoids macOS Keychain access prompts.
+final class MockBearerTokenStore: BearerTokenPersisting, @unchecked Sendable {
     private let lock = NSLock()
     private var storedToken: String?
 
@@ -26,6 +26,24 @@ final class MockBearerTokenStore: BearerTokenStoring, @unchecked Sendable {
         storedToken = nil
         lock.unlock()
         return try loadOrCreateBearerToken()
+    }
+
+    func loadBearerToken() throws -> String? {
+        lock.lock()
+        defer { lock.unlock() }
+        return storedToken
+    }
+
+    func saveBearerToken(_ token: String) throws {
+        lock.lock()
+        storedToken = token
+        lock.unlock()
+    }
+
+    func deleteBearerToken() throws {
+        lock.lock()
+        storedToken = nil
+        lock.unlock()
     }
 
     private static func generateToken() throws -> String {

@@ -5,6 +5,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     case mcp
     case permissions
     case diagnostics
+    case developer
 
     var id: String {
         rawValue
@@ -18,6 +19,8 @@ enum SettingsTab: String, CaseIterable, Identifiable {
             "Permissions"
         case .diagnostics:
             "Diagnostics"
+        case .developer:
+            "Developer"
         }
     }
 }
@@ -36,6 +39,7 @@ final class SettingsStore {
     private let permissionService: any RemindersPermissionChecking
     private let eventsPermissionService: any EventsPermissionChecking
     private let launchAtLoginService: any LaunchAtLoginManaging
+    private let migrateTokenStorage: @Sendable (Bool, Bool) throws -> Void
     private var didPerformLaunchRestore = false
     private var didPerformLaunchAtLoginReconcile = false
 
@@ -44,13 +48,17 @@ final class SettingsStore {
         serverStore: ServerStore,
         permissionService: any RemindersPermissionChecking = RemindersPermissionService(),
         eventsPermissionService: any EventsPermissionChecking = EventsPermissionService(),
-        launchAtLoginService: any LaunchAtLoginManaging = SMAppLaunchAtLoginService()
+        launchAtLoginService: any LaunchAtLoginManaging = SMAppLaunchAtLoginService(),
+        migrateTokenStorage: @escaping @Sendable (Bool, Bool) throws -> Void = { useKeychain, fromKeychainEnabled in
+            try BearerTokenMigrator.migrate(useKeychain: useKeychain, fromKeychainEnabled: fromKeychainEnabled)
+        }
     ) {
         self.appSettings = appSettings
         self.serverStore = serverStore
         self.permissionService = permissionService
         self.eventsPermissionService = eventsPermissionService
         self.launchAtLoginService = launchAtLoginService
+        self.migrateTokenStorage = migrateTokenStorage
     }
 
     var endpointURL: String {
@@ -60,6 +68,36 @@ final class SettingsStore {
     func applyUsageLoggingChange(_ enabled: Bool) async {
         appSettings.usageLoggingEnabled = enabled
         await serverStore.setUsageLoggingEnabled(enabled)
+    }
+
+    func applyKeychainStorageChange(_ useKeychain: Bool) async {
+        guard useKeychain != appSettings.useKeychainForAPIKey else { return }
+
+        let previousUseKeychain = appSettings.useKeychainForAPIKey
+        let wasRunning = serverStore.runState == .running
+
+        do {
+            try migrateTokenStorage(useKeychain, previousUseKeychain)
+        } catch {
+            return
+        }
+
+        if wasRunning {
+            await serverStore.stopServer()
+        }
+
+        appSettings.useKeychainForAPIKey = useKeychain
+        await serverStore.reconfigureTokenStore(useKeychain: useKeychain)
+
+        if appSettings.mcpEnabled, wasRunning {
+            await serverStore.startServer(
+                port: appSettings.mcpPort,
+                enabledCapabilities: serverEnabledCapabilities,
+                usageLoggingEnabled: appSettings.usageLoggingEnabled
+            )
+        } else {
+            await serverStore.refreshBearerToken()
+        }
     }
 
     func refreshUsageAuditEntries() async {

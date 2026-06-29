@@ -309,6 +309,34 @@ struct AppSettingsTests {
 
     @Test
     @MainActor
+    func useKeychainForAPIKeyDefaultsToTrueOnFreshInstall() throws {
+        let suiteName = "AppSettingsTests.useKeychainDefault"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+
+        #expect(appSettings.useKeychainForAPIKey == true)
+    }
+
+    @Test
+    @MainActor
+    func useKeychainForAPIKeyPersistsAcrossInstances() throws {
+        let suiteName = "AppSettingsTests.useKeychainPersist"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.useKeychainForAPIKey = false
+
+        let reloaded = AppSettings(defaults: defaults)
+
+        #expect(reloaded.useKeychainForAPIKey == false)
+        #expect(defaults.bool(forKey: "useKeychainForAPIKey") == false)
+    }
+
+    @Test
+    @MainActor
     func launchAtLoginPersistsAcrossInstances() throws {
         let suiteName = "AppSettingsTests.launchAtLoginPersist"
         let defaults = try #require(UserDefaults(suiteName: suiteName))

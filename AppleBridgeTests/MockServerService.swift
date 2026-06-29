@@ -94,6 +94,8 @@ actor MockServerService: ServerServing {
         usageAuditEntriesResult
     }
 
+    func replaceTokenStore(_: any BearerTokenStoring) async {}
+
     func setUsageAuditEntriesResult(_ entries: [UsageAuditEntry]) {
         usageAuditEntriesResult = entries
     }

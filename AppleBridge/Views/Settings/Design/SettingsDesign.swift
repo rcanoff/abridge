@@ -13,6 +13,8 @@ enum SettingsDesign {
             "lock.shield"
         case .diagnostics:
             "waveform.path.ecg"
+        case .developer:
+            "hammer"
         }
     }
 }
