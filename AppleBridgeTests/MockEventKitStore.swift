@@ -26,6 +26,7 @@ final class MockEventKitStore: EventKitStoreing {
     var invitationRespondableEventIDs: Set<String> = []
     var acceptedInvitationEventIDs: Set<String> = []
     var declinedInvitationEventIDs: Set<String> = []
+    var tentativeInvitationEventIDs: Set<String> = []
     var lastPredicateKind: PredicateKind?
     struct EventQuery: Equatable {
         let start: Date

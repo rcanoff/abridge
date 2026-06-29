@@ -19,4 +19,11 @@ extension MockEventKitStore {
         }
         declinedInvitationEventIDs.insert(event.calendarItemIdentifier)
     }
+
+    func tentativeEventInvitation(_ event: EKEvent) throws {
+        guard canRespondToInvitation(for: event) else {
+            throw EventKitProviderError.invalidArguments("Event has no invitation for the current user")
+        }
+        tentativeInvitationEventIDs.insert(event.calendarItemIdentifier)
+    }
 }

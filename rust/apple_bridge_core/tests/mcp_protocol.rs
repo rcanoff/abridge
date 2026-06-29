@@ -1114,6 +1114,7 @@ fn mcp_tools_list_includes_invitation_tools_when_events_invitations_enabled() {
   assert_eq!(status, 200);
   assert!(resp.contains("eventkit.events.accept_invitation"));
   assert!(resp.contains("eventkit.events.decline_invitation"));
+  assert!(resp.contains("eventkit.events.tentative_invitation"));
   assert!(!resp.contains("eventkit.events.delete_event"));
 }
 
@@ -1160,6 +1161,29 @@ fn tools_call_dispatches_decline_invitation() {
   let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
   assert_eq!(recorded.provider, "eventkit");
   assert_eq!(recorded.operation, "decline_invitation");
+  assert!(recorded.payload_json.contains("evt-42"));
+}
+
+#[test]
+fn tools_call_dispatches_tentative_invitation() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":34,"method":"tools/call","params":{"name":"eventkit.events.tentative_invitation","arguments":{"event_identifier":"evt-42"}}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.events.invitations".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "eventkit");
+  assert_eq!(recorded.operation, "tentative_invitation");
   assert!(recorded.payload_json.contains("evt-42"));
 }
 

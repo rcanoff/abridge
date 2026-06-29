@@ -31,6 +31,7 @@ pub const TOOL_SET_REMINDER_RECURRENCE: &str = "eventkit.reminders.set_reminder_
 pub const TOOL_SET_EVENT_RECURRENCE: &str = "eventkit.events.set_event_recurrence";
 pub const TOOL_ACCEPT_INVITATION: &str = "eventkit.events.accept_invitation";
 pub const TOOL_DECLINE_INVITATION: &str = "eventkit.events.decline_invitation";
+pub const TOOL_TENTATIVE_INVITATION: &str = "eventkit.events.tentative_invitation";
 pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -42,7 +43,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 30] = [
+const ALL_TOOLS: [ToolDefinition; 31] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -245,6 +246,13 @@ const ALL_TOOLS: [ToolDefinition; 30] = [
     provider: "eventkit",
     operation: "decline_invitation",
     description: "Decline a calendar invitation for an event by event_identifier",
+  },
+  ToolDefinition {
+    name: TOOL_TENTATIVE_INVITATION,
+    capability: capabilities::EVENTKIT_EVENTS_INVITATIONS,
+    provider: "eventkit",
+    operation: "tentative_invitation",
+    description: "Mark a calendar invitation tentative for an event by event_identifier",
   },
   ToolDefinition {
     name: TOOL_GET_USAGE_LOG,
@@ -468,13 +476,15 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["calendar_identifier", "title", "start_date", "end_date"]
     }),
-    TOOL_DELETE_EVENT | TOOL_ACCEPT_INVITATION | TOOL_DECLINE_INVITATION => serde_json::json!({
-      "type": "object",
-      "properties": {
-        "event_identifier": { "type": "string" }
-      },
-      "required": ["event_identifier"]
-    }),
+    TOOL_DELETE_EVENT | TOOL_ACCEPT_INVITATION | TOOL_DECLINE_INVITATION | TOOL_TENTATIVE_INVITATION => {
+      serde_json::json!({
+        "type": "object",
+        "properties": {
+          "event_identifier": { "type": "string" }
+        },
+        "required": ["event_identifier"]
+      })
+    }
     TOOL_MOVE_EVENT => serde_json::json!({
       "type": "object",
       "properties": {
@@ -668,8 +678,8 @@ mod tests {
     TOOL_DELETE_REMINDER, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LIST_CALENDARS, TOOL_LIST_EVENTS,
     TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER, TOOL_SEARCH_EVENTS,
     TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS,
-    TOOL_SET_REMINDER_RECURRENCE, TOOL_UNCOMPLETE_REMINDER, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_EVENT,
-    TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
+    TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER, TOOL_UPDATE_CALENDAR,
+    TOOL_UPDATE_EVENT, TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
   };
 
   fn array_items_type(schema: &serde_json::Value, property: &str) -> Option<String> {
@@ -916,7 +926,14 @@ mod tests {
   fn lists_invitation_tools_when_events_invitations_capability_enabled() {
     let tools = tools_for_capabilities(&["eventkit.events.invitations".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_ACCEPT_INVITATION, TOOL_DECLINE_INVITATION]);
+    assert_eq!(
+      names,
+      vec![
+        TOOL_ACCEPT_INVITATION,
+        TOOL_DECLINE_INVITATION,
+        TOOL_TENTATIVE_INVITATION
+      ]
+    );
   }
 
   #[test]
