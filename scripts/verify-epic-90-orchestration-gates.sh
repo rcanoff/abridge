@@ -65,17 +65,17 @@ check_codex_open_zero() {
   fi
 
   last_open="$(grep -E '^\| [0-9]+ \|' "$review" | tail -1 | awk -F'|' '{gsub(/^ +| +$/,"",$5); print $5}' || true)"
+  if [[ -z "$last_open" ]]; then
+    echo "FAIL (no run log rows in $review)"
+    return 1
+  fi
+
   if [[ "$last_open" == "0" ]]; then
     echo "PASS (run log Open: 0)"
     return 0
   fi
 
-  if grep -qiE 'No open findings|Open:[[:space:]]*0' "$review"; then
-    echo "PASS (summary shows no open findings)"
-    return 0
-  fi
-
-  echo "FAIL (final run log Open=${last_open:-unknown})"
+  echo "FAIL (final run log Open=${last_open})"
   return 1
 }
 
