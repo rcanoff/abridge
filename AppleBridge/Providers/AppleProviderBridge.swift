@@ -26,6 +26,10 @@ final class AppleProviderBridge: ProviderBridge, Sendable {
                 let provider = makeEventKitProvider()
                 return provider.handle(operation: request.operation, payloadJson: request.payloadJson)
             }
+        case "contacts":
+            return Self.performOnMainActor {
+                ContactsProvider().handle(operation: request.operation, payloadJson: request.payloadJson)
+            }
         default:
             let payload: [String: String] = [
                 "code": "unknown_provider",
