@@ -60,7 +60,7 @@ TZ=UTC xcodebuild build-for-testing -project AppleBridge.xcodeproj -scheme Apple
   -destination 'platform=macOS,arch=arm64' -quiet >>"$BUNDLE" 2>&1
 TZ=UTC xcodebuild test-without-building -project AppleBridge.xcodeproj -scheme AppleBridge \
   -destination 'platform=macOS,arch=arm64' -parallel-testing-enabled NO \
-  -resultBundlePath "$RESULT_BUNDLE" 2>&1 | tee "$TEST_LOG" >/dev/null
+  -resultBundlePath "$RESULT_BUNDLE" 2>&1 | tee "$TEST_LOG" >>"$BUNDLE"
 
 section "GUARD SUITE — SingleInstanceGuard block only"
 extract_guard_suite >>"$BUNDLE"
