@@ -84,6 +84,19 @@ struct AppSettingsTests {
 
     @Test
     @MainActor
+    func enabledMCPCapabilityIDsIncludesCheckedEventsEditCapability() throws {
+        let suiteName = "AppSettingsTests.eventsEditCapability"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.saveCapabilityIDs(["events-edit"])
+
+        #expect(appSettings.enabledEventsCapabilityIDs == ["eventkit.events.edit"])
+    }
+
+    @Test
+    @MainActor
     func enabledMCPCapabilityIDsIncludesCheckedEventsReadCapability() throws {
         let suiteName = "AppSettingsTests.eventsReadCapability"
         let defaults = try #require(UserDefaults(suiteName: suiteName))

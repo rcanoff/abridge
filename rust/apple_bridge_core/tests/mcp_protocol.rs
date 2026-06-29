@@ -347,6 +347,50 @@ fn tools_call_dispatches_create_event() {
 }
 
 #[test]
+fn mcp_tools_list_includes_update_event_when_events_edit_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.events.edit".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("eventkit.events.update_event"));
+  assert!(!resp.contains("eventkit.events.create_event"));
+}
+
+#[test]
+fn tools_call_dispatches_update_event() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":19,"method":"tools/call","params":{"name":"eventkit.events.update_event","arguments":{"event_identifier":"evt-42","title":"Updated title","notes":"2%"}}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.events.edit".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "eventkit");
+  assert_eq!(recorded.operation, "update_event");
+  assert!(recorded.payload_json.contains("evt-42"));
+  assert!(recorded.payload_json.contains("Updated title"));
+}
+
+#[test]
 fn mcp_tools_list_includes_delete_calendar_when_calendars_delete_enabled() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
