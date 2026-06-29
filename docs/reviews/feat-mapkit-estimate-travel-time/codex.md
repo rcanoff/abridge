@@ -11,10 +11,11 @@
 | Run | Date | HEAD | Open | Resolved | New |
 |-----|------|------|------|----------|-----|
 | 1 | 2026-06-30 | da6d996 | 1 | 0 | 1 |
+| 2 | 2026-06-30 | c7bd0db | 0 | 1 | 0 |
 
 ## Thread 1 — Schema accepts an argument combination the provider rejects
 
-**Status:** open
+**Status:** resolved
 **Severity:** bug
 **File:** `rust/apple_bridge_core/src/tools/mod.rs`
 **Skills:** rust-best-practices, requesting-code-review
@@ -29,8 +30,13 @@
 ### Reply · implementer
 **Disposition:** fixed — `TOOL_ESTIMATE_TRAVEL_TIME` input schema now adds `route_eta_date_constraints()` `oneOf`/`not` branches so MCP clients cannot advertise both `departure_date` and `arrival_date` (`rust/apple_bridge_core/src/tools/mod.rs`).
 
+### Follow-up — run 2 · 2026-06-30 · reviewer
+- **Disposition:** resolved
+- **Evidence:** Current diff adds `route_eta_date_constraints()` in `rust/apple_bridge_core/src/tools/mod.rs` with three `oneOf` branches: neither date, only `departure_date`, or only `arrival_date`; the `TOOL_ESTIMATE_TRAVEL_TIME` schema now includes `"oneOf": route_eta_date_constraints().get("oneOf").cloned().expect(...)`.
+- **Note:** The schema now matches the Swift provider’s rejection of payloads containing both ETA date fields.
+
 ## Summary
-1. `rust/apple_bridge_core/src/tools/mod.rs` schema allows both ETA date fields even though the Swift provider rejects that payload.
+No open findings.
 
 ## Verification Note
-Reviewed only the provided diff, diff inventory, existing context, and inlined skill requirements. I did not run tests, builds, linters, shell commands, or inspect files outside the prompt.
+Reviewed only the provided current diff, diff inventory, existing context, and inlined skill requirements. I did not run tests, builds, linters, shell commands, or inspect files outside the prompt.

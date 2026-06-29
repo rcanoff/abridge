@@ -443,7 +443,6 @@ fn route_endpoint_schema() -> serde_json::Value {
   })
 }
 
-
 /// `departure_date` and `arrival_date` are optional but mutually exclusive (Swift rejects both).
 fn route_eta_date_constraints() -> serde_json::Value {
   serde_json::json!({
@@ -2190,7 +2189,6 @@ mod tests {
     );
   }
 
-
   #[test]
   fn estimate_travel_time_schema_rejects_both_eta_dates() {
     let tool = all_tools()
@@ -2203,22 +2201,18 @@ mod tests {
       .and_then(|value| value.as_array())
       .expect("estimate_travel_time schema oneOf");
     assert_eq!(one_of.len(), 3);
+    assert!(one_of.iter().any(|branch| {
+      branch.get("required").and_then(|value| value.as_array()) == Some(&vec![serde_json::json!("departure_date")])
+        && branch.get("not").is_some()
+    }));
+    assert!(one_of.iter().any(|branch| {
+      branch.get("required").and_then(|value| value.as_array()) == Some(&vec![serde_json::json!("arrival_date")])
+        && branch.get("not").is_some()
+    }));
     assert!(
-      one_of.iter().any(|branch| {
-        branch.get("required").and_then(|value| value.as_array()) == Some(&vec![
-          serde_json::json!("departure_date")
-        ]) && branch.get("not").is_some()
-      })
-    );
-    assert!(
-      one_of.iter().any(|branch| {
-        branch.get("required").and_then(|value| value.as_array()) == Some(&vec![
-          serde_json::json!("arrival_date")
-        ]) && branch.get("not").is_some()
-      })
-    );
-    assert!(
-      one_of.iter().any(|branch| branch.get("not").and_then(|value| value.get("anyOf")).is_some())
+      one_of
+        .iter()
+        .any(|branch| branch.get("not").and_then(|value| value.get("anyOf")).is_some())
     );
   }
 
