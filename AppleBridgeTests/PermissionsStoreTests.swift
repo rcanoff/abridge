@@ -239,13 +239,26 @@ struct PermissionsStoreIntegrationTests {
 
     @Test
     @MainActor
+    func requiresAppleContactsAccessWhenShippedContactsEditEnabled() throws {
+        let suiteName = "PermissionsStoreTests.contactsEditShipped"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+        store.setChecked(true, for: "contacts-edit")
+
+        #expect(store.requiresAppleContactsAccess == true)
+    }
+
+    @Test
+    @MainActor
     func requiresAppleContactsAccessOnlyForShippedCapabilities() throws {
         let suiteName = "PermissionsStoreTests.contactsUnshipped"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
 
         let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
-        store.setChecked(true, for: "contacts-edit")
+        store.setChecked(true, for: "contacts-delete")
 
         #expect(store.requiresAppleContactsAccess == false)
     }
@@ -263,6 +276,26 @@ struct PermissionsStoreIntegrationTests {
             store.shouldApplySavedCapabilitiesAfterToggle(
                 enabling: true,
                 capabilityID: "contacts-create",
+                remindersAuthorized: true,
+                eventsAuthorized: true,
+                contactsAuthorized: false
+            ) == false
+        )
+    }
+
+    @Test
+    @MainActor
+    func shouldNotApplySavedCapabilitiesAfterEnablingShippedContactsEditWithoutAuthorization() throws {
+        let suiteName = "PermissionsStoreTests.contactsEditShippedApply"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+
+        #expect(
+            store.shouldApplySavedCapabilitiesAfterToggle(
+                enabling: true,
+                capabilityID: "contacts-edit",
                 remindersAuthorized: true,
                 eventsAuthorized: true,
                 contactsAuthorized: false
