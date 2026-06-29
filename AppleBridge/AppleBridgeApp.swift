@@ -16,8 +16,20 @@ struct AppleBridgeApp: App {
     @State private var settingsStore: SettingsStore
 
     init() {
+        let dependencies = Self.makeDefaultLaunchDependencies()
         self.init(
             isRunningUnitTests: Self.isRunningUnitTests,
+            singleInstanceChecker: dependencies.singleInstanceChecker,
+            storeMaker: dependencies.storeMaker
+        )
+    }
+
+    /// Production wiring used by the no-arg `init()`; exposed for tests verifying shipped dependencies.
+    static func makeDefaultLaunchDependencies() -> (
+        singleInstanceChecker: any SingleInstanceChecking,
+        storeMaker: any AppleBridgeAppStoreMaking
+    ) {
+        (
             singleInstanceChecker: RunningApplicationInstanceChecker(),
             storeMaker: ProductionAppleBridgeAppStoreMaker()
         )

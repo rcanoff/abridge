@@ -49,6 +49,50 @@ struct SingleInstanceGuardTests {
 
     @Test
     @MainActor
+    func defaultLaunchDependenciesUseProductionTypes() {
+        let dependencies = AppleBridgeApp.makeDefaultLaunchDependencies()
+
+        #expect(dependencies.singleInstanceChecker is RunningApplicationInstanceChecker)
+        #expect(dependencies.storeMaker is ProductionAppleBridgeAppStoreMaker)
+    }
+
+    @Test
+    func shippedProductionInitExitsOnDuplicateWithRunningApplicationChecker() async {
+        await #expect(processExitsWith: .success) {
+            setenv("APPLE_BRIDGE_TEST_DUPLICATE_LAUNCH", "1", 1)
+            defer { unsetenv("APPLE_BRIDGE_TEST_DUPLICATE_LAUNCH") }
+            _ = AppleBridgeApp(
+                isRunningUnitTests: false,
+                singleInstanceChecker: RunningApplicationInstanceChecker(),
+                storeMaker: MockAppleBridgeAppStoreMaker()
+            )
+        }
+    }
+
+    @Test
+    func productionCheckerUsesNSRunningApplicationDetection() {
+        let checker = RunningApplicationInstanceChecker(
+            bundleIdentifier: { "com.applebridge.AppleBridge" },
+            currentProcessIdentifier: { 100 },
+            hasOtherRunningInstance: RunningApplicationInstanceChecker.detectOtherRunningInstance
+        )
+
+        #expect(checker.isDuplicateLaunch() == false)
+    }
+
+    @Test
+    func productionCheckerDetectsDuplicateViaDefaultDetectionClosure() {
+        setenv("APPLE_BRIDGE_TEST_DUPLICATE_LAUNCH", "1", 1)
+        defer { unsetenv("APPLE_BRIDGE_TEST_DUPLICATE_LAUNCH") }
+
+        let checker = RunningApplicationInstanceChecker()
+        let action = AppLaunchGuard.evaluate(isRunningUnitTests: false, singleInstanceChecker: checker)
+
+        #expect(action == .exitDuplicate)
+    }
+
+    @Test
+    @MainActor
     func performEntryBootstrapsStoresWhenNotDuplicate() {
         let storeMaker = MockAppleBridgeAppStoreMaker()
 
