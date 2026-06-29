@@ -101,14 +101,14 @@ struct SingleInstanceGuardTests {
         )
 
         if action == .continueLaunch {
-            AppleBridgeAppLaunchSupport.scheduleLaunchRestore(
+            let launchTask = AppleBridgeAppLaunchSupport.scheduleLaunchRestore(
                 settingsStore: settingsStore,
                 serverStore: serverStore
             )
+            await launchTask.value
         }
 
         #expect(action == .continueLaunch)
-        try await Task.sleep(for: .milliseconds(100))
         #expect(await mock.startCallCount == 1)
     }
 }
