@@ -10,11 +10,13 @@ final class MockMapKitStore: MapKitStoreing {
     var reverseGeocodeResults: [[MKMapItem]] = []
     var forwardGeocodeResults: [[MKMapItem]] = []
     var calculateRouteResults: [MapKitCalculateRouteResult] = []
+    var estimateTravelTimeResults: [MapKitEstimateTravelTimeResult] = []
     private(set) var lastRequest: MapKitSearchRequest?
     private(set) var lastNearbyRequest: MapKitSearchNearbyRequest?
     private(set) var lastReverseGeocodeRequest: MapKitReverseGeocodeRequest?
     private(set) var lastForwardGeocodeRequest: MapKitForwardGeocodeRequest?
     private(set) var lastCalculateRouteRequest: MapKitCalculateRouteRequest?
+    private(set) var lastEstimateTravelTimeRequest: MapKitEstimateTravelTimeRequest?
 
     func locationAuthorizationStatus() -> CLAuthorizationStatus {
         authorizationStatus
@@ -64,6 +66,26 @@ final class MockMapKitStore: MapKitStoreing {
             source: MKMapItem(placemark: sourcePlacemark),
             destination: MKMapItem(placemark: destinationPlacemark),
             routes: []
+        )
+    }
+
+    func estimateTravelTime(request: MapKitEstimateTravelTimeRequest) throws -> MapKitEstimateTravelTimeResult {
+        lastEstimateTravelTimeRequest = request
+        if let first = estimateTravelTimeResults.first {
+            return first
+        }
+
+        let sourcePlacemark = MKPlacemark(coordinate: request.source.coordinate)
+        let destinationPlacemark = MKPlacemark(coordinate: request.destination.coordinate)
+        let now = Date(timeIntervalSince1970: 1_718_000_000)
+        return MapKitEstimateTravelTimeResult(
+            source: MKMapItem(placemark: sourcePlacemark),
+            destination: MKMapItem(placemark: destinationPlacemark),
+            expectedTravelTime: 0,
+            distance: 0,
+            expectedArrivalDate: now,
+            expectedDepartureDate: now,
+            transportType: request.transportType
         )
     }
 }

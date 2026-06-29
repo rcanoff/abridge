@@ -73,6 +73,24 @@ struct MapKitCalculateRouteResult {
     let routes: [MapKitRouteData]
 }
 
+struct MapKitEstimateTravelTimeRequest {
+    let source: MapKitRouteEndpoint
+    let destination: MapKitRouteEndpoint
+    let transportType: MKDirectionsTransportType
+    let departureDate: Date?
+    let arrivalDate: Date?
+}
+
+struct MapKitEstimateTravelTimeResult {
+    let source: MKMapItem
+    let destination: MKMapItem
+    let expectedTravelTime: TimeInterval
+    let distance: CLLocationDistance
+    let expectedArrivalDate: Date
+    let expectedDepartureDate: Date
+    let transportType: MKDirectionsTransportType
+}
+
 @MainActor
 protocol MapKitStoreing {
     func locationAuthorizationStatus() -> CLAuthorizationStatus
@@ -81,4 +99,5 @@ protocol MapKitStoreing {
     func reverseGeocode(request: MapKitReverseGeocodeRequest) throws -> [MKMapItem]
     func forwardGeocode(request: MapKitForwardGeocodeRequest) throws -> [MKMapItem]
     func calculateRoute(request: MapKitCalculateRouteRequest) throws -> MapKitCalculateRouteResult
+    func estimateTravelTime(request: MapKitEstimateTravelTimeRequest) throws -> MapKitEstimateTravelTimeResult
 }

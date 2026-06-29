@@ -201,6 +201,47 @@ struct LiveMapKitStore: MapKitStoreing {
         )
     }
 
+    func estimateTravelTime(request: MapKitEstimateTravelTimeRequest) throws -> MapKitEstimateTravelTimeResult {
+        let mkRequest = MKDirections.Request()
+        mkRequest.source = mapItem(for: request.source.coordinate)
+        mkRequest.destination = mapItem(for: request.destination.coordinate)
+        mkRequest.transportType = request.transportType
+        mkRequest.departureDate = request.departureDate
+        mkRequest.arrivalDate = request.arrivalDate
+
+        let directions = MKDirections(request: mkRequest)
+        var response: MKDirections.ETAResponse?
+        var directionsError: Error?
+
+        try MapKitSearchFetch.waitForCompletion { complete in
+            Task { @MainActor in
+                defer { complete() }
+                do {
+                    response = try await directions.calculateETA()
+                } catch {
+                    directionsError = error
+                }
+            }
+        }
+
+        if let directionsError {
+            throw directionsError
+        }
+        guard let response else {
+            throw MapKitProviderError.mapkitError("MapKit ETA returned no response")
+        }
+
+        return MapKitEstimateTravelTimeResult(
+            source: response.source,
+            destination: response.destination,
+            expectedTravelTime: response.expectedTravelTime,
+            distance: response.distance,
+            expectedArrivalDate: response.expectedArrivalDate,
+            expectedDepartureDate: response.expectedDepartureDate,
+            transportType: response.transportType
+        )
+    }
+
     private func mapItem(for coordinate: CLLocationCoordinate2D) -> MKMapItem {
         MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
     }
