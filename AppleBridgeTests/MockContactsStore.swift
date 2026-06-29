@@ -29,6 +29,14 @@ final class MockContactsStore: ContactsStoreing {
         return contacts
     }
 
+    func fetchContact(identifier: String) throws -> CNContact? {
+        if let fetchError {
+            throw fetchError
+        }
+
+        return contacts.first { $0.identifier == identifier }
+    }
+
     func searchContacts(
         name: String?,
         emailAddress: String?,
