@@ -4,6 +4,21 @@ import Testing
 
 @Suite("SettingsStoreKeychainStorage")
 struct SettingsStoreKeychainStorageTests {
+    @MainActor
+    private func makeSettingsStore(
+        appSettings: AppSettings,
+        serverStore: ServerStore,
+        migrateTokenStorage: @escaping @Sendable (Bool, Bool) throws -> Void = { _, _ in }
+    ) -> SettingsStore {
+        SettingsStore(
+            appSettings: appSettings,
+            serverStore: serverStore,
+            permissionService: MockRemindersPermissionService(),
+            eventsPermissionService: MockEventsPermissionService(),
+            migrateTokenStorage: migrateTokenStorage
+        )
+    }
+
     @Test
     @MainActor
     func applyKeychainStorageChangeRestartsRunningServer() async throws {
@@ -18,7 +33,7 @@ struct SettingsStoreKeychainStorageTests {
         await mock.setRefreshResult(.running)
         let serverStore = ServerStore(serverService: mock)
         await serverStore.startServer(port: 3020, enabledCapabilities: [])
-        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+        let settingsStore = makeSettingsStore(appSettings: appSettings, serverStore: serverStore)
 
         await settingsStore.applyKeychainStorageChange(false)
 
@@ -41,7 +56,7 @@ struct SettingsStoreKeychainStorageTests {
         await mock.setRefreshResult(.running)
         let serverStore = ServerStore(serverService: mock)
         await serverStore.startServer(port: 3020, enabledCapabilities: [])
-        let settingsStore = SettingsStore(
+        let settingsStore = makeSettingsStore(
             appSettings: appSettings,
             serverStore: serverStore,
             migrateTokenStorage: { _, _ in
@@ -68,7 +83,7 @@ struct SettingsStoreKeychainStorageTests {
 
         let mock = MockServerService()
         let serverStore = ServerStore(serverService: mock)
-        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+        let settingsStore = makeSettingsStore(appSettings: appSettings, serverStore: serverStore)
 
         await settingsStore.applyKeychainStorageChange(false)
 
