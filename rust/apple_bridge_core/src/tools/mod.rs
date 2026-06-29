@@ -314,6 +314,10 @@ fn nullable_string() -> serde_json::Value {
   serde_json::json!({ "type": ["string", "null"] })
 }
 
+fn non_whitespace_string() -> serde_json::Value {
+  serde_json::json!({ "type": "string", "pattern": r".*\S.*" })
+}
+
 fn nullable_string_date_time() -> serde_json::Value {
   serde_json::json!({ "type": ["string", "null"], "format": "date-time" })
 }
@@ -823,18 +827,18 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_CREATE_CONTACT => serde_json::json!({
       "type": "object",
       "properties": {
-        "container_identifier": { "type": "string", "minLength": 1 },
+        "container_identifier": non_whitespace_string(),
         "contact_type": {
           "type": "string",
           "enum": ["person", "organization"]
         },
-        "given_name": { "type": "string", "minLength": 1 },
-        "family_name": { "type": "string", "minLength": 1 },
+        "given_name": non_whitespace_string(),
+        "family_name": non_whitespace_string(),
         "middle_name": { "type": "string" },
         "name_prefix": { "type": "string" },
         "name_suffix": { "type": "string" },
         "nickname": { "type": "string" },
-        "organization_name": { "type": "string", "minLength": 1 },
+        "organization_name": non_whitespace_string(),
         "department_name": { "type": "string" },
         "job_title": { "type": "string" },
         "phonetic_given_name": { "type": "string" },
@@ -1249,10 +1253,22 @@ mod tests {
         vec!["organization_name".to_owned()]
       ]
     );
-    assert_eq!(string_property_min_length(&schema, "container_identifier"), Some(1));
-    assert_eq!(string_property_min_length(&schema, "given_name"), Some(1));
-    assert_eq!(string_property_min_length(&schema, "family_name"), Some(1));
-    assert_eq!(string_property_min_length(&schema, "organization_name"), Some(1));
+    assert_eq!(
+      string_property_pattern(&schema, "container_identifier").as_deref(),
+      Some(r".*\S.*")
+    );
+    assert_eq!(
+      string_property_pattern(&schema, "given_name").as_deref(),
+      Some(r".*\S.*")
+    );
+    assert_eq!(
+      string_property_pattern(&schema, "family_name").as_deref(),
+      Some(r".*\S.*")
+    );
+    assert_eq!(
+      string_property_pattern(&schema, "organization_name").as_deref(),
+      Some(r".*\S.*")
+    );
     assert_eq!(array_items_type(&schema, "phone_numbers").as_deref(), Some("object"));
     assert_eq!(array_items_type(&schema, "postal_addresses").as_deref(), Some("object"));
     assert_eq!(array_items_type(&schema, "dates").as_deref(), Some("object"));
@@ -1289,6 +1305,15 @@ mod tests {
       .and_then(|properties| properties.get(property))
       .and_then(|property_schema| property_schema.get("minLength"))
       .and_then(|value| value.as_u64())
+  }
+
+  fn string_property_pattern(schema: &serde_json::Value, property: &str) -> Option<String> {
+    schema
+      .get("properties")
+      .and_then(|properties| properties.get(property))
+      .and_then(|property_schema| property_schema.get("pattern"))
+      .and_then(|value| value.as_str())
+      .map(str::to_owned)
   }
 
   fn any_of_required_fields(schema: &serde_json::Value) -> Vec<Vec<String>> {
