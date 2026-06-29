@@ -16,7 +16,7 @@ struct EventKitTentativeInviteValidationTests {
             calendarIdentifier: "cal-val",
             title: "Invite"
         )
-        mockStore.invitationRespondableEventIDs = ["evt-val"]
+        mockStore.attachMockCurrentUserAttendee(to: event, status: .pending)
         mockStore.events = [event]
         return EventKitProvider(store: mockStore)
     }

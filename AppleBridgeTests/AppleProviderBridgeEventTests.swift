@@ -170,7 +170,7 @@ struct AppleProviderBridgeEventTests {
             calendarIdentifier: "cal-work",
             title: "Invite"
         )
-        mockStore.invitationRespondableEventIDs = ["evt-1"]
+        mockStore.attachMockCurrentUserAttendee(to: event, status: .pending)
         mockStore.events = [event]
         let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
         let request = ProviderRequest(
@@ -196,7 +196,7 @@ struct AppleProviderBridgeEventTests {
             calendarIdentifier: "cal-work",
             title: "Invite"
         )
-        mockStore.invitationRespondableEventIDs = ["evt-1"]
+        mockStore.attachMockCurrentUserAttendee(to: event, status: .pending)
         mockStore.events = [event]
         let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
         let request = ProviderRequest(
@@ -222,7 +222,7 @@ struct AppleProviderBridgeEventTests {
             calendarIdentifier: "cal-work",
             title: "Invite"
         )
-        mockStore.invitationRespondableEventIDs = ["evt-1"]
+        mockStore.attachMockCurrentUserAttendee(to: event, status: .pending)
         mockStore.events = [event]
         let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
         let request = ProviderRequest(

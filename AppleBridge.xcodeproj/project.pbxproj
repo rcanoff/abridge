@@ -145,6 +145,7 @@
 		DBEBE88FE028C1FF9AD723B4 /* AppleProviderBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 061BA2725CA72D643E140494 /* AppleProviderBridgeTests.swift */; };
 		DDA894C58581E8032244F83E /* UsageAuditExportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DD0D0D3E9DB88F6F3340E34 /* UsageAuditExportTests.swift */; };
 		E00E370F1BA717E092582F2B /* EventKitInvitationResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27239CDC73EEB0DA0B205F2C /* EventKitInvitationResponseTests.swift */; };
+		F1A2B3C4D5E6F708192A3B4C /* EventKitMockParticipantSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8A1B2C3D4E5F60718293A4B /* EventKitMockParticipantSupport.swift */; };
 		E20E6013FFEDFAC9D6BCF8DF /* EventKitProviderEventAlarmsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F4CEBDC49640FB447035B90 /* EventKitProviderEventAlarmsTests.swift */; };
 		E5898D3B4EE13617A2532557 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45B580B922B7E847CC513FC1 /* ServiceManagement.framework */; };
 		EA9A6791225C7818ABFB94C0 /* EventKitRecurrenceValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD56CCFE11280BE3CA9EAC63 /* EventKitRecurrenceValidationTests.swift */; };
@@ -293,6 +294,7 @@
 		C3F7B23B42E794085F6CB25B /* EventKitProviderUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderUpdate.swift; sourceTree = "<group>"; };
 		C453F98EBE5CA0E0631FE443 /* SettingsWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowView.swift; sourceTree = "<group>"; };
 		C723EF9225492B1A29DD1228 /* EventKitTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitTestSupport.swift; sourceTree = "<group>"; };
+		E8A1B2C3D4E5F60718293A4B /* EventKitMockParticipantSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitMockParticipantSupport.swift; sourceTree = "<group>"; };
 		C74034B4461DB8E6CA8815C1 /* EventKitProviderMoveValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderMoveValidationTests.swift; sourceTree = "<group>"; };
 		C95A9769548583CA2BD3F783 /* SettingsStoreCalendarCapabilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStoreCalendarCapabilitiesTests.swift; sourceTree = "<group>"; };
 		C9971421EB83DA709A01E372 /* AppleProviderBridgeDeleteListTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleProviderBridgeDeleteListTests.swift; sourceTree = "<group>"; };
@@ -425,6 +427,7 @@
 				542285A0192308558D48432B /* EventKitSerializationEventTests.swift */,
 				DA10FBBA3E71A83884C01863 /* EventKitSerializationTests.swift */,
 				C723EF9225492B1A29DD1228 /* EventKitTestSupport.swift */,
+				E8A1B2C3D4E5F60718293A4B /* EventKitMockParticipantSupport.swift */,
 				885CAED8B8050BBC816094D4 /* EventsPermissionServiceTests.swift */,
 				5EBBF81C3509780ADC778473 /* KeychainServiceIntegrationTests.swift */,
 				2F9E835DF7BD9E1609D3DBF9 /* MockBearerTokenStore.swift */,
@@ -808,6 +811,7 @@
 				C2A2BAB2921416BFE8404015 /* EventKitSerializationEventTests.swift in Sources */,
 				A1EDC7283BF01F3D249DB758 /* EventKitSerializationTests.swift in Sources */,
 				DB666ECE2D4B76B9BA2CFD94 /* EventKitTestSupport.swift in Sources */,
+				F1A2B3C4D5E6F708192A3B4C /* EventKitMockParticipantSupport.swift in Sources */,
 				96E3CF5D4BADF9D384DFEE46 /* EventsPermissionServiceTests.swift in Sources */,
 				5C432A6AE607A30E352C4192 /* KeychainServiceIntegrationTests.swift in Sources */,
 				AE4477865F7B0D003BC3B530 /* MockBearerTokenStore.swift in Sources */,

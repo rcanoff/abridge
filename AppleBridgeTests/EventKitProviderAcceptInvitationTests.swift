@@ -3,7 +3,7 @@ import EventKit
 import Foundation
 import Testing
 
-@Suite("EventKitProviderAcceptInvitation")
+@Suite("EventKitProviderAcceptInvitation", .serialized)
 struct EventKitProviderAcceptInvitationTests {
     private static let eventReadKeys: Set<String> = [
         "calendar_item_identifier",
@@ -48,7 +48,7 @@ struct EventKitProviderAcceptInvitationTests {
             calendarIdentifier: "cal-invite",
             title: "Team sync"
         )
-        mockStore.invitationRespondableEventIDs = ["evt-invite-1"]
+        mockStore.attachMockCurrentUserAttendee(to: event, status: .pending)
         mockStore.events = [event]
         return (EventKitProvider(store: mockStore), mockStore)
     }
@@ -68,6 +68,11 @@ struct EventKitProviderAcceptInvitationTests {
         let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
         #expect(Set(object.keys) == Self.eventReadKeys)
         #expect(object["title"] as? String == "Team sync")
+        #expect(object["has_attendees"] as? Bool == true)
+        let attendees = try #require(object["attendees"] as? [[String: Any]])
+        #expect(attendees.count == 1)
+        #expect(attendees[0]["participant_status"] as? String == "accepted")
+        #expect(attendees[0]["is_current_user"] as? Bool == true)
     }
 
     @Test
