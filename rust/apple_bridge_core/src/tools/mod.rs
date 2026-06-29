@@ -1079,9 +1079,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
             "enum": [
               "address",
               "point_of_interest",
-              "query",
-              "physical_feature",
-              "physical_feature_query"
+              "physical_feature"
             ]
           }
         }
@@ -1820,6 +1818,22 @@ mod tests {
       .map(str::to_owned)
   }
 
+  fn array_property_items_enum(schema: &serde_json::Value, property: &str) -> Vec<String> {
+    schema
+      .get("properties")
+      .and_then(|properties| properties.get(property))
+      .and_then(|property_schema| property_schema.get("items"))
+      .and_then(|items_schema| items_schema.get("enum"))
+      .and_then(|value| value.as_array())
+      .map(|values| {
+        values
+          .iter()
+          .filter_map(|entry| entry.as_str().map(str::to_owned))
+          .collect()
+      })
+      .unwrap_or_default()
+  }
+
   fn any_of_required_fields(schema: &serde_json::Value) -> Vec<Vec<String>> {
     schema
       .get("anyOf")
@@ -1887,6 +1901,23 @@ mod tests {
           .collect::<Vec<_>>()
       }),
       Some(vec!["query".to_owned()])
+    );
+  }
+
+  #[test]
+  fn search_places_schema_result_types_match_swift_support() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_SEARCH_PLACES)
+      .expect("search_places tool");
+    let schema = input_schema(tool);
+    assert_eq!(
+      array_property_items_enum(&schema, "result_types"),
+      vec![
+        "address".to_owned(),
+        "point_of_interest".to_owned(),
+        "physical_feature".to_owned()
+      ]
     );
   }
 

@@ -1,4 +1,5 @@
 import CoreLocation
+import Foundation
 import MapKit
 import Testing
 @testable import AppleBridge
@@ -24,6 +25,25 @@ struct MapKitSerializationTests {
         #expect(json.keys.contains("time_zone"))
         #expect(json.keys.contains("url"))
         #expect(json.keys.contains("identifier"))
+    }
+
+    @Test
+    func locationJSONObjectPreservesNegativeCourseAndSpeed() {
+        let location = CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0),
+            altitude: 0,
+            horizontalAccuracy: 5,
+            verticalAccuracy: 5,
+            course: -1,
+            speed: -1,
+            timestamp: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+
+        let json = MapKitSerialization.locationJSONObject(from: location) as? [String: Any]
+        #expect(json?["course"] as? Double == -1)
+        #expect(json?["speed"] as? Double == -1)
+        #expect((json?["course"] is NSNull) == false)
+        #expect((json?["speed"] is NSNull) == false)
     }
 
     @Test

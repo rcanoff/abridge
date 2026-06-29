@@ -58,8 +58,8 @@ enum MapKitSerialization {
             "altitude": location.altitude,
             "horizontal_accuracy": location.horizontalAccuracy,
             "vertical_accuracy": location.verticalAccuracy,
-            "course": jsonValue(location.course),
-            "speed": jsonValue(location.speed),
+            "course": location.course,
+            "speed": location.speed,
             "timestamp": iso8601String(from: location.timestamp),
             "floor": jsonValueFloor(location.floor),
         ]
