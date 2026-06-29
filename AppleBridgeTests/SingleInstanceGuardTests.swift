@@ -5,6 +5,24 @@ import Testing
 @Suite("SingleInstanceGuard")
 struct SingleInstanceGuardTests {
     @Test
+    func appEntryStatePropertiesHaveNoDefaultInitializers() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("AppleBridge/AppleBridgeApp.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+        let stateLines = source
+            .split(separator: "\n", omittingEmptySubsequences: false)
+            .map(String.init)
+            .filter { $0.contains("@State") }
+
+        for line in stateLines {
+            #expect(!line.contains("= ServerStore()"), "Guard must run before ServerStore default init: \(line)")
+            #expect(!line.contains("= AppSettings()"), "Guard must run before AppSettings default init: \(line)")
+        }
+    }
+
+    @Test
     func evaluateContinuesWhenNotDuplicate() {
         let checker = MockSingleInstanceChecker()
 

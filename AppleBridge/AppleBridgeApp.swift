@@ -10,8 +10,8 @@ struct AppleBridgeApp: App {
     }
 
     @State private var store: AppStore
-    @State private var serverStore = ServerStore()
-    @State private var appSettings = AppSettings()
+    @State private var serverStore: ServerStore
+    @State private var appSettings: AppSettings
     @State private var permissionsStore: PermissionsStore
     @State private var settingsStore: SettingsStore
 
