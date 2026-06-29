@@ -35,7 +35,8 @@ struct SingleInstanceGuardTests {
         let initBody = source[initStart.lowerBound...]
 
         guard let guardRange = initBody.range(of: "AppleBridgeAppBootstrap.performEntry"),
-              let stateAssignRange = initBody.range(of: "_appSettings = State(initialValue:") else {
+              let stateAssignRange = initBody.range(of: "_appSettings = State(initialValue:")
+        else {
             Issue.record("Expected guard-then-State assignment sequence not found")
             return
         }
