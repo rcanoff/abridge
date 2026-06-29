@@ -50,6 +50,19 @@ fn contacts_config_on_port(port: u16, enabled_capabilities: Vec<String>) -> Serv
   }
 }
 
+fn mapkit_config_on_port(port: u16, enabled_capabilities: Vec<String>) -> ServerConfig {
+  ServerConfig {
+    host: "127.0.0.1".into(),
+    port,
+    bearer_token: TEST_TOKEN.into(),
+    enabled_providers: vec![ProviderConfig {
+      name: "mapkit".into(),
+      enabled: true,
+    }],
+    enabled_capabilities,
+  }
+}
+
 fn mcp_post(body: &str, port: u16, mock: &MockProviderBridge) -> (u16, String) {
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.read".into()]),
@@ -1615,6 +1628,48 @@ fn tools_call_dispatches_search_contacts() {
   assert!(recorded.payload_json.contains("Jane"));
   assert!(recorded.payload_json.contains("jane@example.com"));
   assert!(recorded.payload_json.contains("container-1"));
+}
+
+#[test]
+fn mcp_tools_list_includes_search_places_when_mapkit_search_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":3,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    mapkit_config_on_port(port, vec!["mapkit.search".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("mapkit.search_places"));
+}
+
+#[test]
+fn tools_call_dispatches_search_places() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"mapkit.search_places","arguments":{"query":"coffee"}}}"#;
+
+  let handle = create_server(
+    mapkit_config_on_port(port, vec!["mapkit.search".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "mapkit");
+  assert_eq!(recorded.operation, "search_places");
+  assert!(recorded.payload_json.contains("coffee"));
 }
 
 #[test]

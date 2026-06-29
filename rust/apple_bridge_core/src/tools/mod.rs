@@ -44,6 +44,7 @@ pub const TOOL_UNLINK_CONTACTS: &str = "contacts.unlink_contacts";
 pub const TOOL_UPDATE_GROUP: &str = "contacts.update_group";
 pub const TOOL_DELETE_CONTACT: &str = "contacts.delete_contact";
 pub const TOOL_DELETE_GROUP: &str = "contacts.delete_group";
+pub const TOOL_SEARCH_PLACES: &str = "mapkit.search_places";
 pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -55,7 +56,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 43] = [
+const ALL_TOOLS: [ToolDefinition; 44] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -349,6 +350,13 @@ const ALL_TOOLS: [ToolDefinition; 43] = [
     provider: "contacts",
     operation: "delete_group",
     description: "Delete a contact group by group_identifier",
+  },
+  ToolDefinition {
+    name: TOOL_SEARCH_PLACES,
+    capability: capabilities::MAPKIT_SEARCH,
+    provider: "mapkit",
+    operation: "search_places",
+    description: "Search for places by natural-language query with optional region bias",
   },
   ToolDefinition {
     name: TOOL_GET_USAGE_LOG,
@@ -1034,6 +1042,50 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "required": ["group_identifier"],
       "additionalProperties": false
     }),
+    TOOL_SEARCH_PLACES => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "query": { "type": "string", "minLength": 1 },
+        "region": {
+          "type": "object",
+          "properties": {
+            "center": {
+              "type": "object",
+              "properties": {
+                "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+                "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
+              },
+              "required": ["latitude", "longitude"]
+            },
+            "span": {
+              "type": "object",
+              "properties": {
+                "latitude_delta": { "type": "number", "exclusiveMinimum": 0 },
+                "longitude_delta": { "type": "number", "exclusiveMinimum": 0 }
+              },
+              "required": ["latitude_delta", "longitude_delta"]
+            }
+          },
+          "required": ["center", "span"]
+        },
+        "region_priority": {
+          "type": "string",
+          "enum": ["default", "required"]
+        },
+        "result_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "address",
+              "point_of_interest",
+              "physical_feature"
+            ]
+          }
+        }
+      },
+      "required": ["query"]
+    }),
     TOOL_GET_USAGE_LOG => serde_json::json!({
       "type": "object",
       "properties": {
@@ -1084,10 +1136,11 @@ mod tests {
     TOOL_DELETE_CONTACT, TOOL_DELETE_EVENT, TOOL_DELETE_GROUP, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER,
     TOOL_GET_CONTACT, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS, TOOL_LIST_CALENDARS,
     TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT,
-    TOOL_MOVE_REMINDER, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS,
-    TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION,
-    TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT,
-    TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
+    TOOL_MOVE_REMINDER, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS,
+    TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE,
+    TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR,
+    TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools, input_schema,
+    tools_for_capabilities,
   };
 
   fn array_items_type(schema: &serde_json::Value, property: &str) -> Option<String> {
@@ -1765,6 +1818,22 @@ mod tests {
       .map(str::to_owned)
   }
 
+  fn array_property_items_enum(schema: &serde_json::Value, property: &str) -> Vec<String> {
+    schema
+      .get("properties")
+      .and_then(|properties| properties.get(property))
+      .and_then(|property_schema| property_schema.get("items"))
+      .and_then(|items_schema| items_schema.get("enum"))
+      .and_then(|value| value.as_array())
+      .map(|values| {
+        values
+          .iter()
+          .filter_map(|entry| entry.as_str().map(str::to_owned))
+          .collect()
+      })
+      .unwrap_or_default()
+  }
+
   fn any_of_required_fields(schema: &serde_json::Value) -> Vec<Vec<String>> {
     schema
       .get("anyOf")
@@ -1805,6 +1874,49 @@ mod tests {
         vec!["name".to_owned()],
         vec!["email_address".to_owned()],
         vec!["phone_number".to_owned()]
+      ]
+    );
+  }
+
+  #[test]
+  fn lists_search_places_tool_when_mapkit_search_capability_enabled() {
+    let tools = tools_for_capabilities(&["mapkit.search".into()]);
+    let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
+    assert_eq!(names, vec![TOOL_SEARCH_PLACES]);
+  }
+
+  #[test]
+  fn search_places_schema_requires_query() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_SEARCH_PLACES)
+      .expect("search_places tool");
+    let schema = input_schema(tool);
+    assert_eq!(string_property_min_length(&schema, "query"), Some(1));
+    assert_eq!(
+      schema.get("required").and_then(|v| v.as_array()).map(|fields| {
+        fields
+          .iter()
+          .filter_map(|f| f.as_str().map(str::to_owned))
+          .collect::<Vec<_>>()
+      }),
+      Some(vec!["query".to_owned()])
+    );
+  }
+
+  #[test]
+  fn search_places_schema_result_types_match_swift_support() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_SEARCH_PLACES)
+      .expect("search_places tool");
+    let schema = input_schema(tool);
+    assert_eq!(
+      array_property_items_enum(&schema, "result_types"),
+      vec![
+        "address".to_owned(),
+        "point_of_interest".to_owned(),
+        "physical_feature".to_owned()
       ]
     );
   }

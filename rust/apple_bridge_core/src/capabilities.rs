@@ -25,6 +25,7 @@ pub const CONTACTS_SEARCH: &str = "contacts.search";
 pub const CONTACTS_CREATE: &str = "contacts.create";
 pub const CONTACTS_EDIT: &str = "contacts.edit";
 pub const CONTACTS_DELETE: &str = "contacts.delete";
+pub const MAPKIT_SEARCH: &str = "mapkit.search";
 pub const DIAGNOSTICS_READ: &str = "diagnostics.read";
 
 pub fn is_valid_capability_id(id: &str) -> bool {
@@ -33,6 +34,7 @@ pub fn is_valid_capability_id(id: &str) -> bool {
     || id == CONTACTS_CREATE
     || id == CONTACTS_EDIT
     || id == CONTACTS_DELETE
+    || id == MAPKIT_SEARCH
     || id == DIAGNOSTICS_READ
   {
     return true;
@@ -75,6 +77,7 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
       | CONTACTS_CREATE
       | CONTACTS_EDIT
       | CONTACTS_DELETE
+      | MAPKIT_SEARCH
       | DIAGNOSTICS_READ
   )
 }
@@ -88,7 +91,7 @@ mod tests {
     EVENTKIT_EVENTS_INVITATIONS, EVENTKIT_EVENTS_READ, EVENTKIT_EVENTS_RECURRENCE, EVENTKIT_EVENTS_SEARCH,
     EVENTKIT_REMINDERS_ALARMS, EVENTKIT_REMINDERS_COMPLETE, EVENTKIT_REMINDERS_CREATE, EVENTKIT_REMINDERS_DELETE,
     EVENTKIT_REMINDERS_EDIT, EVENTKIT_REMINDERS_READ, EVENTKIT_REMINDERS_RECURRENCE, EVENTKIT_REMINDERS_SEARCH,
-    is_allowed_in_v1, is_valid_capability_id,
+    MAPKIT_SEARCH, is_allowed_in_v1, is_valid_capability_id,
   };
 
   #[test]
@@ -124,6 +127,12 @@ mod tests {
   #[test]
   fn accepts_diagnostics_read_capability_shape() {
     assert!(is_valid_capability_id(DIAGNOSTICS_READ));
+  }
+
+  #[test]
+  fn accepts_mapkit_search_capability_shape() {
+    assert!(is_valid_capability_id(MAPKIT_SEARCH));
+    assert!(is_allowed_in_v1(MAPKIT_SEARCH));
   }
 
   #[test]
@@ -164,6 +173,7 @@ mod tests {
     assert!(is_allowed_in_v1(CONTACTS_CREATE));
     assert!(is_allowed_in_v1(CONTACTS_EDIT));
     assert!(is_allowed_in_v1(CONTACTS_DELETE));
+    assert!(is_allowed_in_v1(MAPKIT_SEARCH));
     assert!(!is_allowed_in_v1("eventkit.reminders.write"));
   }
 }
