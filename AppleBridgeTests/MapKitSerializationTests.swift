@@ -79,8 +79,22 @@ struct MapKitSerializationTests {
         #expect(coordinate?["longitude"] as? Double == -122.0090)
         #expect(json.keys.contains("altitude"))
         #expect(json.keys.contains("ellipsoidal_altitude"))
+        #expect((json["region"] is NSNull) == false)
         #expect((json["address_dictionary"] is NSNull) == true)
-        #expect((json["postal_address"] is NSNull) == true)
+    }
+
+    @Test
+    func mapItemPlacemarkJSONObjectPreservesPlacemarkRegionWithoutAddressFields() {
+        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
+        let item = MKMapItem(placemark: placemark)
+
+        let json = MapKitSerialization.mapItemPlacemarkJSONObject(from: item)
+        let region = json["region"] as? [String: Any]
+        #expect(region != nil)
+        #expect((json["region"] is NSNull) == false)
+        let center = region?["center"] as? [String: Any]
+        #expect(center?["latitude"] as? Double == 37.3346)
+        #expect(center?["longitude"] as? Double == -122.0090)
     }
 
     @Test
@@ -93,8 +107,8 @@ struct MapKitSerializationTests {
         let serializedCoordinate = json["coordinate"] as? [String: Any]
         #expect(serializedCoordinate?["latitude"] as? Double == 12.5)
         #expect(serializedCoordinate?["longitude"] as? Double == -45.6)
-        #expect((json["altitude"] is NSNull) == true)
-        #expect((json["ellipsoidal_altitude"] is NSNull) == true)
+        #expect(json.keys.contains("altitude"))
+        #expect(json.keys.contains("ellipsoidal_altitude"))
     }
 
     @Test
@@ -111,7 +125,7 @@ struct MapKitSerializationTests {
         let serializedCoordinate = placemarkJSON?["coordinate"] as? [String: Any]
         #expect(serializedCoordinate?["latitude"] as? Double == 12.5)
         #expect(serializedCoordinate?["longitude"] as? Double == -45.6)
-        #expect((placemarkJSON?["altitude"] is NSNull) == true)
+        #expect(placemarkJSON?.keys.contains("altitude") == true)
     }
 
     @Test

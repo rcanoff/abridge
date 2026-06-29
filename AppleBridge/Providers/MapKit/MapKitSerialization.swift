@@ -181,34 +181,17 @@ enum MapKitSerialization {
     }
 
     private static func placemarkJSONObjectFromMapItemFields(_ item: MKMapItem) -> [String: Any] {
-        let placemark = item.placemark
-        let coordinate: CLLocationCoordinate2D
-        let altitude: Any
-        let ellipsoidalAltitude: Any
+        var json = placemarkJSONObject(from: item.placemark)
 
         if let location = optionalLocation(from: item) {
-            coordinate = location.coordinate
-            altitude = location.altitude
-            ellipsoidalAltitude = location.ellipsoidalAltitude
-        } else {
-            coordinate = placemark.coordinate
-            altitude = NSNull()
-            ellipsoidalAltitude = NSNull()
+            json["coordinate"] = coordinateJSONObject(from: location.coordinate)
+            json["altitude"] = location.altitude
+            json["ellipsoidal_altitude"] = location.ellipsoidalAltitude
         }
 
-        return [
-            "coordinate": coordinateJSONObject(from: coordinate),
-            "altitude": altitude,
-            "ellipsoidal_altitude": ellipsoidalAltitude,
-            "region": NSNull(),
-            "time_zone": jsonValueTimeZone(item.timeZone),
-            "country_code": NSNull(),
-            "inland_water": NSNull(),
-            "ocean": NSNull(),
-            "areas_of_interest": NSNull(),
-            "postal_address": NSNull(),
-            "address_dictionary": NSNull(),
-        ]
+        json["time_zone"] = jsonValueTimeZone(item.timeZone)
+
+        return json
     }
 
     /// Sparse MapKit items can surface a nil ObjC `location` at runtime despite the non-optional Swift type.
