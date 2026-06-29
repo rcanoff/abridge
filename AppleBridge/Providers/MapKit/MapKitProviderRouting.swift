@@ -7,6 +7,8 @@ extension MapKitProvider {
             searchPlaces(payloadJson: payloadJson)
         case "search_nearby":
             searchNearby(payloadJson: payloadJson)
+        case "reverse_geocode":
+            reverseGeocode(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown mapkit operation: \(operation)")
         }
