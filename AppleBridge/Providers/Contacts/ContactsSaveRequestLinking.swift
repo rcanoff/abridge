@@ -20,8 +20,10 @@ struct LiveContactsLinkingPerformer: ContactsLinkingPerforming {
 }
 
 enum ContactsSaveRequestLinking {
+    private static let linkSelector = Selector(("linkContact:toContact:"))
+
     static var isAvailable: Bool {
-        ABCNSaveRequestContactLinkingIsAvailable()
+        CNSaveRequest.instancesRespond(to: linkSelector)
     }
 
     static func link(
@@ -29,12 +31,17 @@ enum ContactsSaveRequestLinking {
         to unifiedContact: CNMutableContact,
         in saveRequest: CNSaveRequest
     ) throws {
-        guard isAvailable else {
+        guard isAvailable, saveRequest.responds(to: linkSelector) else {
             throw ContactsProviderError.linkingUnavailable
         }
 
-        let success = saveRequest.ab_linkContact(contact, to: unifiedContact)
-        guard success else {
+        guard let result = saveRequest.perform(linkSelector, with: contact, with: unifiedContact)?
+            .takeUnretainedValue() as? NSNumber
+        else {
+            throw ContactsProviderError.contactsError("Contacts framework rejected the link request")
+        }
+
+        guard result.boolValue else {
             throw ContactsProviderError.contactsError("Contacts framework rejected the link request")
         }
     }
