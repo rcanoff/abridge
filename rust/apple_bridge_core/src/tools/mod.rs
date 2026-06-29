@@ -41,6 +41,7 @@ pub const TOOL_CREATE_GROUP: &str = "contacts.create_group";
 pub const TOOL_UPDATE_CONTACT: &str = "contacts.update_contact";
 pub const TOOL_UPDATE_GROUP: &str = "contacts.update_group";
 pub const TOOL_DELETE_CONTACT: &str = "contacts.delete_contact";
+pub const TOOL_DELETE_GROUP: &str = "contacts.delete_group";
 pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -52,7 +53,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 40] = [
+  const ALL_TOOLS: [ToolDefinition; 41] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -325,6 +326,13 @@ const ALL_TOOLS: [ToolDefinition; 40] = [
     provider: "contacts",
     operation: "delete_contact",
     description: "Delete a contact by contact_identifier",
+  },
+  ToolDefinition {
+    name: TOOL_DELETE_GROUP,
+    capability: capabilities::CONTACTS_DELETE,
+    provider: "contacts",
+    operation: "delete_group",
+    description: "Delete a contact group by group_identifier",
   },
   ToolDefinition {
     name: TOOL_GET_USAGE_LOG,
@@ -903,6 +911,13 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["contact_identifier"]
     }),
+    TOOL_DELETE_GROUP => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "group_identifier": { "type": "string" }
+      },
+      "required": ["group_identifier"]
+    }),
     TOOL_SEARCH_CONTACTS => serde_json::json!({
       "type": "object",
       "properties": {
@@ -1035,7 +1050,8 @@ mod tests {
   use super::{
     TOOL_ACCEPT_INVITATION, TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_CONTACT, TOOL_CREATE_EVENT,
     TOOL_CREATE_GROUP, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DECLINE_INVITATION, TOOL_DELETE_CALENDAR,
-    TOOL_DELETE_CONTACT, TOOL_DELETE_EVENT, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER, TOOL_GET_CONTACT, TOOL_GET_EVENT,
+    TOOL_DELETE_CONTACT, TOOL_DELETE_EVENT, TOOL_DELETE_GROUP, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER, TOOL_GET_CONTACT,
+    TOOL_GET_EVENT,
     TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS,
     TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER, TOOL_SEARCH_CONTACTS,
     TOOL_SEARCH_EVENTS, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE,
@@ -1431,10 +1447,10 @@ mod tests {
   }
 
   #[test]
-  fn lists_delete_contact_tool_when_contacts_delete_capability_enabled() {
+  fn lists_delete_contact_and_delete_group_tools_when_contacts_delete_capability_enabled() {
     let tools = tools_for_capabilities(&["contacts.delete".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_DELETE_CONTACT]);
+    assert_eq!(names, vec![TOOL_DELETE_CONTACT, TOOL_DELETE_GROUP]);
   }
 
   #[test]
@@ -1453,6 +1469,25 @@ mod tests {
           .collect::<Vec<_>>()
       }),
       Some(vec!["contact_identifier".to_owned()])
+    );
+  }
+
+  #[test]
+  fn delete_group_schema_requires_group_identifier() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_DELETE_GROUP)
+      .expect("delete_group tool");
+    let schema = input_schema(tool);
+
+    assert_eq!(
+      schema.get("required").and_then(|value| value.as_array()).map(|fields| {
+        fields
+          .iter()
+          .filter_map(|field| field.as_str().map(str::to_owned))
+          .collect::<Vec<_>>()
+      }),
+      Some(vec!["group_identifier".to_owned()])
     );
   }
 
