@@ -226,21 +226,34 @@ struct PermissionsStoreIntegrationTests {
 
     @Test
     @MainActor
-    func requiresAppleContactsAccessOnlyForShippedCapabilities() throws {
-        let suiteName = "PermissionsStoreTests.contactsUnshipped"
+    func requiresAppleContactsAccessWhenShippedContactsCreateEnabled() throws {
+        let suiteName = "PermissionsStoreTests.contactsCreateShipped"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
 
         let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
         store.setChecked(true, for: "contacts-create")
 
+        #expect(store.requiresAppleContactsAccess == true)
+    }
+
+    @Test
+    @MainActor
+    func requiresAppleContactsAccessOnlyForShippedCapabilities() throws {
+        let suiteName = "PermissionsStoreTests.contactsUnshipped"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+        store.setChecked(true, for: "contacts-edit")
+
         #expect(store.requiresAppleContactsAccess == false)
     }
 
     @Test
     @MainActor
-    func shouldApplySavedCapabilitiesAfterEnablingUnshippedContactsWithoutAuthorization() throws {
-        let suiteName = "PermissionsStoreTests.contactsUnshippedApply"
+    func shouldNotApplySavedCapabilitiesAfterEnablingShippedContactsCreateWithoutAuthorization() throws {
+        let suiteName = "PermissionsStoreTests.contactsCreateShippedApply"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
 
@@ -253,7 +266,7 @@ struct PermissionsStoreIntegrationTests {
                 remindersAuthorized: true,
                 eventsAuthorized: true,
                 contactsAuthorized: false
-            )
+            ) == false
         )
     }
 

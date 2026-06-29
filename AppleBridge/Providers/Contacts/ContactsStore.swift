@@ -47,4 +47,5 @@ protocol ContactsStoreing {
         phoneNumber: String?,
         containerIdentifier: String?
     ) throws -> [CNContact]
+    func createContact(in containerIdentifier: String, contact: CNMutableContact) throws -> CNContact
 }

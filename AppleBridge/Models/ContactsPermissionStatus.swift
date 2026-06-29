@@ -18,6 +18,15 @@ enum ContactsPermissionStatus: Equatable, CaseIterable {
         }
     }
 
+    var grantsWriteAccess: Bool {
+        switch self {
+        case .authorized:
+            true
+        default:
+            false
+        }
+    }
+
     var displayName: String {
         switch self {
         case .unknown:

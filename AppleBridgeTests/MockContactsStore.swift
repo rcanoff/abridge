@@ -92,4 +92,23 @@ final class MockContactsStore: ContactsStoreing {
             labeledValue.value.stringValue.localizedCaseInsensitiveContains(phoneNumber)
         }
     }
+
+    func createContact(in containerIdentifier: String, contact: CNMutableContact) throws -> CNContact {
+        if let fetchError {
+            throw fetchError
+        }
+
+        guard knownContainerIdentifiers.contains(containerIdentifier) else {
+            throw ContactsProviderError.invalidArguments(
+                "Unknown container_identifier: \(containerIdentifier)"
+            )
+        }
+
+        guard let saved = contact.mutableCopy() as? CNMutableContact else {
+            throw ContactsProviderError.contactsError("Failed to copy contact")
+        }
+
+        contacts.append(saved)
+        return saved
+    }
 }

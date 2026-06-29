@@ -30,4 +30,23 @@ struct ContactsPermissionStatusTests {
         #expect(status == .limited)
         #expect(status.grantsReadAccess)
     }
+
+    @Test
+    func mapAuthorizedGrantsWriteAccess() {
+        let status = ContactsPermissionStatusMapper.map(.authorized)
+        #expect(status.grantsWriteAccess)
+    }
+
+    @Test
+    func mapLimitedDoesNotGrantWriteAccess() throws {
+        let limitedStatus = try #require(CNAuthorizationStatus(rawValue: 4))
+        let status = ContactsPermissionStatusMapper.map(limitedStatus)
+        #expect(status.grantsWriteAccess == false)
+    }
+
+    @Test
+    func mapDeniedDoesNotGrantWriteAccess() {
+        let status = ContactsPermissionStatusMapper.map(.denied)
+        #expect(status.grantsWriteAccess == false)
+    }
 }

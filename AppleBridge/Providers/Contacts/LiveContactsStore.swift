@@ -95,6 +95,28 @@ final class LiveContactsStore: ContactsStoreing {
         return ContactsSearchSupport.intersectContacts(contactSets)
     }
 
+    func createContact(in containerIdentifier: String, contact: CNMutableContact) throws -> CNContact {
+        let containers = try contactStore.containers(matching: nil)
+        guard containers.contains(where: { $0.identifier == containerIdentifier }) else {
+            throw ContactsProviderError.invalidArguments(
+                "Unknown container_identifier: \(containerIdentifier)"
+            )
+        }
+
+        let saveRequest = CNSaveRequest()
+        saveRequest.add(contact, toContainerWithIdentifier: containerIdentifier)
+        do {
+            try contactStore.execute(saveRequest)
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
+
+        guard let saved = try fetchContact(identifier: contact.identifier) else {
+            throw ContactsProviderError.contactsError("Failed to fetch created contact")
+        }
+        return saved
+    }
+
     private func unifiedContacts(matching predicate: NSPredicate) throws -> [CNContact] {
         do {
             return try contactStore.unifiedContacts(
