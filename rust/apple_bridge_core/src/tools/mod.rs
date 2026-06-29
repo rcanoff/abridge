@@ -64,7 +64,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-  const ALL_TOOLS: [ToolDefinition; 52] = [
+const ALL_TOOLS: [ToolDefinition; 52] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
