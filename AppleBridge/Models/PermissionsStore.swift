@@ -23,6 +23,12 @@ final class PermissionsStore {
         }
     }
 
+    var requiresAppleContactsAccess: Bool {
+        checkedCapabilityIDs.contains { id in
+            CapabilityCatalog.contactsCapabilities.contains { $0.id == id && $0.shipped }
+        }
+    }
+
     func setChecked(_ checked: Bool, for capabilityID: String) {
         if checked {
             checkedCapabilityIDs.insert(capabilityID)
@@ -44,7 +50,8 @@ final class PermissionsStore {
         enabling: Bool,
         capabilityID: String,
         remindersAuthorized: Bool,
-        eventsAuthorized: Bool
+        eventsAuthorized: Bool,
+        contactsAuthorized: Bool
     ) -> Bool {
         guard enabling else { return true }
 
@@ -54,6 +61,10 @@ final class PermissionsStore {
 
         if CapabilityCatalog.eventsCapabilities.contains(where: { $0.id == capabilityID && $0.shipped }) {
             return eventsAuthorized
+        }
+
+        if CapabilityCatalog.contactsCapabilities.contains(where: { $0.id == capabilityID && $0.shipped }) {
+            return contactsAuthorized
         }
 
         return remindersAuthorized
