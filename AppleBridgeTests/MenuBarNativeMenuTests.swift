@@ -56,14 +56,17 @@ struct MenuBarNativeMenuTests {
     @MainActor
     func quitIsDisabledWhileServerStoreIsStartingServer() async {
         let mock = MockServerService()
-        await mock.setStartDelayNanoseconds(200_000_000)
+        let startEntered = await mock.enableStartHold()
         await mock.setRefreshResult(.running)
         let serverStore = ServerStore(serverService: mock)
         let startTask = Task { await serverStore.startServer(port: 3020, enabledCapabilities: []) }
 
-        try? await Task.sleep(nanoseconds: 50_000_000)
-        #expect(MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore))
+        for await _ in startEntered {
+            #expect(MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore))
+            break
+        }
 
+        await mock.releaseHeldStart()
         await startTask.value
         #expect(MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore) == false)
     }

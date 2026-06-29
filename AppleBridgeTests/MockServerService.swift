@@ -8,7 +8,9 @@ actor MockServerService: ServerServing {
     var startError: ServerOperationError?
     var stopError: ServerOperationError?
     var resetBearerTokenError: ServerOperationError?
-    var startDelayNanoseconds: UInt64 = 0
+
+    private var startEnteredYield: (() -> Void)?
+    private var startProceedContinuation: CheckedContinuation<Void, Never>?
 
     private(set) var startCallCount = 0
     private(set) var stopCallCount = 0
@@ -53,8 +55,10 @@ actor MockServerService: ServerServing {
             throw startError
         }
 
-        if startDelayNanoseconds > 0 {
-            try await Task.sleep(nanoseconds: startDelayNanoseconds)
+        if let startEnteredYield {
+            startEnteredYield()
+            self.startEnteredYield = nil
+            await withCheckedContinuation { startProceedContinuation = $0 }
         }
 
         usageLoggingEnabledState = usageLoggingEnabled
@@ -125,7 +129,14 @@ actor MockServerService: ServerServing {
         bearerTokenResult = token
     }
 
-    func setStartDelayNanoseconds(_ delay: UInt64) {
-        startDelayNanoseconds = delay
+    func enableStartHold() -> AsyncStream<Void> {
+        AsyncStream { continuation in
+            startEnteredYield = { continuation.yield(()) }
+        }
+    }
+
+    func releaseHeldStart() {
+        startProceedContinuation?.resume()
+        startProceedContinuation = nil
     }
 }
