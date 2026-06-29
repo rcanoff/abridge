@@ -40,6 +40,7 @@ pub const TOOL_CREATE_CONTACT: &str = "contacts.create_contact";
 pub const TOOL_CREATE_GROUP: &str = "contacts.create_group";
 pub const TOOL_UPDATE_CONTACT: &str = "contacts.update_contact";
 pub const TOOL_LINK_CONTACTS: &str = "contacts.link_contacts";
+pub const TOOL_UNLINK_CONTACTS: &str = "contacts.unlink_contacts";
 pub const TOOL_UPDATE_GROUP: &str = "contacts.update_group";
 pub const TOOL_DELETE_CONTACT: &str = "contacts.delete_contact";
 pub const TOOL_DELETE_GROUP: &str = "contacts.delete_group";
@@ -54,7 +55,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 42] = [
+const ALL_TOOLS: [ToolDefinition; 43] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -320,6 +321,13 @@ const ALL_TOOLS: [ToolDefinition; 42] = [
     provider: "contacts",
     operation: "link_contacts",
     description: "Link a contact to another unified contact by from_contact_identifier and to_contact_identifier",
+  },
+  ToolDefinition {
+    name: TOOL_UNLINK_CONTACTS,
+    capability: capabilities::CONTACTS_EDIT,
+    provider: "contacts",
+    operation: "unlink_contacts",
+    description: "Unlink a contact from its unified contact card by contact_identifier",
   },
   ToolDefinition {
     name: TOOL_UPDATE_GROUP,
@@ -1007,6 +1015,13 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["from_contact_identifier", "to_contact_identifier"]
     }),
+    TOOL_UNLINK_CONTACTS => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "contact_identifier": non_whitespace_string()
+      },
+      "required": ["contact_identifier"]
+    }),
     TOOL_UPDATE_GROUP => serde_json::json!({
       "type": "object",
       "properties": {
@@ -1067,7 +1082,8 @@ mod tests {
     TOOL_ACCEPT_INVITATION, TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_CONTACT, TOOL_CREATE_EVENT,
     TOOL_CREATE_GROUP, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DECLINE_INVITATION, TOOL_DELETE_CALENDAR,
     TOOL_DELETE_CONTACT, TOOL_DELETE_EVENT, TOOL_DELETE_GROUP, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER,
-    TOOL_GET_CONTACT, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS, TOOL_LIST_CALENDARS,
+    TOOL_GET_CONTACT, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS, TOOL_UNLINK_CONTACTS,
+    TOOL_LIST_CALENDARS,
     TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT,
     TOOL_MOVE_REMINDER, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS,
     TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION,
@@ -1430,7 +1446,15 @@ mod tests {
   fn lists_update_contact_tool_when_contacts_edit_capability_enabled() {
     let tools = tools_for_capabilities(&["contacts.edit".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_UPDATE_CONTACT, TOOL_LINK_CONTACTS, TOOL_UPDATE_GROUP]);
+    assert_eq!(
+      names,
+      vec![
+        TOOL_UPDATE_CONTACT,
+        TOOL_LINK_CONTACTS,
+        TOOL_UNLINK_CONTACTS,
+        TOOL_UPDATE_GROUP
+      ]
+    );
   }
 
   #[test]
@@ -1459,6 +1483,30 @@ mod tests {
       .expect("link_contacts properties");
     assert!(properties.contains_key("from_contact_identifier"));
     assert!(properties.contains_key("to_contact_identifier"));
+  }
+
+  #[test]
+  fn unlink_contacts_schema_requires_contact_identifier() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_UNLINK_CONTACTS)
+      .expect("unlink_contacts tool");
+    let schema = input_schema(tool);
+
+    assert_eq!(
+      schema.get("required").and_then(|value| value.as_array()).map(|fields| {
+        fields
+          .iter()
+          .filter_map(|field| field.as_str().map(str::to_owned))
+          .collect::<Vec<_>>()
+      }),
+      Some(vec!["contact_identifier".to_owned()])
+    );
+    let properties = schema
+      .get("properties")
+      .and_then(|value| value.as_object())
+      .expect("unlink_contacts properties");
+    assert!(properties.contains_key("contact_identifier"));
   }
 
   #[test]
