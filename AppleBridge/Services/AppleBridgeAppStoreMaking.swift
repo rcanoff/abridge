@@ -14,11 +14,16 @@ struct ProductionAppleBridgeAppStoreMaker: AppleBridgeAppStoreMaking {
             )
         )
         let permissionService = RemindersPermissionService()
-        let store = AppStore(permissionService: permissionService)
+        let contactsPermissionService = ContactsPermissionService()
+        let store = AppStore(
+            permissionService: permissionService,
+            contactsPermissionService: contactsPermissionService
+        )
         let settingsStore = SettingsStore(
             appSettings: appSettings,
             serverStore: serverStore,
-            permissionService: permissionService
+            permissionService: permissionService,
+            contactsPermissionService: contactsPermissionService
         )
         let permissionsStore = PermissionsStore(appSettings: appSettings)
         return AppleBridgeAppBootstrap.Stores(

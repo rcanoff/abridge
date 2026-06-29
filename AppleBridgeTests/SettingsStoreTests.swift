@@ -228,7 +228,43 @@ struct SettingsStoreTests {
         await serverStore.startServer(port: 3020, enabledCapabilities: [])
         let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
 
-        await settingsStore.applySavedCapabilities(remindersAuthorized: false, eventsAuthorized: false)
+        await settingsStore.applySavedCapabilities(
+            remindersAuthorized: false,
+            eventsAuthorized: false,
+            contactsAuthorized: false
+        )
+
+        #expect(await mock.startCallCount == 2)
+        #expect(await mock.lastEnabledCapabilities == ["diagnostics.read"])
+    }
+
+    @Test
+    @MainActor
+    func applySavedCapabilitiesOmitsContactsCapabilitiesWithoutAuthorization() async throws {
+        let suiteName = "SettingsStoreTests.contactsGatedApply"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = true
+        appSettings.saveCapabilityIDs(["contacts-read"])
+
+        let contactsMock = MockContactsPermissionService()
+        contactsMock.status = .denied
+        let mock = MockServerService()
+        await mock.setRefreshResult(.running)
+        let serverStore = ServerStore(serverService: mock)
+        await serverStore.startServer(port: 3020, enabledCapabilities: [])
+        let settingsStore = SettingsStore(
+            appSettings: appSettings,
+            serverStore: serverStore,
+            contactsPermissionService: contactsMock
+        )
+
+        await settingsStore.applySavedCapabilities(
+            remindersAuthorized: false,
+            eventsAuthorized: false,
+            contactsAuthorized: false
+        )
 
         #expect(await mock.startCallCount == 2)
         #expect(await mock.lastEnabledCapabilities == ["diagnostics.read"])
@@ -303,7 +339,11 @@ struct SettingsStoreTests {
         await serverStore.startServer(port: 3020, enabledCapabilities: [])
         let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
 
-        await settingsStore.applySavedCapabilities(remindersAuthorized: true, eventsAuthorized: false)
+        await settingsStore.applySavedCapabilities(
+            remindersAuthorized: true,
+            eventsAuthorized: false,
+            contactsAuthorized: false
+        )
 
         #expect(await mock.startCallCount == 2)
         #expect(await mock.lastEnabledCapabilities == ["diagnostics.read", "eventkit.reminders.read"])

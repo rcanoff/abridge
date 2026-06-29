@@ -112,7 +112,8 @@ struct PermissionsStoreIntegrationTests {
                 enabling: true,
                 capabilityID: "read",
                 remindersAuthorized: true,
-                eventsAuthorized: false
+                eventsAuthorized: false,
+                contactsAuthorized: false
             )
         )
     }
@@ -131,7 +132,8 @@ struct PermissionsStoreIntegrationTests {
                 enabling: true,
                 capabilityID: "read",
                 remindersAuthorized: false,
-                eventsAuthorized: false
+                eventsAuthorized: false,
+                contactsAuthorized: false
             ) == false
         )
     }
@@ -150,7 +152,8 @@ struct PermissionsStoreIntegrationTests {
                 enabling: false,
                 capabilityID: "read",
                 remindersAuthorized: false,
-                eventsAuthorized: false
+                eventsAuthorized: false,
+                contactsAuthorized: false
             )
         )
     }
@@ -169,7 +172,8 @@ struct PermissionsStoreIntegrationTests {
                 enabling: true,
                 capabilityID: "calendars-read",
                 remindersAuthorized: false,
-                eventsAuthorized: true
+                eventsAuthorized: true,
+                contactsAuthorized: false
             )
         )
     }
@@ -188,8 +192,42 @@ struct PermissionsStoreIntegrationTests {
                 enabling: true,
                 capabilityID: "calendars-read",
                 remindersAuthorized: true,
-                eventsAuthorized: false
+                eventsAuthorized: false,
+                contactsAuthorized: false
             ) == false
+        )
+    }
+
+    @Test
+    @MainActor
+    func requiresAppleContactsAccessOnlyForShippedCapabilities() throws {
+        let suiteName = "PermissionsStoreTests.contactsUnshipped"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+        store.setChecked(true, for: "contacts-read")
+
+        #expect(store.requiresAppleContactsAccess == false)
+    }
+
+    @Test
+    @MainActor
+    func shouldApplySavedCapabilitiesAfterEnablingUnshippedContactsWithoutAuthorization() throws {
+        let suiteName = "PermissionsStoreTests.contactsUnshippedApply"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
+
+        #expect(
+            store.shouldApplySavedCapabilitiesAfterToggle(
+                enabling: true,
+                capabilityID: "contacts-read",
+                remindersAuthorized: true,
+                eventsAuthorized: true,
+                contactsAuthorized: false
+            )
         )
     }
 
