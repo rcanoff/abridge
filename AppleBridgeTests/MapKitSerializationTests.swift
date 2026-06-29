@@ -1,0 +1,43 @@
+import CoreLocation
+import MapKit
+import Testing
+@testable import AppleBridge
+
+@Suite("MapKitSerialization")
+struct MapKitSerializationTests {
+    @Test
+    func mapItemJSONObjectIncludesTopLevelKeys() throws {
+        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
+        let item = MKMapItem(placemark: placemark)
+        item.name = "Test Place"
+        item.phoneNumber = "+1 555 0100"
+
+        let json = MapKitSerialization.mapItemJSONObject(from: item)
+        #expect(json["name"] as? String == "Test Place")
+        #expect(json["phone_number"] as? String == item.phoneNumber)
+        #expect(json.keys.contains("placemark"))
+        #expect(json.keys.contains("is_current_location"))
+        #expect(json.keys.contains("location"))
+        #expect(json.keys.contains("address"))
+        #expect(json.keys.contains("address_representations"))
+        #expect(json.keys.contains("point_of_interest_category"))
+        #expect(json.keys.contains("time_zone"))
+        #expect(json.keys.contains("url"))
+        #expect(json.keys.contains("identifier"))
+    }
+
+    @Test
+    func coordinateRegionJSONObjectPreservesSpan() {
+        let region = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 1, longitude: 2),
+            span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.2)
+        )
+        let json = MapKitSerialization.coordinateRegionJSONObject(from: region)
+        let center = json["center"] as? [String: Any]
+        #expect(center?["latitude"] as? Double == 1)
+        #expect(center?["longitude"] as? Double == 2)
+        let span = json["span"] as? [String: Any]
+        #expect(span?["latitude_delta"] as? Double == 0.1)
+        #expect(span?["longitude_delta"] as? Double == 0.2)
+    }
+}
