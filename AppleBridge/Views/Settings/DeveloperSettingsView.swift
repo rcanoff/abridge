@@ -13,15 +13,18 @@ struct DeveloperSettingsView: View {
                 if settingsStore.appSettings.useKeychainForAPIKey {
                     Text("Recommended. The bearer token is stored in the macOS Keychain.")
                 } else {
-                    Text(
-                        "The API key is stored in a local file on this Mac. This is less secure and intended for development and automation only — not for everyday use."
-                    )
-                    .foregroundStyle(.orange)
+                    Text(fileStorageDisclaimer)
+                        .foregroundStyle(.orange)
                 }
             }
         }
         .formStyle(.grouped)
         .navigationTitle("Developer")
+    }
+
+    private var fileStorageDisclaimer: String {
+        "The API key is stored in a local file on this Mac. "
+            + "This is less secure and intended for development and automation only — not for everyday use."
     }
 
     private var keychainBinding: Binding<Bool> {
