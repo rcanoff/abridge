@@ -363,6 +363,7 @@ fn mcp_tools_list_includes_update_event_when_events_edit_enabled() {
 
   assert_eq!(status, 200);
   assert!(resp.contains("eventkit.events.update_event"));
+  assert!(resp.contains("eventkit.events.move_event"));
   assert!(!resp.contains("eventkit.events.create_event"));
 }
 
@@ -388,6 +389,30 @@ fn tools_call_dispatches_update_event() {
   assert_eq!(recorded.operation, "update_event");
   assert!(recorded.payload_json.contains("evt-42"));
   assert!(recorded.payload_json.contains("Updated title"));
+}
+
+#[test]
+fn tools_call_dispatches_move_event() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":21,"method":"tools/call","params":{"name":"eventkit.events.move_event","arguments":{"event_identifier":"evt-42","calendar_identifier":"cal-2"}}}"#;
+
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.events.edit".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "eventkit");
+  assert_eq!(recorded.operation, "move_event");
+  assert!(recorded.payload_json.contains("evt-42"));
+  assert!(recorded.payload_json.contains("cal-2"));
 }
 
 #[test]

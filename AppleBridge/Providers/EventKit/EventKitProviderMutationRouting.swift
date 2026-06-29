@@ -9,6 +9,8 @@ extension EventKitProvider {
             handleUpdateMutation(operation: operation, payloadJson: payloadJson)
         case "move_reminder":
             moveReminder(payloadJson: payloadJson)
+        case "move_event":
+            moveEvent(payloadJson: payloadJson)
         case "delete_reminder", "delete_list", "delete_calendar", "delete_event":
             handleDeleteMutation(operation: operation, payloadJson: payloadJson)
         case "complete_reminder":
