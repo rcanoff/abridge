@@ -32,6 +32,8 @@ final class ContactsProvider {
             getContact(payloadJson: payloadJson)
         case "create_contact":
             createContact(payloadJson: payloadJson)
+        case "update_contact":
+            updateContact(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown contacts operation: \(operation)")
         }

@@ -129,6 +129,23 @@ struct ContactsDeserializationTests {
     }
 
     @Test
+    func applyWritableFieldsUpdatesOnlyProvidedKeys() throws {
+        let contact = CNMutableContact()
+        contact.givenName = "Jane"
+        contact.familyName = "Doe"
+        contact.note = "VIP"
+
+        try ContactsDeserialization.applyWritableFields(
+            from: ["given_name": "Janet", "note": NSNull()],
+            to: contact
+        )
+
+        #expect(contact.givenName == "Janet")
+        #expect(contact.familyName == "Doe")
+        #expect(contact.note.isEmpty)
+    }
+
+    @Test
     func mutableContactRejectsInvalidBase64ImageData() {
         let json: [String: Any] = [
             "given_name": "Bad",
