@@ -74,7 +74,9 @@ struct MenuBarPopoverView: View {
             .frame(maxWidth: .infinity)
 
             Button("Quit Apple Bridge") {
-                Task { await MenuBarQuitCoordinator.quit(serverStore: serverStore, appQuitter: appQuitter) }
+                Task { @MainActor in
+                    await MenuBarQuitCoordinator.quit(serverStore: serverStore, appQuitter: appQuitter)
+                }
             }
             .buttonStyle(.plain)
             .frame(maxWidth: .infinity)
