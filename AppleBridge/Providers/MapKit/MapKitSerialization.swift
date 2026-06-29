@@ -74,6 +74,21 @@ enum MapKitSerialization {
         ]
     }
 
+    static func openNavigationResponseJSONObject(result: MapKitOpenNavigationResult) -> [String: Any] {
+        var launchOptions: Any = NSNull()
+        if let directionsMode = result.directionsMode {
+            launchOptions = ["directions_mode": directionsMode]
+        }
+
+        return [
+            "opened": result.opened,
+            "source": mapItemJSONObject(from: result.source),
+            "destination": mapItemJSONObject(from: result.destination),
+            "transport_type": transportTypeJSONArray(from: result.transportType),
+            "launch_options": launchOptions,
+        ]
+    }
+
     static func routeJSONObject(from route: MapKitRouteData) -> [String: Any] {
         [
             "name": route.name,

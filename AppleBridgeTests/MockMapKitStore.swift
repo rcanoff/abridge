@@ -12,6 +12,7 @@ final class MockMapKitStore: MapKitStoreing {
     var calculateRouteResults: [MapKitCalculateRouteResult] = []
     var estimateTravelTimeResults: [MapKitEstimateTravelTimeResult] = []
     var lookupPlaceResults: [MKMapItem] = []
+    var openNavigationResults: [MapKitOpenNavigationResult] = []
     private(set) var lastRequest: MapKitSearchRequest?
     private(set) var lastNearbyRequest: MapKitSearchNearbyRequest?
     private(set) var lastReverseGeocodeRequest: MapKitReverseGeocodeRequest?
@@ -19,6 +20,7 @@ final class MockMapKitStore: MapKitStoreing {
     private(set) var lastCalculateRouteRequest: MapKitCalculateRouteRequest?
     private(set) var lastEstimateTravelTimeRequest: MapKitEstimateTravelTimeRequest?
     private(set) var lastLookupPlaceRequest: MapKitLookupPlaceRequest?
+    private(set) var lastOpenNavigationRequest: MapKitOpenNavigationRequest?
 
     func locationAuthorizationStatus() -> CLAuthorizationStatus {
         authorizationStatus
@@ -99,5 +101,22 @@ final class MockMapKitStore: MapKitStoreing {
 
         let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 0, longitude: 0))
         return MKMapItem(placemark: placemark)
+    }
+
+    func openNavigation(request: MapKitOpenNavigationRequest) throws -> MapKitOpenNavigationResult {
+        lastOpenNavigationRequest = request
+        if let first = openNavigationResults.first {
+            return first
+        }
+
+        let sourcePlacemark = MKPlacemark(coordinate: request.source.coordinate)
+        let destinationPlacemark = MKPlacemark(coordinate: request.destination.coordinate)
+        return MapKitOpenNavigationResult(
+            source: MKMapItem(placemark: sourcePlacemark),
+            destination: MKMapItem(placemark: destinationPlacemark),
+            transportType: request.transportType,
+            directionsMode: nil,
+            opened: true
+        )
     }
 }

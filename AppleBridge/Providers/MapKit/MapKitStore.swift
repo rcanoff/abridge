@@ -95,6 +95,20 @@ struct MapKitLookupPlaceRequest {
     let identifier: String
 }
 
+struct MapKitOpenNavigationRequest {
+    let source: MapKitRouteEndpoint
+    let destination: MapKitRouteEndpoint
+    let transportType: MKDirectionsTransportType
+}
+
+struct MapKitOpenNavigationResult {
+    let source: MKMapItem
+    let destination: MKMapItem
+    let transportType: MKDirectionsTransportType
+    let directionsMode: String?
+    let opened: Bool
+}
+
 @MainActor
 protocol MapKitStoreing {
     func locationAuthorizationStatus() -> CLAuthorizationStatus
@@ -105,4 +119,5 @@ protocol MapKitStoreing {
     func calculateRoute(request: MapKitCalculateRouteRequest) throws -> MapKitCalculateRouteResult
     func estimateTravelTime(request: MapKitEstimateTravelTimeRequest) throws -> MapKitEstimateTravelTimeResult
     func lookupPlace(request: MapKitLookupPlaceRequest) throws -> MKMapItem
+    func openNavigation(request: MapKitOpenNavigationRequest) throws -> MapKitOpenNavigationResult
 }

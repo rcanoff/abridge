@@ -51,6 +51,7 @@ pub const TOOL_FORWARD_GEOCODE: &str = "mapkit.forward_geocode";
 pub const TOOL_CALCULATE_ROUTE: &str = "mapkit.calculate_route";
 pub const TOOL_ESTIMATE_TRAVEL_TIME: &str = "mapkit.estimate_travel_time";
 pub const TOOL_LOOKUP_PLACE: &str = "mapkit.lookup_place";
+pub const TOOL_OPEN_NAVIGATION: &str = "mapkit.open_navigation";
 pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -62,7 +63,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 50] = [
+const ALL_TOOLS: [ToolDefinition; 51] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -407,6 +408,13 @@ const ALL_TOOLS: [ToolDefinition; 50] = [
     description: "Look up a place by MapKit identifier with full place metadata",
   },
   ToolDefinition {
+    name: TOOL_OPEN_NAVIGATION,
+    capability: capabilities::MAPKIT_NAVIGATION,
+    provider: "mapkit",
+    operation: "open_navigation",
+    description: "Open Apple Maps navigation between source and destination coordinates",
+  },
+  ToolDefinition {
     name: TOOL_GET_USAGE_LOG,
     capability: capabilities::DIAGNOSTICS_READ,
     provider: "diagnostics",
@@ -448,6 +456,14 @@ fn route_endpoint_schema() -> serde_json::Value {
       "coordinate": coordinate_schema()
     },
     "required": ["coordinate"]
+  })
+}
+
+/// Optional `transport_type`; Swift treats omitted or null as `.automobile`.
+fn nullable_transport_type_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": ["string", "null"],
+    "enum": ["automobile", "walking", "transit", "cycling", "any", null]
   })
 }
 
@@ -1312,6 +1328,15 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["identifier"]
     }),
+    TOOL_OPEN_NAVIGATION => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "source": route_endpoint_schema(),
+        "destination": route_endpoint_schema(),
+        "transport_type": nullable_transport_type_schema()
+      },
+      "required": ["source", "destination"]
+    }),
     TOOL_GET_USAGE_LOG => serde_json::json!({
       "type": "object",
       "properties": {
@@ -1363,8 +1388,8 @@ mod tests {
     TOOL_DELETE_REMINDER, TOOL_ESTIMATE_TRAVEL_TIME, TOOL_FORWARD_GEOCODE, TOOL_GET_CONTACT, TOOL_GET_EVENT,
     TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS, TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS,
     TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_LOOKUP_PLACE, TOOL_MOVE_EVENT,
-    TOOL_MOVE_REMINDER, TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY,
-    TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE,
+    TOOL_MOVE_REMINDER, TOOL_OPEN_NAVIGATION, TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS,
+    TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE,
     TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER,
     TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP,
     TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
@@ -2187,6 +2212,13 @@ mod tests {
   }
 
   #[test]
+  fn lists_open_navigation_tool_when_mapkit_navigation_capability_enabled() {
+    let tools = tools_for_capabilities(&["mapkit.navigation".into()]);
+    let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
+    assert_eq!(names, vec![TOOL_OPEN_NAVIGATION]);
+  }
+
+  #[test]
   fn calculate_route_schema_requires_source_and_destination() {
     let tool = all_tools()
       .iter()
@@ -2254,6 +2286,56 @@ mod tests {
       one_of
         .iter()
         .any(|branch| branch.get("not").and_then(|value| value.get("anyOf")).is_some())
+    );
+  }
+
+  #[test]
+  fn open_navigation_schema_requires_source_and_destination() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_OPEN_NAVIGATION)
+      .expect("open_navigation tool");
+    let schema = input_schema(tool);
+    assert_eq!(
+      schema
+        .get("required")
+        .and_then(|value| value.as_array())
+        .map(|items| items.iter().filter_map(|item| item.as_str()).collect::<Vec<_>>()),
+      Some(vec!["source", "destination"])
+    );
+    assert!(schema.get("properties").and_then(|p| p.get("source")).is_some());
+    assert!(schema.get("properties").and_then(|p| p.get("destination")).is_some());
+    assert!(schema.get("properties").and_then(|p| p.get("transport_type")).is_some());
+  }
+
+  #[test]
+  fn open_navigation_schema_allows_null_transport_type() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_OPEN_NAVIGATION)
+      .expect("open_navigation tool");
+    let schema = input_schema(tool);
+    let transport_type = schema
+      .get("properties")
+      .and_then(|properties| properties.get("transport_type"))
+      .expect("transport_type property");
+    assert_eq!(
+      transport_type
+        .get("type")
+        .and_then(|value| value.as_array())
+        .map(|types| {
+          types
+            .iter()
+            .filter_map(|entry| entry.as_str().map(str::to_owned))
+            .collect::<Vec<_>>()
+        }),
+      Some(vec!["string".to_owned(), "null".to_owned()])
+    );
+    assert!(
+      transport_type
+        .get("enum")
+        .and_then(|value| value.as_array())
+        .is_some_and(|values| values.iter().any(|entry| entry.is_null()))
     );
   }
 

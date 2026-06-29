@@ -299,6 +299,27 @@ struct LiveMapKitStore: MapKitStoreing {
         return try result.get()
     }
 
+    func openNavigation(request: MapKitOpenNavigationRequest) throws -> MapKitOpenNavigationResult {
+        let source = mapItem(for: request.source.coordinate)
+        let destination = mapItem(for: request.destination.coordinate)
+        let launchOptions = Self.launchOptions(for: request.transportType)
+        let opened = MKMapItem.openMaps(
+            with: [source, destination],
+            launchOptions: launchOptions
+        )
+        guard opened else {
+            throw MapKitProviderError.mapkitError("Failed to open Apple Maps navigation")
+        }
+
+        return MapKitOpenNavigationResult(
+            source: source,
+            destination: destination,
+            transportType: request.transportType,
+            directionsMode: Self.directionsModeValue(for: request.transportType),
+            opened: true
+        )
+    }
+
     private func mapItem(for coordinate: CLLocationCoordinate2D) -> MKMapItem {
         MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
     }
@@ -329,6 +350,35 @@ struct LiveMapKitStore: MapKitStoreing {
             polylineTitle: step.polyline.title,
             polylineSubtitle: step.polyline.subtitle
         )
+    }
+
+    private static func launchOptions(for transportType: MKDirectionsTransportType) -> [String: Any]? {
+        guard let directionsMode = directionsModeValue(for: transportType) else {
+            return nil
+        }
+
+        return [MKLaunchOptionsDirectionsModeKey: directionsMode]
+    }
+
+    private static func directionsModeValue(for transportType: MKDirectionsTransportType) -> String? {
+        if transportType == .any {
+            return nil
+        }
+
+        if transportType.contains(.automobile) {
+            return MKLaunchOptionsDirectionsModeDriving
+        }
+        if transportType.contains(.walking) {
+            return MKLaunchOptionsDirectionsModeWalking
+        }
+        if transportType.contains(.transit) {
+            return MKLaunchOptionsDirectionsModeTransit
+        }
+        if transportType.contains(.cycling) {
+            return MKLaunchOptionsDirectionsModeCycling
+        }
+
+        return MKLaunchOptionsDirectionsModeDriving
     }
 
     private static func coordinates(from polyline: MKPolyline) -> [CLLocationCoordinate2D] {
