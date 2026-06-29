@@ -34,6 +34,8 @@ final class ContactsProvider {
             createContact(payloadJson: payloadJson)
         case "update_contact":
             updateContact(payloadJson: payloadJson)
+        case "link_contacts":
+            linkContacts(payloadJson: payloadJson)
         case "delete_contact":
             deleteContact(payloadJson: payloadJson)
         default:
