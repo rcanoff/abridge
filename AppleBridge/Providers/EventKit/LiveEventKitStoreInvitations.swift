@@ -15,6 +15,15 @@ extension LiveEventKitStore {
         )
     }
 
+    func declineEventInvitation(_ event: EKEvent) throws {
+        guard EventKitInvitationResponse.canRespond(to: event) else {
+            throw EventKitProviderError.invalidArguments("Event has no invitation for the current user")
+        }
+        throw EventKitProviderError.eventKitError(
+            "Declining calendar invitations is not supported via public EventKit API on macOS"
+        )
+    }
+
     func tentativeEventInvitation(_ event: EKEvent) throws {
         guard EventKitInvitationResponse.canRespond(to: event) else {
             throw EventKitProviderError.invalidArguments("Event has no invitation for the current user")
