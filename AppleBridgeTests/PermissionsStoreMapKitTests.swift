@@ -6,21 +6,21 @@ import Testing
 struct PermissionsStoreMapKitTests {
     @Test
     @MainActor
-    func requiresAppleLocationAccessIsFalseForUnshippedMapKitToggle() throws {
-        let suiteName = "PermissionsStoreMapKitTests.unshipped"
+    func requiresAppleLocationAccessIsTrueForShippedMapKitToggle() throws {
+        let suiteName = "PermissionsStoreMapKitTests.shipped"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
 
         let store = PermissionsStore(appSettings: AppSettings(defaults: defaults))
         store.setChecked(true, for: "mapkit-search")
 
-        #expect(store.requiresAppleLocationAccess == false)
+        #expect(store.requiresAppleLocationAccess == true)
     }
 
     @Test
     @MainActor
-    func shouldNotApplySavedCapabilitiesAfterEnablingUnshippedMapKitWithoutAuthorization() throws {
-        let suiteName = "PermissionsStoreMapKitTests.unshippedApply"
+    func shouldNotApplySavedCapabilitiesAfterEnablingMapKitWithoutAuthorization() throws {
+        let suiteName = "PermissionsStoreMapKitTests.shippedApply"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
 
@@ -36,7 +36,7 @@ struct PermissionsStoreMapKitTests {
                     contactsAuthorized: true,
                     locationAuthorized: false
                 )
-            )
+            ) == false
         )
     }
 }

@@ -176,6 +176,6 @@ struct SettingsStoreGatedCapabilitiesTests {
         )
 
         #expect(await mock.startCallCount == 2)
-        #expect(await mock.lastEnabledCapabilities == ["diagnostics.read"])
+        #expect(await mock.lastEnabledCapabilities == ["diagnostics.read", "mapkit.search"])
     }
 }

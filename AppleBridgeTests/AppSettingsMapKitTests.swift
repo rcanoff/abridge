@@ -6,7 +6,7 @@ import Testing
 struct AppSettingsMapKitTests {
     @Test
     @MainActor
-    func serverEnabledMCPCapabilityIDsOmitsMapKitCapabilitiesWithoutAuthorization() throws {
+    func serverEnabledMCPCapabilityIDsIncludesMapKitSearchWhenLocationAuthorized() throws {
         let suiteName = "AppSettingsMapKitTests.mapkitServerGating"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
@@ -14,7 +14,7 @@ struct AppSettingsMapKitTests {
         let appSettings = AppSettings(defaults: defaults)
         appSettings.saveCapabilityIDs(["mapkit-search"])
 
-        #expect(appSettings.enabledMapKitCapabilityIDs.isEmpty)
+        #expect(appSettings.enabledMapKitCapabilityIDs == ["mapkit.search"])
         #expect(
             appSettings.serverEnabledMCPCapabilityIDs(
                 remindersAuthorized: false,
@@ -29,7 +29,7 @@ struct AppSettingsMapKitTests {
                 eventsAuthorized: false,
                 contactsAuthorized: false,
                 locationAuthorized: true
-            ) == ["diagnostics.read"]
+            ) == ["diagnostics.read", "mapkit.search"]
         )
     }
 }
