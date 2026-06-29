@@ -147,17 +147,26 @@ enum EventKitMockParticipantSupport {
             "B@:"
         )
 
-        let statusBlock: @convention(block) (AnyObject) -> Int32 = { participant in
+        guard
+            let statusMethod = class_getInstanceMethod(
+                EKParticipant.self,
+                #selector(getter: EKParticipant.participantStatus)
+            ),
+            let statusTypeEncoding = method_getTypeEncoding(statusMethod)
+        else {
+            fatalError("Failed to read EKParticipant.participantStatus method encoding")
+        }
+
+        let statusBlock: @convention(block) (AnyObject) -> Int = { participant in
             stateLock.lock()
             defer { stateLock.unlock() }
-            let raw = participantStatuses[ObjectIdentifier(participant)] ?? EKParticipantStatus.unknown.rawValue
-            return Int32(raw)
+            return participantStatuses[ObjectIdentifier(participant)] ?? EKParticipantStatus.unknown.rawValue
         }
         class_addMethod(
             dynamicClass,
             #selector(getter: EKParticipant.participantStatus),
             imp_implementationWithBlock(statusBlock),
-            "i@:"
+            statusTypeEncoding
         )
 
         objc_registerClassPair(dynamicClass)
