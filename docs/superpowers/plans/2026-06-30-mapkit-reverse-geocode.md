@@ -254,7 +254,13 @@ static func reverseGeocodeResponseJSONObject(mapItems: [MKMapItem]) -> [String: 
 
 ```swift
 func reverseGeocode(request: MapKitReverseGeocodeRequest) throws -> [MKMapItem] {
-    let mkRequest = MKReverseGeocodingRequest(coordinate: request.coordinate)
+    let location = CLLocation(
+        latitude: request.coordinate.latitude,
+        longitude: request.coordinate.longitude
+    )
+    guard let mkRequest = MKReverseGeocodingRequest(location: location) else {
+        throw MapKitProviderError.mapkitError("MapKit reverse geocode request could not be created")
+    }
     var mapItems: [MKMapItem]?
     var geocodeError: Error?
 

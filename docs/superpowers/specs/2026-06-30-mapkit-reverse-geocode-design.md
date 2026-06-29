@@ -32,7 +32,9 @@ Use **`MKReverseGeocodingRequest`** (MapKit geocoding API, macOS 26 SDK):
 
 | MCP argument | Apple API |
 |--------------|-----------|
-| `coordinate.latitude` / `coordinate.longitude` | `MKReverseGeocodingRequest(coordinate:)` |
+| `coordinate.latitude` / `coordinate.longitude` | `MKReverseGeocodingRequest(location:)` via mechanical `CLLocation(latitude:longitude:)` bridge |
+
+macOS 26 SDK (`MKReverseGeocodingRequest.h`) exposes only `-initWithLocation:` / `init(location:)` — there is no platform `init(coordinate:)`. The MCP tool is coordinate-only; `LiveMapKitStore` constructs a `CLLocation` from the supplied latitude/longitude (no invented altitude, course, or accuracy) and passes it to the sole MapKit initializer. Extra `CLLocation` metadata defaults are not part of the MCP contract and are not forwarded as tool input.
 
 `mapItems` is an async property; the provider blocks on the main actor using the existing **RunLoop pump** pattern (`MapKitSearchFetch.waitForCompletion`) with a `@MainActor` `Task` — same synchronous FFI contract as `search_places` / `search_nearby`.
 

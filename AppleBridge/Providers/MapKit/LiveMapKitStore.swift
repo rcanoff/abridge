@@ -2,15 +2,6 @@ import CoreLocation
 import Foundation
 import MapKit
 
-extension MKReverseGeocodingRequest {
-    /// MapKit exposes `init(location:)` only; bridge coordinate-only MCP input through that API.
-    convenience init(coordinate: CLLocationCoordinate2D) {
-        self.init(
-            location: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        )!
-    }
-}
-
 @MainActor
 enum MapKitSearchFetch {
     /// Upper bound for blocking the main actor while MapKit delivers its callback.
@@ -106,7 +97,14 @@ struct LiveMapKitStore: MapKitStoreing {
     }
 
     func reverseGeocode(request: MapKitReverseGeocodeRequest) throws -> [MKMapItem] {
-        let mkRequest = MKReverseGeocodingRequest(coordinate: request.coordinate)
+        // macOS 26 SDK: MKReverseGeocodingRequest exposes only init(location:), not init(coordinate:).
+        let location = CLLocation(
+            latitude: request.coordinate.latitude,
+            longitude: request.coordinate.longitude
+        )
+        guard let mkRequest = MKReverseGeocodingRequest(location: location) else {
+            throw MapKitProviderError.mapkitError("MapKit reverse geocode request could not be created")
+        }
         var mapItems: [MKMapItem]?
         var geocodeError: Error?
 
