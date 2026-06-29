@@ -16,9 +16,22 @@ struct AppleBridgeApp: App {
     @State private var settingsStore: SettingsStore
 
     init() {
-        switch AppleBridgeAppBootstrap.performEntry(
+        self.init(
             isRunningUnitTests: Self.isRunningUnitTests,
-            singleInstanceChecker: RunningApplicationInstanceChecker()
+            singleInstanceChecker: RunningApplicationInstanceChecker(),
+            storeMaker: ProductionAppleBridgeAppStoreMaker()
+        )
+    }
+
+    init(
+        isRunningUnitTests: Bool,
+        singleInstanceChecker: any SingleInstanceChecking,
+        storeMaker: any AppleBridgeAppStoreMaking
+    ) {
+        switch AppleBridgeAppBootstrap.performEntry(
+            isRunningUnitTests: isRunningUnitTests,
+            singleInstanceChecker: singleInstanceChecker,
+            storeMaker: storeMaker
         ) {
         case .exitDuplicate:
             exit(0)
@@ -29,7 +42,7 @@ struct AppleBridgeApp: App {
             _settingsStore = State(initialValue: stores.settingsStore)
             _store = State(initialValue: stores.store)
 
-            guard !Self.isRunningUnitTests else { return }
+            guard !isRunningUnitTests else { return }
 
             AppleBridgeAppLaunchSupport.scheduleLaunchRestore(
                 settingsStore: stores.settingsStore,
