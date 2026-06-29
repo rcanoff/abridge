@@ -1,4 +1,5 @@
 import AppKit
+import EventKit
 import SwiftUI
 
 struct PermissionsSettingsView: View {
@@ -15,7 +16,11 @@ struct PermissionsSettingsView: View {
         self.permissionsStore = permissionsStore
         self.settingsStore = settingsStore
         self.appStore = appStore
-        _calendarReadAuthorized = State(initialValue: appStore.calendarPermissionStatus.grantsReadAccess)
+        _calendarReadAuthorized = State(
+            initialValue: EventsPermissionStatusMapper.map(
+                EKEventStore.authorizationStatus(for: .event)
+            ).grantsReadAccess
+        )
     }
 
     var body: some View {

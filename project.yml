@@ -31,6 +31,7 @@ targets:
         INFOPLIST_KEY_NSRemindersUsageDescription: "Apple Bridge needs access to your reminders to expose them through the local MCP bridge."
         INFOPLIST_KEY_NSContactsUsageDescription: "Apple Bridge needs access to your contacts to expose them through the local MCP bridge."
         INFOPLIST_KEY_NSCalendarsUsageDescription: "Apple Bridge needs access to your calendars and events to expose them through the local MCP bridge."
+        INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription: "Apple Bridge needs full access to your calendars and events to expose them through the local MCP bridge."
         INFOPLIST_KEY_CFBundleDisplayName: Apple Bridge
         SWIFT_OBJC_BRIDGING_HEADER: AppleBridge/AppleBridge-Bridging-Header.h
   AppleBridgeTests:
