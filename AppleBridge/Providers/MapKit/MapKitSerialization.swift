@@ -48,6 +48,12 @@ enum MapKitSerialization {
         ]
     }
 
+    static func reverseGeocodeResponseJSONObject(mapItems: [MKMapItem]) -> [String: Any] {
+        [
+            "map_items": mapItems.map(mapItemJSONObject(from:)),
+        ]
+    }
+
     // MARK: - Nested types
 
     static func locationJSONObject(from location: CLLocation?) -> Any {

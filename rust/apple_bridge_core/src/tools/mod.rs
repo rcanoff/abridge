@@ -46,6 +46,7 @@ pub const TOOL_DELETE_CONTACT: &str = "contacts.delete_contact";
 pub const TOOL_DELETE_GROUP: &str = "contacts.delete_group";
 pub const TOOL_SEARCH_PLACES: &str = "mapkit.search_places";
 pub const TOOL_SEARCH_NEARBY: &str = "mapkit.search_nearby";
+pub const TOOL_REVERSE_GEOCODE: &str = "mapkit.reverse_geocode";
 pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -57,7 +58,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 45] = [
+const ALL_TOOLS: [ToolDefinition; 46] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -365,6 +366,13 @@ const ALL_TOOLS: [ToolDefinition; 45] = [
     provider: "mapkit",
     operation: "search_nearby",
     description: "Search for points of interest near a coordinate or region",
+  },
+  ToolDefinition {
+    name: TOOL_REVERSE_GEOCODE,
+    capability: capabilities::MAPKIT_GEOCODE,
+    provider: "mapkit",
+    operation: "reverse_geocode",
+    description: "Resolve a coordinate to address representations",
   },
   ToolDefinition {
     name: TOOL_GET_USAGE_LOG,
@@ -1138,6 +1146,20 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         }
       }
     }),
+    TOOL_REVERSE_GEOCODE => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "coordinate": {
+          "type": "object",
+          "properties": {
+            "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+            "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
+          },
+          "required": ["latitude", "longitude"]
+        }
+      },
+      "required": ["coordinate"]
+    }),
     TOOL_GET_USAGE_LOG => serde_json::json!({
       "type": "object",
       "properties": {
@@ -1188,11 +1210,11 @@ mod tests {
     TOOL_DELETE_CONTACT, TOOL_DELETE_EVENT, TOOL_DELETE_GROUP, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER,
     TOOL_GET_CONTACT, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS, TOOL_LIST_CALENDARS,
     TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT,
-    TOOL_MOVE_REMINDER, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES,
-    TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS,
-    TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS,
-    TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools,
-    input_schema, tools_for_capabilities,
+    TOOL_MOVE_REMINDER, TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY,
+    TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE,
+    TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER,
+    TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP,
+    TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
   };
 
   fn array_items_type(schema: &serde_json::Value, property: &str) -> Option<String> {
@@ -1935,6 +1957,30 @@ mod tests {
     let tools = tools_for_capabilities(&["mapkit.search".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
     assert_eq!(names, vec![TOOL_SEARCH_PLACES, TOOL_SEARCH_NEARBY]);
+  }
+
+  #[test]
+  fn lists_reverse_geocode_tool_when_mapkit_geocode_capability_enabled() {
+    let tools = tools_for_capabilities(&["mapkit.geocode".into()]);
+    let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
+    assert_eq!(names, vec![TOOL_REVERSE_GEOCODE]);
+  }
+
+  #[test]
+  fn reverse_geocode_schema_requires_coordinate() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_REVERSE_GEOCODE)
+      .expect("reverse_geocode tool");
+    let schema = input_schema(tool);
+    assert_eq!(
+      schema
+        .get("required")
+        .and_then(|value| value.as_array())
+        .map(|items| items.iter().filter_map(|item| item.as_str()).collect::<Vec<_>>()),
+      Some(vec!["coordinate"])
+    );
+    assert!(schema.get("properties").and_then(|p| p.get("coordinate")).is_some());
   }
 
   #[test]

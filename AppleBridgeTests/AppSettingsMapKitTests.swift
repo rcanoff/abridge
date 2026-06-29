@@ -31,5 +31,16 @@ struct AppSettingsMapKitTests {
                 locationAuthorized: true
             ) == ["diagnostics.read", "mapkit.search"]
         )
+
+        appSettings.saveCapabilityIDs(["mapkit-geocode"])
+        #expect(appSettings.enabledMapKitCapabilityIDs == ["mapkit.geocode"])
+        #expect(
+            appSettings.serverEnabledMCPCapabilityIDs(
+                remindersAuthorized: false,
+                eventsAuthorized: false,
+                contactsAuthorized: false,
+                locationAuthorized: true
+            ).contains("mapkit.geocode")
+        )
     }
 }

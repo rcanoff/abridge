@@ -58,6 +58,31 @@ struct AppleProviderBridgeMapKitTests {
 
     @Test
     @MainActor
+    func callProviderMapKitReverseGeocodeSucceedsWithMockStore() throws {
+        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
+        let item = MKMapItem(placemark: placemark)
+        item.name = "Reverse Mock Address"
+        let store = MockMapKitStore()
+        store.authorizationStatus = .authorized
+        store.reverseGeocodeResults = [[item]]
+        let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: store))
+
+        let request = ProviderRequest(
+            provider: "mapkit",
+            operation: "reverse_geocode",
+            payloadJson: #"{"coordinate":{"latitude":37.3346,"longitude":-122.0090}}"#
+        )
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let mapItems = decoded?["map_items"] as? [[String: Any]]
+        #expect(mapItems?.first?["name"] as? String == "Reverse Mock Address")
+    }
+
+    @Test
+    @MainActor
     func callProviderMapKitReturnsUnknownOperation() throws {
         let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: MockMapKitStore()))
         let request = ProviderRequest(provider: "mapkit", operation: "lookup_place", payloadJson: "{}")

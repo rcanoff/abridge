@@ -1715,6 +1715,48 @@ fn tools_call_dispatches_search_nearby() {
 }
 
 #[test]
+fn mcp_tools_list_includes_reverse_geocode_when_mapkit_geocode_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":13,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    mapkit_config_on_port(port, vec!["mapkit.geocode".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("mapkit.reverse_geocode"));
+}
+
+#[test]
+fn tools_call_dispatches_reverse_geocode() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"mapkit.reverse_geocode","arguments":{"coordinate":{"latitude":37.3346,"longitude":-122.0090}}}}"#;
+
+  let handle = create_server(
+    mapkit_config_on_port(port, vec!["mapkit.geocode".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "mapkit");
+  assert_eq!(recorded.operation, "reverse_geocode");
+  assert!(recorded.payload_json.contains("37.3346"));
+}
+
+#[test]
 fn tools_call_unknown_tool() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
