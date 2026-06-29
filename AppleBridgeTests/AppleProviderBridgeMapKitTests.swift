@@ -212,6 +212,30 @@ struct AppleProviderBridgeMapKitTests {
 
     @Test
     @MainActor
+    func callProviderMapKitLookupPlaceSucceedsWithMockStore() throws {
+        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
+        let item = MKMapItem(placemark: placemark)
+        item.name = "Bridge Lookup Place"
+        let store = MockMapKitStore()
+        store.authorizationStatus = .authorized
+        store.lookupPlaceResults = [item]
+        let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: store))
+
+        let request = ProviderRequest(
+            provider: "mapkit",
+            operation: "lookup_place",
+            payloadJson: #"{"identifier":"I1234567890"}"#
+        )
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        #expect(decoded?["name"] as? String == "Bridge Lookup Place")
+    }
+
+    @Test
+    @MainActor
     func callProviderMapKitOpenNavigationSucceedsWithMockStore() throws {
         let sourcePlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
         let destinationPlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(
@@ -259,7 +283,7 @@ struct AppleProviderBridgeMapKitTests {
     @MainActor
     func callProviderMapKitReturnsUnknownOperation() throws {
         let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: MockMapKitStore()))
-        let request = ProviderRequest(provider: "mapkit", operation: "lookup_place", payloadJson: "{}")
+        let request = ProviderRequest(provider: "mapkit", operation: "not_a_mapkit_operation", payloadJson: "{}")
         let response = bridge.callProvider(request: request)
         #expect(response.ok == false)
 
@@ -267,7 +291,7 @@ struct AppleProviderBridgeMapKitTests {
         let data = try #require(errorJson.data(using: .utf8))
         let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         #expect(decoded?["code"] as? String == "unknown_operation")
-        #expect((decoded?["message"] as? String)?.contains("lookup_place") == true)
+        #expect((decoded?["message"] as? String)?.contains("not_a_mapkit_operation") == true)
     }
 
     private func calculateRoutePayload(
