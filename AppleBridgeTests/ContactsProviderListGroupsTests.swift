@@ -65,6 +65,7 @@ struct ContactsProviderListGroupsTests {
         )
 
         #expect(response.ok == true)
+        #expect(mockStore.lastFetchGroupsContainerIdentifier == "container-1")
     }
 
     @Test

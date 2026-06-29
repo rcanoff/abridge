@@ -9,6 +9,7 @@ final class MockContactsStore: ContactsStoreing {
     var groups: [CNGroup] = []
     var knownContainerIdentifiers: Set<String> = ["container-1"]
     var fetchError: ContactsProviderError?
+    var lastFetchGroupsContainerIdentifier: String?
 
     func contactsAuthorizationStatus() -> CNAuthorizationStatus {
         authorizationStatus
@@ -31,6 +32,8 @@ final class MockContactsStore: ContactsStoreing {
     }
 
     func fetchGroups(containerIdentifier: String?) throws -> [CNGroup] {
+        lastFetchGroupsContainerIdentifier = containerIdentifier
+
         if let fetchError {
             throw fetchError
         }
