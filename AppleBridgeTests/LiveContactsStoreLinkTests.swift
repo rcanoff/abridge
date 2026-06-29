@@ -39,7 +39,7 @@ struct LiveContactsStoreLinkTests {
     }
 
     @Test
-    func liveLinkingPathDoesNotThrowLinkingUnavailableWhenRuntimeSupportsLinking() throws {
+    func liveLinkingPathCompletesWithoutCrashWhenRuntimeSupportsLinking() throws {
         let fromMutable = try #require(
             ContactsTestSupport.makeRichContact().mutableCopy() as? CNMutableContact
         )
@@ -59,6 +59,8 @@ struct LiveContactsStoreLinkTests {
             return
         }
 
+        // Typed BOOL objc_msgSend bridge must not trap on primitive YES/NO returns.
+        #expect(ABContactLinkingIsAvailable())
         do {
             try ContactsSaveRequestLinking.link(from: fromMutable, to: toMutable, in: saveRequest)
         } catch let error as ContactsProviderError {
