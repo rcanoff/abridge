@@ -2,5 +2,6 @@ import Foundation
 
 @MainActor
 protocol EventsPermissionChecking {
-    func grantsReadAccess() -> Bool
+    func currentStatus() -> EventsPermissionStatus
+    func requestAccess() async throws -> EventsPermissionStatus
 }

@@ -184,7 +184,7 @@ final class SettingsStore {
     private var serverEnabledCapabilities: [String] {
         appSettings.serverEnabledMCPCapabilityIDs(
             remindersAuthorized: permissionService.currentStatus().grantsReadAccess,
-            eventsAuthorized: eventsPermissionService.grantsReadAccess(),
+            eventsAuthorized: eventsPermissionService.currentStatus().grantsReadAccess,
             contactsAuthorized: contactsPermissionService.currentStatus().grantsReadAccess
         )
     }

@@ -101,4 +101,72 @@ struct AppStoreTests {
 
         #expect(store.lastError == "Unable to open Reminders privacy settings.")
     }
+
+    @Test
+    @MainActor
+    func refreshStatusUpdatesCalendarPermissionStatus() {
+        let mock = MockEventsPermissionService()
+        mock.status = .denied
+        let store = AppStore(eventsPermissionService: mock)
+
+        store.refreshStatus()
+
+        #expect(store.calendarPermissionStatus == .denied)
+    }
+
+    @Test
+    @MainActor
+    func requestCalendarAccessUpdatesStatusOnSuccess() async {
+        let mock = MockEventsPermissionService()
+        mock.status = .notDetermined
+        mock.requestResult = .success(.authorized)
+        let store = AppStore(eventsPermissionService: mock)
+
+        await store.requestCalendarAccess()
+
+        #expect(store.calendarPermissionStatus == .authorized)
+        #expect(store.isRequestingCalendarPermission == false)
+        #expect(store.lastError == nil)
+        #expect(mock.requestCallCount == 1)
+    }
+
+    @Test
+    @MainActor
+    func requestCalendarAccessSetsErrorOnFailure() async {
+        let mock = MockEventsPermissionService()
+        mock.requestResult = .failure(
+            EventsPermissionError.requestFailed("permission denied by user")
+        )
+        let store = AppStore(eventsPermissionService: mock)
+
+        await store.requestCalendarAccess()
+
+        #expect(store.lastError == "permission denied by user")
+        #expect(store.isRequestingCalendarPermission == false)
+    }
+
+    @Test
+    @MainActor
+    func openCalendarPrivacySettingsClearsErrorOnSuccess() {
+        let urlOpener = MockURLOpener()
+        urlOpener.shouldSucceed = true
+        let store = AppStore(urlOpener: urlOpener)
+
+        store.openCalendarPrivacySettings()
+
+        #expect(store.lastError == nil)
+        #expect(urlOpener.openedURL != nil)
+    }
+
+    @Test
+    @MainActor
+    func openCalendarPrivacySettingsSetsErrorOnFailure() {
+        let urlOpener = MockURLOpener()
+        urlOpener.shouldSucceed = false
+        let store = AppStore(urlOpener: urlOpener)
+
+        store.openCalendarPrivacySettings()
+
+        #expect(store.lastError == "Unable to open Calendars privacy settings.")
+    }
 }

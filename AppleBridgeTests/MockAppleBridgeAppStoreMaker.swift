@@ -18,15 +18,18 @@ final class MockAppleBridgeAppStoreMaker: AppleBridgeAppStoreMaking, @unchecked 
         let mock = MockServerService()
         let serverStore = ServerStore(serverService: mock)
         let permissionService = RemindersPermissionService()
+        let eventsPermissionService = EventsPermissionService()
         let contactsPermissionService = ContactsPermissionService()
         let store = AppStore(
             permissionService: permissionService,
+            eventsPermissionService: eventsPermissionService,
             contactsPermissionService: contactsPermissionService
         )
         let settingsStore = SettingsStore(
             appSettings: appSettings,
             serverStore: serverStore,
             permissionService: permissionService,
+            eventsPermissionService: eventsPermissionService,
             contactsPermissionService: contactsPermissionService
         )
         let permissionsStore = PermissionsStore(appSettings: appSettings)
