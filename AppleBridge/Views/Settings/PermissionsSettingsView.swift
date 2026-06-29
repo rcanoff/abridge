@@ -1,12 +1,10 @@
 import AppKit
-import EventKit
 import SwiftUI
 
 struct PermissionsSettingsView: View {
     @Bindable var permissionsStore: PermissionsStore
     @Bindable var settingsStore: SettingsStore
     @Bindable var appStore: AppStore
-    @State private var eventsReadAuthorized = PermissionsEventKitAuthorization.eventsReadAuthorized
 
     var body: some View {
         Form {
@@ -17,6 +15,13 @@ struct PermissionsSettingsView: View {
                     isRequestingPermission: appStore.isRequestingPermission,
                     onOpenSystemSettings: { appStore.openRemindersPrivacySettings() },
                     onRequestPermissions: { Task { await appStore.requestAccess() } }
+                )
+                AppleCalendarsPermissionRow(
+                    required: permissionsStore.requiresCalendarAccess,
+                    granted: appStore.calendarPermissionStatus.grantsReadAccess,
+                    isRequestingPermission: appStore.isRequestingCalendarPermission,
+                    onOpenSystemSettings: { appStore.openCalendarPrivacySettings() },
+                    onRequestPermissions: { Task { await appStore.requestCalendarAccess() } }
                 )
                 AppleContactsPermissionRow(
                     required: permissionsStore.requiresAppleContactsAccess,
@@ -53,18 +58,28 @@ struct PermissionsSettingsView: View {
         .onAppear {
             appStore.refreshStatus()
             permissionsStore.reloadFromSettings()
-            refreshEventsAuthorizationAndReapplyIfNeeded()
+            reapplyCapabilitiesIfCalendarAccessGranted()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             appStore.refreshStatus()
-            refreshEventsAuthorizationAndReapplyIfNeeded()
+            reapplyCapabilitiesIfCalendarAccessGranted()
         }
         .onChange(of: appStore.permissionStatus.grantsReadAccess) { _, remindersAuthorized in
             guard remindersAuthorized, permissionsStore.requiresAppleRemindersAccess else { return }
             Task {
                 await settingsStore.applySavedCapabilities(
                     remindersAuthorized: true,
-                    eventsAuthorized: PermissionsEventKitAuthorization.eventsReadAuthorized,
+                    eventsAuthorized: appStore.calendarPermissionStatus.grantsReadAccess,
+                    contactsAuthorized: appStore.contactsPermissionStatus.grantsReadAccess
+                )
+            }
+        }
+        .onChange(of: appStore.calendarPermissionStatus.grantsReadAccess) { _, eventsAuthorized in
+            guard eventsAuthorized, permissionsStore.requiresCalendarAccess else { return }
+            Task {
+                await settingsStore.applySavedCapabilities(
+                    remindersAuthorized: appStore.permissionStatus.grantsReadAccess,
+                    eventsAuthorized: true,
                     contactsAuthorized: appStore.contactsPermissionStatus.grantsReadAccess
                 )
             }
@@ -74,7 +89,7 @@ struct PermissionsSettingsView: View {
             Task {
                 await settingsStore.applySavedCapabilities(
                     remindersAuthorized: appStore.permissionStatus.grantsReadAccess,
-                    eventsAuthorized: PermissionsEventKitAuthorization.eventsReadAuthorized,
+                    eventsAuthorized: appStore.calendarPermissionStatus.grantsReadAccess,
                     contactsAuthorized: true
                 )
             }
@@ -96,7 +111,7 @@ struct PermissionsSettingsView: View {
             set: { newValue in
                 permissionsStore.setChecked(newValue, for: capabilityID)
                 let remindersAuthorized = appStore.permissionStatus.grantsReadAccess
-                let eventsAuthorized = PermissionsEventKitAuthorization.eventsReadAuthorized
+                let eventsAuthorized = appStore.calendarPermissionStatus.grantsReadAccess
                 let contactsAuthorized = appStore.contactsPermissionStatus.grantsReadAccess
                 guard permissionsStore.shouldApplySavedCapabilitiesAfterToggle(
                     enabling: newValue,
@@ -116,26 +131,17 @@ struct PermissionsSettingsView: View {
         )
     }
 
-    private func refreshEventsAuthorizationAndReapplyIfNeeded() {
-        let current = PermissionsEventKitAuthorization.eventsReadAuthorized
-        let becameAuthorized = current && !eventsReadAuthorized
-        eventsReadAuthorized = current
-
-        guard becameAuthorized, permissionsStore.requiresCalendarAccess else { return }
+    private func reapplyCapabilitiesIfCalendarAccessGranted() {
+        guard appStore.calendarPermissionStatus.grantsReadAccess,
+              permissionsStore.requiresCalendarAccess else { return }
 
         Task {
             await settingsStore.applySavedCapabilities(
                 remindersAuthorized: appStore.permissionStatus.grantsReadAccess,
-                eventsAuthorized: current,
+                eventsAuthorized: true,
                 contactsAuthorized: appStore.contactsPermissionStatus.grantsReadAccess
             )
         }
-    }
-}
-
-private enum PermissionsEventKitAuthorization {
-    static var eventsReadAuthorized: Bool {
-        EKEventStore.authorizationStatus(for: .event) == .fullAccess
     }
 }
 
@@ -237,6 +243,43 @@ private struct AppleRemindersPermissionRow: View {
                 .buttonStyle(.borderless)
                 .accessibilityLabel("Open Reminders System Settings")
                 .help("Open Reminders System Settings")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
+    }
+}
+
+private struct AppleCalendarsPermissionRow: View {
+    let required: Bool
+    let granted: Bool
+    let isRequestingPermission: Bool
+    let onOpenSystemSettings: () -> Void
+    let onRequestPermissions: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Calendars Full Access")
+                ApplePermissionAccessStatusLabel(required: required, granted: granted)
+            }
+
+            Spacer(minLength: 8)
+
+            HStack(spacing: 8) {
+                Button("Request Permissions", action: onRequestPermissions)
+                    .buttonStyle(.borderless)
+                    .disabled(granted || isRequestingPermission)
+
+                Button(action: onOpenSystemSettings) {
+                    Image(nsImage: SystemSettingsIcon.image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Open Calendars System Settings")
+                .help("Open Calendars System Settings")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

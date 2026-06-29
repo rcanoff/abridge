@@ -17,7 +17,7 @@ struct SettingsStoreCalendarCapabilitiesTests {
         let remindersMock = MockRemindersPermissionService()
         remindersMock.status = .denied
         let eventsMock = MockEventsPermissionService()
-        eventsMock.grantsReadAccessValue = true
+        eventsMock.status = .authorized
         let mock = MockServerService()
         let serverStore = ServerStore(serverService: mock)
         let settingsStore = SettingsStore(
@@ -44,7 +44,7 @@ struct SettingsStoreCalendarCapabilitiesTests {
         appSettings.saveCapabilityIDs(["calendars-read"])
 
         let eventsMock = MockEventsPermissionService()
-        eventsMock.grantsReadAccessValue = false
+        eventsMock.status = .denied
         let mock = MockServerService()
         let serverStore = ServerStore(serverService: mock)
         let settingsStore = SettingsStore(
