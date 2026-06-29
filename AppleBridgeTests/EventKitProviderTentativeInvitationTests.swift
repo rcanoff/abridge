@@ -3,7 +3,7 @@ import EventKit
 import Foundation
 import Testing
 
-@Suite("EventKitProviderTentativeInvitation")
+@Suite("EventKitProviderTentativeInvitation", .serialized)
 struct EventKitProviderTentativeInvitationTests {
     private static let eventReadKeys: Set<String> = [
         "calendar_item_identifier",
@@ -48,7 +48,7 @@ struct EventKitProviderTentativeInvitationTests {
             calendarIdentifier: "cal-invite",
             title: "Team sync"
         )
-        mockStore.invitationRespondableEventIDs = ["evt-invite-1"]
+        mockStore.attachMockCurrentUserAttendee(to: event, status: .pending)
         mockStore.events = [event]
         return (EventKitProvider(store: mockStore), mockStore)
     }
