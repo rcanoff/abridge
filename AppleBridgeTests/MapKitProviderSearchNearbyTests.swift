@@ -34,7 +34,11 @@ struct MapKitProviderSearchNearbyTests {
         let provider = MapKitProvider(store: MockMapKitStore())
         let response = provider.handle(
             operation: "search_nearby",
-            payloadJson: #"{"region":{"center":{"latitude":37.0,"longitude":-122.0},"span":{"latitude_delta":0.1,"longitude_delta":0.1}},"coordinate":{"latitude":37.0,"longitude":-122.0}}"#
+            payloadJson: """
+            {"region":{"center":{"latitude":37.0,"longitude":-122.0},"span":\
+            {"latitude_delta":0.1,"longitude_delta":0.1}},"coordinate":\
+            {"latitude":37.0,"longitude":-122.0}}
+            """
         )
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
