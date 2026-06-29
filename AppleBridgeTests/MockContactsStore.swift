@@ -28,4 +28,60 @@ final class MockContactsStore: ContactsStoreing {
 
         return contacts
     }
+
+    func searchContacts(
+        name: String?,
+        emailAddress: String?,
+        phoneNumber: String?,
+        containerIdentifier: String?
+    ) throws -> [CNContact] {
+        if let fetchError {
+            throw fetchError
+        }
+
+        if let containerIdentifier {
+            guard knownContainerIdentifiers.contains(containerIdentifier) else {
+                throw ContactsProviderError.invalidArguments(
+                    "Unknown container_identifier: \(containerIdentifier)"
+                )
+            }
+        }
+
+        return contacts.filter { contact in
+            if let name, !matchesName(contact, name) {
+                return false
+            }
+            if let emailAddress, !matchesEmail(contact, emailAddress) {
+                return false
+            }
+            if let phoneNumber, !matchesPhone(contact, phoneNumber) {
+                return false
+            }
+            return true
+        }
+    }
+
+    private func matchesName(_ contact: CNContact, _ name: String) -> Bool {
+        let searchableFields = [
+            contact.givenName,
+            contact.familyName,
+            contact.middleName,
+            contact.nickname,
+            contact.organizationName,
+        ]
+        let haystack = searchableFields.joined(separator: " ").lowercased()
+        return haystack.contains(name.lowercased())
+    }
+
+    private func matchesEmail(_ contact: CNContact, _ emailAddress: String) -> Bool {
+        contact.emailAddresses.contains { labeledValue in
+            (labeledValue.value as String).localizedCaseInsensitiveContains(emailAddress)
+        }
+    }
+
+    private func matchesPhone(_ contact: CNContact, _ phoneNumber: String) -> Bool {
+        contact.phoneNumbers.contains { labeledValue in
+            labeledValue.value.stringValue.localizedCaseInsensitiveContains(phoneNumber)
+        }
+    }
 }
