@@ -118,6 +118,31 @@ final class LiveContactsStore: ContactsStoreing {
         return ContactsSearchSupport.intersectContacts(contactSets)
     }
 
+    func updateGroup(identifier: String, fields: [String: Any]) throws -> CNGroup {
+        guard let existing = try fetchGroup(identifier: identifier) else {
+            throw ContactsProviderError.invalidArguments("Unknown group_identifier: \(identifier)")
+        }
+
+        guard let mutable = existing.mutableCopy() as? CNMutableGroup else {
+            throw ContactsProviderError.contactsError("Failed to copy group")
+        }
+
+        try ContactsGroupDeserialization.applyWritableFields(from: fields, to: mutable)
+
+        let saveRequest = CNSaveRequest()
+        saveRequest.update(mutable)
+        do {
+            try contactStore.execute(saveRequest)
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
+
+        guard let saved = try fetchGroup(identifier: identifier) else {
+            throw ContactsProviderError.contactsError("Failed to fetch updated group")
+        }
+        return saved
+    }
+
     func createGroup(in containerIdentifier: String, name: String) throws -> CNGroup {
         let containers = try contactStore.containers(matching: nil)
         guard containers.contains(where: { $0.identifier == containerIdentifier }) else {
@@ -206,6 +231,17 @@ final class LiveContactsStore: ContactsStoreing {
             throw ContactsProviderError.contactsError("Failed to fetch updated contact")
         }
         return saved
+    }
+
+    private func fetchGroup(identifier: String) throws -> CNGroup? {
+        do {
+            let groups = try contactStore.groups(
+                matching: CNGroup.predicateForGroups(withIdentifiers: [identifier])
+            )
+            return groups.first
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
     }
 
     private func unifiedContacts(matching predicate: NSPredicate) throws -> [CNContact] {
