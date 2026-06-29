@@ -318,13 +318,16 @@ struct LiveMapKitStore: MapKitStoreing {
 
     func getCurrentLocation() throws -> CLLocation {
         let result = MapKitSearchFetch.AsyncBridgeResult<CLLocation>()
+        var fetchHolder: OneShotLocationFetcher?
         do {
             try MapKitSearchFetch.waitForCompletion { complete in
                 // Schedule via GCD so run-loop pumping can deliver delegate callbacks while this
                 // @MainActor method blocks synchronously.
                 DispatchQueue.main.async {
                     let fetcher = OneShotLocationFetcher()
+                    fetchHolder = fetcher
                     fetcher.requestLocation { outcome in
+                        fetchHolder = nil
                         switch outcome {
                         case let .success(value): result.setValue(value)
                         case let .failure(error): result.setError(error)
@@ -357,8 +360,11 @@ private final class OneShotLocationFetcher: NSObject, @preconcurrency CLLocation
 
     func locationManager(_: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let completion else { return }; self.completion = nil
-        if let location = locations.last { completion(.success(location)) }
-        else { completion(.failure(MapKitProviderError.mapkitError("CoreLocation returned no location"))) }
+        if let location = locations.last {
+            completion(.success(location))
+        } else {
+            completion(.failure(MapKitProviderError.mapkitError("CoreLocation returned no location")))
+        }
     }
 
     func locationManager(_: CLLocationManager, didFailWithError error: Error) {
