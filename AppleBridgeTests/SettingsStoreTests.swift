@@ -334,6 +334,35 @@ struct SettingsStoreTests {
 
     @Test
     @MainActor
+    func applyKeychainStorageChangeLeavesServerRunningWhenMigrationFails() async throws {
+        let suiteName = "SettingsStoreTests.keychainStorageMigrationFailure"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = true
+        appSettings.useKeychainForAPIKey = true
+
+        let mock = MockServerService()
+        await mock.setRefreshResult(.running)
+        let serverStore = ServerStore(serverService: mock)
+        await serverStore.startServer(port: 3020, enabledCapabilities: [])
+        let settingsStore = SettingsStore(
+            appSettings: appSettings,
+            serverStore: serverStore,
+            migrateTokenStorage: { _, _ in
+                throw FileBearerTokenError(message: "migration failed")
+            }
+        )
+
+        await settingsStore.applyKeychainStorageChange(false)
+
+        #expect(appSettings.useKeychainForAPIKey == true)
+        #expect(await mock.stopCallCount == 0)
+        #expect(serverStore.runState == .running)
+    }
+
+    @Test
+    @MainActor
     func applyKeychainStorageChangePersistsWithoutRestartWhenServerStopped() async throws {
         let suiteName = "SettingsStoreTests.keychainStorageStopped"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
