@@ -177,10 +177,13 @@ struct LiveMapKitStore: MapKitStoreing {
         var directionsError: Error?
 
         try MapKitSearchFetch.waitForCompletion { complete in
-            directions.calculate { result, error in
-                response = result
-                directionsError = error
-                complete()
+            Task { @MainActor in
+                defer { complete() }
+                do {
+                    response = try await directions.calculate()
+                } catch {
+                    directionsError = error
+                }
             }
         }
 
@@ -210,6 +213,8 @@ struct LiveMapKitStore: MapKitStoreing {
             expectedTravelTime: route.expectedTravelTime,
             transportType: route.transportType,
             polylineCoordinates: coordinates(from: route.polyline),
+            polylineTitle: route.polyline.title,
+            polylineSubtitle: route.polyline.subtitle,
             steps: route.steps.map(stepData(from:)),
             hasTolls: route.hasTolls,
             hasHighways: route.hasHighways
@@ -222,7 +227,9 @@ struct LiveMapKitStore: MapKitStoreing {
             notice: step.notice,
             distance: step.distance,
             transportType: step.transportType,
-            polylineCoordinates: coordinates(from: step.polyline)
+            polylineCoordinates: coordinates(from: step.polyline),
+            polylineTitle: step.polyline.title,
+            polylineSubtitle: step.polyline.subtitle
         )
     }
 

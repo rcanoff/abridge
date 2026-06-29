@@ -122,6 +122,8 @@ struct AppleProviderBridgeMapKitTests {
             expectedTravelTime: 600,
             transportType: .automobile,
             polylineCoordinates: [sourcePlacemark.coordinate, destinationPlacemark.coordinate],
+            polylineTitle: nil,
+            polylineSubtitle: nil,
             steps: [],
             hasTolls: false,
             hasHighways: false

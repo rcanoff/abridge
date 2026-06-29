@@ -49,6 +49,8 @@ struct MapKitRouteStepData {
     let distance: CLLocationDistance
     let transportType: MKDirectionsTransportType
     let polylineCoordinates: [CLLocationCoordinate2D]
+    let polylineTitle: String?
+    let polylineSubtitle: String?
 }
 
 struct MapKitRouteData {
@@ -58,6 +60,8 @@ struct MapKitRouteData {
     let expectedTravelTime: TimeInterval
     let transportType: MKDirectionsTransportType
     let polylineCoordinates: [CLLocationCoordinate2D]
+    let polylineTitle: String?
+    let polylineSubtitle: String?
     let steps: [MapKitRouteStepData]
     let hasTolls: Bool
     let hasHighways: Bool

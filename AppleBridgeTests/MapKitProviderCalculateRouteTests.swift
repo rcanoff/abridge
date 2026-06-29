@@ -72,6 +72,8 @@ struct MapKitProviderCalculateRouteTests {
                 CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090),
                 CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
             ],
+            polylineTitle: "Route polyline",
+            polylineSubtitle: "Main path",
             steps: [
                 MapKitRouteStepData(
                     instructions: "Head north on N De Anza Blvd",
@@ -81,7 +83,9 @@ struct MapKitProviderCalculateRouteTests {
                     polylineCoordinates: [
                         CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090),
                         CLLocationCoordinate2D(latitude: 37.3350, longitude: -122.0095),
-                    ]
+                    ],
+                    polylineTitle: "Step polyline",
+                    polylineSubtitle: "First segment"
                 ),
             ],
             hasTolls: false,
@@ -116,6 +120,12 @@ struct MapKitProviderCalculateRouteTests {
         #expect(source?["name"] as? String == "Apple Park")
         #expect(routes?.first?["name"] as? String == "US-101")
         #expect(routes?.first?["has_highways"] as? Bool == true)
+        let routePolyline = routes?.first?["polyline"] as? [String: Any]
+        #expect(routePolyline?["title"] as? String == "Route polyline")
+        #expect(routePolyline?["subtitle"] as? String == "Main path")
+        let stepPolyline = (routes?.first?["steps"] as? [[String: Any]])?.first?["polyline"] as? [String: Any]
+        #expect(stepPolyline?["title"] as? String == "Step polyline")
+        #expect(stepPolyline?["subtitle"] as? String == "First segment")
         #expect(store.lastCalculateRouteRequest?.transportType == .walking)
     }
 

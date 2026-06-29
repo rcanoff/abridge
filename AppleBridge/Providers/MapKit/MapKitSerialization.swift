@@ -71,8 +71,8 @@ enum MapKitSerialization {
             "transport_type": transportTypeJSONArray(from: route.transportType),
             "polyline": polylineJSONObject(
                 coordinates: route.polylineCoordinates,
-                title: nil,
-                subtitle: nil
+                title: route.polylineTitle,
+                subtitle: route.polylineSubtitle
             ),
             "steps": route.steps.map(routeStepJSONObject(from:)),
             "has_tolls": route.hasTolls,
@@ -88,8 +88,8 @@ enum MapKitSerialization {
             "transport_type": transportTypeJSONArray(from: step.transportType),
             "polyline": polylineJSONObject(
                 coordinates: step.polylineCoordinates,
-                title: nil,
-                subtitle: nil
+                title: step.polylineTitle,
+                subtitle: step.polylineSubtitle
             ),
         ]
     }
