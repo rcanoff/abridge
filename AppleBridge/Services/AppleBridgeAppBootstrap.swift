@@ -14,7 +14,7 @@ enum AppleBridgeAppBootstrap {
         case continued(Stores)
     }
 
-    /// Mirrors `AppleBridgeApp.init()` guard-then-bootstrap sequence for testability.
+    /// Shipped app entry; `AppleBridgeApp.init` must delegate here only.
     @MainActor
     static func performEntry(
         isRunningUnitTests: Bool,

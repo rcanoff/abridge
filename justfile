@@ -6,6 +6,12 @@ review *FLAGS='':
 review-strict:
     @local/review/bin/review.sh --strict
 
+verify-issue-120:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    chmod +x scripts/verify-issue-120.sh
+    scripts/verify-issue-120.sh
+
 test-swift:
     #!/usr/bin/env bash
     set -euo pipefail
