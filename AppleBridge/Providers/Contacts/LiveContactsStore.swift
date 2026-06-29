@@ -71,11 +71,10 @@ final class LiveContactsStore: ContactsStoreing {
             predicates.append(CNContact.predicateForContactsInContainer(withIdentifier: containerIdentifier))
         }
 
-        let predicate: NSPredicate
-        if predicates.count == 1 {
-            predicate = predicates[0]
+        let predicate = if predicates.count == 1 {
+            predicates[0]
         } else {
-            predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+            NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
         }
 
         let request = CNContactFetchRequest(keysToFetch: ContactsKeyDescriptors.all)
