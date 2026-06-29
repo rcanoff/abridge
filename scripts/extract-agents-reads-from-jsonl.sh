@@ -63,6 +63,11 @@ PATH_ALIASES = {
     "/Users/rcanoff/Projects/apple-bridge/Agents.md": "/Users/rcanoff/Projects/apple-bridge/AGENTS.md",
 }
 
+# Index display paths (session jsonl spelling where it differs from canonical).
+INDEX_DISPLAY_PATHS = {
+    "/Users/rcanoff/Projects/apple-bridge/AGENTS.md": "/Users/rcanoff/Projects/apple-bridge/Agents.md",
+}
+
 
 def canonical_path(path: str) -> str:
     return PATH_ALIASES.get(path, path)
@@ -117,8 +122,10 @@ def safe_filename(tool_call_id: str) -> str:
 
 pending = {}
 reads = []
+all_reads = []
 logs_written = 0
 per_path_counts = {path: 0 for path in AGENTS_PATHS}
+index_path_counts = {path: 0 for path in AGENTS_PATHS}
 
 for line in session_jsonl.read_text().splitlines():
     if not line.strip():
@@ -204,6 +211,18 @@ for line in session_jsonl.read_text().splitlines():
     out_path.write_text("\n".join(header_lines) + "\n" + body + "\n", encoding="utf-8")
     logs_written += 1
 
+    nbytes = len(body.encode("utf-8"))
+    all_reads.append(
+        {
+            "ts": read_ts,
+            "path": meta["path"],
+            "toolCallId": tool_call_id,
+            "bytes": nbytes,
+            "partial": partial,
+        }
+    )
+    index_path_counts[meta["path"]] += 1
+
     if not partial:
         reads.append(
             {
@@ -211,13 +230,36 @@ for line in session_jsonl.read_text().splitlines():
                 "path": meta["path"],
                 "toolCallId": tool_call_id,
                 "log": out_name,
-                "bytes": len(body.encode("utf-8")),
+                "bytes": nbytes,
             }
         )
         per_path_counts[meta["path"]] += 1
     pending.pop(tool_call_id, None)
 
 reads.sort(key=lambda r: (r["ts"], r["path"], r["toolCallId"]))
+all_reads.sort(key=lambda r: (r["ts"], r["path"], r["toolCallId"]))
+
+extracted_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+index_lines = [
+    "# agents-refresh-jsonl-index.txt",
+    f"source: {session_jsonl}",
+    f"extracted_utc: {extracted_utc}",
+    "",
+]
+
+for path, label in AGENTS_PATHS.items():
+    display_path = INDEX_DISPLAY_PATHS.get(path, path)
+    path_reads = [r for r in all_reads if r["path"] == path]
+    index_lines.append(f"## {label}: {display_path}")
+    index_lines.append(f"count: {len(path_reads)}")
+    for r in path_reads:
+        index_lines.append(
+            f"  - {iso_utc(r['ts'])} toolCallId={r['toolCallId']} bytes={r['bytes']}"
+        )
+    index_lines.append("")
+
+index_path = scratch / "agents-refresh-jsonl-index.txt"
+index_path.write_text("\n".join(index_lines) + "\n", encoding="utf-8")
 
 repo_root = Path(os.environ["REPO_ROOT"])
 
@@ -290,7 +332,10 @@ print(f"  SESSION_JSONL: {session_jsonl}")
 print(f"  SCRATCH: {scratch}")
 print(f"  log files written: {logs_written} ({len(reads)} full reads for merge mapping)")
 for path, label in AGENTS_PATHS.items():
-    print(f"  {label} ({path}): {per_path_counts[path]} reads")
+    print(f"  {label} ({path}): {per_path_counts[path]} full reads")
+print(f"  jsonl-index: {index_path}")
+for path, label in AGENTS_PATHS.items():
+    print(f"  jsonl-index {label}: {index_path_counts[path]} reads")
 print(f"  merge mapping: {merge_path}")
 print(f"  merge gates PASS: {merge_pass}/{len(EPIC_PRS)}")
 PY
