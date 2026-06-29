@@ -5,6 +5,8 @@ extension MapKitProvider {
         switch operation {
         case "search_places":
             searchPlaces(payloadJson: payloadJson)
+        case "search_nearby":
+            searchNearby(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown mapkit operation: \(operation)")
         }
