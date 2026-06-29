@@ -163,6 +163,55 @@ struct AppleProviderBridgeMapKitTests {
 
     @Test
     @MainActor
+    func callProviderMapKitEstimateTravelTimeSucceedsWithMockStore() throws {
+        let sourcePlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
+        let destinationPlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(
+            latitude: 37.7749,
+            longitude: -122.4194
+        ))
+        let sourceItem = MKMapItem(placemark: sourcePlacemark)
+        sourceItem.name = "ETA Source"
+        let destinationItem = MKMapItem(placemark: destinationPlacemark)
+        destinationItem.name = "ETA Destination"
+        let departureDate = Date(timeIntervalSince1970: 1_718_000_000)
+        let store = MockMapKitStore()
+        store.authorizationStatus = .authorized
+        store.estimateTravelTimeResults = [
+            MapKitEstimateTravelTimeResult(
+                source: sourceItem,
+                destination: destinationItem,
+                expectedTravelTime: 900,
+                distance: 5000,
+                expectedArrivalDate: departureDate.addingTimeInterval(900),
+                expectedDepartureDate: departureDate,
+                transportType: .walking
+            ),
+        ]
+        let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: store))
+
+        let request = ProviderRequest(
+            provider: "mapkit",
+            operation: "estimate_travel_time",
+            payloadJson: estimateTravelTimePayload(
+                sourceLatitude: 37.3346,
+                sourceLongitude: -122.0090,
+                destinationLatitude: 37.7749,
+                destinationLongitude: -122.4194
+            )
+        )
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        #expect(decoded?["expected_travel_time"] as? Double == 900)
+        #expect(decoded?["distance"] as? Double == 5000)
+        let transportType = decoded?["transport_type"] as? [String]
+        #expect(transportType == ["walking"])
+    }
+
+    @Test
+    @MainActor
     func callProviderMapKitReturnsUnknownOperation() throws {
         let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: MockMapKitStore()))
         let request = ProviderRequest(provider: "mapkit", operation: "lookup_place", payloadJson: "{}")
@@ -185,5 +234,19 @@ struct AppleProviderBridgeMapKitTests {
         "{\"source\":{\"coordinate\":{\"latitude\":\(sourceLatitude),\"longitude\":\(sourceLongitude)}},"
             + "\"destination\":{\"coordinate\":{\"latitude\":\(destinationLatitude),"
             + "\"longitude\":\(destinationLongitude)}}}"
+    }
+
+    private func estimateTravelTimePayload(
+        sourceLatitude: Double,
+        sourceLongitude: Double,
+        destinationLatitude: Double,
+        destinationLongitude: Double
+    ) -> String {
+        calculateRoutePayload(
+            sourceLatitude: sourceLatitude,
+            sourceLongitude: sourceLongitude,
+            destinationLatitude: destinationLatitude,
+            destinationLongitude: destinationLongitude
+        )
     }
 }
