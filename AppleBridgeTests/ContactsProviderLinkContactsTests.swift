@@ -44,16 +44,17 @@ struct ContactsProviderLinkContactsTests {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .authorized
         let fromContact = ContactsTestSupport.makeRichContact()
-        let toMutable = ContactsTestSupport.makeRichContact().mutableCopy() as! CNMutableContact
+        let toMutable = try #require(
+            ContactsTestSupport.makeRichContact().mutableCopy() as? CNMutableContact
+        )
         toMutable.givenName = "Destination"
         let toContact = toMutable as CNContact
         mockStore.contacts = [fromContact, toContact]
         let provider = ContactsProvider(store: mockStore)
 
-        let response = provider.handle(
-            operation: "link_contacts",
-            payloadJson: #"{"from_contact_identifier":"\#(fromContact.identifier)","to_contact_identifier":"\#(toContact.identifier)"}"#
-        )
+        let payloadJson = #"{"from_contact_identifier":"\#(fromContact.identifier)","#
+            + #""to_contact_identifier":"\#(toContact.identifier)"}"#
+        let response = provider.handle(operation: "link_contacts", payloadJson: payloadJson)
 
         #expect(response.ok == true)
 
@@ -165,10 +166,9 @@ struct ContactsProviderLinkContactsTests {
         mockStore.contacts = [contact]
         let provider = ContactsProvider(store: mockStore)
 
-        let response = provider.handle(
-            operation: "link_contacts",
-            payloadJson: #"{"from_contact_identifier":"\#(contact.identifier)","to_contact_identifier":"\#(contact.identifier)"}"#
-        )
+        let payloadJson = #"{"from_contact_identifier":"\#(contact.identifier)","#
+            + #""to_contact_identifier":"\#(contact.identifier)"}"#
+        let response = provider.handle(operation: "link_contacts", payloadJson: payloadJson)
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)

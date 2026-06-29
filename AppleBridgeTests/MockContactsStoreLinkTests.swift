@@ -9,7 +9,9 @@ struct MockContactsStoreLinkTests {
     func linkContactsRemovesFromContactAndReturnsDestination() throws {
         let store = MockContactsStore()
         let fromContact = ContactsTestSupport.makeRichContact()
-        let toMutable = ContactsTestSupport.makeRichContact().mutableCopy() as! CNMutableContact
+        let toMutable = try #require(
+            ContactsTestSupport.makeRichContact().mutableCopy() as? CNMutableContact
+        )
         toMutable.givenName = "Destination"
         let toContact = toMutable as CNContact
         store.contacts = [fromContact, toContact]

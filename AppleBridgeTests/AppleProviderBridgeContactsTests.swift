@@ -68,10 +68,12 @@ struct AppleProviderBridgeContactsTests {
         mockStore.contacts = [fromContact, toContact]
         let bridge = AppleProviderBridge(contactsProvider: ContactsProvider(store: mockStore))
 
+        let payloadJson = #"{"from_contact_identifier":"\#(fromContact.identifier)","#
+            + #""to_contact_identifier":"\#(toContact.identifier)"}"#
         let request = ProviderRequest(
             provider: "contacts",
             operation: "link_contacts",
-            payloadJson: #"{"from_contact_identifier":"\#(fromContact.identifier)","to_contact_identifier":"\#(toContact.identifier)"}"#
+            payloadJson: payloadJson
         )
         let response = bridge.callProvider(request: request)
 
