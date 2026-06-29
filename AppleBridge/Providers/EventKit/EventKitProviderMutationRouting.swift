@@ -13,14 +13,14 @@ extension EventKitProvider {
             moveEvent(payloadJson: payloadJson)
         case "delete_reminder", "delete_list", "delete_calendar", "delete_event":
             handleDeleteMutation(operation: operation, payloadJson: payloadJson)
-        case "complete_reminder":
-            completeReminder(payloadJson: payloadJson)
-        case "uncomplete_reminder":
-            uncompleteReminder(payloadJson: payloadJson)
+        case "complete_reminder", "uncomplete_reminder":
+            handleCompleteMutation(operation: operation, payloadJson: payloadJson)
         case "set_reminder_alarms", "set_event_alarms":
             handleSetAlarmsMutation(operation: operation, payloadJson: payloadJson)
         case "set_reminder_recurrence", "set_event_recurrence":
             handleSetRecurrenceMutation(operation: operation, payloadJson: payloadJson)
+        case "accept_invitation":
+            acceptInvitation(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }
@@ -71,6 +71,17 @@ extension EventKitProvider {
             setReminderRecurrence(payloadJson: payloadJson)
         case "set_event_recurrence":
             setEventRecurrence(payloadJson: payloadJson)
+        default:
+            errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
+        }
+    }
+
+    private func handleCompleteMutation(operation: String, payloadJson: String) -> ProviderResponse {
+        switch operation {
+        case "complete_reminder":
+            completeReminder(payloadJson: payloadJson)
+        case "uncomplete_reminder":
+            uncompleteReminder(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown operation: \(operation)")
         }

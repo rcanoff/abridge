@@ -159,6 +159,32 @@ struct AppleProviderBridgeEventTests {
 
     @Test
     @MainActor
+    func routesEventKitAcceptInvitation() {
+        let mockStore = MockEventKitStore()
+        mockStore.eventAuthorizationStatusValue = .fullAccess
+        mockStore.eventCalendarsList = [
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+        ]
+        let event = mockStore.makeTestEvent(
+            calendarItemIdentifier: "evt-1",
+            calendarIdentifier: "cal-work",
+            title: "Invite"
+        )
+        mockStore.invitationRespondableEventIDs = ["evt-1"]
+        mockStore.events = [event]
+        let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
+        let request = ProviderRequest(
+            provider: "eventkit",
+            operation: "accept_invitation",
+            payloadJson: #"{"event_identifier":"evt-evt-1"}"#
+        )
+        let response = bridge.callProvider(request: request)
+        #expect(response.ok == true)
+        #expect(mockStore.acceptedInvitationEventIDs.contains("evt-1"))
+    }
+
+    @Test
+    @MainActor
     func routesEventKitDeleteEvent() {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess

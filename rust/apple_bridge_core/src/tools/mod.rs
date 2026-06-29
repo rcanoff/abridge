@@ -29,6 +29,7 @@ pub const TOOL_SET_REMINDER_ALARMS: &str = "eventkit.reminders.set_reminder_alar
 pub const TOOL_SET_EVENT_ALARMS: &str = "eventkit.events.set_event_alarms";
 pub const TOOL_SET_REMINDER_RECURRENCE: &str = "eventkit.reminders.set_reminder_recurrence";
 pub const TOOL_SET_EVENT_RECURRENCE: &str = "eventkit.events.set_event_recurrence";
+pub const TOOL_ACCEPT_INVITATION: &str = "eventkit.events.accept_invitation";
 pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -40,7 +41,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 28] = [
+const ALL_TOOLS: [ToolDefinition; 29] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -229,6 +230,13 @@ const ALL_TOOLS: [ToolDefinition; 28] = [
     provider: "eventkit",
     operation: "set_event_recurrence",
     description: "Replace an event's recurrence rules by event_identifier; pass an empty array to remove all",
+  },
+  ToolDefinition {
+    name: TOOL_ACCEPT_INVITATION,
+    capability: capabilities::EVENTKIT_EVENTS_INVITATIONS,
+    provider: "eventkit",
+    operation: "accept_invitation",
+    description: "Accept a calendar invitation for an event by event_identifier",
   },
   ToolDefinition {
     name: TOOL_GET_USAGE_LOG,
@@ -452,7 +460,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["calendar_identifier", "title", "start_date", "end_date"]
     }),
-    TOOL_DELETE_EVENT => serde_json::json!({
+    TOOL_DELETE_EVENT | TOOL_ACCEPT_INVITATION => serde_json::json!({
       "type": "object",
       "properties": {
         "event_identifier": { "type": "string" }
@@ -647,12 +655,13 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
 #[cfg(test)]
 mod tests {
   use super::{
-    TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_EVENT, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER,
-    TOOL_DELETE_CALENDAR, TOOL_DELETE_EVENT, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER, TOOL_GET_EVENT, TOOL_GET_REMINDER,
-    TOOL_GET_USAGE_LOG, TOOL_LIST_CALENDARS, TOOL_LIST_EVENTS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT,
-    TOOL_MOVE_REMINDER, TOOL_SEARCH_EVENTS, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE,
-    TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_UNCOMPLETE_REMINDER, TOOL_UPDATE_CALENDAR,
-    TOOL_UPDATE_EVENT, TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
+    TOOL_ACCEPT_INVITATION, TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_EVENT, TOOL_CREATE_LIST,
+    TOOL_CREATE_REMINDER, TOOL_DELETE_CALENDAR, TOOL_DELETE_EVENT, TOOL_DELETE_LIST, TOOL_DELETE_REMINDER,
+    TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LIST_CALENDARS, TOOL_LIST_EVENTS, TOOL_LIST_LISTS,
+    TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER, TOOL_SEARCH_EVENTS, TOOL_SEARCH_REMINDERS,
+    TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE,
+    TOOL_UNCOMPLETE_REMINDER, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_EVENT, TOOL_UPDATE_REMINDER, all_tools, input_schema,
+    tools_for_capabilities,
   };
 
   fn array_items_type(schema: &serde_json::Value, property: &str) -> Option<String> {
@@ -893,6 +902,13 @@ mod tests {
     let tools = tools_for_capabilities(&["eventkit.events.recurrence".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
     assert_eq!(names, vec![TOOL_SET_EVENT_RECURRENCE]);
+  }
+
+  #[test]
+  fn lists_accept_invitation_tool_when_events_invitations_capability_enabled() {
+    let tools = tools_for_capabilities(&["eventkit.events.invitations".into()]);
+    let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
+    assert_eq!(names, vec![TOOL_ACCEPT_INVITATION]);
   }
 
   #[test]
