@@ -40,6 +40,19 @@ final class LiveContactsStore: ContactsStoreing {
         return fetched
     }
 
+    func fetchContact(identifier: String) throws -> CNContact? {
+        do {
+            return try contactStore.unifiedContact(
+                withIdentifier: identifier,
+                keysToFetch: ContactsKeyDescriptors.all
+            )
+        } catch let error as CNError where error.code == .recordDoesNotExist {
+            return nil
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
+    }
+
     func searchContacts(
         name: String?,
         emailAddress: String?,

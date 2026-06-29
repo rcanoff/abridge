@@ -28,6 +28,8 @@ final class ContactsProvider {
             listContacts(payloadJson: payloadJson)
         case "search_contacts":
             searchContacts(payloadJson: payloadJson)
+        case "get_contact":
+            getContact(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown contacts operation: \(operation)")
         }
