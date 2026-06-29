@@ -1905,7 +1905,8 @@ fn mcp_tools_list_includes_get_current_location_when_mapkit_location_enabled() {
 fn tools_call_dispatches_get_current_location() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":22,"method":"tools/call","params":{"name":"mapkit.get_current_location","arguments":{}}}"#;
+  let body =
+    r#"{"jsonrpc":"2.0","id":22,"method":"tools/call","params":{"name":"mapkit.get_current_location","arguments":{}}}"#;
   let handle = create_server(
     mapkit_config_on_port(port, vec!["mapkit.location".into()]),
     Box::new(mock.clone_for_server()),

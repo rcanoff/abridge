@@ -1357,14 +1357,14 @@ mod tests {
     TOOL_ACCEPT_INVITATION, TOOL_CALCULATE_ROUTE, TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_CONTACT,
     TOOL_CREATE_EVENT, TOOL_CREATE_GROUP, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DECLINE_INVITATION,
     TOOL_DELETE_CALENDAR, TOOL_DELETE_CONTACT, TOOL_DELETE_EVENT, TOOL_DELETE_GROUP, TOOL_DELETE_LIST,
-    TOOL_DELETE_REMINDER, TOOL_ESTIMATE_TRAVEL_TIME, TOOL_FORWARD_GEOCODE, TOOL_GET_CONTACT,
-    TOOL_GET_CURRENT_LOCATION, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS,
-    TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS,
-    TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER, TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS,
-    TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS,
-    TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION,
-    TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT,
-    TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
+    TOOL_DELETE_REMINDER, TOOL_ESTIMATE_TRAVEL_TIME, TOOL_FORWARD_GEOCODE, TOOL_GET_CONTACT, TOOL_GET_CURRENT_LOCATION,
+    TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS, TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS,
+    TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER,
+    TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES,
+    TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS,
+    TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS,
+    TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools,
+    input_schema, tools_for_capabilities,
   };
 
   fn array_items_type(schema: &serde_json::Value, property: &str) -> Option<String> {
@@ -2166,10 +2166,25 @@ mod tests {
 
   #[test]
   fn get_current_location_schema_has_no_required_fields() {
-    let tool = all_tools().iter().find(|tool| tool.name == TOOL_GET_CURRENT_LOCATION).expect("get_current_location tool");
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_GET_CURRENT_LOCATION)
+      .expect("get_current_location tool");
     let schema = input_schema(tool);
-    assert_eq!(schema.get("required").and_then(|value| value.as_array()).map(|items| items.iter().filter_map(|item| item.as_str()).collect::<Vec<_>>()), None);
-    assert_eq!(schema.get("properties").and_then(|value| value.as_object()).map(|properties| properties.len()), Some(0));
+    assert_eq!(
+      schema
+        .get("required")
+        .and_then(|value| value.as_array())
+        .map(|items| items.iter().filter_map(|item| item.as_str()).collect::<Vec<_>>()),
+      None
+    );
+    assert_eq!(
+      schema
+        .get("properties")
+        .and_then(|value| value.as_object())
+        .map(|properties| properties.len()),
+      Some(0)
+    );
   }
 
   #[test]

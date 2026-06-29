@@ -315,15 +315,20 @@ struct LiveMapKitStore: MapKitStoreing {
 private final class OneShotLocationFetcher: NSObject, @preconcurrency CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     private var completion: ((Result<CLLocation, Error>) -> Void)?
-    override init() { super.init(); manager.delegate = self }
+    override init() {
+        super.init(); manager.delegate = self
+    }
+
     func requestLocation(completion: @escaping (Result<CLLocation, Error>) -> Void) {
         self.completion = completion; manager.requestLocation()
     }
+
     func locationManager(_: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let completion else { return }; self.completion = nil
         if let location = locations.last { completion(.success(location)) }
         else { completion(.failure(MapKitProviderError.mapkitError("CoreLocation returned no location"))) }
     }
+
     func locationManager(_: CLLocationManager, didFailWithError error: Error) {
         guard let completion else { return }; self.completion = nil; completion(.failure(error))
     }

@@ -17,6 +17,7 @@ extension MapKitProvider {
             return errorResponse(code: "mapkit_error", message: error.localizedDescription)
         }
     }
+
     private func parseGetCurrentLocationArguments(_ payloadJson: String) throws {
         let trimmed = payloadJson.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }

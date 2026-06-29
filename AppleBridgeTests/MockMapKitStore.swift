@@ -21,26 +21,38 @@ final class MockMapKitStore: MapKitStoreing {
     private(set) var lastCalculateRouteRequest: MapKitCalculateRouteRequest?
     private(set) var lastEstimateTravelTimeRequest: MapKitEstimateTravelTimeRequest?
 
-    func locationAuthorizationStatus() -> CLAuthorizationStatus { authorizationStatus }
+    func locationAuthorizationStatus() -> CLAuthorizationStatus {
+        authorizationStatus
+    }
+
     func searchPlaces(request: MapKitSearchRequest) throws -> MapKitSearchResult {
         lastRequest = request; return results.first ?? MapKitSearchResult(mapItems: [], boundingRegion: nil)
     }
+
     func searchNearby(request: MapKitSearchNearbyRequest) throws -> MapKitSearchResult {
         lastNearbyRequest = request; return nearbyResults.first ?? MapKitSearchResult(mapItems: [], boundingRegion: nil)
     }
+
     func reverseGeocode(request: MapKitReverseGeocodeRequest) throws -> [MKMapItem] {
         lastReverseGeocodeRequest = request; return reverseGeocodeResults.first ?? []
     }
+
     func forwardGeocode(request: MapKitForwardGeocodeRequest) throws -> [MKMapItem] {
         lastForwardGeocodeRequest = request; return forwardGeocodeResults.first ?? []
     }
+
     func calculateRoute(request: MapKitCalculateRouteRequest) throws -> MapKitCalculateRouteResult {
         lastCalculateRouteRequest = request
         if let first = calculateRouteResults.first { return first }
         let sourcePlacemark = MKPlacemark(coordinate: request.source.coordinate)
         let destinationPlacemark = MKPlacemark(coordinate: request.destination.coordinate)
-        return MapKitCalculateRouteResult(source: MKMapItem(placemark: sourcePlacemark), destination: MKMapItem(placemark: destinationPlacemark), routes: [])
+        return MapKitCalculateRouteResult(
+            source: MKMapItem(placemark: sourcePlacemark),
+            destination: MKMapItem(placemark: destinationPlacemark),
+            routes: []
+        )
     }
+
     func getCurrentLocation() throws -> CLLocation {
         getCurrentLocationCallCount += 1
         if let getCurrentLocationError { throw getCurrentLocationError }
