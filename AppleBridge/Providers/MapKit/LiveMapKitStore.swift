@@ -236,7 +236,10 @@ struct LiveMapKitStore: MapKitStoreing {
     private static func coordinates(from polyline: MKPolyline) -> [CLLocationCoordinate2D] {
         guard polyline.pointCount > 0 else { return [] }
 
-        var coordinates = [CLLocationCoordinate2D](repeating: kCLLocationCoordinate2DInvalid, count: polyline.pointCount)
+        var coordinates = [CLLocationCoordinate2D](
+            repeating: kCLLocationCoordinate2DInvalid,
+            count: polyline.pointCount
+        )
         polyline.getCoordinates(&coordinates, range: NSRange(location: 0, length: polyline.pointCount))
         return coordinates
     }

@@ -55,8 +55,29 @@ struct MapKitProviderCalculateRouteTests {
     @Test
     @MainActor
     func calculateRouteReturnsSerializedResponse() throws {
+        let store = makeSerializedRouteStore()
+        let provider = MapKitProvider(store: store)
+        let response = provider.handle(
+            operation: "calculate_route",
+            payloadJson: routePayload(
+                sourceLatitude: 37.3346,
+                sourceLongitude: -122.0090,
+                destinationLatitude: 37.7749,
+                destinationLongitude: -122.4194,
+                transportType: "walking"
+            )
+        )
+
+        try expectSerializedCalculateRouteResponse(response, store: store)
+    }
+
+    @MainActor
+    private func makeSerializedRouteStore() -> MockMapKitStore {
         let sourcePlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
-        let destinationPlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194))
+        let destinationPlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(
+            latitude: 37.7749,
+            longitude: -122.4194
+        ))
         let sourceItem = MKMapItem(placemark: sourcePlacemark)
         sourceItem.name = "Apple Park"
         let destinationItem = MKMapItem(placemark: destinationPlacemark)
@@ -65,8 +86,8 @@ struct MapKitProviderCalculateRouteTests {
         let route = MapKitRouteData(
             name: "US-101",
             advisoryNotices: ["Avoid during winter storms"],
-            distance: 77_000,
-            expectedTravelTime: 3_600,
+            distance: 77000,
+            expectedTravelTime: 3600,
             transportType: .automobile,
             polylineCoordinates: [
                 CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090),
@@ -100,18 +121,14 @@ struct MapKitProviderCalculateRouteTests {
                 routes: [route]
             ),
         ]
-        let provider = MapKitProvider(store: store)
-        let response = provider.handle(
-            operation: "calculate_route",
-            payloadJson: routePayload(
-                sourceLatitude: 37.3346,
-                sourceLongitude: -122.0090,
-                destinationLatitude: 37.7749,
-                destinationLongitude: -122.4194,
-                transportType: "walking"
-            )
-        )
+        return store
+    }
 
+    @MainActor
+    private func expectSerializedCalculateRouteResponse(
+        _ response: ProviderResponse,
+        store: MockMapKitStore
+    ) throws {
         #expect(response.ok == true)
         let data = try #require(response.payloadJson.data(using: .utf8))
         let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]

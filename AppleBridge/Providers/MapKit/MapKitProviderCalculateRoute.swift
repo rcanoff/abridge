@@ -34,7 +34,8 @@ extension MapKitProvider {
         let source = try requiredRouteEndpointArgument(named: "source", in: dictionary)
         let destination = try requiredRouteEndpointArgument(named: "destination", in: dictionary)
         let transportType = try optionalTransportTypeArgument(in: dictionary)
-        let requestsAlternateRoutes = try optionalBoolArgument(named: "requests_alternate_routes", in: dictionary) ?? false
+        let requestsAlternateRoutes = try optionalBoolArgument(named: "requests_alternate_routes", in: dictionary) ??
+            false
         let departureDate = try optionalISO8601DateArgument(named: "departure_date", in: dictionary)
         let arrivalDate = try optionalISO8601DateArgument(named: "arrival_date", in: dictionary)
 
