@@ -100,14 +100,14 @@ enum CapabilityCatalog {
             shipped: true
         ),
         // accept_invitation, decline_invitation, and tentative_invitation register in
-        // Rust behind this capability and appear in Settings when shipped. Live macOS
-        // EventKit has no public RSVP API, so LiveEventKitStore returns an explicit
+        // Rust when the capability is enabled in MCP config. Settings hides this until a
+        // live macOS EventKit RSVP API exists. LiveEventKitStore returns an explicit
         // eventKitError; mock store mutates attendee status for CI/tests (#70 AC2).
         CapabilityDefinition(
             id: "events-invitations",
             capabilityID: "eventkit.events.invitations",
             label: "Invitations",
-            shipped: true
+            shipped: false
         ),
     ]
 }
