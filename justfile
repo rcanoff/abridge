@@ -12,6 +12,12 @@ verify-issue-120:
     chmod +x scripts/verify-issue-120.sh
     scripts/verify-issue-120.sh
 
+verify-epic-90:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    chmod +x scripts/verify-epic-90-orchestration-gates.sh
+    scripts/verify-epic-90-orchestration-gates.sh
+
 test-swift:
     #!/usr/bin/env bash
     set -euo pipefail
