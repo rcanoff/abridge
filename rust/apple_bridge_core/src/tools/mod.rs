@@ -653,9 +653,9 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_SEARCH_CONTACTS => serde_json::json!({
       "type": "object",
       "properties": {
-        "name": { "type": "string" },
-        "email_address": { "type": "string" },
-        "phone_number": { "type": "string" },
+        "name": { "type": "string", "minLength": 1 },
+        "email_address": { "type": "string", "minLength": 1 },
+        "phone_number": { "type": "string", "minLength": 1 },
         "container_identifier": { "type": "string" }
       }
     }),
@@ -979,6 +979,27 @@ mod tests {
     let tools = tools_for_capabilities(&["contacts.search".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
     assert_eq!(names, vec![TOOL_SEARCH_CONTACTS]);
+  }
+
+  fn string_property_min_length(schema: &serde_json::Value, property: &str) -> Option<u64> {
+    schema
+      .get("properties")
+      .and_then(|properties| properties.get(property))
+      .and_then(|property_schema| property_schema.get("minLength"))
+      .and_then(|value| value.as_u64())
+  }
+
+  #[test]
+  fn search_contacts_schema_requires_non_empty_search_strings() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_SEARCH_CONTACTS)
+      .expect("search_contacts tool");
+    let schema = input_schema(tool);
+
+    assert_eq!(string_property_min_length(&schema, "name"), Some(1));
+    assert_eq!(string_property_min_length(&schema, "email_address"), Some(1));
+    assert_eq!(string_property_min_length(&schema, "phone_number"), Some(1));
   }
 
   #[test]

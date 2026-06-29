@@ -42,9 +42,9 @@ extension ContactsProvider {
         }
 
         let dictionary = try parseJSONObject(from: data)
-        let name = try optionalStringArgument(named: "name", in: dictionary)
-        let emailAddress = try optionalStringArgument(named: "email_address", in: dictionary)
-        let phoneNumber = try optionalStringArgument(named: "phone_number", in: dictionary)
+        let name = try optionalSearchStringArgument(named: "name", in: dictionary)
+        let emailAddress = try optionalSearchStringArgument(named: "email_address", in: dictionary)
+        let phoneNumber = try optionalSearchStringArgument(named: "phone_number", in: dictionary)
         let containerIdentifier = try optionalStringArgument(named: "container_identifier", in: dictionary)
 
         guard name != nil || emailAddress != nil || phoneNumber != nil else {
@@ -73,5 +73,26 @@ extension ContactsProvider {
         }
 
         return value
+    }
+
+    private func optionalSearchStringArgument(named key: String, in dictionary: [String: Any]) throws -> String? {
+        guard dictionary.keys.contains(key) else {
+            return nil
+        }
+
+        if dictionary[key] is NSNull {
+            return nil
+        }
+
+        guard let value = dictionary[key] as? String else {
+            throw ContactsProviderError.invalidArguments("\(key) must be a string or null")
+        }
+
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            throw ContactsProviderError.invalidArguments("\(key) must not be empty")
+        }
+
+        return trimmed
     }
 }

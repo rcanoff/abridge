@@ -55,40 +55,41 @@ final class LiveContactsStore: ContactsStoreing {
             }
         }
 
-        var predicates: [NSPredicate] = []
+        var searchPredicates: [NSPredicate] = []
         if let name {
-            predicates.append(CNContact.predicateForContacts(matchingName: name))
+            searchPredicates.append(CNContact.predicateForContacts(matchingName: name))
         }
         if let emailAddress {
-            predicates.append(CNContact.predicateForContacts(matchingEmailAddress: emailAddress))
+            searchPredicates.append(CNContact.predicateForContacts(matchingEmailAddress: emailAddress))
         }
         if let phoneNumber {
-            predicates.append(
+            searchPredicates.append(
                 CNContact.predicateForContacts(matching: CNPhoneNumber(stringValue: phoneNumber))
             )
         }
+
+        var contactSets = try searchPredicates.map { predicate in
+            try unifiedContacts(matching: predicate)
+        }
+
         if let containerIdentifier {
-            predicates.append(CNContact.predicateForContactsInContainer(withIdentifier: containerIdentifier))
+            let containerContacts = try unifiedContacts(
+                matching: CNContact.predicateForContactsInContainer(withIdentifier: containerIdentifier)
+            )
+            contactSets.append(containerContacts)
         }
 
-        let predicate = if predicates.count == 1 {
-            predicates[0]
-        } else {
-            NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-        }
+        return ContactsSearchSupport.intersectContacts(contactSets)
+    }
 
-        let request = CNContactFetchRequest(keysToFetch: ContactsKeyDescriptors.all)
-        request.predicate = predicate
-
-        var fetched: [CNContact] = []
+    private func unifiedContacts(matching predicate: NSPredicate) throws -> [CNContact] {
         do {
-            try contactStore.enumerateContacts(with: request) { contact, _ in
-                fetched.append(contact)
-            }
+            return try contactStore.unifiedContacts(
+                matching: predicate,
+                keysToFetch: ContactsKeyDescriptors.all
+            )
         } catch {
             throw ContactsProviderError.contactsError(error.localizedDescription)
         }
-
-        return fetched
     }
 }
