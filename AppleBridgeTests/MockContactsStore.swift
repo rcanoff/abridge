@@ -141,4 +141,31 @@ final class MockContactsStore: ContactsStoreing {
         contacts[index] = mutable
         return mutable
     }
+
+    func linkContacts(fromIdentifier: String, toIdentifier: String) throws -> CNContact {
+        if let fetchError {
+            throw fetchError
+        }
+
+        if fromIdentifier == toIdentifier {
+            throw ContactsProviderError.invalidArguments(
+                "from_contact_identifier and to_contact_identifier must differ"
+            )
+        }
+
+        guard let fromIndex = contacts.firstIndex(where: { $0.identifier == fromIdentifier }) else {
+            throw ContactsProviderError.invalidArguments(
+                "Unknown from_contact_identifier: \(fromIdentifier)"
+            )
+        }
+
+        guard let toContact = contacts.first(where: { $0.identifier == toIdentifier }) else {
+            throw ContactsProviderError.invalidArguments(
+                "Unknown to_contact_identifier: \(toIdentifier)"
+            )
+        }
+
+        contacts.remove(at: fromIndex)
+        return toContact
+    }
 }

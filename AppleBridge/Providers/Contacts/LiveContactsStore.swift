@@ -135,6 +135,45 @@ final class LiveContactsStore: ContactsStoreing {
         }
     }
 
+    func linkContacts(fromIdentifier: String, toIdentifier: String) throws -> CNContact {
+        if fromIdentifier == toIdentifier {
+            throw ContactsProviderError.invalidArguments(
+                "from_contact_identifier and to_contact_identifier must differ"
+            )
+        }
+
+        guard let fromContact = try fetchContact(identifier: fromIdentifier) else {
+            throw ContactsProviderError.invalidArguments(
+                "Unknown from_contact_identifier: \(fromIdentifier)"
+            )
+        }
+
+        guard let toContact = try fetchContact(identifier: toIdentifier) else {
+            throw ContactsProviderError.invalidArguments(
+                "Unknown to_contact_identifier: \(toIdentifier)"
+            )
+        }
+
+        guard let fromMutable = fromContact.mutableCopy() as? CNMutableContact,
+              let toMutable = toContact.mutableCopy() as? CNMutableContact
+        else {
+            throw ContactsProviderError.contactsError("Failed to copy contact")
+        }
+
+        let saveRequest = CNSaveRequest()
+        saveRequest.link(fromMutable, to: toMutable)
+        do {
+            try contactStore.execute(saveRequest)
+        } catch {
+            throw ContactsProviderError.contactsError(error.localizedDescription)
+        }
+
+        guard let linked = try fetchContact(identifier: toIdentifier) else {
+            throw ContactsProviderError.contactsError("Failed to fetch linked contact")
+        }
+        return linked
+    }
+
     func updateContact(identifier: String, fields: [String: Any]) throws -> CNContact {
         guard let existing = try fetchContact(identifier: identifier) else {
             throw ContactsProviderError.invalidArguments("Unknown contact_identifier: \(identifier)")
