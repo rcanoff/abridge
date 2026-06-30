@@ -147,6 +147,6 @@ enum CapabilityCatalog {
             label: "Barcodes",
             shipped: true
         ),
-        CapabilityDefinition(id: "vision-faces", capabilityID: "vision.faces", label: "Faces", shipped: false),
+        CapabilityDefinition(id: "vision-faces", capabilityID: "vision.faces", label: "Faces", shipped: true),
     ]
 }

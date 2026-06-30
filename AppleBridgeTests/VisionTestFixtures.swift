@@ -153,6 +153,83 @@ enum VisionTestFixtures {
     }
 
     @MainActor
+    static func sampleFaceObservations() throws -> [VNFaceObservation] {
+        do {
+            let imageData = try samplePortraitImageData()
+            let store = LiveVisionStore()
+            let request = VisionDetectFacesRequest(
+                imageData: imageData,
+                orientation: .up,
+                revision: nil,
+                regionOfInterest: nil,
+                constellation: .constellationNotDefined
+            )
+            let observations = try store.detectFaces(request: request)
+            if observations.isEmpty == false {
+                return observations
+            }
+        } catch {
+            // Fall back to a synthetic observation when live detection is unavailable.
+        }
+
+        let observation = VNFaceObservation(
+            requestRevision: VNDetectFaceLandmarksRequestRevision3,
+            boundingBox: CGRect(x: 0.2, y: 0.2, width: 0.35, height: 0.45),
+            roll: nil,
+            yaw: nil,
+            pitch: nil
+        )
+        return [observation]
+    }
+
+    static func samplePortraitImageData() throws -> Data {
+        let width = 320
+        let height = 400
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else {
+            throw VisionProviderError.visionError("Failed to create portrait image context")
+        }
+
+        context.setFillColor(CGColor(red: 0.92, green: 0.82, blue: 0.72, alpha: 1))
+        context.fillEllipse(in: CGRect(x: 60, y: 40, width: 200, height: 260))
+
+        context.setFillColor(CGColor(red: 0.15, green: 0.1, blue: 0.08, alpha: 1))
+        context.fillEllipse(in: CGRect(x: 110, y: 140, width: 28, height: 28))
+        context.fillEllipse(in: CGRect(x: 182, y: 140, width: 28, height: 28))
+
+        context.setStrokeColor(CGColor(red: 0.45, green: 0.2, blue: 0.15, alpha: 1))
+        context.setLineWidth(4)
+        context.strokeEllipse(in: CGRect(x: 130, y: 210, width: 60, height: 36))
+
+        guard let cgImage = context.makeImage() else {
+            throw VisionProviderError.visionError("Failed to render portrait image")
+        }
+
+        let data = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(
+            data,
+            UTType.png.identifier as CFString,
+            1,
+            nil
+        ) else {
+            throw VisionProviderError.visionError("Failed to create PNG destination")
+        }
+        CGImageDestinationAddImage(destination, cgImage, nil)
+        guard CGImageDestinationFinalize(destination) else {
+            throw VisionProviderError.visionError("Failed to finalize portrait PNG")
+        }
+        return data as Data
+    }
+
+    @MainActor
     static func sampleRecognizedTextObservations() throws -> [VNRecognizedTextObservation] {
         guard let archivedData = Data(base64Encoded: archivedRecognizedTextObservationsBase64) else {
             throw VisionProviderError.serializationFailed

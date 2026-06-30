@@ -45,4 +45,24 @@ struct AppSettingsVisionTests {
         )
         #expect(capabilities.contains("vision.document"))
     }
+
+    @Test
+    @MainActor
+    func serverEnabledMCPCapabilityIDsIncludesVisionFacesWhenShippedAndEnabled() throws {
+        let suiteName = "AppSettingsVisionTests.faces"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.saveCapabilityIDs(["vision-faces"])
+
+        #expect(appSettings.enabledVisionCapabilityIDs == ["vision.faces"])
+        let capabilities = appSettings.serverEnabledMCPCapabilityIDs(
+            remindersAuthorized: false,
+            eventsAuthorized: false,
+            contactsAuthorized: false,
+            locationAuthorized: false
+        )
+        #expect(capabilities.contains("vision.faces"))
+    }
 }

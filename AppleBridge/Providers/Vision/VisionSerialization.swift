@@ -185,6 +185,18 @@ enum VisionSerialization {
         string ?? NSNull()
     }
 
+    static func jsonValue(_ number: NSNumber?) -> Any {
+        number ?? NSNull()
+    }
+
+    static func jsonValue(_ number: Float?) -> Any {
+        number.map { Double($0) } ?? NSNull()
+    }
+
+    static func detectFacesResponseJSONObject(observations: [VNFaceObservation]) -> [String: Any] {
+        VisionFaceSerialization.detectFacesResponseJSONObject(observations: observations)
+    }
+
     static func fourCCString(from pixelFormat: OSType) -> String {
         let bytes: [UInt8] = [
             UInt8((pixelFormat >> 24) & 0xFF),

@@ -11,6 +11,8 @@ extension VisionProvider {
             readQrCode(payloadJson: payloadJson)
         case "detect_barcodes":
             detectBarcodes(payloadJson: payloadJson)
+        case "detect_faces":
+            detectFaces(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown vision operation: \(operation)")
         }
