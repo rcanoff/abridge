@@ -139,7 +139,7 @@ enum CapabilityCatalog {
             id: "vision-document",
             capabilityID: "vision.document",
             label: "Document",
-            shipped: false
+            shipped: true
         ),
         CapabilityDefinition(
             id: "vision-barcodes",

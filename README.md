@@ -112,7 +112,7 @@ MCP tool names use dot notation (e.g. `eventkit.reminders.list_reminders`). Disc
 <summary><strong>Vision</strong> (planned)</summary>
 
 - [x] `vision.recognize_text`
-- [ ] `vision.scan_document`
+- [x] `vision.scan_document`
 - [ ] `vision.read_qr_code`
 - [ ] `vision.detect_barcodes`
 - [ ] `vision.detect_faces`
