@@ -1460,7 +1460,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "properties": {
         "image_data": { "type": "string", "minLength": 1 },
         "orientation": { "type": "integer", "minimum": 1, "maximum": 8 },
-        "revision": { "type": "integer" },
+        "revision": { "type": "integer", "minimum": 0 },
         "region_of_interest": {
           "type": "object",
           "properties": {
@@ -2325,6 +2325,14 @@ mod tests {
       .and_then(|value| value.as_u64())
   }
 
+  fn integer_property_minimum(schema: &serde_json::Value, property: &str) -> Option<i64> {
+    schema
+      .get("properties")
+      .and_then(|properties| properties.get(property))
+      .and_then(|property_schema| property_schema.get("minimum"))
+      .and_then(|value| value.as_i64())
+  }
+
   fn string_property_pattern(schema: &serde_json::Value, property: &str) -> Option<String> {
     schema
       .get("properties")
@@ -2751,6 +2759,7 @@ mod tests {
       .expect("read_qr_code tool");
     let schema = input_schema(tool);
     assert_eq!(string_property_min_length(&schema, "image_data"), Some(1));
+    assert_eq!(integer_property_minimum(&schema, "revision"), Some(0));
     assert_eq!(
       schema.get("required").and_then(|v| v.as_array()).map(|fields| {
         fields
