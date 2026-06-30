@@ -49,10 +49,19 @@ struct VisionDetectBarcodesRequest: Equatable {
     let coalesceCompositeSymbologies: Bool?
 }
 
+struct VisionDetectFacesRequest: Equatable {
+    let imageData: Data
+    let orientation: CGImagePropertyOrientation?
+    let revision: Int?
+    let regionOfInterest: CGRect?
+    let constellation: VNRequestFaceLandmarksConstellation
+}
+
 @MainActor
 protocol VisionStoreing {
     func recognizeText(request: VisionRecognizeTextRequest) throws -> [VNRecognizedTextObservation]
     func scanDocument(request: VisionScanDocumentRequest) throws -> VisionScanDocumentResult
     func readQrCode(request: VisionReadQrCodeRequest) throws -> [VNBarcodeObservation]
     func detectBarcodes(request: VisionDetectBarcodesRequest) throws -> [BarcodeObservation]
+    func detectFaces(request: VisionDetectFacesRequest) throws -> [VNFaceObservation]
 }

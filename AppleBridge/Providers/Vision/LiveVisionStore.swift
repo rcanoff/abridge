@@ -96,6 +96,30 @@ struct LiveVisionStore: VisionStoreing {
         }
     }
 
+    func detectFaces(request: VisionDetectFacesRequest) throws -> [VNFaceObservation] {
+        let imageSource = try imageSource(from: request.imageData)
+        let cgImage = try decodeCGImage(from: imageSource)
+        let orientation = request.orientation ?? orientationFromImageSource(imageSource)
+
+        let detectRequest = VNDetectFaceLandmarksRequest()
+        if let revision = request.revision {
+            detectRequest.revision = revision
+        }
+        if let regionOfInterest = request.regionOfInterest {
+            detectRequest.regionOfInterest = regionOfInterest
+        }
+        detectRequest.constellation = request.constellation
+
+        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
+        do {
+            try handler.perform([detectRequest])
+        } catch {
+            throw VisionProviderError.visionError(error.localizedDescription)
+        }
+
+        return detectRequest.results ?? []
+    }
+
     func recognizeText(request: VisionRecognizeTextRequest) throws -> [VNRecognizedTextObservation] {
         let imageSource = try imageSource(from: request.imageData)
         let cgImage = try decodeCGImage(from: imageSource)

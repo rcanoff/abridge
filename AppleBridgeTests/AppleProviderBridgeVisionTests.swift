@@ -99,4 +99,28 @@ struct AppleProviderBridgeVisionTests {
         let results = decoded?["results"] as? [[String: Any]]
         #expect(results?.isEmpty == false)
     }
+
+    @Test
+    @MainActor
+    func callProviderVisionDetectFacesSucceedsWithMockStore() throws {
+        let observations = try VisionTestFixtures.sampleFaceObservations()
+        let store = MockVisionStore()
+        store.faceObservations = observations
+        let bridge = AppleProviderBridge(visionProvider: VisionProvider(store: store))
+        let imageData = try VisionTestFixtures.samplePortraitImageData()
+        let encoded = imageData.base64EncodedString()
+
+        let request = ProviderRequest(
+            provider: "vision",
+            operation: "detect_faces",
+            payloadJson: #"{"image_data":"\#(encoded)"}"#
+        )
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let results = decoded?["results"] as? [[String: Any]]
+        #expect(results?.isEmpty == false)
+    }
 }
