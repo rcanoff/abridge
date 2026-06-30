@@ -62,6 +62,12 @@ struct VisionSerializationTests {
     }
 
     @Test
+    func optionalTimeRangeSerializesAsNull() {
+        let value = VisionSerialization.cmTimeRangeJSONObject(from: nil as CMTimeRange?)
+        #expect(value is NSNull)
+    }
+
+    @Test
     @MainActor
     func maxCandidateCountLimitsSerializedCandidates() throws {
         let observations = try VisionTestFixtures.sampleRecognizedTextObservations()

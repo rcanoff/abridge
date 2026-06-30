@@ -75,9 +75,9 @@ enum VisionSerialization {
         ]
     }
 
-    static func cmTimeRangeJSONObject(from range: CMTimeRange?) -> [String: Any] {
+    static func cmTimeRangeJSONObject(from range: CMTimeRange?) -> Any {
         guard let range else {
-            return cmTimeRangeJSONObject(from: .zero)
+            return NSNull()
         }
         return cmTimeRangeJSONObject(from: range)
     }

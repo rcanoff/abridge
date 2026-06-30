@@ -27,7 +27,7 @@ struct LiveVisionStore: VisionStoreing {
     }
 
     private func makeRecognizeDocumentsRequest(from request: VisionScanDocumentRequest) -> RecognizeDocumentsRequest {
-        var recognizeRequest = RecognizeDocumentsRequest()
+        var recognizeRequest = RecognizeDocumentsRequest(request.revision)
         if let regionOfInterest = request.regionOfInterest {
             recognizeRequest.regionOfInterest = regionOfInterest
         }

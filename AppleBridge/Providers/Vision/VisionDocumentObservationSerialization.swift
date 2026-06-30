@@ -1,3 +1,5 @@
+import CoreGraphics
+import CoreVideo
 import Foundation
 import Vision
 
@@ -129,7 +131,29 @@ enum VisionDocumentObservationSerialization {
         let height = Int(observation.size.height)
         guard width > 0, height > 0 else { return NSNull() }
 
-        let bytesPerRow = width
+        if let cgImage = try? observation.cgImage {
+            let bytesPerRow = cgImage.bytesPerRow
+            let byteCount = bytesPerRow * height
+            guard let dataProvider = cgImage.dataProvider,
+                  let cfData = dataProvider.data,
+                  let baseAddress = CFDataGetBytePtr(cfData)
+            else {
+                return NSNull()
+            }
+
+            return [
+                "width": width,
+                "height": height,
+                "pixel_format": VisionSerialization.fourCCString(from: observation.pixelFormat),
+                "bytes_per_row": bytesPerRow,
+                "data": Data(bytes: baseAddress, count: byteCount).base64EncodedString(),
+            ]
+        }
+
+        let bytesPerPixel = bytesPerPixel(for: observation.pixelFormat)
+        guard bytesPerPixel > 0 else { return NSNull() }
+
+        let bytesPerRow = width * bytesPerPixel
         let byteCount = bytesPerRow * height
         var data = Data(count: byteCount)
         var copyFailed = false
@@ -153,6 +177,27 @@ enum VisionDocumentObservationSerialization {
             "bytes_per_row": bytesPerRow,
             "data": data.base64EncodedString(),
         ]
+    }
+
+    private static func bytesPerPixel(for pixelFormat: UInt32) -> Int {
+        let format = OSType(pixelFormat)
+        switch format {
+        case kCVPixelFormatType_OneComponent8,
+             kCVPixelFormatType_OneComponent16,
+             kCVPixelFormatType_OneComponent16Half:
+            return (format == kCVPixelFormatType_OneComponent8) ? 1 : 2
+        case kCVPixelFormatType_32BGRA,
+             kCVPixelFormatType_32ARGB,
+             kCVPixelFormatType_32RGBA:
+            return 4
+        default:
+            let fourCC = VisionSerialization.fourCCString(from: pixelFormat)
+            if fourCC.hasPrefix("L") || fourCC.hasPrefix("l") {
+                if fourCC.contains("8") { return 1 }
+                if fourCC.contains("16") { return 2 }
+            }
+            return 0
+        }
     }
 
     private static func base64DataValue(_ data: Data?) -> Any {
