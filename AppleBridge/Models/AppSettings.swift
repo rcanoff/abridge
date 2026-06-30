@@ -126,6 +126,12 @@ final class AppSettings {
             .map(\.capabilityID)
     }
 
+    var enabledVisionCapabilityIDs: [String] {
+        CapabilityCatalog.visionCapabilities
+            .filter { $0.shipped && savedCapabilityIDs.contains($0.id) }
+            .map(\.capabilityID)
+    }
+
     func serverEnabledMCPCapabilityIDs(
         remindersAuthorized: Bool,
         eventsAuthorized: Bool,
@@ -146,6 +152,7 @@ final class AppSettings {
         if locationAuthorized {
             capabilities.append(contentsOf: enabledMapKitCapabilityIDs)
         }
+        capabilities.append(contentsOf: enabledVisionCapabilityIDs)
         return capabilities
     }
 }

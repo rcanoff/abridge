@@ -75,6 +75,10 @@ final class PermissionsStore {
             return authorization.locationAuthorized
         }
 
+        if CapabilityCatalog.visionCapabilities.contains(where: { $0.id == capabilityID }) {
+            return true
+        }
+
         return authorization.remindersAuthorized
     }
 
