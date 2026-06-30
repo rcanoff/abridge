@@ -71,6 +71,20 @@ struct MapKitMCPPermissionsGroup: View {
     }
 }
 
+struct VisionMCPPermissionsGroup: View {
+    let capabilityBinding: (String) -> Binding<Bool>
+
+    var body: some View {
+        Section {
+            ForEach(CapabilityCatalog.visionCapabilities) { capability in
+                Toggle(capability.label, isOn: capabilityBinding(capability.id))
+            }
+        } header: {
+            Text("Vision")
+        }
+    }
+}
+
 enum SystemSettingsIcon {
     static let image: NSImage = {
         let workspace = NSWorkspace.shared
