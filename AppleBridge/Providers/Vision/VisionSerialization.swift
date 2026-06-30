@@ -110,8 +110,8 @@ enum VisionSerialization {
         observations: [DocumentObservation],
         segmentation: DetectedDocumentObservation?,
         maximumCandidateCount: Int
-    ) -> [String: Any] {
-        VisionDocumentSerialization.scanDocumentResponseJSONObject(
+    ) throws -> [String: Any] {
+        try VisionDocumentSerialization.scanDocumentResponseJSONObject(
             observations: observations,
             segmentation: segmentation,
             maximumCandidateCount: maximumCandidateCount
@@ -121,8 +121,8 @@ enum VisionSerialization {
     static func documentObservationJSONObject(
         from observation: DocumentObservation,
         maximumCandidateCount: Int
-    ) -> [String: Any] {
-        VisionDocumentSerialization.documentObservationJSONObject(
+    ) throws -> [String: Any] {
+        try VisionDocumentSerialization.documentObservationJSONObject(
             from: observation,
             maximumCandidateCount: maximumCandidateCount
         )

@@ -54,7 +54,7 @@ struct VisionDocumentSerializationTests {
     @MainActor
     func scanDocumentResponseIncludesTopLevelKeys() throws {
         let observations = try VisionTestFixtures.sampleDocumentObservations()
-        let object = VisionSerialization.scanDocumentResponseJSONObject(
+        let object = try VisionSerialization.scanDocumentResponseJSONObject(
             observations: observations,
             segmentation: nil,
             maximumCandidateCount: 1
@@ -70,7 +70,7 @@ struct VisionDocumentSerializationTests {
     func documentObservationProjectionIncludesAllKeys() throws {
         let observations = try VisionTestFixtures.sampleDocumentObservations()
         let observation = try #require(observations.first)
-        let object = VisionSerialization.documentObservationJSONObject(
+        let object = try VisionSerialization.documentObservationJSONObject(
             from: observation,
             maximumCandidateCount: 1
         )
@@ -104,7 +104,7 @@ struct VisionDocumentSerializationTests {
     func maximumCandidateCountLimitsNestedCandidates() throws {
         let observations = try VisionTestFixtures.sampleDocumentObservations()
         let observation = try #require(observations.first)
-        let object = VisionSerialization.documentObservationJSONObject(
+        let object = try VisionSerialization.documentObservationJSONObject(
             from: observation,
             maximumCandidateCount: 2
         )

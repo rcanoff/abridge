@@ -33,7 +33,7 @@ enum VisionDocumentObservationSerialization {
     static func barcodeObservationJSONObject(
         from observation: BarcodeObservation,
         boundingRegion: [String: Any]
-    ) -> [String: Any] {
+    ) throws -> [String: Any] {
         [
             "uuid": observation.uuid.uuidString,
             "confidence": observation.confidence,
@@ -47,7 +47,7 @@ enum VisionDocumentObservationSerialization {
             "supplemental_payload_data": base64DataValue(observation.supplementalPayloadData),
             "supplemental_composite_type": compositeTypeString(from: observation.supplementalCompositeType) ?? NSNull(),
             "is_gs1_data_carrier": observation.isGS1DataCarrier,
-            "symbology": barcodeSymbologyIdentifier(from: observation.symbology),
+            "symbology": try barcodeSymbologyIdentifier(from: observation.symbology),
             "is_color_inverted": observation.isColorInverted,
             "top_left": normalizedPointJSONObject(from: observation.topLeft),
             "top_right": normalizedPointJSONObject(from: observation.topRight),
@@ -231,13 +231,19 @@ enum VisionDocumentObservationSerialization {
         }
     }
 
-    static func barcodeSymbologyIdentifier(from symbology: BarcodeSymbology) -> String {
+    static func barcodeSymbologyIdentifier(from symbology: BarcodeSymbology) throws -> String {
+        let data: Data
+        do {
+            data = try JSONEncoder().encode(symbology)
+        } catch {
+            throw VisionProviderError.serializationFailed
+        }
+
         guard
-            let data = try? JSONEncoder().encode(symbology),
             let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
             let identifier = object.keys.first
         else {
-            preconditionFailure("Failed to serialize BarcodeSymbology")
+            throw VisionProviderError.serializationFailed
         }
         return identifier
     }

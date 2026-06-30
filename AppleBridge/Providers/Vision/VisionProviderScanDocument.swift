@@ -6,7 +6,7 @@ extension VisionProvider {
         do {
             let arguments = try parseScanDocumentArguments(payloadJson)
             let result = try store.scanDocument(request: arguments)
-            let payloadObject = VisionSerialization.scanDocumentResponseJSONObject(
+            let payloadObject = try VisionSerialization.scanDocumentResponseJSONObject(
                 observations: result.observations,
                 segmentation: result.segmentation,
                 maximumCandidateCount: arguments.maximumCandidateCount
