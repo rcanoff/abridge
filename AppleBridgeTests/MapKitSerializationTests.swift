@@ -8,8 +8,14 @@ import Testing
 struct MapKitSerializationTests {
     @Test
     func mapItemJSONObjectIncludesTopLevelKeys() {
-        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
-        let item = MKMapItem(placemark: placemark)
+        let location = CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090),
+            altitude: 0,
+            horizontalAccuracy: 5,
+            verticalAccuracy: 5,
+            timestamp: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+        let item = MKMapItem(location: location, address: nil)
         item.name = "Test Place"
         item.phoneNumber = "+1 555 0100"
 
@@ -47,15 +53,15 @@ struct MapKitSerializationTests {
     }
 
     @Test
-    func placemarkJSONObjectPreservesNegativeAltitudeValues() {
+    func mapItemPlacemarkJSONObjectPreservesNegativeAltitudeValues() {
         let location = NegativeAltitudeTestLocation(
             coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0),
             altitude: -50,
             ellipsoidalAltitude: -30
         )
-        let placemark = PlacemarkWithLocationTestDouble(location: location)
+        let item = SparseMapItemTestDouble(location: location)
 
-        let json = MapKitSerialization.placemarkJSONObject(from: placemark)
+        let json = MapKitSerialization.mapItemPlacemarkJSONObject(from: item)
         #expect(json["altitude"] as? Double == -50)
         #expect(json["ellipsoidal_altitude"] as? Double == -30)
         #expect((json["altitude"] is NSNull) == false)
@@ -63,7 +69,7 @@ struct MapKitSerializationTests {
     }
 
     @Test
-    func mapItemPlacemarkJSONObjectBuildsFromLocationWhenPlacemarkUnavailable() {
+    func mapItemPlacemarkJSONObjectBuildsFromLocationWhenPlacemarkSparse() {
         let location = CLLocation(
             coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090),
             altitude: 12.3,
@@ -79,13 +85,15 @@ struct MapKitSerializationTests {
         #expect(coordinate?["longitude"] as? Double == -122.0090)
         #expect(json.keys.contains("altitude"))
         #expect(json.keys.contains("ellipsoidal_altitude"))
-        #expect((json["region"] is NSNull) == false)
-        #expect((json["address_dictionary"] is NSNull) == true)
+        #expect(json.keys.contains("address_dictionary"))
+        #expect(json.keys.contains("country_code"))
+        #expect(json.keys.contains("postal_address"))
     }
 
     @Test
-    func mapItemPlacemarkJSONObjectPreservesPlacemarkRegionWithoutAddressFields() {
-        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
+    func mapItemPlacemarkJSONObjectSerializesPlacemarkRegionViaKVC() {
+        let coordinate = CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090)
+        let placemark = MKPlacemark(coordinate: coordinate)
         let item = MKMapItem(placemark: placemark)
 
         let json = MapKitSerialization.mapItemPlacemarkJSONObject(from: item)
@@ -95,13 +103,32 @@ struct MapKitSerializationTests {
         let center = region?["center"] as? [String: Any]
         #expect(center?["latitude"] as? Double == 37.3346)
         #expect(center?["longitude"] as? Double == -122.0090)
+        #expect((region?["radius"] as? Double ?? -1) >= 0)
     }
 
     @Test
-    func mapItemPlacemarkJSONObjectUsesPlacemarkCoordinateWhenLocationUnavailable() {
+    func mapItemPlacemarkJSONObjectPreservesPlacemarkMetadataViaKVC() {
+        let coordinate = CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090)
+        let placemark = MKPlacemark(coordinate: coordinate)
+        let item = MKMapItem(placemark: placemark)
+
+        let json = MapKitSerialization.mapItemPlacemarkJSONObject(from: item)
+        let coordinateJSON = json["coordinate"] as? [String: Any]
+        #expect(coordinateJSON?["latitude"] as? Double == 37.3346)
+        #expect(coordinateJSON?["longitude"] as? Double == -122.0090)
+        #expect(json.keys.contains("country_code"))
+        #expect(json.keys.contains("postal_address"))
+        #expect(json.keys.contains("address_dictionary"))
+        #expect(json.keys.contains("inland_water"))
+        #expect(json.keys.contains("ocean"))
+        #expect(json.keys.contains("areas_of_interest"))
+    }
+
+    @Test
+    func mapItemPlacemarkJSONObjectUsesNullCoordinateWhenLocationUnavailable() {
         let coordinate = CLLocationCoordinate2D(latitude: 12.5, longitude: -45.6)
         let placemark = MKPlacemark(coordinate: coordinate)
-        let item = SparseMapItemTestDouble(placemark: placemark, location: nil)
+        let item = SparseMapItemTestDouble(location: nil, placemark: placemark)
 
         let json = MapKitSerialization.mapItemPlacemarkJSONObject(from: item)
         let serializedCoordinate = json["coordinate"] as? [String: Any]
@@ -112,10 +139,21 @@ struct MapKitSerializationTests {
     }
 
     @Test
+    func mapItemPlacemarkJSONObjectUsesNullRegionWhenPlacemarkUnavailable() {
+        let item = SparseMapItemTestDouble(location: nil, placemark: nil)
+
+        let json = MapKitSerialization.mapItemPlacemarkJSONObject(from: item)
+        #expect((json["coordinate"] is NSNull) == true)
+        #expect((json["region"] is NSNull) == true)
+        #expect(json.keys.contains("altitude"))
+        #expect(json.keys.contains("ellipsoidal_altitude"))
+    }
+
+    @Test
     func mapItemJSONObjectSerializesSparseItemWithNilLocationWithoutCrashing() {
         let coordinate = CLLocationCoordinate2D(latitude: 12.5, longitude: -45.6)
         let placemark = MKPlacemark(coordinate: coordinate)
-        let item = SparseMapItemTestDouble(placemark: placemark, location: nil)
+        let item = SparseMapItemTestDouble(location: nil, placemark: placemark)
         item.name = "Sparse Place"
 
         let json = MapKitSerialization.mapItemJSONObject(from: item)
@@ -173,9 +211,11 @@ private final class NegativeAltitudeTestLocation: CLLocation, @unchecked Sendabl
 }
 
 private final class SparseMapItemTestDouble: MKMapItem, @unchecked Sendable {
-    private let testPlacemark: MKPlacemark
+    private let testLocation: CLLocation?
+    private let testPlacemark: AnyObject?
 
-    init(placemark: MKPlacemark, location _: CLLocation?) {
+    init(location: CLLocation?, placemark: AnyObject? = nil) {
+        testLocation = location
         testPlacemark = placemark
         super.init()
     }
@@ -185,32 +225,13 @@ private final class SparseMapItemTestDouble: MKMapItem, @unchecked Sendable {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override var placemark: MKPlacemark {
-        testPlacemark
-    }
-
     override func value(forKey key: String) -> Any? {
         if key == "location" {
-            return nil
+            return testLocation
+        }
+        if key == "placemark" {
+            return testPlacemark
         }
         return super.value(forKey: key)
-    }
-}
-
-private final class PlacemarkWithLocationTestDouble: MKPlacemark, @unchecked Sendable {
-    private let testLocation: CLLocation
-
-    init(location: CLLocation) {
-        testLocation = location
-        super.init(coordinate: location.coordinate)
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override var location: CLLocation? {
-        testLocation
     }
 }
