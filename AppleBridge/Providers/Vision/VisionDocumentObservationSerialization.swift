@@ -1,0 +1,199 @@
+import Foundation
+import Vision
+
+enum VisionDocumentObservationSerialization {
+    static func recognizedTextObservationJSONObject(
+        from observation: RecognizedTextObservation,
+        maximumCandidateCount: Int,
+        boundingRegion: [String: Any]
+    ) -> [String: Any] {
+        [
+            "uuid": observation.uuid.uuidString,
+            "confidence": observation.confidence,
+            "time_range": VisionSerialization.cmTimeRangeJSONObject(from: observation.timeRange),
+            "originating_request_descriptor": requestDescriptorJSONObject(
+                from: observation.originatingRequestDescriptor
+            ),
+            "top_left": normalizedPointJSONObject(from: observation.topLeft),
+            "top_right": normalizedPointJSONObject(from: observation.topRight),
+            "bottom_right": normalizedPointJSONObject(from: observation.bottomRight),
+            "bottom_left": normalizedPointJSONObject(from: observation.bottomLeft),
+            "bounding_region": boundingRegion,
+            "transcript": observation.transcript,
+            "recognition_languages": observation.recognitionLanguages.map(bcp47String(from:)),
+            "is_title": observation.isTitle,
+            "should_wrap_to_next_line": observation.shouldWrapToNextLine ?? NSNull(),
+            "text_direction": textDirectionString(from: observation.textDirection) ?? NSNull(),
+            "candidates": observation.topCandidates(maximumCandidateCount).map(recognizedTextJSONObject(from:)),
+        ]
+    }
+
+    static func barcodeObservationJSONObject(
+        from observation: BarcodeObservation,
+        boundingRegion: [String: Any]
+    ) -> [String: Any] {
+        [
+            "uuid": observation.uuid.uuidString,
+            "confidence": observation.confidence,
+            "time_range": VisionSerialization.cmTimeRangeJSONObject(from: observation.timeRange),
+            "originating_request_descriptor": requestDescriptorJSONObject(
+                from: observation.originatingRequestDescriptor
+            ),
+            "payload_string": VisionSerialization.jsonValue(observation.payloadString),
+            "payload_data": base64DataValue(observation.payloadData),
+            "supplemental_payload_string": VisionSerialization.jsonValue(observation.supplementalPayloadString),
+            "supplemental_payload_data": base64DataValue(observation.supplementalPayloadData),
+            "supplemental_composite_type": compositeTypeString(from: observation.supplementalCompositeType) ?? NSNull(),
+            "is_gs1_data_carrier": observation.isGS1DataCarrier,
+            "symbology": String(describing: observation.symbology),
+            "is_color_inverted": observation.isColorInverted,
+            "top_left": normalizedPointJSONObject(from: observation.topLeft),
+            "top_right": normalizedPointJSONObject(from: observation.topRight),
+            "bottom_right": normalizedPointJSONObject(from: observation.bottomRight),
+            "bottom_left": normalizedPointJSONObject(from: observation.bottomLeft),
+            "bounding_region": boundingRegion,
+        ]
+    }
+
+    static func detectedDocumentObservationJSONObject(from observation: DetectedDocumentObservation) -> [String: Any] {
+        [
+            "uuid": observation.uuid.uuidString,
+            "confidence": observation.confidence,
+            "time_range": VisionSerialization.cmTimeRangeJSONObject(from: observation.timeRange),
+            "originating_request_descriptor": requestDescriptorJSONObject(
+                from: observation.originatingRequestDescriptor
+            ),
+            "global_segmentation_mask": pixelBufferObservationJSONObject(from: observation.globalSegmentationMask),
+            "top_left": normalizedPointJSONObject(from: observation.topLeft),
+            "top_right": normalizedPointJSONObject(from: observation.topRight),
+            "bottom_right": normalizedPointJSONObject(from: observation.bottomRight),
+            "bottom_left": normalizedPointJSONObject(from: observation.bottomLeft),
+        ]
+    }
+
+    static func normalizedRegionJSONObject(from contour: ContoursObservation.Contour) -> [String: Any] {
+        [
+            "aspect_ratio": contour.aspectRatio,
+            "index_path": Array(contour.indexPath),
+            "point_count": contour.pointCount,
+            "normalized_points": contour.normalizedPoints.map(simdPointJSONObject(from:)),
+            "child_contours": contour.childContours.map(normalizedRegionJSONObject(from:)),
+        ]
+    }
+
+    static func requestDescriptorJSONObject(from descriptor: RequestDescriptor?) -> Any {
+        guard let descriptor else { return NSNull() }
+        return ["identifier": String(describing: descriptor)]
+    }
+
+    private static func pixelBufferObservationJSONObject(from observation: PixelBufferObservation) -> [String: Any] {
+        [
+            "uuid": observation.uuid.uuidString,
+            "confidence": observation.confidence,
+            "time_range": VisionSerialization.cmTimeRangeJSONObject(from: observation.timeRange),
+            "originating_request_descriptor": requestDescriptorJSONObject(
+                from: observation.originatingRequestDescriptor
+            ),
+            "size": [
+                "width": observation.size.width,
+                "height": observation.size.height,
+            ],
+            "pixel_format": VisionSerialization.fourCCString(from: observation.pixelFormat),
+            "pixel_buffer": pixelBufferJSONObject(from: observation),
+        ]
+    }
+
+    private static func recognizedTextJSONObject(from text: RecognizedText) -> [String: Any] {
+        [
+            "string": text.string,
+            "confidence": text.confidence,
+        ]
+    }
+
+    private static func normalizedPointJSONObject(from point: NormalizedPoint) -> [String: Any] {
+        [
+            "x": point.x,
+            "y": point.y,
+        ]
+    }
+
+    private static func simdPointJSONObject(from point: SIMD2<Float>) -> [String: Any] {
+        [
+            "x": Double(point.x),
+            "y": Double(point.y),
+        ]
+    }
+
+    private static func pixelBufferJSONObject(from observation: PixelBufferObservation) -> Any {
+        let width = Int(observation.size.width)
+        let height = Int(observation.size.height)
+        guard width > 0, height > 0 else { return NSNull() }
+
+        let bytesPerRow = width
+        let byteCount = bytesPerRow * height
+        var data = Data(count: byteCount)
+        var copyFailed = false
+
+        observation.withUnsafePointer { pointer in
+            data.withUnsafeMutableBytes { destination in
+                guard let baseAddress = destination.baseAddress else {
+                    copyFailed = true
+                    return
+                }
+                memcpy(baseAddress, pointer, byteCount)
+            }
+        }
+
+        guard !copyFailed else { return NSNull() }
+
+        return [
+            "width": width,
+            "height": height,
+            "pixel_format": VisionSerialization.fourCCString(from: observation.pixelFormat),
+            "bytes_per_row": bytesPerRow,
+            "data": data.base64EncodedString(),
+        ]
+    }
+
+    private static func base64DataValue(_ data: Data?) -> Any {
+        data?.base64EncodedString() ?? NSNull()
+    }
+
+    private static func bcp47String(from language: Locale.Language) -> String {
+        var components: [String] = []
+        if let languageCode = language.languageCode?.identifier {
+            components.append(languageCode)
+        }
+        if let script = language.script?.identifier {
+            components.append(script)
+        }
+        if let region = language.region?.identifier {
+            components.append(region)
+        }
+        if components.isEmpty {
+            return language.minimalIdentifier
+        }
+        return components.joined(separator: "-")
+    }
+
+    private static func textDirectionString(from direction: RecognizedTextObservation.Direction?) -> String? {
+        switch direction {
+        case .leftToRight: "left_to_right"
+        case .rightToLeft: "right_to_left"
+        case .topToBottom: "top_to_bottom"
+        case nil: nil
+        @unknown default: nil
+        }
+    }
+
+    private static func compositeTypeString(from type: BarcodeObservation.CompositeType?) -> String? {
+        switch type {
+        case .gs1TypeA: "gs1_type_a"
+        case .gs1TypeB: "gs1_type_b"
+        case .gs1TypeC: "gs1_type_c"
+        case .linked: "linked"
+        case nil: nil
+        @unknown default: nil
+        }
+    }
+}
