@@ -93,7 +93,7 @@ JSON **object** mirroring `VNDetectBarcodesRequest.results` (not a bare array):
       "top_right": { "x": 0.0, "y": 0.0 },
       "bottom_left": { "x": 0.0, "y": 0.0 },
       "bottom_right": { "x": 0.0, "y": 0.0 },
-      "symbology": "qr",
+      "symbology": "VNBarcodeSymbologyQR",
       "payload_string_value": "…",
       "payload_data": "…"
     }
@@ -127,9 +127,11 @@ Inheritance: `VNBarcodeObservation` → `VNRectangleObservation` → `VNDetected
 | `top_right` | `VNRectangleObservation.topRight` | `CGPoint` object |
 | `bottom_left` | `VNRectangleObservation.bottomLeft` | `CGPoint` object |
 | `bottom_right` | `VNRectangleObservation.bottomRight` | `CGPoint` object |
-| `symbology` | `VNBarcodeObservation.symbology` | string (raw `VNBarcodeSymbology` identifier, e.g. `"qr"`) |
+| `symbology` | `VNBarcodeObservation.symbology` | string (`VNBarcodeSymbology.rawValue`, e.g. `"VNBarcodeSymbologyQR"` for QR; not the short Codable key used by Swift Vision `BarcodeObservation`, e.g. `"qr"`) |
 | `payload_string_value` | `VNBarcodeObservation.payloadStringValue` | string or `null` |
 | `payload_data` | `VNBarcodeObservation.payloadData` | base64 string or `null` |
+
+`vision.detect_barcodes` and `vision.scan_document` use the macOS 26 Swift Vision `BarcodeObservation` type with different key names per their specs — intentional; symbology strings are not normalized across tools.
 
 `VNPixelBufferObservation` nested encoding reuses the helper from `recognize_text` (`uuid`, `confidence`, `time_range`, `request_revision`, `pixel_buffer` with `width`, `height`, `pixel_format`, `bytes_per_row`, `data`).
 
