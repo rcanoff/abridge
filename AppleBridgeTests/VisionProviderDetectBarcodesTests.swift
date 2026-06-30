@@ -60,14 +60,10 @@ struct VisionProviderDetectBarcodesTests {
         let imageData = try VisionTestFixtures.sampleTextImageData()
         let encoded = imageData.base64EncodedString()
 
-        _ = provider.handle(
-            operation: "detect_barcodes",
-            payloadJson: #"""
-            {"image_data":"\#(
-                encoded
-            )","symbologies":["qr"],"region_of_interest":{"origin":{"x":0.1,"y":0.2},"size":{"width":0.5,"height":0.6}},"coalesce_composite_symbologies":true}
-            """#
-        )
+        // swiftlint:disable:next line_length
+        let payloadJson = #"{"image_data":"\#(encoded)","symbologies":["qr"],"region_of_interest":{"origin":{"x":0.1,"y":0.2},"size":{"width":0.5,"height":0.6}},"coalesce_composite_symbologies":true}"#
+        let response = provider.handle(operation: "detect_barcodes", payloadJson: payloadJson)
+        #expect(response.ok == true, "Expected success, got: \(response.errorJson ?? "nil")")
 
         #expect(store.lastDetectBarcodesRequest?.symbologies?.count == 1)
         #expect(store.lastDetectBarcodesRequest?.regionOfInterest != nil)
