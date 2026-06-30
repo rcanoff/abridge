@@ -180,6 +180,7 @@
 		93A813E1503316FF142C1B8A /* LaunchAtLoginManaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1CD2B4B95605CD09F6E7E83 /* LaunchAtLoginManaging.swift */; };
 		93AC36DD535E2EFBE370F060 /* EventKitProviderDeleteListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8845608742FA7223A013EA89 /* EventKitProviderDeleteListTests.swift */; };
 		946E8C9D3E412127B69C8AE9 /* AppleProviderBridgeListCalendarsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732F11CED2185A9CC3DDE300 /* AppleProviderBridgeListCalendarsTests.swift */; };
+		9476E428E07FF99B1610E36B /* VisionProviderScanDocumentArguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4353DF0AECD40BC499FEAE4 /* VisionProviderScanDocumentArguments.swift */; };
 		95362A38FEEAF494CEA7E608 /* ContactsRuntimeUnlinking.m in Sources */ = {isa = PBXBuildFile; fileRef = 89776D27F726F0BD62A62EDD /* ContactsRuntimeUnlinking.m */; };
 		96D65FF6E735083A83502209 /* EventKitProviderGetEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABA761A62E110F5AA0D9D852 /* EventKitProviderGetEvent.swift */; };
 		96E3CF5D4BADF9D384DFEE46 /* EventsPermissionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885CAED8B8050BBC816094D4 /* EventsPermissionServiceTests.swift */; };
@@ -597,6 +598,7 @@
 		C1FE25708EAD3205C02EC1CE /* EventKitProviderCompleteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderCompleteTests.swift; sourceTree = "<group>"; };
 		C300045AD0E6C11D011B1368 /* MapKitProviderSearchPlacesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderSearchPlacesTests.swift; sourceTree = "<group>"; };
 		C3F7B23B42E794085F6CB25B /* EventKitProviderUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderUpdate.swift; sourceTree = "<group>"; };
+		C4353DF0AECD40BC499FEAE4 /* VisionProviderScanDocumentArguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProviderScanDocumentArguments.swift; sourceTree = "<group>"; };
 		C453F98EBE5CA0E0631FE443 /* SettingsWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowView.swift; sourceTree = "<group>"; };
 		C4CE8A393E6A9E8C1B568FDD /* LiveEventKitStoreInvitationContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveEventKitStoreInvitationContractTests.swift; sourceTree = "<group>"; };
 		C6D6F91117573DF21D7C70E9 /* ContactsRuntimeLinking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContactsRuntimeLinking.h; sourceTree = "<group>"; };
@@ -1044,6 +1046,7 @@
 				927071200B23CBA646E4008A /* VisionProviderRecognizeText.swift */,
 				BFBBC6976ABC8D4502D41CBF /* VisionProviderRouting.swift */,
 				F8F8D62F07C979351CD35051 /* VisionProviderScanDocument.swift */,
+				C4353DF0AECD40BC499FEAE4 /* VisionProviderScanDocumentArguments.swift */,
 				42DA30319226BD2AB8C51C64 /* VisionSerialization.swift */,
 				08CA3D9B7CD57342F59C0223 /* VisionStore.swift */,
 			);
@@ -1366,6 +1369,7 @@
 				F928A30FF5607E71609A8E07 /* VisionProviderRecognizeText.swift in Sources */,
 				14226CD8103C108E637CA750 /* VisionProviderRouting.swift in Sources */,
 				ECCD5A13D9AE8DD670CBAEDC /* VisionProviderScanDocument.swift in Sources */,
+				9476E428E07FF99B1610E36B /* VisionProviderScanDocumentArguments.swift in Sources */,
 				A94B0BC10672D6BF704C1B65 /* VisionSerialization.swift in Sources */,
 				E20633AF1771B2E3CDD6A15B /* VisionStore.swift in Sources */,
 				60FD0A8FF20E78B4EB93D578 /* apple_bridge_core.swift in Sources */,
