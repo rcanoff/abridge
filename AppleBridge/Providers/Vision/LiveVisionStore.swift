@@ -67,30 +67,12 @@ struct LiveVisionStore: VisionStoreing {
 
     private func performVisionAsync<T>(
         operation: String,
-        work: @escaping () async throws -> T
+        work: @Sendable @escaping () async throws -> T
     ) throws -> T {
-        let result = VisionAsyncBridge.AsyncBridgeResult<T>()
         do {
-            try VisionAsyncBridge.waitForCompletion(operation: operation) { complete in
-                DispatchQueue.main.async {
-                    Task {
-                        defer { complete() }
-                        do {
-                            try await result.setValue(work())
-                        } catch {
-                            result.setError(error)
-                        }
-                    }
-                }
-            }
+            return try VisionAsyncBridge.perform(operation: operation, work: work)
         } catch let error as VisionProviderError {
             throw error
-        } catch {
-            throw VisionProviderError.visionError(error.localizedDescription)
-        }
-
-        do {
-            return try result.get()
         } catch {
             throw VisionProviderError.visionError(error.localizedDescription)
         }

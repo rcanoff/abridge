@@ -180,6 +180,7 @@
 		93A813E1503316FF142C1B8A /* LaunchAtLoginManaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1CD2B4B95605CD09F6E7E83 /* LaunchAtLoginManaging.swift */; };
 		93AC36DD535E2EFBE370F060 /* EventKitProviderDeleteListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8845608742FA7223A013EA89 /* EventKitProviderDeleteListTests.swift */; };
 		946E8C9D3E412127B69C8AE9 /* AppleProviderBridgeListCalendarsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732F11CED2185A9CC3DDE300 /* AppleProviderBridgeListCalendarsTests.swift */; };
+		9476E428E07FF99B1610E36B /* VisionProviderScanDocumentArguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4353DF0AECD40BC499FEAE4 /* VisionProviderScanDocumentArguments.swift */; };
 		95362A38FEEAF494CEA7E608 /* ContactsRuntimeUnlinking.m in Sources */ = {isa = PBXBuildFile; fileRef = 89776D27F726F0BD62A62EDD /* ContactsRuntimeUnlinking.m */; };
 		96D65FF6E735083A83502209 /* EventKitProviderGetEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABA761A62E110F5AA0D9D852 /* EventKitProviderGetEvent.swift */; };
 		96E3CF5D4BADF9D384DFEE46 /* EventsPermissionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885CAED8B8050BBC816094D4 /* EventsPermissionServiceTests.swift */; };
@@ -237,6 +238,7 @@
 		B6B25F026F5922AD7F11C9D3 /* EventsPermissionChecking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32A79D84706744C840F4647C /* EventsPermissionChecking.swift */; };
 		B7C032A7A55F0B43103E2D11 /* EventKitProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2B9116F294A471D608AE114 /* EventKitProvider.swift */; };
 		B80F14C5B754A0276C38DABB /* EventKitDeserializationCalendar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49492AC0B653C9E1D649F4F5 /* EventKitDeserializationCalendar.swift */; };
+		B9D3F555B9D68162E6BD47CC /* VisionAsyncBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99B6E555EAFE325774373C26 /* VisionAsyncBridgeTests.swift */; };
 		BA971967C55DE01A0123591B /* SettingsWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C453F98EBE5CA0E0631FE443 /* SettingsWindowView.swift */; };
 		BC8C38F0B782560E191796EB /* ContactsProviderDeleteGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CC06B6EA433027C3373E504 /* ContactsProviderDeleteGroup.swift */; };
 		BCB2CF0B64E6DF2A7DB64D4B /* MockContactsStoreCreateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34388819C93666C7CAFE9389 /* MockContactsStoreCreateTests.swift */; };
@@ -533,6 +535,7 @@
 		9694E2FA2117F05B1BDD8C75 /* EventKitProviderDeclineInvitationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderDeclineInvitationTests.swift; sourceTree = "<group>"; };
 		9768CC8719D5EEA69C64049E /* VisionDocumentSerializationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionDocumentSerializationTests.swift; sourceTree = "<group>"; };
 		97D1FABE02F2CD00445E6D0C /* MockEventKitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockEventKitStore.swift; sourceTree = "<group>"; };
+		99B6E555EAFE325774373C26 /* VisionAsyncBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionAsyncBridgeTests.swift; sourceTree = "<group>"; };
 		99C0185B2328E52AB5EBDD1D /* StatusIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusIndicator.swift; sourceTree = "<group>"; };
 		9AA4B163FBF9D18481CA0F6B /* ContactsProviderLinkContactsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsProviderLinkContactsTests.swift; sourceTree = "<group>"; };
 		9ADA2DBCC17021D67E96E20F /* EventsPermissionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsPermissionStatus.swift; sourceTree = "<group>"; };
@@ -595,6 +598,7 @@
 		C1FE25708EAD3205C02EC1CE /* EventKitProviderCompleteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderCompleteTests.swift; sourceTree = "<group>"; };
 		C300045AD0E6C11D011B1368 /* MapKitProviderSearchPlacesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderSearchPlacesTests.swift; sourceTree = "<group>"; };
 		C3F7B23B42E794085F6CB25B /* EventKitProviderUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderUpdate.swift; sourceTree = "<group>"; };
+		C4353DF0AECD40BC499FEAE4 /* VisionProviderScanDocumentArguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProviderScanDocumentArguments.swift; sourceTree = "<group>"; };
 		C453F98EBE5CA0E0631FE443 /* SettingsWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowView.swift; sourceTree = "<group>"; };
 		C4CE8A393E6A9E8C1B568FDD /* LiveEventKitStoreInvitationContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveEventKitStoreInvitationContractTests.swift; sourceTree = "<group>"; };
 		C6D6F91117573DF21D7C70E9 /* ContactsRuntimeLinking.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContactsRuntimeLinking.h; sourceTree = "<group>"; };
@@ -862,12 +866,13 @@
 				CF9F62B5834A3345F997495F /* StaleRemindersPermissionService.swift */,
 				E6E8DA79BFB87C1E5EB17DE6 /* StalledEventKitStore.swift */,
 				3DD0D0D3E9DB88F6F3340E34 /* UsageAuditExportTests.swift */,
+				99B6E555EAFE325774373C26 /* VisionAsyncBridgeTests.swift */,
 				702E109293B015E9765ABA83 /* VisionBarcodeSerializationTests.swift */,
 				9768CC8719D5EEA69C64049E /* VisionDocumentSerializationTests.swift */,
-				8735DED7DBA9BB38AB9B20C7 /* VisionProviderDetectBarcodesTests.swift */,
-				F3958041BC780465A6099BC6 /* VisionProviderReadQrCodeTests.swift */,
 				26A9F13BFC1F7BB7A7DD8CBB /* VisionFaceSerializationTests.swift */,
+				8735DED7DBA9BB38AB9B20C7 /* VisionProviderDetectBarcodesTests.swift */,
 				BED458AC38A8E4DCD207CEE3 /* VisionProviderDetectFacesTests.swift */,
+				F3958041BC780465A6099BC6 /* VisionProviderReadQrCodeTests.swift */,
 				D28580F4A296765375761177 /* VisionProviderRecognizeTextTests.swift */,
 				E5F56849DE520E56C83F0C68 /* VisionProviderScanDocumentTests.swift */,
 				4953C9B1D466DCF818C52D84 /* VisionSerializationTests.swift */,
@@ -1036,11 +1041,12 @@
 				AAC525BD863DF4ECFA532B19 /* VisionFaceSerialization.swift */,
 				62838F701D789E0CAD2DDCB4 /* VisionProvider.swift */,
 				20F1D88B31B8CB80294AFECD /* VisionProviderDetectBarcodes.swift */,
-				89F46964A37C9355E1E73125 /* VisionProviderReadQrCode.swift */,
 				27DF6BE4658C2C817675F7B4 /* VisionProviderDetectFaces.swift */,
+				89F46964A37C9355E1E73125 /* VisionProviderReadQrCode.swift */,
 				927071200B23CBA646E4008A /* VisionProviderRecognizeText.swift */,
 				BFBBC6976ABC8D4502D41CBF /* VisionProviderRouting.swift */,
 				F8F8D62F07C979351CD35051 /* VisionProviderScanDocument.swift */,
+				C4353DF0AECD40BC499FEAE4 /* VisionProviderScanDocumentArguments.swift */,
 				42DA30319226BD2AB8C51C64 /* VisionSerialization.swift */,
 				08CA3D9B7CD57342F59C0223 /* VisionStore.swift */,
 			);
@@ -1358,11 +1364,12 @@
 				DE85F96ECE7DB1FA04AF90D7 /* VisionFaceSerialization.swift in Sources */,
 				35E9D330FBA609A2A2AE1320 /* VisionProvider.swift in Sources */,
 				F4280ABFAEE07CC250470C5A /* VisionProviderDetectBarcodes.swift in Sources */,
-				CC5C7504EA40AB9780C9C31A /* VisionProviderReadQrCode.swift in Sources */,
 				E110E5C9DB96296EB909EE35 /* VisionProviderDetectFaces.swift in Sources */,
+				CC5C7504EA40AB9780C9C31A /* VisionProviderReadQrCode.swift in Sources */,
 				F928A30FF5607E71609A8E07 /* VisionProviderRecognizeText.swift in Sources */,
 				14226CD8103C108E637CA750 /* VisionProviderRouting.swift in Sources */,
 				ECCD5A13D9AE8DD670CBAEDC /* VisionProviderScanDocument.swift in Sources */,
+				9476E428E07FF99B1610E36B /* VisionProviderScanDocumentArguments.swift in Sources */,
 				A94B0BC10672D6BF704C1B65 /* VisionSerialization.swift in Sources */,
 				E20633AF1771B2E3CDD6A15B /* VisionStore.swift in Sources */,
 				60FD0A8FF20E78B4EB93D578 /* apple_bridge_core.swift in Sources */,
@@ -1527,12 +1534,13 @@
 				A596D73AC23907B0E888FEB0 /* StaleRemindersPermissionService.swift in Sources */,
 				14EEE63F84E039A033483CF5 /* StalledEventKitStore.swift in Sources */,
 				DDA894C58581E8032244F83E /* UsageAuditExportTests.swift in Sources */,
+				B9D3F555B9D68162E6BD47CC /* VisionAsyncBridgeTests.swift in Sources */,
 				E8E5AB515A24E2E1ACE05376 /* VisionBarcodeSerializationTests.swift in Sources */,
 				A0E7A93BE3106A813F12FCD0 /* VisionDocumentSerializationTests.swift in Sources */,
-				1B428998B197145906A961D7 /* VisionProviderDetectBarcodesTests.swift in Sources */,
-				310F0345CD94020D4DF35638 /* VisionProviderReadQrCodeTests.swift in Sources */,
 				4B3331444E115902ED549B3D /* VisionFaceSerializationTests.swift in Sources */,
+				1B428998B197145906A961D7 /* VisionProviderDetectBarcodesTests.swift in Sources */,
 				1733DA4FCE3563644DFD3F96 /* VisionProviderDetectFacesTests.swift in Sources */,
+				310F0345CD94020D4DF35638 /* VisionProviderReadQrCodeTests.swift in Sources */,
 				F4BCC3689903EE6D5ECC5CD2 /* VisionProviderRecognizeTextTests.swift in Sources */,
 				783D992245C468EE875D8297 /* VisionProviderScanDocumentTests.swift in Sources */,
 				BF607F380B33C7D34A26F169 /* VisionSerializationTests.swift in Sources */,

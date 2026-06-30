@@ -1403,20 +1403,21 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "revision": { "type": "string", "enum": ["revision1"] },
         "region_of_interest": {
           "type": "object",
+          "description": "Normalized crop region. Per-field bounds are 0...1 for origin and (0,1] for size; the rectangle must also satisfy origin.x + size.width <= 1 and origin.y + size.height <= 1.",
           "properties": {
             "origin": {
               "type": "object",
               "properties": {
-                "x": { "type": "number" },
-                "y": { "type": "number" }
+                "x": { "type": "number", "minimum": 0, "maximum": 1 },
+                "y": { "type": "number", "minimum": 0, "maximum": 1 }
               },
               "required": ["x", "y"]
             },
             "size": {
               "type": "object",
               "properties": {
-                "width": { "type": "number" },
-                "height": { "type": "number" }
+                "width": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+                "height": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
               },
               "required": ["width", "height"]
             }
@@ -1430,7 +1431,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
             "automatically_detect_language": { "type": "boolean" },
             "recognition_languages": {
               "type": "array",
-              "items": { "type": "string" }
+              "items": { "type": "string", "minLength": 1 }
             },
             "use_language_correction": { "type": "boolean" },
             "custom_words": {
@@ -2317,6 +2318,30 @@ mod tests {
       .unwrap_or_default()
   }
 
+  fn number_property_minimum(schema: &serde_json::Value, property: &str) -> Option<f64> {
+    schema
+      .get("properties")
+      .and_then(|properties| properties.get(property))
+      .and_then(|property_schema| property_schema.get("minimum"))
+      .and_then(|value| value.as_f64())
+  }
+
+  fn number_property_maximum(schema: &serde_json::Value, property: &str) -> Option<f64> {
+    schema
+      .get("properties")
+      .and_then(|properties| properties.get(property))
+      .and_then(|property_schema| property_schema.get("maximum"))
+      .and_then(|value| value.as_f64())
+  }
+
+  fn number_property_exclusive_minimum(schema: &serde_json::Value, property: &str) -> Option<f64> {
+    schema
+      .get("properties")
+      .and_then(|properties| properties.get(property))
+      .and_then(|property_schema| property_schema.get("exclusiveMinimum"))
+      .and_then(|value| value.as_f64())
+  }
+
   fn string_property_min_length(schema: &serde_json::Value, property: &str) -> Option<u64> {
     schema
       .get("properties")
@@ -2742,6 +2767,93 @@ mod tests {
       .expect("scan_document tool");
     let schema = input_schema(tool);
     assert_eq!(string_property_min_length(&schema, "image_data"), Some(1));
+  }
+
+  #[test]
+  fn scan_document_schema_requires_non_empty_recognition_languages() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_SCAN_DOCUMENT)
+      .expect("scan_document tool");
+    let schema = input_schema(tool);
+    let min_length = schema
+      .get("properties")
+      .and_then(|properties| properties.get("text_recognition_options"))
+      .and_then(|options| options.get("properties"))
+      .and_then(|properties| properties.get("recognition_languages"))
+      .and_then(|languages| languages.get("items"))
+      .and_then(|items| items.get("minLength"))
+      .and_then(|value| value.as_u64());
+    assert_eq!(min_length, Some(1));
+  }
+
+  #[test]
+  fn scan_document_schema_constrains_normalized_region_of_interest() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_SCAN_DOCUMENT)
+      .expect("scan_document tool");
+    let schema = input_schema(tool);
+    let region = schema
+      .get("properties")
+      .and_then(|properties| properties.get("region_of_interest"))
+      .expect("region_of_interest schema");
+    let origin = region
+      .get("properties")
+      .and_then(|properties| properties.get("origin"))
+      .expect("origin schema");
+    let size = region
+      .get("properties")
+      .and_then(|properties| properties.get("size"))
+      .expect("size schema");
+
+    assert_eq!(number_property_minimum(origin, "x"), Some(0.0));
+    assert_eq!(number_property_maximum(origin, "x"), Some(1.0));
+    assert_eq!(number_property_minimum(origin, "y"), Some(0.0));
+    assert_eq!(number_property_maximum(origin, "y"), Some(1.0));
+    assert_eq!(number_property_exclusive_minimum(size, "width"), Some(0.0));
+    assert_eq!(number_property_maximum(size, "width"), Some(1.0));
+    assert_eq!(number_property_exclusive_minimum(size, "height"), Some(0.0));
+    assert_eq!(number_property_maximum(size, "height"), Some(1.0));
+  }
+
+  #[test]
+  fn scan_document_schema_documents_region_of_interest_fit_constraint() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_SCAN_DOCUMENT)
+      .expect("scan_document tool");
+    let schema = input_schema(tool);
+    let description = schema
+      .get("properties")
+      .and_then(|properties| properties.get("region_of_interest"))
+      .and_then(|region| region.get("description"))
+      .and_then(|value| value.as_str())
+      .unwrap_or("");
+    assert!(description.contains("origin.x + size.width <= 1"));
+    assert!(description.contains("origin.y + size.height <= 1"));
+    assert!(!scan_document_region_of_interest_fits_normalized_space(
+      0.6, 0.2, 0.5, 0.5
+    ));
+    assert!(scan_document_region_of_interest_fits_normalized_space(
+      0.1, 0.2, 0.5, 0.6
+    ));
+  }
+
+  fn scan_document_region_of_interest_fits_normalized_space(
+    origin_x: f64,
+    origin_y: f64,
+    width: f64,
+    height: f64,
+  ) -> bool {
+    (0.0..=1.0).contains(&origin_x)
+      && (0.0..=1.0).contains(&origin_y)
+      && width > 0.0
+      && width <= 1.0
+      && height > 0.0
+      && height <= 1.0
+      && origin_x + width <= 1.0
+      && origin_y + height <= 1.0
   }
 
   #[test]
