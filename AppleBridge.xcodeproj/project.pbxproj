@@ -70,6 +70,7 @@
 		332F91499F2FF03A49F0D207 /* EventKitProviderUpdateEventValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D102C3F21E2E6956E4E36E7C /* EventKitProviderUpdateEventValidationTests.swift */; };
 		35D9BD56598AB3F89133F078 /* SMAppLaunchAtLoginService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F5667783ACEA479011AB5F /* SMAppLaunchAtLoginService.swift */; };
 		3717B0B73ADD7E1E469AFB13 /* ContactsRuntimeLinking.m in Sources */ = {isa = PBXBuildFile; fileRef = F585AB906D4A5D0F0C0EEDB9 /* ContactsRuntimeLinking.m */; };
+		A1B2C3D4E5F60718293A4B6E /* MapKitKVCHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F60718293A4B6E7F /* MapKitKVCHelper.m */; };
 		376E793804067E48493AF2F3 /* MapKitProviderSearchNearbyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8485970B3C31DF6BD9C434D /* MapKitProviderSearchNearbyTests.swift */; };
 		37918560F94C6EA0728430A3 /* EventsPermissionStatusReconciliationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A09D9525C8DB34DE014FC47D /* EventsPermissionStatusReconciliationTests.swift */; };
 		386B54535CE151F8279BB68A /* RunningApplicationInstanceChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08A103CD7E384CFE00B8F8B9 /* RunningApplicationInstanceChecker.swift */; };
@@ -596,6 +597,8 @@
 		F4B13FFA54DE646F0722E357 /* LiveContactsStoreLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveContactsStoreLinkTests.swift; sourceTree = "<group>"; };
 		F4E4B0199BC23795F30B18A7 /* ContactsPermissionChecking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsPermissionChecking.swift; sourceTree = "<group>"; };
 		F585AB906D4A5D0F0C0EEDB9 /* ContactsRuntimeLinking.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ContactsRuntimeLinking.m; sourceTree = "<group>"; };
+		A2B3C4D5E6F70718293A4B6E8 /* MapKitKVCHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MapKitKVCHelper.h; sourceTree = "<group>"; };
+		B2C3D4E5F60718293A4B6E7F /* MapKitKVCHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MapKitKVCHelper.m; sourceTree = "<group>"; };
 		F63C4A36971DB8F9CADA7306 /* EventKitProviderCreateCalendar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderCreateCalendar.swift; sourceTree = "<group>"; };
 		FA8959227DB90C4148572276 /* UsageAuditExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageAuditExport.swift; sourceTree = "<group>"; };
 		FB687A7DAFC334F2F543BB5C /* EventKitProviderDeleteEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderDeleteEvent.swift; sourceTree = "<group>"; };
@@ -839,6 +842,8 @@
 				0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */,
 				C6D6F91117573DF21D7C70E9 /* ContactsRuntimeLinking.h */,
 				F585AB906D4A5D0F0C0EEDB9 /* ContactsRuntimeLinking.m */,
+				A2B3C4D5E6F70718293A4B6E8 /* MapKitKVCHelper.h */,
+				B2C3D4E5F60718293A4B6E7F /* MapKitKVCHelper.m */,
 				E405A97C97625C50DA5CA03F /* ContactsRuntimeUnlinking.h */,
 				89776D27F726F0BD62A62EDD /* ContactsRuntimeUnlinking.m */,
 				B85F46CDAA3C988BFBBC89D3 /* Models */,
@@ -1141,6 +1146,7 @@
 				2091575066C359950ABBEC2E /* ContactsProviderUpdateContact.swift in Sources */,
 				0755B94537D684B5D27FC61E /* ContactsProviderUpdateGroup.swift in Sources */,
 				3717B0B73ADD7E1E469AFB13 /* ContactsRuntimeLinking.m in Sources */,
+				A1B2C3D4E5F60718293A4B6E /* MapKitKVCHelper.m in Sources */,
 				95362A38FEEAF494CEA7E608 /* ContactsRuntimeUnlinking.m in Sources */,
 				0E12501559A311E0D34E21D1 /* ContactsSaveRequestLinking.swift in Sources */,
 				6FE67D771DD481BC94D063AF /* ContactsSaveRequestUnlinking.swift in Sources */,
