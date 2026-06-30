@@ -5,27 +5,20 @@ import MapKit
 
 extension MapKitSerialization {
     static func mapItemPlacemarkJSONObject(from item: MKMapItem) -> [String: Any] {
-        let placemark = item.placemark
-        if hasEnrichedPlacemarkData(placemark) {
-            return placemarkJSONObject(from: placemark)
-        }
+        let location = optionalLocation(from: item)
 
-        return placemarkJSONObjectFromMapItemFields(item)
-    }
-
-    static func placemarkJSONObject(from placemark: MKPlacemark) -> [String: Any] {
-        [
-            "coordinate": coordinateJSONObject(from: placemark.coordinate),
-            "altitude": placemark.location?.altitude ?? NSNull(),
-            "ellipsoidal_altitude": placemark.location?.ellipsoidalAltitude ?? NSNull(),
-            "region": regionJSONObject(from: placemark.region),
-            "time_zone": jsonValueTimeZone(placemark.timeZone),
-            "country_code": jsonValue(placemark.countryCode ?? placemark.isoCountryCode),
-            "inland_water": jsonValue(placemark.inlandWater),
-            "ocean": jsonValue(placemark.ocean),
-            "areas_of_interest": jsonValue(placemark.areasOfInterest),
-            "postal_address": postalAddressJSONObject(from: placemark.postalAddress),
-            "address_dictionary": addressDictionaryJSONObject(from: placemark.addressDictionary),
+        return [
+            "coordinate": location.map { coordinateJSONObject(from: $0.coordinate) } ?? NSNull(),
+            "altitude": location?.altitude ?? NSNull(),
+            "ellipsoidal_altitude": location?.ellipsoidalAltitude ?? NSNull(),
+            "region": regionJSONObject(from: location),
+            "time_zone": jsonValueTimeZone(item.timeZone),
+            "country_code": NSNull(),
+            "inland_water": NSNull(),
+            "ocean": NSNull(),
+            "areas_of_interest": NSNull(),
+            "postal_address": NSNull(),
+            "address_dictionary": NSNull(),
         ]
     }
 
@@ -85,61 +78,20 @@ extension MapKitSerialization {
         return [addressRepresentationsJSONObject(from: representations)]
     }
 
-    private static func placemarkJSONObjectFromMapItemFields(_ item: MKMapItem) -> [String: Any] {
-        var json = placemarkJSONObject(from: item.placemark)
-
-        if let location = optionalLocation(from: item) {
-            json["coordinate"] = coordinateJSONObject(from: location.coordinate)
-            json["altitude"] = location.altitude
-            json["ellipsoidal_altitude"] = location.ellipsoidalAltitude
-        }
-
-        json["time_zone"] = jsonValueTimeZone(item.timeZone)
-
-        return json
-    }
-
     /// Sparse MapKit items can surface a nil ObjC `location` at runtime despite the non-optional Swift type.
     static func optionalLocation(from item: MKMapItem) -> CLLocation? {
         (item as AnyObject).value(forKey: "location") as? CLLocation
     }
 
-    private static func hasEnrichedPlacemarkData(_ placemark: MKPlacemark) -> Bool {
-        placemark.countryCode != nil
-            || placemark.isoCountryCode != nil
-            || placemark.inlandWater != nil
-            || placemark.ocean != nil
-            || placemark.areasOfInterest != nil
-            || placemark.addressDictionary != nil
-            || placemark.timeZone != nil
-            || hasMeaningfulPostalAddress(placemark.postalAddress)
-    }
+    private static func regionJSONObject(from location: CLLocation?) -> Any {
+        guard let location else { return NSNull() }
 
-    private static func hasMeaningfulPostalAddress(_ address: CNPostalAddress?) -> Bool {
-        guard let address else { return false }
-
-        return !address.street.isEmpty
-            || !address.subLocality.isEmpty
-            || !address.city.isEmpty
-            || !address.subAdministrativeArea.isEmpty
-            || !address.state.isEmpty
-            || !address.postalCode.isEmpty
-            || !address.country.isEmpty
-            || !address.isoCountryCode.isEmpty
-    }
-
-    private static func regionJSONObject(from region: CLRegion?) -> Any {
-        guard let region else { return NSNull() }
-
-        if let circularRegion = region as? CLCircularRegion {
-            return circularRegionJSONObject(from: circularRegion)
-        }
-
-        return [
-            "center": coordinateJSONObject(from: region.center),
-            "radius": region.radius,
-            "identifier": region.identifier,
-        ]
+        let region = CLCircularRegion(
+            center: location.coordinate,
+            radius: 0,
+            identifier: ""
+        )
+        return circularRegionJSONObject(from: region)
     }
 
     private static func circularRegionJSONObject(from region: CLCircularRegion) -> [String: Any] {
@@ -148,16 +100,5 @@ extension MapKitSerialization {
             "radius": region.radius,
             "identifier": region.identifier,
         ]
-    }
-
-    private static func addressDictionaryJSONObject(from dictionary: [AnyHashable: Any]?) -> Any {
-        guard let dictionary else { return NSNull() }
-
-        var payload: [String: Any] = [:]
-        for (key, value) in dictionary {
-            guard let key = key as? String else { continue }
-            payload[key] = jsonValue(value)
-        }
-        return payload
     }
 }

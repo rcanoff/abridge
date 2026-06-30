@@ -76,6 +76,9 @@ enum MapKitSearchFetch {
 
 @MainActor
 struct LiveMapKitStore: MapKitStoreing {
+    var makeLocationFetcher: @MainActor () -> any MapKitLocationFetching = { OneShotLocationFetcher() }
+    var locationFetchTimeout: TimeInterval = MapKitSearchFetch.defaultTimeout
+
     func locationAuthorizationStatus() -> CLAuthorizationStatus {
         CLLocationManager().authorizationStatus
     }
