@@ -98,6 +98,20 @@ struct VisionSerializationTests {
 
     @Test
     @MainActor
+    func barcodeObservationSymbologyUsesRawValue() throws {
+        let observations = try VisionTestFixtures.sampleVNBarcodeObservations()
+        let observation = try #require(observations.first)
+
+        let object = VisionSerialization.barcodeObservationJSONObject(from: observation)
+        let symbology = try #require(object["symbology"] as? String)
+
+        #expect(symbology == observation.symbology.rawValue)
+        #expect(symbology == "VNBarcodeSymbologyQR")
+        #expect(!symbology.contains("(_rawValue:"))
+    }
+
+    @Test
+    @MainActor
     func readQrCodeResponseWrapsResultsArray() throws {
         let observations = try VisionTestFixtures.sampleVNBarcodeObservations()
         let object = VisionSerialization.readQrCodeResponseJSONObject(observations: observations)
