@@ -51,4 +51,28 @@ struct AppleProviderBridgeVisionTests {
         let results = decoded?["results"] as? [[String: Any]]
         #expect(results?.isEmpty == false)
     }
+
+    @Test
+    @MainActor
+    func callProviderVisionReadQrCodeSucceedsWithMockStore() throws {
+        let observations = try VisionTestFixtures.sampleBarcodeObservations()
+        let store = MockVisionStore()
+        store.barcodeObservations = observations
+        let bridge = AppleProviderBridge(visionProvider: VisionProvider(store: store))
+        let imageData = try VisionTestFixtures.sampleTextImageData()
+        let encoded = imageData.base64EncodedString()
+
+        let request = ProviderRequest(
+            provider: "vision",
+            operation: "read_qr_code",
+            payloadJson: #"{"image_data":"\#(encoded)"}"#
+        )
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let results = decoded?["results"] as? [[String: Any]]
+        #expect(results?.isEmpty == false)
+    }
 }

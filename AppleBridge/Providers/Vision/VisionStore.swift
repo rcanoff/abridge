@@ -32,8 +32,17 @@ struct VisionScanDocumentResult: Equatable {
     let segmentation: DetectedDocumentObservation?
 }
 
+struct VisionReadQrCodeRequest: Equatable {
+    let imageData: Data
+    let orientation: CGImagePropertyOrientation?
+    let revision: Int?
+    let regionOfInterest: CGRect?
+    let coalesceCompositeSymbologies: Bool?
+}
+
 @MainActor
 protocol VisionStoreing {
     func recognizeText(request: VisionRecognizeTextRequest) throws -> [VNRecognizedTextObservation]
     func scanDocument(request: VisionScanDocumentRequest) throws -> VisionScanDocumentResult
+    func readQrCode(request: VisionReadQrCodeRequest) throws -> [VNBarcodeObservation]
 }
