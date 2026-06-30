@@ -47,8 +47,7 @@ struct MapKitProviderSearchNearbyTests {
     @Test
     @MainActor
     func searchNearbyReturnsSerializedResponse() throws {
-        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
-        let item = MKMapItem(placemark: placemark)
+        let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
         item.name = "Nearby Cafe"
         let store = MockMapKitStore()
         store.nearbyResults = [MapKitSearchResult(mapItems: [item], boundingRegion: nil)]

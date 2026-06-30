@@ -93,8 +93,7 @@ struct MapKitSerializationTests {
     @Test
     func mapItemPlacemarkJSONObjectSerializesPlacemarkRegionViaKVC() {
         let coordinate = CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090)
-        let placemark = MKPlacemark(coordinate: coordinate)
-        let item = MKMapItem(placemark: placemark)
+        let item = MapKitTestFixtures.mapItem(coordinate: coordinate)
 
         let json = MapKitSerialization.mapItemPlacemarkJSONObject(from: item)
         let region = json["region"] as? [String: Any]
@@ -109,8 +108,7 @@ struct MapKitSerializationTests {
     @Test
     func mapItemPlacemarkJSONObjectPreservesPlacemarkMetadataViaKVC() {
         let coordinate = CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090)
-        let placemark = MKPlacemark(coordinate: coordinate)
-        let item = MKMapItem(placemark: placemark)
+        let item = MapKitTestFixtures.mapItem(coordinate: coordinate)
 
         let json = MapKitSerialization.mapItemPlacemarkJSONObject(from: item)
         let coordinateJSON = json["coordinate"] as? [String: Any]
@@ -127,7 +125,7 @@ struct MapKitSerializationTests {
     @Test
     func mapItemPlacemarkJSONObjectUsesNullCoordinateWhenLocationUnavailable() {
         let coordinate = CLLocationCoordinate2D(latitude: 12.5, longitude: -45.6)
-        let placemark = MKPlacemark(coordinate: coordinate)
+        let placemark = MapKitTestFixtures.placemarkObject(for: coordinate)
         let item = SparseMapItemTestDouble(location: nil, placemark: placemark)
 
         let json = MapKitSerialization.mapItemPlacemarkJSONObject(from: item)
@@ -152,7 +150,7 @@ struct MapKitSerializationTests {
     @Test
     func mapItemJSONObjectSerializesSparseItemWithNilLocationWithoutCrashing() {
         let coordinate = CLLocationCoordinate2D(latitude: 12.5, longitude: -45.6)
-        let placemark = MKPlacemark(coordinate: coordinate)
+        let placemark = MapKitTestFixtures.placemarkObject(for: coordinate)
         let item = SparseMapItemTestDouble(location: nil, placemark: placemark)
         item.name = "Sparse Place"
 

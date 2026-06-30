@@ -31,8 +31,10 @@ struct MapKitProviderLookupPlaceTests {
     @Test
     @MainActor
     func lookupPlaceReturnsSerializedMapItem() throws {
-        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
-        let item = MKMapItem(placemark: placemark)
+        let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
+            latitude: 37.3346,
+            longitude: -122.0090
+        ))
         item.name = "Lookup Mock Place"
         let store = MockMapKitStore()
         store.lookupPlaceResults = [item]
