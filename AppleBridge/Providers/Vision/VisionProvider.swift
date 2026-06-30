@@ -7,7 +7,7 @@ enum LiveVisionEnvironment {
 
 @MainActor
 struct VisionProvider {
-    func handle(operation: String, payloadJson: String) -> ProviderResponse {
+    func handle(operation: String, payloadJson _: String) -> ProviderResponse {
         let payload: [String: String] = [
             "code": "unknown_operation",
             "message": "Unknown vision operation: \(operation)",
