@@ -49,12 +49,12 @@ struct LocationPermissionServiceTests {
 
     @Test
     @MainActor
-    func waitUntilDeterminedTimesOutWhenAuthorizationStaysNotDetermined() {
+    func waitUntilDeterminedTimesOutWhenAuthorizationStaysNotDetermined() async {
         let timeout: TimeInterval = 0.1
         let started = ContinuousClock.now
 
-        #expect(throws: LocationPermissionError.self) {
-            try LocationAuthorizationWait.waitUntilDetermined(timeout: timeout) {
+        await #expect(throws: LocationPermissionError.self) {
+            try await LocationAuthorizationWait.waitUntilDetermined(timeout: timeout) {
                 false
             }
         }
@@ -65,10 +65,10 @@ struct LocationPermissionServiceTests {
 
     @Test
     @MainActor
-    func waitUntilDeterminedResumesWhenAuthorizationBecomesDetermined() throws {
+    func waitUntilDeterminedResumesWhenAuthorizationBecomesDetermined() async throws {
         var status: CLAuthorizationStatus = .notDetermined
 
-        try LocationAuthorizationWait.waitUntilDetermined(timeout: 0.1) {
+        try await LocationAuthorizationWait.waitUntilDetermined(timeout: 0.1) {
             status != .notDetermined
         } onCheck: {
             status = .authorized
@@ -77,10 +77,31 @@ struct LocationPermissionServiceTests {
 
     @Test
     @MainActor
+    func waitUntilDeterminedSuspendsMainActor() async throws {
+        let timeout: TimeInterval = 0.2
+        var counter = 0
+
+        let waitTask = Task { @MainActor in
+            try await LocationAuthorizationWait.waitUntilDetermined(timeout: timeout) {
+                false
+            }
+        }
+
+        try await Task.sleep(for: .milliseconds(50))
+        counter += 1
+        #expect(counter == 1)
+
+        await #expect(throws: LocationPermissionError.self) {
+            try await waitTask.value
+        }
+    }
+
+    @Test
+    @MainActor
     func requestAccessSurfacesTimeoutFromAuthorizationWait() async {
         let service = LocationPermissionService(
             requestAccessHandler: {
-                try LocationAuthorizationWait.waitUntilDetermined(timeout: 0.1) {
+                try await LocationAuthorizationWait.waitUntilDetermined(timeout: 0.1) {
                     false
                 }
                 return .authorized

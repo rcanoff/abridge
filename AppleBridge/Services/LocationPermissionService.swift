@@ -22,7 +22,7 @@ enum LocationAuthorizationWait {
         timeout: TimeInterval = defaultTimeout,
         isDetermined: () -> Bool,
         onCheck: () -> Void = {}
-    ) throws {
+    ) async throws {
         let deadline = Date().addingTimeInterval(timeout)
         while !isDetermined(), Date() < deadline {
             if Task.isCancelled {
@@ -30,7 +30,7 @@ enum LocationAuthorizationWait {
             }
             onCheck()
             if isDetermined() { return }
-            EventKitReminderFetch.pumpRunLoop(until: Date(timeIntervalSinceNow: runLoopInterval))
+            try await Task.sleep(for: .seconds(runLoopInterval))
         }
 
         guard isDetermined() else {
@@ -125,7 +125,7 @@ private final class AuthorizationRequestLocationManager: NSObject, @preconcurren
 
     private func waitForDeterminationOrTimeout() async {
         do {
-            try LocationAuthorizationWait.waitUntilDetermined(timeout: requestTimeout) {
+            try await LocationAuthorizationWait.waitUntilDetermined(timeout: requestTimeout) {
                 manager.authorizationStatus != .notDetermined
             } onCheck: {
                 self.resumeIfDetermined()
