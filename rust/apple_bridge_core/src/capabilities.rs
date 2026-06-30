@@ -32,6 +32,7 @@ pub const MAPKIT_LOCATION: &str = "mapkit.location";
 pub const MAPKIT_READ: &str = "mapkit.read";
 pub const MAPKIT_NAVIGATION: &str = "mapkit.navigation";
 pub const DIAGNOSTICS_READ: &str = "diagnostics.read";
+pub const VISION_TEXT: &str = "vision.text";
 
 pub fn is_valid_capability_id(id: &str) -> bool {
   if id == CONTACTS_READ
@@ -46,6 +47,7 @@ pub fn is_valid_capability_id(id: &str) -> bool {
     || id == MAPKIT_READ
     || id == MAPKIT_NAVIGATION
     || id == DIAGNOSTICS_READ
+    || id == VISION_TEXT
   {
     return true;
   }
@@ -94,6 +96,7 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
       | MAPKIT_READ
       | MAPKIT_NAVIGATION
       | DIAGNOSTICS_READ
+      | VISION_TEXT
   )
 }
 
@@ -106,8 +109,8 @@ mod tests {
     EVENTKIT_EVENTS_INVITATIONS, EVENTKIT_EVENTS_READ, EVENTKIT_EVENTS_RECURRENCE, EVENTKIT_EVENTS_SEARCH,
     EVENTKIT_REMINDERS_ALARMS, EVENTKIT_REMINDERS_COMPLETE, EVENTKIT_REMINDERS_CREATE, EVENTKIT_REMINDERS_DELETE,
     EVENTKIT_REMINDERS_EDIT, EVENTKIT_REMINDERS_READ, EVENTKIT_REMINDERS_RECURRENCE, EVENTKIT_REMINDERS_SEARCH,
-    MAPKIT_GEOCODE, MAPKIT_LOCATION, MAPKIT_NAVIGATION, MAPKIT_READ, MAPKIT_ROUTING, MAPKIT_SEARCH, is_allowed_in_v1,
-    is_valid_capability_id,
+    MAPKIT_GEOCODE, MAPKIT_LOCATION, MAPKIT_NAVIGATION, MAPKIT_READ, MAPKIT_ROUTING, MAPKIT_SEARCH, VISION_TEXT,
+    is_allowed_in_v1, is_valid_capability_id,
   };
 
   #[test]
@@ -179,6 +182,12 @@ mod tests {
   fn accepts_mapkit_navigation_capability_shape() {
     assert!(is_valid_capability_id(MAPKIT_NAVIGATION));
     assert!(is_allowed_in_v1(MAPKIT_NAVIGATION));
+  }
+
+  #[test]
+  fn accepts_vision_text_capability_shape() {
+    assert!(is_valid_capability_id(VISION_TEXT));
+    assert!(is_allowed_in_v1(VISION_TEXT));
   }
 
   #[test]

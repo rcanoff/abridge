@@ -63,6 +63,19 @@ fn mapkit_config_on_port(port: u16, enabled_capabilities: Vec<String>) -> Server
   }
 }
 
+fn vision_config_on_port(port: u16, enabled_capabilities: Vec<String>) -> ServerConfig {
+  ServerConfig {
+    host: "127.0.0.1".into(),
+    port,
+    bearer_token: TEST_TOKEN.into(),
+    enabled_providers: vec![ProviderConfig {
+      name: "vision".into(),
+      enabled: true,
+    }],
+    enabled_capabilities,
+  }
+}
+
 fn mcp_post(body: &str, port: u16, mock: &MockProviderBridge) -> (u16, String) {
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.read".into()]),
@@ -2006,6 +2019,48 @@ fn tools_call_dispatches_open_navigation() {
   assert_eq!(recorded.operation, "open_navigation");
   assert!(recorded.payload_json.contains("37.3346"));
   assert!(recorded.payload_json.contains("37.7749"));
+}
+
+#[test]
+fn mcp_tools_list_includes_recognize_text_when_vision_text_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":3,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    vision_config_on_port(port, vec!["vision.text".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("vision.recognize_text"));
+}
+
+#[test]
+fn tools_call_dispatches_recognize_text() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision.recognize_text","arguments":{"image_data":"aGVsbG8="}}}"#;
+
+  let handle = create_server(
+    vision_config_on_port(port, vec!["vision.text".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "vision");
+  assert_eq!(recorded.operation, "recognize_text");
+  assert!(recorded.payload_json.contains("image_data"));
 }
 
 #[test]
