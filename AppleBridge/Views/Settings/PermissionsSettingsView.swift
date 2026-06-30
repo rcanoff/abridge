@@ -56,7 +56,11 @@ struct PermissionsSettingsView: View {
             } header: {
                 Text("Apple Permissions")
             } footer: {
-                Text("To view or revoke what macOS has granted, use System Settings.")
+                Text(
+                    "To view or revoke what macOS has granted, use System Settings. "
+                        + "Vision tools analyze image data supplied by MCP clients; "
+                        + "no macOS privacy permission is required for this foundation."
+                )
             }
 
             Section {
@@ -73,6 +77,9 @@ struct PermissionsSettingsView: View {
                     binding(for: capabilityID)
                 }
                 MapKitMCPPermissionsGroup { capabilityID in
+                    binding(for: capabilityID)
+                }
+                VisionMCPPermissionsGroup { capabilityID in
                     binding(for: capabilityID)
                 }
             } header: {

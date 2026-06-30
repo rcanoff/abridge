@@ -132,4 +132,21 @@ enum CapabilityCatalog {
         CapabilityDefinition(id: "mapkit-location", capabilityID: "mapkit.location", label: "Location", shipped: true),
         CapabilityDefinition(id: "mapkit-read", capabilityID: "mapkit.read", label: "Read", shipped: true),
     ]
+
+    static let visionCapabilities: [CapabilityDefinition] = [
+        CapabilityDefinition(id: "vision-text", capabilityID: "vision.text", label: "Text", shipped: false),
+        CapabilityDefinition(
+            id: "vision-document",
+            capabilityID: "vision.document",
+            label: "Document",
+            shipped: false
+        ),
+        CapabilityDefinition(
+            id: "vision-barcodes",
+            capabilityID: "vision.barcodes",
+            label: "Barcodes",
+            shipped: false
+        ),
+        CapabilityDefinition(id: "vision-faces", capabilityID: "vision.faces", label: "Faces", shipped: false),
+    ]
 }

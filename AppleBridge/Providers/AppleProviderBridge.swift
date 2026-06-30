@@ -7,6 +7,7 @@ final class AppleProviderBridge: ProviderBridge, Sendable {
     private let makeEventKitProvider: @MainActor @Sendable () -> EventKitProvider
     private let makeContactsProvider: @MainActor @Sendable () -> ContactsProvider
     private let makeMapKitProvider: @MainActor @Sendable () -> MapKitProvider
+    private let makeVisionProvider: @MainActor @Sendable () -> VisionProvider
 
     init(
         makeEventKitProvider: @escaping @MainActor @Sendable () -> EventKitProvider = {
@@ -17,11 +18,15 @@ final class AppleProviderBridge: ProviderBridge, Sendable {
         },
         makeMapKitProvider: @escaping @MainActor @Sendable () -> MapKitProvider = {
             LiveMapKitEnvironment.sharedProvider
+        },
+        makeVisionProvider: @escaping @MainActor @Sendable () -> VisionProvider = {
+            LiveVisionEnvironment.sharedProvider
         }
     ) {
         self.makeEventKitProvider = makeEventKitProvider
         self.makeContactsProvider = makeContactsProvider
         self.makeMapKitProvider = makeMapKitProvider
+        self.makeVisionProvider = makeVisionProvider
     }
 
     /// Test seam: capture the injected provider on the main actor; the factory runs only inside
@@ -43,6 +48,12 @@ final class AppleProviderBridge: ProviderBridge, Sendable {
         self.init(makeMapKitProvider: { [mapKitProvider] in mapKitProvider })
     }
 
+    /// Test seam: capture the injected Vision provider on the main actor.
+    @MainActor
+    convenience init(visionProvider: VisionProvider) {
+        self.init(makeVisionProvider: { [visionProvider] in visionProvider })
+    }
+
     func callProvider(request: ProviderRequest) -> ProviderResponse {
         switch request.provider {
         case "eventkit":
@@ -58,6 +69,11 @@ final class AppleProviderBridge: ProviderBridge, Sendable {
         case "mapkit":
             return Self.performOnMainActor { [makeMapKitProvider] in
                 let provider = makeMapKitProvider()
+                return provider.handle(operation: request.operation, payloadJson: request.payloadJson)
+            }
+        case "vision":
+            return Self.performOnMainActor { [makeVisionProvider] in
+                let provider = makeVisionProvider()
                 return provider.handle(operation: request.operation, payloadJson: request.payloadJson)
             }
         default:
