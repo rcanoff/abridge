@@ -29,8 +29,8 @@ extension VisionProvider {
         let dictionary = try parseJSONObject(from: data)
         let imageData = try requiredImageDataArgument(in: dictionary)
         let orientation = try optionalOrientationArgument(in: dictionary)
-        let revision = try optionalIntArgument(in: dictionary, key: "revision")
-        let regionOfInterest = try optionalRegionOfInterestArgument(in: dictionary)
+        let revision = try optionalFaceLandmarksRevisionArgument(in: dictionary)
+        let regionOfInterest = try optionalNormalizedRegionOfInterestArgument(in: dictionary)
         let constellation = try optionalConstellationArgument(in: dictionary)
 
         return VisionDetectFacesRequest(
@@ -113,7 +113,22 @@ extension VisionProvider {
         }
     }
 
-    private func optionalRegionOfInterestArgument(in dictionary: [String: Any]) throws -> CGRect? {
+    private func optionalFaceLandmarksRevisionArgument(in dictionary: [String: Any]) throws -> Int? {
+        guard let revision = try optionalIntArgument(in: dictionary, key: "revision") else {
+            return nil
+        }
+
+        let supportedRevisions = VNDetectFaceLandmarksRequest.supportedRevisions
+        guard supportedRevisions.contains(revision) else {
+            throw VisionProviderError.invalidArguments(
+                "revision must be one of the supported face landmark detection revisions"
+            )
+        }
+
+        return revision
+    }
+
+    private func optionalNormalizedRegionOfInterestArgument(in dictionary: [String: Any]) throws -> CGRect? {
         guard dictionary.keys.contains("region_of_interest") else { return nil }
         if dictionary["region_of_interest"] is NSNull { return nil }
 
@@ -131,6 +146,37 @@ extension VisionProvider {
         let originY = try requiredNumber(in: origin, key: "y", label: "region_of_interest.origin.y")
         let width = try requiredNumber(in: size, key: "width", label: "region_of_interest.size.width")
         let height = try requiredNumber(in: size, key: "height", label: "region_of_interest.size.height")
+
+        return try normalizedRegionOfInterest(
+            originX: originX,
+            originY: originY,
+            width: width,
+            height: height
+        )
+    }
+
+    private func normalizedRegionOfInterest(
+        originX: CGFloat,
+        originY: CGFloat,
+        width: CGFloat,
+        height: CGFloat
+    ) throws -> CGRect {
+        guard originX >= 0, originY >= 0 else {
+            throw VisionProviderError.invalidArguments("region_of_interest origin must be non-negative")
+        }
+        guard width > 0, height > 0 else {
+            throw VisionProviderError.invalidArguments("region_of_interest size must be positive")
+        }
+        guard originX <= 1, originY <= 1, width <= 1, height <= 1 else {
+            throw VisionProviderError.invalidArguments(
+                "region_of_interest must use normalized unit coordinates between 0 and 1"
+            )
+        }
+        guard originX + width <= 1, originY + height <= 1 else {
+            throw VisionProviderError.invalidArguments(
+                "region_of_interest must fit within normalized unit coordinates"
+            )
+        }
 
         return CGRect(x: originX, y: originY, width: width, height: height)
     }

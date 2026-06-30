@@ -30,6 +30,36 @@ struct VisionProviderDetectFacesTests {
 
     @Test
     @MainActor
+    func detectFacesRejectsUnsupportedRevision() {
+        let provider = VisionProvider(store: MockVisionStore())
+        let response = provider.handle(
+            operation: "detect_faces",
+            payloadJson: #"{"image_data":"aGVsbG8=","revision":999}"#
+        )
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("revision") == true)
+    }
+
+    @Test
+    @MainActor
+    func detectFacesRejectsInvalidRegionOfInterest() {
+        let provider = VisionProvider(store: MockVisionStore())
+        let response = provider.handle(
+            operation: "detect_faces",
+            payloadJson: #"""
+            {"image_data":"aGVsbG8=","region_of_interest":{
+                "origin":{"x":-0.1,"y":0.2},"size":{"width":0.5,"height":0.6}
+            }}
+            """#
+        )
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("region_of_interest") == true)
+    }
+
+    @Test
+    @MainActor
     func detectFacesRejectsInvalidConstellation() {
         let provider = VisionProvider(store: MockVisionStore())
         let response = provider.handle(
