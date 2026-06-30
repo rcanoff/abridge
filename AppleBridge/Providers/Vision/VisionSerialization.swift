@@ -31,7 +31,7 @@ enum VisionSerialization {
             "top_right": cgPointJSONObject(from: observation.topRight),
             "bottom_left": cgPointJSONObject(from: observation.bottomLeft),
             "bottom_right": cgPointJSONObject(from: observation.bottomRight),
-            "symbology": String(describing: observation.symbology),
+            "symbology": observation.symbology.rawValue,
             "payload_string_value": jsonValue(observation.payloadStringValue),
             "payload_data": observation.payloadData?.base64EncodedString() ?? NSNull(),
         ]
