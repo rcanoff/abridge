@@ -2148,6 +2148,48 @@ fn tools_call_dispatches_read_qr_code() {
 }
 
 #[test]
+fn mcp_tools_list_includes_detect_barcodes_when_vision_barcodes_enabled() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":3,"method":"tools/list","params":{}}"#;
+
+  let handle = create_server(
+    vision_config_on_port(port, vec!["vision.barcodes".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains("vision.detect_barcodes"));
+}
+
+#[test]
+fn tools_call_dispatches_detect_barcodes() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision.detect_barcodes","arguments":{"image_data":"aGVsbG8="}}}"#;
+
+  let handle = create_server(
+    vision_config_on_port(port, vec!["vision.barcodes".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#));
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "vision");
+  assert_eq!(recorded.operation, "detect_barcodes");
+  assert!(recorded.payload_json.contains("image_data"));
+}
+
+#[test]
 fn tools_call_unknown_tool() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();

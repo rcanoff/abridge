@@ -1,6 +1,7 @@
 import AppKit
 @testable import AppleBridge
 import CoreGraphics
+import CoreImage
 import CoreText
 import Foundation
 import ImageIO
@@ -138,7 +139,7 @@ enum VisionTestFixtures {
     }
 
     @MainActor
-    static func sampleBarcodeObservations() throws -> [VNBarcodeObservation] {
+    static func sampleVNBarcodeObservations() throws -> [VNBarcodeObservation] {
         guard let archivedData = Data(base64Encoded: archivedBarcodeObservationsBase64) else {
             throw VisionProviderError.serializationFailed
         }
@@ -163,5 +164,42 @@ enum VisionTestFixtures {
             throw VisionProviderError.serializationFailed
         }
         return observations
+    }
+
+    static func sampleQRCodeImageData() throws -> Data {
+        guard let filter = CIFilter(name: "CIQRCodeGenerator") else {
+            throw VisionProviderError.visionError("Failed to create QR code filter")
+        }
+        filter.setValue(Data("TEST".utf8), forKey: "inputMessage")
+        guard let outputImage = filter.outputImage else {
+            throw VisionProviderError.visionError("Failed to generate QR code image")
+        }
+
+        let scaled = outputImage.transformed(by: CGAffineTransform(scaleX: 12, y: 12))
+        let rep = NSCIImageRep(ciImage: scaled)
+        let image = NSImage(size: rep.size)
+        image.addRepresentation(rep)
+
+        guard let tiff = image.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiff),
+              let png = bitmap.representation(using: .png, properties: [:])
+        else {
+            throw VisionProviderError.visionError("Failed to encode QR code PNG")
+        }
+        return png
+    }
+
+    /// Pre-encoded `BarcodeObservation` fixture from a sample QR image.
+    /// Unit tests load this deterministically instead of invoking live Vision barcode detection.
+    private static let archivedBarcodeObservationBase64 =
+        "eyJzdXBwbGVtZW50YWxQYXlsb2FkRGF0YSI6bnVsbCwic3ltYm9sb2d5Ijp7InFyIjp7fX0sInN1cHBsZW1lbnRhbENvbXBvc2l0ZVR5cGUiOm51bGwsInJlY3RhbmdsZSI6eyJ0b3BMZWZ0Ijp7ImNnUG9pbnQiOlswLjA0MzQ3ODI2MDg2OTU2NTIxNiwwLjk1NjUyMTczOTEzMDQzNDhdfSwiYm90dG9tTGVmdCI6eyJjZ1BvaW50IjpbMC4wNDM0NzgyNjA4Njk1NjUyMTYsMC4wNDM0NzgyNjA4Njk1NjUxOV19LCJ0b3BSaWdodCI6eyJjZ1BvaW50IjpbMC45NTY1MjE3MzkxMzA0MzQ4LDAuOTU2NTIxNzM5MTMwNDM0OF19LCJib3R0b21SaWdodCI6eyJjZ1BvaW50IjpbMC45NTY1MjE3MzkxMzA0MzQ4LDAuMDQzNDc4MjYwODY5NTY1MTldfX0sIm9ic2VydmF0aW9uIjp7InV1aWQiOiJBQTk1MzU3Qy1GMjU1LTRBOTMtOTJFNC01MjQxQzU3MDM4QzIiLCJ0aW1lUmFuZ2UiOnsiZW5kIjp7fSwic3RhcnQiOnt9fSwicmVxdWVzdERlc2NyaXB0b3IiOnsiZGV0ZWN0QmFyY29kZXNSZXF1ZXN0Ijp7Il8wIjp7InJldmlzaW9uNCI6e319fX0sImNvbmZpZGVuY2UiOjF9LCJwYXlsb2FkU3RyaW5nIjoiVEVTVCIsInBheWxvYWREYXRhIjoiSUNVbm9TRHNFZXdSN0JIc0Vld1I3QT09Iiwic3VwcGxlbWVudGFsUGF5bG9hZFN0cmluZyI6bnVsbCwiaXNHUzFEYXRhQ2FycmllciI6ZmFsc2UsImlzQ29sb3JJbnZlcnRlZCI6ZmFsc2V9" // swiftlint:disable:this line_length
+
+    @MainActor
+    static func sampleBarcodeObservations() throws -> [BarcodeObservation] {
+        guard let archivedData = Data(base64Encoded: archivedBarcodeObservationBase64) else {
+            throw VisionProviderError.serializationFailed
+        }
+        let observation = try JSONDecoder().decode(BarcodeObservation.self, from: archivedData)
+        return [observation]
     }
 }

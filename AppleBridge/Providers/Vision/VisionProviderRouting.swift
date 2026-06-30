@@ -9,6 +9,8 @@ extension VisionProvider {
             scanDocument(payloadJson: payloadJson)
         case "read_qr_code":
             readQrCode(payloadJson: payloadJson)
+        case "detect_barcodes":
+            detectBarcodes(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown vision operation: \(operation)")
         }

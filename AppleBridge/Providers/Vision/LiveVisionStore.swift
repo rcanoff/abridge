@@ -5,6 +5,31 @@ import Vision
 
 @MainActor
 struct LiveVisionStore: VisionStoreing {
+    func detectBarcodes(request: VisionDetectBarcodesRequest) throws -> [BarcodeObservation] {
+        let imageSource = try imageSource(from: request.imageData)
+        let orientation = request.orientation ?? orientationFromImageSource(imageSource)
+        let handler = ImageRequestHandler(request.imageData, orientation: orientation)
+        let detectRequest = makeDetectBarcodesRequest(from: request)
+
+        return try performVisionAsync(operation: "Vision barcode detection") {
+            try await handler.perform(detectRequest)
+        }
+    }
+
+    private func makeDetectBarcodesRequest(from request: VisionDetectBarcodesRequest) -> DetectBarcodesRequest {
+        var detectRequest = DetectBarcodesRequest(request.revision)
+        if let regionOfInterest = request.regionOfInterest {
+            detectRequest.regionOfInterest = regionOfInterest
+        }
+        if let symbologies = request.symbologies {
+            detectRequest.symbologies = symbologies
+        }
+        if let coalesceCompositeSymbologies = request.coalesceCompositeSymbologies {
+            detectRequest.coalescesCompositeSymbologies = coalesceCompositeSymbologies
+        }
+        return detectRequest
+    }
+
     func scanDocument(request: VisionScanDocumentRequest) throws -> VisionScanDocumentResult {
         let imageSource = try imageSource(from: request.imageData)
         let orientation = request.orientation ?? orientationFromImageSource(imageSource)

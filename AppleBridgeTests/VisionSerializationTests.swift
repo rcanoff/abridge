@@ -86,7 +86,7 @@ struct VisionSerializationTests {
     @Test
     @MainActor
     func barcodeObservationProjectionIncludesAllKeys() throws {
-        let observations = try VisionTestFixtures.sampleBarcodeObservations()
+        let observations = try VisionTestFixtures.sampleVNBarcodeObservations()
         let observation = try #require(observations.first)
 
         let object = VisionSerialization.barcodeObservationJSONObject(from: observation)
@@ -99,7 +99,7 @@ struct VisionSerializationTests {
     @Test
     @MainActor
     func readQrCodeResponseWrapsResultsArray() throws {
-        let observations = try VisionTestFixtures.sampleBarcodeObservations()
+        let observations = try VisionTestFixtures.sampleVNBarcodeObservations()
         let object = VisionSerialization.readQrCodeResponseJSONObject(observations: observations)
 
         #expect(object.keys.contains("results"))

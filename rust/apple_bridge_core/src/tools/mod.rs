@@ -57,6 +57,7 @@ pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 pub const TOOL_RECOGNIZE_TEXT: &str = "vision.recognize_text";
 pub const TOOL_SCAN_DOCUMENT: &str = "vision.scan_document";
 pub const TOOL_READ_QR_CODE: &str = "vision.read_qr_code";
+pub const TOOL_DETECT_BARCODES: &str = "vision.detect_barcodes";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ToolDefinition {
@@ -67,7 +68,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 55] = [
+const ALL_TOOLS: [ToolDefinition; 56] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -452,6 +453,13 @@ const ALL_TOOLS: [ToolDefinition; 55] = [
     provider: "vision",
     operation: "read_qr_code",
     description: "Read QR codes in a client-provided image using Vision framework barcode detection",
+  },
+  ToolDefinition {
+    name: TOOL_DETECT_BARCODES,
+    capability: capabilities::VISION_BARCODES,
+    provider: "vision",
+    operation: "detect_barcodes",
+    description: "Detect barcodes and QR codes in a client-provided image using Vision framework",
   },
 ];
 
@@ -1471,6 +1479,42 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["image_data"]
     }),
+    TOOL_DETECT_BARCODES => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "image_data": { "type": "string", "minLength": 1 },
+        "orientation": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "revision": { "type": "string", "enum": ["revision1", "revision4"] },
+        "region_of_interest": {
+          "type": "object",
+          "properties": {
+            "origin": {
+              "type": "object",
+              "properties": {
+                "x": { "type": "number" },
+                "y": { "type": "number" }
+              },
+              "required": ["x", "y"]
+            },
+            "size": {
+              "type": "object",
+              "properties": {
+                "width": { "type": "number" },
+                "height": { "type": "number" }
+              },
+              "required": ["width", "height"]
+            }
+          },
+          "required": ["origin", "size"]
+        },
+        "symbologies": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "coalesce_composite_symbologies": { "type": "boolean" }
+      },
+      "required": ["image_data"]
+    }),
     TOOL_RECOGNIZE_TEXT => serde_json::json!({
       "type": "object",
       "properties": {
@@ -1561,15 +1605,15 @@ mod tests {
     TOOL_ACCEPT_INVITATION, TOOL_CALCULATE_ROUTE, TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_CONTACT,
     TOOL_CREATE_EVENT, TOOL_CREATE_GROUP, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DECLINE_INVITATION,
     TOOL_DELETE_CALENDAR, TOOL_DELETE_CONTACT, TOOL_DELETE_EVENT, TOOL_DELETE_GROUP, TOOL_DELETE_LIST,
-    TOOL_DELETE_REMINDER, TOOL_ESTIMATE_TRAVEL_TIME, TOOL_FORWARD_GEOCODE, TOOL_GET_CONTACT, TOOL_GET_CURRENT_LOCATION,
-    TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS, TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS,
-    TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_LOOKUP_PLACE, TOOL_MOVE_EVENT,
-    TOOL_MOVE_REMINDER, TOOL_OPEN_NAVIGATION, TOOL_READ_QR_CODE, TOOL_RECOGNIZE_TEXT, TOOL_REVERSE_GEOCODE,
-    TOOL_SCAN_DOCUMENT, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES,
-    TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS,
-    TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS,
-    TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools,
-    input_schema, tools_for_capabilities,
+    TOOL_DELETE_REMINDER, TOOL_DETECT_BARCODES, TOOL_ESTIMATE_TRAVEL_TIME, TOOL_FORWARD_GEOCODE, TOOL_GET_CONTACT,
+    TOOL_GET_CURRENT_LOCATION, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS,
+    TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS,
+    TOOL_LOOKUP_PLACE, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER, TOOL_OPEN_NAVIGATION, TOOL_READ_QR_CODE,
+    TOOL_RECOGNIZE_TEXT, TOOL_REVERSE_GEOCODE, TOOL_SCAN_DOCUMENT, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS,
+    TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE,
+    TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER,
+    TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP,
+    TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
   };
 
   fn array_items_type(schema: &serde_json::Value, property: &str) -> Option<String> {
@@ -2650,10 +2694,10 @@ mod tests {
   }
 
   #[test]
-  fn lists_read_qr_code_tool_when_vision_barcodes_capability_enabled() {
+  fn lists_vision_barcode_tools_when_vision_barcodes_capability_enabled() {
     let tools = tools_for_capabilities(&["vision.barcodes".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_READ_QR_CODE]);
+    assert_eq!(names, vec![TOOL_READ_QR_CODE, TOOL_DETECT_BARCODES]);
   }
 
   #[test]
@@ -2662,6 +2706,25 @@ mod tests {
       .iter()
       .find(|tool| tool.name == TOOL_READ_QR_CODE)
       .expect("read_qr_code tool");
+    let schema = input_schema(tool);
+    assert_eq!(string_property_min_length(&schema, "image_data"), Some(1));
+    assert_eq!(
+      schema.get("required").and_then(|v| v.as_array()).map(|fields| {
+        fields
+          .iter()
+          .filter_map(|f| f.as_str().map(str::to_owned))
+          .collect::<Vec<_>>()
+      }),
+      Some(vec!["image_data".to_owned()])
+    );
+  }
+
+  #[test]
+  fn detect_barcodes_schema_requires_image_data() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_DETECT_BARCODES)
+      .expect("detect_barcodes tool");
     let schema = input_schema(tool);
     assert_eq!(string_property_min_length(&schema, "image_data"), Some(1));
     assert_eq!(
