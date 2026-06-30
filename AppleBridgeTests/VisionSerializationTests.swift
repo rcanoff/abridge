@@ -106,7 +106,8 @@ struct VisionSerializationTests {
         let symbology = try #require(object["symbology"] as? String)
 
         #expect(symbology == observation.symbology.rawValue)
-        #expect(symbology == "qr")
+        #expect(symbology == "VNBarcodeSymbologyQR")
+        #expect(!symbology.contains("(_rawValue:"))
     }
 
     @Test
