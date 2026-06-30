@@ -1,4 +1,3 @@
-import Contacts
 import CoreLocation
 import Foundation
 import MapKit
@@ -21,8 +20,8 @@ enum MapKitSerialization {
             "point_of_interest_category": jsonValuePOICategory(item.pointOfInterestCategory),
             "is_current_location": item.isCurrentLocation,
             "identifier": jsonValueMapItemIdentifier(item.identifier),
-            "location": locationJSONObject(from: item.location),
-            "placemark": placemarkJSONObject(from: item.placemark),
+            "location": locationJSONObject(from: optionalLocation(from: item)),
+            "placemark": mapItemPlacemarkJSONObject(from: item),
             "address": addressJSONObject(from: item.address),
             "address_representations": addressRepresentationsJSONArray(from: item.addressRepresentations),
         ]
@@ -155,142 +154,37 @@ enum MapKitSerialization {
         ]
     }
 
-    static func placemarkJSONObject(from placemark: MKPlacemark) -> [String: Any] {
-        [
-            "coordinate": coordinateJSONObject(from: placemark.coordinate),
-            "altitude": placemark.location?.altitude ?? NSNull(),
-            "ellipsoidal_altitude": placemark.location?.ellipsoidalAltitude ?? NSNull(),
-            "region": regionJSONObject(from: placemark.region),
-            "time_zone": jsonValueTimeZone(placemark.timeZone),
-            "country_code": jsonValue(placemark.countryCode ?? placemark.isoCountryCode),
-            "inland_water": jsonValue(placemark.inlandWater),
-            "ocean": jsonValue(placemark.ocean),
-            "areas_of_interest": jsonValue(placemark.areasOfInterest),
-            "postal_address": postalAddressJSONObject(from: placemark.postalAddress),
-            "address_dictionary": addressDictionaryJSONObject(from: placemark.addressDictionary),
-        ]
-    }
-
-    static func addressJSONObject(from address: MKAddress?) -> Any {
-        guard let address else { return NSNull() }
-
-        return [
-            "full_address": address.fullAddress,
-            "short_address": jsonValue(address.shortAddress),
-            "region": NSNull(),
-            "sub_region": NSNull(),
-            "city": NSNull(),
-            "sub_city": NSNull(),
-            "street": NSNull(),
-            "sub_street": NSNull(),
-            "postal_code": NSNull(),
-            "country": NSNull(),
-            "country_code": NSNull(),
-            "formatted_address_lines": NSNull(),
-            "representations": NSNull(),
-        ]
-    }
-
-    static func addressRepresentationsJSONObject(from representations: MKAddressRepresentations) -> [String: Any] {
-        [
-            "full_address": jsonValue(
-                representations.fullAddress(includingRegion: true, singleLine: false)
-            ),
-            "short_address": jsonValue(
-                representations.fullAddress(includingRegion: false, singleLine: true)
-            ),
-            "city_name": jsonValue(representations.cityName),
-            "city_with_context": jsonValue(representations.cityWithContext),
-            "region_name": jsonValue(representations.regionName),
-            "region_code": NSNull(),
-            "formatted_address_lines": NSNull(),
-        ]
-    }
-
-    static func postalAddressJSONObject(from address: CNPostalAddress?) -> Any {
-        guard let address else { return NSNull() }
-
-        return [
-            "street": address.street,
-            "sub_locality": address.subLocality,
-            "city": address.city,
-            "sub_administrative_area": address.subAdministrativeArea,
-            "state": address.state,
-            "postal_code": address.postalCode,
-            "country": address.country,
-            "iso_country_code": address.isoCountryCode,
-        ]
-    }
-
     // MARK: - Helpers
 
-    private static func coordinateJSONObject(from coordinate: CLLocationCoordinate2D) -> [String: Any] {
+    static func coordinateJSONObject(from coordinate: CLLocationCoordinate2D) -> [String: Any] {
         [
             "latitude": coordinate.latitude,
             "longitude": coordinate.longitude,
         ]
     }
 
-    private static func regionJSONObject(from region: CLRegion?) -> Any {
-        guard let region else { return NSNull() }
-
-        if let circularRegion = region as? CLCircularRegion {
-            return circularRegionJSONObject(from: circularRegion)
-        }
-
-        return [
-            "center": coordinateJSONObject(from: region.center),
-            "radius": region.radius,
-            "identifier": region.identifier,
-        ]
-    }
-
-    private static func circularRegionJSONObject(from region: CLCircularRegion) -> [String: Any] {
-        [
-            "center": coordinateJSONObject(from: region.center),
-            "radius": region.radius,
-            "identifier": region.identifier,
-        ]
-    }
-
-    private static func addressDictionaryJSONObject(from dictionary: [AnyHashable: Any]?) -> Any {
-        guard let dictionary else { return NSNull() }
-
-        var payload: [String: Any] = [:]
-        for (key, value) in dictionary {
-            guard let key = key as? String else { continue }
-            payload[key] = jsonValue(value)
-        }
-        return payload
-    }
-
-    private static func addressRepresentationsJSONArray(from representations: MKAddressRepresentations?) -> Any {
-        guard let representations else { return NSNull() }
-        return [addressRepresentationsJSONObject(from: representations)]
-    }
-
-    private static func jsonValue(_ string: String?) -> Any {
+    static func jsonValue(_ string: String?) -> Any {
         string ?? NSNull()
     }
 
-    private static func jsonValue(_ number: Double?) -> Any {
+    static func jsonValue(_ number: Double?) -> Any {
         guard let number, number >= 0 else { return NSNull() }
         return number
     }
 
-    private static func jsonValue(_ values: [String]?) -> Any {
+    static func jsonValue(_ values: [String]?) -> Any {
         values ?? NSNull()
     }
 
-    private static func jsonValue(_ value: Any?) -> Any {
+    static func jsonValue(_ value: Any?) -> Any {
         value ?? NSNull()
     }
 
-    private static func jsonValueURL(_ url: URL?) -> Any {
+    static func jsonValueURL(_ url: URL?) -> Any {
         url?.absoluteString ?? NSNull()
     }
 
-    private static func jsonValueTimeZone(_ timeZone: TimeZone?) -> Any {
+    static func jsonValueTimeZone(_ timeZone: TimeZone?) -> Any {
         timeZone?.identifier ?? NSNull()
     }
 

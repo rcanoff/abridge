@@ -43,7 +43,7 @@ struct MapKitProviderSearchPlacesTests {
     func mapKitSearchFetchPumpsRunLoopForDeferredCallback() throws {
         var result = 0
 
-        try MapKitSearchFetch.waitForCompletion(timeout: 1) { complete in
+        try MapKitSearchFetch.waitForCompletion(operation: "MapKit search", timeout: 1) { complete in
             Timer.scheduledTimer(withTimeInterval: 0.001, repeats: false) { _ in
                 result = 42
                 complete()
@@ -59,8 +59,8 @@ struct MapKitProviderSearchPlacesTests {
         let timeout: TimeInterval = 0.1
         let started = ContinuousClock.now
 
-        #expect(throws: MapKitProviderError.self) {
-            try MapKitSearchFetch.waitForCompletion(timeout: timeout) { _ in
+        #expect(throws: MapKitProviderError.mapkitError("MapKit nearby search timed out")) {
+            try MapKitSearchFetch.waitForCompletion(operation: "MapKit nearby search", timeout: timeout) { _ in
                 // Intentionally never call complete — mirrors a stalled MapKit callback.
             }
         }
