@@ -1,5 +1,5 @@
-@testable import AppleBridge
 import AppKit
+@testable import AppleBridge
 import CoreGraphics
 import CoreText
 import Foundation
