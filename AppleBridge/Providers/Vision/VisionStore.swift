@@ -16,7 +16,24 @@ struct VisionRecognizeTextRequest: Equatable {
     let maxCandidateCount: Int
 }
 
+struct VisionScanDocumentRequest: Equatable {
+    let imageData: Data
+    let orientation: CGImagePropertyOrientation?
+    let revision: RecognizeDocumentsRequest.Revision?
+    let regionOfInterest: NormalizedRect?
+    let textRecognitionOptions: RecognizeDocumentsRequest.TextRecognitionOptions?
+    let barcodeDetectionOptions: RecognizeDocumentsRequest.BarcodeDetectionOptions?
+    let includeSegmentation: Bool
+    let maximumCandidateCount: Int
+}
+
+struct VisionScanDocumentResult: Equatable {
+    let observations: [DocumentObservation]
+    let segmentation: DetectedDocumentObservation?
+}
+
 @MainActor
 protocol VisionStoreing {
     func recognizeText(request: VisionRecognizeTextRequest) throws -> [VNRecognizedTextObservation]
+    func scanDocument(request: VisionScanDocumentRequest) throws -> VisionScanDocumentResult
 }
