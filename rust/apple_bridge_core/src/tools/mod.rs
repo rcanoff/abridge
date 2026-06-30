@@ -55,6 +55,7 @@ pub const TOOL_LOOKUP_PLACE: &str = "mapkit.lookup_place";
 pub const TOOL_OPEN_NAVIGATION: &str = "mapkit.open_navigation";
 pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
 pub const TOOL_RECOGNIZE_TEXT: &str = "vision.recognize_text";
+pub const TOOL_SCAN_DOCUMENT: &str = "vision.scan_document";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ToolDefinition {
@@ -65,7 +66,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 53] = [
+const ALL_TOOLS: [ToolDefinition; 54] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -436,6 +437,13 @@ const ALL_TOOLS: [ToolDefinition; 53] = [
     provider: "vision",
     operation: "recognize_text",
     description: "Recognize text in a client-provided image using Vision framework OCR",
+  },
+  ToolDefinition {
+    name: TOOL_SCAN_DOCUMENT,
+    capability: capabilities::VISION_DOCUMENT,
+    provider: "vision",
+    operation: "scan_document",
+    description: "Scan and recognize structured document content in a client-provided image using Vision framework",
   },
 ];
 
@@ -1363,6 +1371,66 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "limit": { "type": "integer", "minimum": 0 }
       }
     }),
+    TOOL_SCAN_DOCUMENT => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "image_data": { "type": "string", "minLength": 1 },
+        "orientation": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "revision": { "type": "string", "enum": ["revision1"] },
+        "region_of_interest": {
+          "type": "object",
+          "properties": {
+            "origin": {
+              "type": "object",
+              "properties": {
+                "x": { "type": "number" },
+                "y": { "type": "number" }
+              },
+              "required": ["x", "y"]
+            },
+            "size": {
+              "type": "object",
+              "properties": {
+                "width": { "type": "number" },
+                "height": { "type": "number" }
+              },
+              "required": ["width", "height"]
+            }
+          },
+          "required": ["origin", "size"]
+        },
+        "text_recognition_options": {
+          "type": "object",
+          "properties": {
+            "minimum_text_height_fraction": { "type": "number", "minimum": 0 },
+            "automatically_detect_language": { "type": "boolean" },
+            "recognition_languages": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "use_language_correction": { "type": "boolean" },
+            "custom_words": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "maximum_candidate_count": { "type": "integer", "minimum": 1, "maximum": 10 }
+          }
+        },
+        "barcode_detection_options": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "symbologies": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "coalesce_composite_symbologies": { "type": "boolean" }
+          }
+        },
+        "include_segmentation": { "type": "boolean" }
+      },
+      "required": ["image_data"]
+    }),
     TOOL_RECOGNIZE_TEXT => serde_json::json!({
       "type": "object",
       "properties": {
@@ -1456,11 +1524,12 @@ mod tests {
     TOOL_DELETE_REMINDER, TOOL_ESTIMATE_TRAVEL_TIME, TOOL_FORWARD_GEOCODE, TOOL_GET_CONTACT, TOOL_GET_CURRENT_LOCATION,
     TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS, TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS,
     TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_LOOKUP_PLACE, TOOL_MOVE_EVENT,
-    TOOL_MOVE_REMINDER, TOOL_OPEN_NAVIGATION, TOOL_RECOGNIZE_TEXT, TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS,
-    TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS,
-    TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION,
-    TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT,
-    TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
+    TOOL_MOVE_REMINDER, TOOL_OPEN_NAVIGATION, TOOL_RECOGNIZE_TEXT, TOOL_REVERSE_GEOCODE, TOOL_SCAN_DOCUMENT,
+    TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS,
+    TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE,
+    TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR,
+    TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools, input_schema,
+    tools_for_capabilities,
   };
 
   fn array_items_type(schema: &serde_json::Value, property: &str) -> Option<String> {
@@ -2521,5 +2590,22 @@ mod tests {
       }),
       Some(vec!["image_data".to_owned()])
     );
+  }
+
+  #[test]
+  fn lists_scan_document_tool_when_vision_document_capability_enabled() {
+    let tools = tools_for_capabilities(&["vision.document".into()]);
+    let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
+    assert_eq!(names, vec![TOOL_SCAN_DOCUMENT]);
+  }
+
+  #[test]
+  fn scan_document_schema_requires_image_data() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_SCAN_DOCUMENT)
+      .expect("scan_document tool");
+    let schema = input_schema(tool);
+    assert_eq!(string_property_min_length(&schema, "image_data"), Some(1));
   }
 }
