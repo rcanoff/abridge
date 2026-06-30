@@ -6,8 +6,9 @@ import Vision
 @MainActor
 struct LiveVisionStore: VisionStoreing {
     func recognizeText(request: VisionRecognizeTextRequest) throws -> [VNRecognizedTextObservation] {
-        let cgImage = try decodeCGImage(from: request.imageData)
-        let orientation = request.orientation ?? .up
+        let imageSource = try imageSource(from: request.imageData)
+        let cgImage = try decodeCGImage(from: imageSource)
+        let orientation = request.orientation ?? orientationFromImageSource(imageSource)
 
         let recognizeRequest = VNRecognizeTextRequest()
         if let recognitionLanguages = request.recognitionLanguages {
@@ -46,12 +47,27 @@ struct LiveVisionStore: VisionStoreing {
         return recognizeRequest.results ?? []
     }
 
-    private func decodeCGImage(from data: Data) throws -> CGImage {
-        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
-              let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
-        else {
+    private func imageSource(from data: Data) throws -> CGImageSource {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
+            throw VisionProviderError.invalidArguments("image_data could not be decoded as an image")
+        }
+        return source
+    }
+
+    private func decodeCGImage(from source: CGImageSource) throws -> CGImage {
+        guard let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
             throw VisionProviderError.invalidArguments("image_data could not be decoded as an image")
         }
         return image
+    }
+
+    private func orientationFromImageSource(_ source: CGImageSource) -> CGImagePropertyOrientation {
+        guard let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let orientationValue = properties[kCGImagePropertyOrientation] as? UInt32,
+              let orientation = CGImagePropertyOrientation(rawValue: orientationValue)
+        else {
+            return .up
+        }
+        return orientation
     }
 }

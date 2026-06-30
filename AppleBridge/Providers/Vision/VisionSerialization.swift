@@ -91,19 +91,32 @@ enum VisionSerialization {
     static func pixelBufferJSONObject(from pixelBuffer: CVPixelBuffer?) -> Any {
         guard let pixelBuffer else { return NSNull() }
 
-        CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
-        defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
-
         let width = CVPixelBufferGetWidth(pixelBuffer)
         let height = CVPixelBufferGetHeight(pixelBuffer)
         let pixelFormat = CVPixelBufferGetPixelFormatType(pixelBuffer)
         let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
 
+        let lockStatus = CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+        defer {
+            if lockStatus == kCVReturnSuccess {
+                CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
+            }
+        }
+
         var dataValue: Any = NSNull()
-        if let baseAddress = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 0) {
-            let length = bytesPerRow * height
-            let data = Data(bytes: baseAddress, count: length)
-            dataValue = data.base64EncodedString()
+        if lockStatus == kCVReturnSuccess {
+            let planeCount = CVPixelBufferGetPlaneCount(pixelBuffer)
+            if planeCount > 0 {
+                if let baseAddress = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 0) {
+                    let length = bytesPerRow * height
+                    let data = Data(bytes: baseAddress, count: length)
+                    dataValue = data.base64EncodedString()
+                }
+            } else if let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer) {
+                let length = bytesPerRow * height
+                let data = Data(bytes: baseAddress, count: length)
+                dataValue = data.base64EncodedString()
+            }
         }
 
         return [
