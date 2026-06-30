@@ -14,7 +14,7 @@ struct AppSettingsVisionTests {
         let appSettings = AppSettings(defaults: defaults)
         appSettings.saveCapabilityIDs(["vision-text", "vision-barcodes"])
 
-        #expect(appSettings.enabledVisionCapabilityIDs == ["vision.text"])
+        #expect(appSettings.enabledVisionCapabilityIDs == ["vision.text", "vision.barcodes"])
         let capabilities = appSettings.serverEnabledMCPCapabilityIDs(
             remindersAuthorized: false,
             eventsAuthorized: false,
@@ -22,7 +22,7 @@ struct AppSettingsVisionTests {
             locationAuthorized: false
         )
         #expect(capabilities.contains("vision.text"))
-        #expect(!capabilities.contains("vision.barcodes"))
+        #expect(capabilities.contains("vision.barcodes"))
         #expect(capabilities.contains("diagnostics.read"))
     }
 

@@ -13,6 +13,30 @@ enum VisionSerialization {
         return string
     }
 
+    static func readQrCodeResponseJSONObject(observations: [VNBarcodeObservation]) -> [String: Any] {
+        [
+            "results": observations.map(barcodeObservationJSONObject(from:)),
+        ]
+    }
+
+    static func barcodeObservationJSONObject(from observation: VNBarcodeObservation) -> [String: Any] {
+        [
+            "uuid": observation.uuid.uuidString,
+            "confidence": observation.confidence,
+            "time_range": cmTimeRangeJSONObject(from: observation.timeRange),
+            "request_revision": observation.requestRevision,
+            "bounding_box": cgRectJSONObject(from: observation.boundingBox),
+            "global_segmentation_mask": pixelBufferObservationJSONObject(from: observation.globalSegmentationMask),
+            "top_left": cgPointJSONObject(from: observation.topLeft),
+            "top_right": cgPointJSONObject(from: observation.topRight),
+            "bottom_left": cgPointJSONObject(from: observation.bottomLeft),
+            "bottom_right": cgPointJSONObject(from: observation.bottomRight),
+            "symbology": String(describing: observation.symbology),
+            "payload_string_value": jsonValue(observation.payloadStringValue),
+            "payload_data": observation.payloadData?.base64EncodedString() ?? NSNull(),
+        ]
+    }
+
     static func recognizeTextResponseJSONObject(
         observations: [VNRecognizedTextObservation],
         maxCandidateCount: Int

@@ -113,6 +113,33 @@ struct LiveVisionStore: VisionStoreing {
         return recognizeRequest.results ?? []
     }
 
+    func readQrCode(request: VisionReadQrCodeRequest) throws -> [VNBarcodeObservation] {
+        let imageSource = try imageSource(from: request.imageData)
+        let cgImage = try decodeCGImage(from: imageSource)
+        let orientation = request.orientation ?? orientationFromImageSource(imageSource)
+
+        let detectRequest = VNDetectBarcodesRequest()
+        detectRequest.symbologies = [.qr]
+        if let revision = request.revision {
+            detectRequest.revision = revision
+        }
+        if let regionOfInterest = request.regionOfInterest {
+            detectRequest.regionOfInterest = regionOfInterest
+        }
+        if let coalesce = request.coalesceCompositeSymbologies {
+            detectRequest.coalesceCompositeSymbologies = coalesce
+        }
+
+        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
+        do {
+            try handler.perform([detectRequest])
+        } catch {
+            throw VisionProviderError.visionError(error.localizedDescription)
+        }
+
+        return detectRequest.results ?? []
+    }
+
     private func imageSource(from data: Data) throws -> CGImageSource {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
             throw VisionProviderError.invalidArguments("image_data could not be decoded as an image")

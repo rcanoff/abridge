@@ -70,6 +70,7 @@
 		2D2DB4C45C969B8B0AA10BAB /* EventKitProviderGetEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6AA7BD4CD9EFDCFE5A909F8 /* EventKitProviderGetEventTests.swift */; };
 		2D6FE262167FCE0B27023A27 /* ContactsDeserializationCollections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BC81EED9B7227381379871 /* ContactsDeserializationCollections.swift */; };
 		30D42E256C69B5C0CCCCDB13 /* LiveMapKitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 060D01EA883FF58ABFE7F5E7 /* LiveMapKitStore.swift */; };
+		310F0345CD94020D4DF35638 /* VisionProviderReadQrCodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3958041BC780465A6099BC6 /* VisionProviderReadQrCodeTests.swift */; };
 		332F91499F2FF03A49F0D207 /* EventKitProviderUpdateEventValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D102C3F21E2E6956E4E36E7C /* EventKitProviderUpdateEventValidationTests.swift */; };
 		35D9BD56598AB3F89133F078 /* SMAppLaunchAtLoginService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F5667783ACEA479011AB5F /* SMAppLaunchAtLoginService.swift */; };
 		35E9D330FBA609A2A2AE1320 /* VisionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62838F701D789E0CAD2DDCB4 /* VisionProvider.swift */; };
@@ -250,6 +251,7 @@
 		C52983C00DA6F97A5D2C1FF6 /* SettingsStoreUsageLoggingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A55461E0BD369ADDC25FAFC1 /* SettingsStoreUsageLoggingTests.swift */; };
 		C764B769B53E60974DE2F894 /* AppleProviderBridgeDeleteListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9971421EB83DA709A01E372 /* AppleProviderBridgeDeleteListTests.swift */; };
 		C77F1AA397C9434134BC6A38 /* EventKitEventRecurrenceValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBC31419078564A176C2D4A /* EventKitEventRecurrenceValidationTests.swift */; };
+		CC5C7504EA40AB9780C9C31A /* VisionProviderReadQrCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F46964A37C9355E1E73125 /* VisionProviderReadQrCode.swift */; };
 		CC5D1EF30B8162843113F2F1 /* ContactsPermissionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5CA501CB9707ADA89A0324 /* ContactsPermissionServiceTests.swift */; };
 		CDAB05794EDC6DA92D904694 /* EventKitProviderAcceptInvitationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A04BC282628F5763B7A7FEB /* EventKitProviderAcceptInvitationTests.swift */; };
 		CDB8FE57FF4FF9ECC5A4D951 /* LiveContactsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8407D017E658DEEBFF2AB94A /* LiveContactsStore.swift */; };
@@ -500,6 +502,7 @@
 		8845608742FA7223A013EA89 /* EventKitProviderDeleteListTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderDeleteListTests.swift; sourceTree = "<group>"; };
 		885CAED8B8050BBC816094D4 /* EventsPermissionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsPermissionServiceTests.swift; sourceTree = "<group>"; };
 		89776D27F726F0BD62A62EDD /* ContactsRuntimeUnlinking.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ContactsRuntimeUnlinking.m; sourceTree = "<group>"; };
+		89F46964A37C9355E1E73125 /* VisionProviderReadQrCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProviderReadQrCode.swift; sourceTree = "<group>"; };
 		8A6A70E5E2EFA85E4991AF69 /* AppleBridgeLaunchDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBridgeLaunchDependencies.swift; sourceTree = "<group>"; };
 		8A8023EBC0B79296B6028F35 /* AppleBridgeAppStoreMaking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBridgeAppStoreMaking.swift; sourceTree = "<group>"; };
 		8C46E3ACDC1DD62B5A1DDDF4 /* AppleBridge-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AppleBridge-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -636,6 +639,7 @@
 		F05C246209CCD36F08E9FF8A /* SettingsStoreLaunchAtLoginTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStoreLaunchAtLoginTests.swift; sourceTree = "<group>"; };
 		F0A3762AE4920DF977F1123E /* MockContactsStoreCreateGroupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockContactsStoreCreateGroupTests.swift; sourceTree = "<group>"; };
 		F14ACC25EBB3AA6729012771 /* apple_bridge_core.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = apple_bridge_core.xcframework; path = AppleBridgeCore/apple_bridge_core.xcframework; sourceTree = "<group>"; };
+		F3958041BC780465A6099BC6 /* VisionProviderReadQrCodeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProviderReadQrCodeTests.swift; sourceTree = "<group>"; };
 		F4B13FFA54DE646F0722E357 /* LiveContactsStoreLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveContactsStoreLinkTests.swift; sourceTree = "<group>"; };
 		F4E4B0199BC23795F30B18A7 /* ContactsPermissionChecking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsPermissionChecking.swift; sourceTree = "<group>"; };
 		F585AB906D4A5D0F0C0EEDB9 /* ContactsRuntimeLinking.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ContactsRuntimeLinking.m; sourceTree = "<group>"; };
@@ -843,6 +847,7 @@
 				E6E8DA79BFB87C1E5EB17DE6 /* StalledEventKitStore.swift */,
 				3DD0D0D3E9DB88F6F3340E34 /* UsageAuditExportTests.swift */,
 				9768CC8719D5EEA69C64049E /* VisionDocumentSerializationTests.swift */,
+				F3958041BC780465A6099BC6 /* VisionProviderReadQrCodeTests.swift */,
 				D28580F4A296765375761177 /* VisionProviderRecognizeTextTests.swift */,
 				E5F56849DE520E56C83F0C68 /* VisionProviderScanDocumentTests.swift */,
 				4953C9B1D466DCF818C52D84 /* VisionSerializationTests.swift */,
@@ -1008,6 +1013,7 @@
 				A16583458A5DACA0DD777E97 /* VisionDocumentObservationSerialization.swift */,
 				5027921B5761D1F2D69ECBF1 /* VisionDocumentSerialization.swift */,
 				62838F701D789E0CAD2DDCB4 /* VisionProvider.swift */,
+				89F46964A37C9355E1E73125 /* VisionProviderReadQrCode.swift */,
 				927071200B23CBA646E4008A /* VisionProviderRecognizeText.swift */,
 				BFBBC6976ABC8D4502D41CBF /* VisionProviderRouting.swift */,
 				F8F8D62F07C979351CD35051 /* VisionProviderScanDocument.swift */,
@@ -1325,6 +1331,7 @@
 				F3DA265D0A3D6B4F6A0C69F5 /* VisionDocumentObservationSerialization.swift in Sources */,
 				1C123BA4E867EC8AE8364E12 /* VisionDocumentSerialization.swift in Sources */,
 				35E9D330FBA609A2A2AE1320 /* VisionProvider.swift in Sources */,
+				CC5C7504EA40AB9780C9C31A /* VisionProviderReadQrCode.swift in Sources */,
 				F928A30FF5607E71609A8E07 /* VisionProviderRecognizeText.swift in Sources */,
 				14226CD8103C108E637CA750 /* VisionProviderRouting.swift in Sources */,
 				ECCD5A13D9AE8DD670CBAEDC /* VisionProviderScanDocument.swift in Sources */,
@@ -1493,6 +1500,7 @@
 				14EEE63F84E039A033483CF5 /* StalledEventKitStore.swift in Sources */,
 				DDA894C58581E8032244F83E /* UsageAuditExportTests.swift in Sources */,
 				A0E7A93BE3106A813F12FCD0 /* VisionDocumentSerializationTests.swift in Sources */,
+				310F0345CD94020D4DF35638 /* VisionProviderReadQrCodeTests.swift in Sources */,
 				F4BCC3689903EE6D5ECC5CD2 /* VisionProviderRecognizeTextTests.swift in Sources */,
 				783D992245C468EE875D8297 /* VisionProviderScanDocumentTests.swift in Sources */,
 				BF607F380B33C7D34A26F169 /* VisionSerializationTests.swift in Sources */,
