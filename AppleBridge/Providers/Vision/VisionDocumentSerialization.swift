@@ -6,10 +6,10 @@ enum VisionDocumentSerialization {
         observations: [DocumentObservation],
         segmentation: DetectedDocumentObservation?,
         maximumCandidateCount: Int
-    ) -> [String: Any] {
-        [
+    ) throws -> [String: Any] {
+        try [
             "results": observations.map {
-                documentObservationJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
+                try documentObservationJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
             },
             "segmentation": segmentation.map(
                 VisionDocumentObservationSerialization.detectedDocumentObservationJSONObject(from:)
@@ -20,8 +20,8 @@ enum VisionDocumentSerialization {
     static func documentObservationJSONObject(
         from observation: DocumentObservation,
         maximumCandidateCount: Int
-    ) -> [String: Any] {
-        [
+    ) throws -> [String: Any] {
+        try [
             "uuid": observation.uuid.uuidString,
             "confidence": observation.confidence,
             "time_range": VisionSerialization.cmTimeRangeJSONObject(from: observation.timeRange),
@@ -38,23 +38,23 @@ enum VisionDocumentSerialization {
     private static func documentContainerJSONObject(
         from container: DocumentObservation.Container,
         maximumCandidateCount: Int
-    ) -> [String: Any] {
-        [
+    ) throws -> [String: Any] {
+        try [
             "title": container.title.map {
-                documentTextJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
+                try documentTextJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
             } ?? NSNull(),
             "text": documentTextJSONObject(from: container.text, maximumCandidateCount: maximumCandidateCount),
             "paragraphs": container.paragraphs.map {
-                documentTextJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
+                try documentTextJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
             },
             "tables": container.tables.map {
-                documentTableJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
+                try documentTableJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
             },
             "lists": container.lists.map {
-                documentListJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
+                try documentListJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
             },
             "barcodes": container.barcodes.map { observation in
-                VisionDocumentObservationSerialization.barcodeObservationJSONObject(
+                try VisionDocumentObservationSerialization.barcodeObservationJSONObject(
                     from: observation,
                     boundingRegion: VisionDocumentObservationSerialization.normalizedRegionJSONObject(
                         from: observation.boundingRegion
@@ -70,7 +70,7 @@ enum VisionDocumentSerialization {
     private static func documentTextJSONObject(
         from text: DocumentObservation.Container.Text,
         maximumCandidateCount: Int
-    ) -> [String: Any] {
+    ) throws -> [String: Any] {
         let boundingRegion = VisionDocumentObservationSerialization.normalizedRegionJSONObject(
             from: text.boundingRegion
         )
@@ -111,13 +111,14 @@ enum VisionDocumentSerialization {
     private static func documentTableJSONObject(
         from table: DocumentObservation.Container.Table,
         maximumCandidateCount: Int
-    ) -> [String: Any] {
-        [
+    ) throws -> [String: Any] {
+        try [
             "rows": table.rows.map { row in
-                row.map { documentTableCellJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount) }
+                try row.map { try documentTableCellJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount) }
             },
             "columns": table.columns.map { column in
-                column.map { documentTableCellJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount) }
+                try column
+                    .map { try documentTableCellJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount) }
             },
             "bounding_region": VisionDocumentObservationSerialization.normalizedRegionJSONObject(
                 from: table.boundingRegion
@@ -128,8 +129,8 @@ enum VisionDocumentSerialization {
     private static func documentTableCellJSONObject(
         from cell: DocumentObservation.Container.Table.Cell,
         maximumCandidateCount: Int
-    ) -> [String: Any] {
-        [
+    ) throws -> [String: Any] {
+        try [
             "content": documentContainerJSONObject(from: cell.content, maximumCandidateCount: maximumCandidateCount),
             "row_range": closedRangeJSONObject(from: cell.rowRange),
             "column_range": closedRangeJSONObject(from: cell.columnRange),
@@ -139,10 +140,10 @@ enum VisionDocumentSerialization {
     private static func documentListJSONObject(
         from list: DocumentObservation.Container.List,
         maximumCandidateCount: Int
-    ) -> [String: Any] {
-        [
+    ) throws -> [String: Any] {
+        try [
             "items": list.items.map {
-                documentListItemJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
+                try documentListItemJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
             },
             "bounding_region": VisionDocumentObservationSerialization.normalizedRegionJSONObject(
                 from: list.boundingRegion
@@ -153,8 +154,8 @@ enum VisionDocumentSerialization {
     private static func documentListItemJSONObject(
         from item: DocumentObservation.Container.List.Item,
         maximumCandidateCount: Int
-    ) -> [String: Any] {
-        [
+    ) throws -> [String: Any] {
+        try [
             "content": documentContainerJSONObject(from: item.content, maximumCandidateCount: maximumCandidateCount),
             "marker_type": listMarkerString(from: item.markerType) ?? NSNull(),
             "marker_string": item.markerString,

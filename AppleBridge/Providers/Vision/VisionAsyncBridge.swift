@@ -38,6 +38,7 @@ enum VisionAsyncBridge {
     private final class CompletionBox: @unchecked Sendable {
         private let lock = NSLock()
         private var done = false
+        private var started = false
         private var cancelled = false
         private var task: Task<Void, Never>?
 
@@ -45,6 +46,7 @@ enum VisionAsyncBridge {
             lock.lock()
             defer { lock.unlock() }
             self.task = task
+            started = true
             if cancelled {
                 task.cancel()
             }
@@ -54,6 +56,12 @@ enum VisionAsyncBridge {
             lock.lock()
             defer { lock.unlock() }
             done = true
+        }
+
+        func isStarted() -> Bool {
+            lock.lock()
+            defer { lock.unlock() }
+            return started
         }
 
         func isDone() -> Bool {
@@ -78,7 +86,36 @@ enum VisionAsyncBridge {
         let result = AsyncBridgeResult<T>()
         let completion = CompletionBox()
 
-        DispatchQueue.main.async {
+        installTask(completion: completion, result: result, work: work)
+
+        let deadline = Date().addingTimeInterval(timeout)
+        while !completion.isStarted(), Date() < deadline {
+            pumpRunLoop(for: runLoopInterval)
+        }
+
+        if !completion.isStarted() {
+            completion.cancelTask()
+            throw VisionProviderError.visionError("\(operation) timed out")
+        }
+
+        while !completion.isDone(), Date() < deadline {
+            pumpRunLoop(for: runLoopInterval)
+        }
+
+        if !completion.isDone() {
+            completion.cancelTask()
+            throw VisionProviderError.visionError("\(operation) timed out")
+        }
+
+        return try result.get()
+    }
+
+    private static func installTask<T>(
+        completion: CompletionBox,
+        result: AsyncBridgeResult<T>,
+        work: @Sendable @escaping () async throws -> T
+    ) {
+        let body = {
             let asyncTask = Task {
                 defer { completion.markDone() }
                 do {
@@ -96,17 +133,14 @@ enum VisionAsyncBridge {
             completion.setTask(asyncTask)
         }
 
-        let deadline = Date().addingTimeInterval(timeout)
-        while !completion.isDone(), Date() < deadline {
-            pumpRunLoop(for: runLoopInterval)
+        if Thread.isMainThread {
+            body()
+        } else {
+            CFRunLoopPerformBlock(CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue) {
+                body()
+            }
+            CFRunLoopWakeUp(CFRunLoopGetMain())
         }
-
-        if !completion.isDone() {
-            completion.cancelTask()
-            throw VisionProviderError.visionError("\(operation) timed out")
-        }
-
-        return try result.get()
     }
 
     static func pumpRunLoop(for interval: TimeInterval) {

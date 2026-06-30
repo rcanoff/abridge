@@ -7,7 +7,8 @@ extension VisionProvider {
         do {
             let arguments = try parseDetectBarcodesArguments(payloadJson)
             let observations = try store.detectBarcodes(request: arguments)
-            let payloadObject = VisionBarcodeSerialization.detectBarcodesResponseJSONObject(observations: observations)
+            let payloadObject = try VisionBarcodeSerialization
+                .detectBarcodesResponseJSONObject(observations: observations)
             let payload = try VisionSerialization.jsonString(from: payloadObject)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as VisionProviderError {

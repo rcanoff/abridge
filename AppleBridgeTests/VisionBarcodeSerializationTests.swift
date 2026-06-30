@@ -31,7 +31,7 @@ struct VisionBarcodeSerializationTests {
     @MainActor
     func detectBarcodesResponseIncludesTopLevelKeys() throws {
         let observations = try VisionTestFixtures.sampleBarcodeObservations()
-        let object = VisionBarcodeSerialization.detectBarcodesResponseJSONObject(observations: observations)
+        let object = try VisionBarcodeSerialization.detectBarcodesResponseJSONObject(observations: observations)
 
         for key in responseKeys {
             #expect(object.keys.contains(key), "Missing response key: \(key)")
@@ -43,10 +43,39 @@ struct VisionBarcodeSerializationTests {
     func barcodeObservationProjectionIncludesAllKeys() throws {
         let observations = try VisionTestFixtures.sampleBarcodeObservations()
         let observation = try #require(observations.first)
-        let object = VisionBarcodeSerialization.barcodeObservationJSONObject(from: observation)
+        let object = try VisionBarcodeSerialization.barcodeObservationJSONObject(from: observation)
 
         for key in barcodeObservationKeys {
             #expect(object.keys.contains(key), "Missing barcode observation key: \(key)")
         }
+    }
+
+    @Test
+    @MainActor
+    func barcodeObservationSymbologyUsesRawValue() throws {
+        let observations = try VisionTestFixtures.sampleBarcodeObservations()
+        let observation = try #require(observations.first)
+
+        let object = try VisionBarcodeSerialization.barcodeObservationJSONObject(from: observation)
+        let symbology = try #require(object["symbology"] as? String)
+
+        let identifier = try VisionDocumentObservationSerialization
+            .barcodeSymbologyIdentifier(from: observation.symbology)
+        #expect(symbology == identifier)
+        #expect(!symbology.contains("(_rawValue:"))
+        #expect(!symbology.contains("BarcodeSymbology("))
+        #expect(symbology == "qr")
+    }
+
+    @Test
+    @MainActor
+    func barcodeSymbologyIdentifierReturnsCodableKey() throws {
+        let observations = try VisionTestFixtures.sampleBarcodeObservations()
+        let observation = try #require(observations.first)
+
+        let identifier = try VisionDocumentObservationSerialization.barcodeSymbologyIdentifier(
+            from: observation.symbology
+        )
+        #expect(identifier == "qr")
     }
 }

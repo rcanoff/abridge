@@ -5,6 +5,7 @@ import Testing
 @Suite("VisionAsyncBridge")
 struct VisionAsyncBridgeTests {
     @Test
+    @MainActor
     func performReturnsResultWhenWorkCompletes() throws {
         let value = try VisionAsyncBridge.perform(operation: "Vision test", timeout: 1) {
             42
@@ -34,6 +35,17 @@ struct VisionAsyncBridgeTests {
 
         try await Task.sleep(for: .milliseconds(200))
         #expect(workContinued.didContinue() == false)
+    }
+
+    @Test
+    @MainActor
+    func performReturnsResultRepeatedlyUnderRunLoopLoad() throws {
+        for iteration in 0 ..< 50 {
+            let value = try VisionAsyncBridge.perform(operation: "Vision stress \(iteration)", timeout: 1) {
+                iteration
+            }
+            #expect(value == iteration)
+        }
     }
 }
 
