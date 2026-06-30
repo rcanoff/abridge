@@ -5,6 +5,8 @@ extension VisionProvider {
         switch operation {
         case "recognize_text":
             recognizeText(payloadJson: payloadJson)
+        case "scan_document":
+            scanDocument(payloadJson: payloadJson)
         default:
             errorResponse(code: "unknown_operation", message: "Unknown vision operation: \(operation)")
         }

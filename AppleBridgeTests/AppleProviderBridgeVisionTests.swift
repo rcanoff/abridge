@@ -30,16 +30,25 @@ struct AppleProviderBridgeVisionTests {
 
     @Test
     @MainActor
-    func callProviderVisionReturnsUnknownOperation() throws {
-        let bridge = AppleProviderBridge(visionProvider: VisionProvider(store: MockVisionStore()))
-        let request = ProviderRequest(provider: "vision", operation: "scan_document", payloadJson: "{}")
-        let response = bridge.callProvider(request: request)
-        #expect(response.ok == false)
+    func callProviderVisionScanDocumentSucceedsWithMockStore() throws {
+        let observations = try VisionTestFixtures.sampleDocumentObservations()
+        let store = MockVisionStore()
+        store.scanDocumentResult = VisionScanDocumentResult(observations: observations, segmentation: nil)
+        let bridge = AppleProviderBridge(visionProvider: VisionProvider(store: store))
+        let imageData = try VisionTestFixtures.sampleTextImageData()
+        let encoded = imageData.base64EncodedString()
 
-        let errorJson = try #require(response.errorJson)
-        let data = try #require(errorJson.data(using: .utf8))
+        let request = ProviderRequest(
+            provider: "vision",
+            operation: "scan_document",
+            payloadJson: #"{"image_data":"\#(encoded)"}"#
+        )
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
         let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-        #expect(decoded?["code"] as? String == "unknown_operation")
-        #expect((decoded?["message"] as? String)?.contains("scan_document") == true)
+        let results = decoded?["results"] as? [[String: Any]]
+        #expect(results?.isEmpty == false)
     }
 }

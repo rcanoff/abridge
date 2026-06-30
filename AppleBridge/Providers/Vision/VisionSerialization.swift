@@ -75,6 +75,35 @@ enum VisionSerialization {
         ]
     }
 
+    static func cmTimeRangeJSONObject(from range: CMTimeRange?) -> Any {
+        guard let range else {
+            return NSNull()
+        }
+        return cmTimeRangeJSONObject(from: range)
+    }
+
+    static func scanDocumentResponseJSONObject(
+        observations: [DocumentObservation],
+        segmentation: DetectedDocumentObservation?,
+        maximumCandidateCount: Int
+    ) -> [String: Any] {
+        VisionDocumentSerialization.scanDocumentResponseJSONObject(
+            observations: observations,
+            segmentation: segmentation,
+            maximumCandidateCount: maximumCandidateCount
+        )
+    }
+
+    static func documentObservationJSONObject(
+        from observation: DocumentObservation,
+        maximumCandidateCount: Int
+    ) -> [String: Any] {
+        VisionDocumentSerialization.documentObservationJSONObject(
+            from: observation,
+            maximumCandidateCount: maximumCandidateCount
+        )
+    }
+
     static func pixelBufferObservationJSONObject(from observation: VNPixelBufferObservation?) -> Any {
         guard let observation else { return NSNull() }
 
@@ -132,7 +161,7 @@ enum VisionSerialization {
         string ?? NSNull()
     }
 
-    private static func fourCCString(from pixelFormat: OSType) -> String {
+    static func fourCCString(from pixelFormat: OSType) -> String {
         let bytes: [UInt8] = [
             UInt8((pixelFormat >> 24) & 0xFF),
             UInt8((pixelFormat >> 16) & 0xFF),

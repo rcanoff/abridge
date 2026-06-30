@@ -5,6 +5,72 @@ import Vision
 
 @MainActor
 struct LiveVisionStore: VisionStoreing {
+    func scanDocument(request: VisionScanDocumentRequest) throws -> VisionScanDocumentResult {
+        let imageSource = try imageSource(from: request.imageData)
+        let orientation = request.orientation ?? orientationFromImageSource(imageSource)
+        let handler = ImageRequestHandler(request.imageData, orientation: orientation)
+        let recognizeRequest = makeRecognizeDocumentsRequest(from: request)
+
+        let observations = try performVisionAsync(operation: "Vision document recognition") {
+            try await handler.perform(recognizeRequest)
+        }
+
+        let segmentation: DetectedDocumentObservation? = if request.includeSegmentation {
+            try performVisionAsync(operation: "Vision document segmentation") {
+                try await handler.perform(DetectDocumentSegmentationRequest())
+            }
+        } else {
+            nil
+        }
+
+        return VisionScanDocumentResult(observations: observations, segmentation: segmentation)
+    }
+
+    private func makeRecognizeDocumentsRequest(from request: VisionScanDocumentRequest) -> RecognizeDocumentsRequest {
+        var recognizeRequest = RecognizeDocumentsRequest(request.revision)
+        if let regionOfInterest = request.regionOfInterest {
+            recognizeRequest.regionOfInterest = regionOfInterest
+        }
+        if let textRecognitionOptions = request.textRecognitionOptions {
+            recognizeRequest.textRecognitionOptions = textRecognitionOptions
+        }
+        if let barcodeDetectionOptions = request.barcodeDetectionOptions {
+            recognizeRequest.barcodeDetectionOptions = barcodeDetectionOptions
+        }
+        return recognizeRequest
+    }
+
+    private func performVisionAsync<T>(
+        operation: String,
+        work: @escaping () async throws -> T
+    ) throws -> T {
+        let result = VisionAsyncBridge.AsyncBridgeResult<T>()
+        do {
+            try VisionAsyncBridge.waitForCompletion(operation: operation) { complete in
+                DispatchQueue.main.async {
+                    Task {
+                        defer { complete() }
+                        do {
+                            try await result.setValue(work())
+                        } catch {
+                            result.setError(error)
+                        }
+                    }
+                }
+            }
+        } catch let error as VisionProviderError {
+            throw error
+        } catch {
+            throw VisionProviderError.visionError(error.localizedDescription)
+        }
+
+        do {
+            return try result.get()
+        } catch {
+            throw VisionProviderError.visionError(error.localizedDescription)
+        }
+    }
+
     func recognizeText(request: VisionRecognizeTextRequest) throws -> [VNRecognizedTextObservation] {
         let imageSource = try imageSource(from: request.imageData)
         let cgImage = try decodeCGImage(from: imageSource)
