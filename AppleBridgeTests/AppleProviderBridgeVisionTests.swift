@@ -5,9 +5,34 @@ import Testing
 @Suite("AppleProviderBridgeVision")
 struct AppleProviderBridgeVisionTests {
     @Test
+    @MainActor
+    func callProviderVisionRecognizeTextSucceedsWithMockStore() throws {
+        let observations = try VisionTestFixtures.sampleRecognizedTextObservations()
+        let store = MockVisionStore()
+        store.observations = observations
+        let bridge = AppleProviderBridge(visionProvider: VisionProvider(store: store))
+        let imageData = try VisionTestFixtures.sampleTextImageData()
+        let encoded = imageData.base64EncodedString()
+
+        let request = ProviderRequest(
+            provider: "vision",
+            operation: "recognize_text",
+            payloadJson: #"{"image_data":"\#(encoded)"}"#
+        )
+        let response = bridge.callProvider(request: request)
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let results = decoded?["results"] as? [[String: Any]]
+        #expect(results?.isEmpty == false)
+    }
+
+    @Test
+    @MainActor
     func callProviderVisionReturnsUnknownOperation() throws {
-        let bridge = AppleProviderBridge()
-        let request = ProviderRequest(provider: "vision", operation: "recognize_text", payloadJson: "{}")
+        let bridge = AppleProviderBridge(visionProvider: VisionProvider(store: MockVisionStore()))
+        let request = ProviderRequest(provider: "vision", operation: "scan_document", payloadJson: "{}")
         let response = bridge.callProvider(request: request)
         #expect(response.ok == false)
 
@@ -15,6 +40,6 @@ struct AppleProviderBridgeVisionTests {
         let data = try #require(errorJson.data(using: .utf8))
         let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         #expect(decoded?["code"] as? String == "unknown_operation")
-        #expect((decoded?["message"] as? String)?.contains("recognize_text") == true)
+        #expect((decoded?["message"] as? String)?.contains("scan_document") == true)
     }
 }

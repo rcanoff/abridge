@@ -134,7 +134,7 @@ enum CapabilityCatalog {
     ]
 
     static let visionCapabilities: [CapabilityDefinition] = [
-        CapabilityDefinition(id: "vision-text", capabilityID: "vision.text", label: "Text", shipped: false),
+        CapabilityDefinition(id: "vision-text", capabilityID: "vision.text", label: "Text", shipped: true),
         CapabilityDefinition(
             id: "vision-document",
             capabilityID: "vision.document",
