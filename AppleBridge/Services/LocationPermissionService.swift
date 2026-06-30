@@ -16,7 +16,7 @@ enum LocationPermissionError: LocalizedError, Equatable {
 enum LocationAuthorizationWait {
     /// Upper bound for blocking while CoreLocation delivers its authorization callback.
     static let defaultTimeout: TimeInterval = 30
-    static let runLoopInterval: TimeInterval = 0.01
+    static let pollInterval: Duration = .milliseconds(10)
 
     static func waitUntilDetermined(
         timeout: TimeInterval = defaultTimeout,
@@ -30,7 +30,7 @@ enum LocationAuthorizationWait {
             }
             onCheck()
             if isDetermined() { return }
-            try await Task.sleep(for: .seconds(runLoopInterval))
+            try await Task.sleep(for: pollInterval)
         }
 
         guard isDetermined() else {
