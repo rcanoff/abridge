@@ -38,12 +38,16 @@ enum VisionAsyncBridge {
     private final class CompletionBox: @unchecked Sendable {
         private let lock = NSLock()
         private var done = false
+        private var cancelled = false
         private var task: Task<Void, Never>?
 
         func setTask(_ task: Task<Void, Never>) {
             lock.lock()
             defer { lock.unlock() }
             self.task = task
+            if cancelled {
+                task.cancel()
+            }
         }
 
         func markDone() {
@@ -61,6 +65,7 @@ enum VisionAsyncBridge {
         func cancelTask() {
             lock.lock()
             defer { lock.unlock() }
+            cancelled = true
             task?.cancel()
         }
     }
