@@ -1528,23 +1528,23 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "properties": {
         "image_data": { "type": "string", "minLength": 1 },
         "orientation": { "type": "integer", "minimum": 1, "maximum": 8 },
-        "revision": { "type": "integer" },
+        "revision": { "type": "integer", "enum": [1, 2, 3] },
         "region_of_interest": {
           "type": "object",
           "properties": {
             "origin": {
               "type": "object",
               "properties": {
-                "x": { "type": "number" },
-                "y": { "type": "number" }
+                "x": { "type": "number", "minimum": 0, "maximum": 1 },
+                "y": { "type": "number", "minimum": 0, "maximum": 1 }
               },
               "required": ["x", "y"]
             },
             "size": {
               "type": "object",
               "properties": {
-                "width": { "type": "number" },
-                "height": { "type": "number" }
+                "width": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+                "height": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
               },
               "required": ["width", "height"]
             }
@@ -2804,6 +2804,42 @@ mod tests {
           .collect::<Vec<_>>()
       }),
       Some(vec!["image_data".to_owned()])
+    );
+  }
+
+  #[test]
+  fn detect_faces_schema_constrains_revision_and_region_of_interest() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_DETECT_FACES)
+      .expect("detect_faces tool");
+    let schema = input_schema(tool);
+    let revision_enum = schema
+      .pointer("/properties/revision/enum")
+      .and_then(|value| value.as_array())
+      .expect("revision enum");
+    assert_eq!(
+      revision_enum
+        .iter()
+        .filter_map(|value| value.as_i64())
+        .collect::<Vec<_>>(),
+      vec![1, 2, 3]
+    );
+
+    let region_schema = schema
+      .pointer("/properties/region_of_interest")
+      .expect("region_of_interest schema");
+    assert_eq!(
+      region_schema
+        .pointer("/properties/origin/properties/x/minimum")
+        .and_then(|value| value.as_f64()),
+      Some(0.0)
+    );
+    assert_eq!(
+      region_schema
+        .pointer("/properties/size/properties/width/exclusiveMinimum")
+        .and_then(|value| value.as_f64()),
+      Some(0.0)
     );
   }
 }
