@@ -34,6 +34,16 @@ test-swift:
         -only-testing:AppleBridgeTests -destination 'platform=macOS,arch=arm64' \
         -parallel-testing-enabled NO -quiet
 
+test-swift-verbose:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # arm64-only (see main); build + test-without-building avoids destination ambiguity and pipe hangs.
+    TZ=UTC xcodebuild build-for-testing -project AppleBridge.xcodeproj -scheme AppleBridge \
+        -destination 'platform=macOS,arch=arm64'
+    TZ=UTC xcodebuild test-without-building -project AppleBridge.xcodeproj -scheme AppleBridge \
+        -only-testing:AppleBridgeTests -destination 'platform=macOS,arch=arm64' \
+        -parallel-testing-enabled NO
+
 # Guard: rust recipes require rust/Cargo.toml (lands with PR 2+)
 _rust-workspace:
     @test -f rust/Cargo.toml || (echo "error: rust/Cargo.toml not found — Rust workspace lands in PR 2+" >&2 && exit 1)
@@ -97,6 +107,10 @@ build-rust: _rust-workspace
 
 test-all:
     just test-swift
+    @if [ -f rust/Cargo.toml ]; then just test-rust; fi
+
+test-all-verbose:
+    just test-swift-verbose
     @if [ -f rust/Cargo.toml ]; then just test-rust; fi
 
 clean-rust: _rust-workspace
