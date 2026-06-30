@@ -130,6 +130,7 @@ struct VisionProviderScanDocumentTests {
         let encoded = imageData.base64EncodedString()
 
         // swiftlint:disable:next line_length
+        // swiftlint:disable:next line_length
         let payloadJson = #"{"image_data":"\#(encoded)","text_recognition_options":{"recognition_languages":["en-US"]}}"#
         let response = provider.handle(operation: "scan_document", payloadJson: payloadJson)
         #expect(response.ok == true, "Expected success, got: \(response.errorJson ?? "nil")")
@@ -167,6 +168,7 @@ struct VisionProviderScanDocumentTests {
         let imageData = try VisionTestFixtures.sampleTextImageData()
         let encoded = imageData.base64EncodedString()
 
+        // swiftlint:disable:next line_length
         // swiftlint:disable:next line_length
         let payloadJson = #"{"image_data":"\#(encoded)","region_of_interest":{"origin":{"x":0.1,"y":0.2},"size":{"width":0.5,"height":0.6}}}"#
         let response = provider.handle(operation: "scan_document", payloadJson: payloadJson)
