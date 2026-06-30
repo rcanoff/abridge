@@ -5,11 +5,13 @@ import Vision
 final class MockVisionStore: VisionStoreing {
     var observations: [VNRecognizedTextObservation] = []
     var scanDocumentResult = VisionScanDocumentResult(observations: [], segmentation: nil)
-    var barcodeObservations: [VNBarcodeObservation] = []
+    var readQrCodeObservations: [VNBarcodeObservation] = []
+    var detectBarcodesObservations: [BarcodeObservation] = []
     var error: Error?
     private(set) var lastRequest: VisionRecognizeTextRequest?
     private(set) var lastScanDocumentRequest: VisionScanDocumentRequest?
     private(set) var lastReadQrCodeRequest: VisionReadQrCodeRequest?
+    private(set) var lastDetectBarcodesRequest: VisionDetectBarcodesRequest?
 
     func recognizeText(request: VisionRecognizeTextRequest) throws -> [VNRecognizedTextObservation] {
         lastRequest = request
@@ -32,6 +34,14 @@ final class MockVisionStore: VisionStoreing {
         if let error {
             throw error
         }
-        return barcodeObservations
+        return readQrCodeObservations
+    }
+
+    func detectBarcodes(request: VisionDetectBarcodesRequest) throws -> [BarcodeObservation] {
+        lastDetectBarcodesRequest = request
+        if let error {
+            throw error
+        }
+        return detectBarcodesObservations
     }
 }
