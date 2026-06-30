@@ -6,6 +6,14 @@ protocol MapKitLocationFetching: AnyObject {
     func requestLocation(completion: @escaping (Result<CLLocation, Error>) -> Void)
 }
 
+@MainActor
+protocol MapKitLocationManaging: AnyObject {
+    var delegate: CLLocationManagerDelegate? { get set }
+    func requestLocation()
+}
+
+extension CLLocationManager: MapKitLocationManaging {}
+
 extension LiveMapKitStore {
     func getCurrentLocation() throws -> CLLocation {
         let result = MapKitSearchFetch.AsyncBridgeResult<CLLocation>()
@@ -66,10 +74,13 @@ final class LocationFetcherRetentionBox: @unchecked Sendable {
 
 @MainActor
 final class OneShotLocationFetcher: NSObject, MapKitLocationFetching, @preconcurrency CLLocationManagerDelegate {
-    private let manager = CLLocationManager()
+    private let manager: any MapKitLocationManaging
     private var completion: ((Result<CLLocation, Error>) -> Void)?
-    override init() {
-        super.init(); manager.delegate = self
+
+    init(locationManager: any MapKitLocationManaging = CLLocationManager()) {
+        manager = locationManager
+        super.init()
+        manager.delegate = self
     }
 
     func requestLocation(completion: @escaping (Result<CLLocation, Error>) -> Void) {
