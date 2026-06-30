@@ -7,8 +7,8 @@ enum VisionDocumentSerialization {
         segmentation: DetectedDocumentObservation?,
         maximumCandidateCount: Int
     ) throws -> [String: Any] {
-        [
-            "results": try observations.map {
+        try [
+            "results": observations.map {
                 try documentObservationJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
             },
             "segmentation": segmentation.map(
@@ -21,14 +21,14 @@ enum VisionDocumentSerialization {
         from observation: DocumentObservation,
         maximumCandidateCount: Int
     ) throws -> [String: Any] {
-        [
+        try [
             "uuid": observation.uuid.uuidString,
             "confidence": observation.confidence,
             "time_range": VisionSerialization.cmTimeRangeJSONObject(from: observation.timeRange),
             "originating_request_descriptor": VisionDocumentObservationSerialization.requestDescriptorJSONObject(
                 from: observation.originatingRequestDescriptor
             ),
-            "document": try documentContainerJSONObject(
+            "document": documentContainerJSONObject(
                 from: observation.document,
                 maximumCandidateCount: maximumCandidateCount
             ),
@@ -39,21 +39,21 @@ enum VisionDocumentSerialization {
         from container: DocumentObservation.Container,
         maximumCandidateCount: Int
     ) throws -> [String: Any] {
-        [
-            "title": try container.title.map {
+        try [
+            "title": container.title.map {
                 try documentTextJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
             } ?? NSNull(),
-            "text": try documentTextJSONObject(from: container.text, maximumCandidateCount: maximumCandidateCount),
-            "paragraphs": try container.paragraphs.map {
+            "text": documentTextJSONObject(from: container.text, maximumCandidateCount: maximumCandidateCount),
+            "paragraphs": container.paragraphs.map {
                 try documentTextJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
             },
-            "tables": try container.tables.map {
+            "tables": container.tables.map {
                 try documentTableJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
             },
-            "lists": try container.lists.map {
+            "lists": container.lists.map {
                 try documentListJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
             },
-            "barcodes": try container.barcodes.map { observation in
+            "barcodes": container.barcodes.map { observation in
                 try VisionDocumentObservationSerialization.barcodeObservationJSONObject(
                     from: observation,
                     boundingRegion: VisionDocumentObservationSerialization.normalizedRegionJSONObject(
@@ -112,12 +112,13 @@ enum VisionDocumentSerialization {
         from table: DocumentObservation.Container.Table,
         maximumCandidateCount: Int
     ) throws -> [String: Any] {
-        [
-            "rows": try table.rows.map { row in
+        try [
+            "rows": table.rows.map { row in
                 try row.map { try documentTableCellJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount) }
             },
-            "columns": try table.columns.map { column in
-                try column.map { try documentTableCellJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount) }
+            "columns": table.columns.map { column in
+                try column
+                    .map { try documentTableCellJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount) }
             },
             "bounding_region": VisionDocumentObservationSerialization.normalizedRegionJSONObject(
                 from: table.boundingRegion
@@ -129,8 +130,8 @@ enum VisionDocumentSerialization {
         from cell: DocumentObservation.Container.Table.Cell,
         maximumCandidateCount: Int
     ) throws -> [String: Any] {
-        [
-            "content": try documentContainerJSONObject(from: cell.content, maximumCandidateCount: maximumCandidateCount),
+        try [
+            "content": documentContainerJSONObject(from: cell.content, maximumCandidateCount: maximumCandidateCount),
             "row_range": closedRangeJSONObject(from: cell.rowRange),
             "column_range": closedRangeJSONObject(from: cell.columnRange),
         ]
@@ -140,8 +141,8 @@ enum VisionDocumentSerialization {
         from list: DocumentObservation.Container.List,
         maximumCandidateCount: Int
     ) throws -> [String: Any] {
-        [
-            "items": try list.items.map {
+        try [
+            "items": list.items.map {
                 try documentListItemJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
             },
             "bounding_region": VisionDocumentObservationSerialization.normalizedRegionJSONObject(
@@ -154,8 +155,8 @@ enum VisionDocumentSerialization {
         from item: DocumentObservation.Container.List.Item,
         maximumCandidateCount: Int
     ) throws -> [String: Any] {
-        [
-            "content": try documentContainerJSONObject(from: item.content, maximumCandidateCount: maximumCandidateCount),
+        try [
+            "content": documentContainerJSONObject(from: item.content, maximumCandidateCount: maximumCandidateCount),
             "marker_type": listMarkerString(from: item.markerType) ?? NSNull(),
             "marker_string": item.markerString,
             "item_string": item.itemString,

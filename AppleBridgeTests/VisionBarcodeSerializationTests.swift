@@ -59,7 +59,8 @@ struct VisionBarcodeSerializationTests {
         let object = try VisionBarcodeSerialization.barcodeObservationJSONObject(from: observation)
         let symbology = try #require(object["symbology"] as? String)
 
-        let identifier = try VisionDocumentObservationSerialization.barcodeSymbologyIdentifier(from: observation.symbology)
+        let identifier = try VisionDocumentObservationSerialization
+            .barcodeSymbologyIdentifier(from: observation.symbology)
         #expect(symbology == identifier)
         #expect(!symbology.contains("(_rawValue:"))
         #expect(!symbology.contains("BarcodeSymbology("))

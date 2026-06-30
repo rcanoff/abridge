@@ -3,8 +3,8 @@ import Vision
 
 enum VisionBarcodeSerialization {
     static func detectBarcodesResponseJSONObject(observations: [BarcodeObservation]) throws -> [String: Any] {
-        [
-            "results": try observations.map(barcodeObservationJSONObject(from:)),
+        try [
+            "results": observations.map(barcodeObservationJSONObject(from:)),
         ]
     }
 

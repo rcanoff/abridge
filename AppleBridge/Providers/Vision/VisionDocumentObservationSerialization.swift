@@ -34,7 +34,7 @@ enum VisionDocumentObservationSerialization {
         from observation: BarcodeObservation,
         boundingRegion: [String: Any]
     ) throws -> [String: Any] {
-        [
+        try [
             "uuid": observation.uuid.uuidString,
             "confidence": observation.confidence,
             "time_range": VisionSerialization.cmTimeRangeJSONObject(from: observation.timeRange),
@@ -47,7 +47,7 @@ enum VisionDocumentObservationSerialization {
             "supplemental_payload_data": base64DataValue(observation.supplementalPayloadData),
             "supplemental_composite_type": compositeTypeString(from: observation.supplementalCompositeType) ?? NSNull(),
             "is_gs1_data_carrier": observation.isGS1DataCarrier,
-            "symbology": try barcodeSymbologyIdentifier(from: observation.symbology),
+            "symbology": barcodeSymbologyIdentifier(from: observation.symbology),
             "is_color_inverted": observation.isColorInverted,
             "top_left": normalizedPointJSONObject(from: observation.topLeft),
             "top_right": normalizedPointJSONObject(from: observation.topRight),
