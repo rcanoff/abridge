@@ -1431,7 +1431,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
             "automatically_detect_language": { "type": "boolean" },
             "recognition_languages": {
               "type": "array",
-              "items": { "type": "string" }
+              "items": { "type": "string", "minLength": 1 }
             },
             "use_language_correction": { "type": "boolean" },
             "custom_words": {
@@ -2770,6 +2770,24 @@ mod tests {
   }
 
   #[test]
+  fn scan_document_schema_requires_non_empty_recognition_languages() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_SCAN_DOCUMENT)
+      .expect("scan_document tool");
+    let schema = input_schema(tool);
+    let min_length = schema
+      .get("properties")
+      .and_then(|properties| properties.get("text_recognition_options"))
+      .and_then(|options| options.get("properties"))
+      .and_then(|properties| properties.get("recognition_languages"))
+      .and_then(|languages| languages.get("items"))
+      .and_then(|items| items.get("minLength"))
+      .and_then(|value| value.as_u64());
+    assert_eq!(min_length, Some(1));
+  }
+
+  #[test]
   fn scan_document_schema_constrains_normalized_region_of_interest() {
     let tool = all_tools()
       .iter()
@@ -2814,8 +2832,12 @@ mod tests {
       .unwrap_or("");
     assert!(description.contains("origin.x + size.width <= 1"));
     assert!(description.contains("origin.y + size.height <= 1"));
-    assert!(!scan_document_region_of_interest_fits_normalized_space(0.6, 0.2, 0.5, 0.5));
-    assert!(scan_document_region_of_interest_fits_normalized_space(0.1, 0.2, 0.5, 0.6));
+    assert!(!scan_document_region_of_interest_fits_normalized_space(
+      0.6, 0.2, 0.5, 0.5
+    ));
+    assert!(scan_document_region_of_interest_fits_normalized_space(
+      0.1, 0.2, 0.5, 0.6
+    ));
   }
 
   fn scan_document_region_of_interest_fits_normalized_space(

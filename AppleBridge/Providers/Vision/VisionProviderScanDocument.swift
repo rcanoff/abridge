@@ -272,13 +272,22 @@ extension VisionProvider {
     }
 
     private func optionalRecognitionLanguagesPayload(in dictionary: [String: Any]) throws -> [[String: Any]]? {
-        guard let languageTags = try optionalStringArrayArgument(in: dictionary, key: "recognition_languages") else {
+        guard let languageTags = try optionalNonEmptyStringArrayArgument(
+            in: dictionary,
+            key: "recognition_languages",
+            label: "text_recognition_options.recognition_languages"
+        ) else {
             return nil
         }
 
-        return languageTags.map { tag in
+        return try languageTags.map { tag in
             let components = tag.split(separator: "-", maxSplits: 1).map(String.init)
-            var languageComponents: [String: String] = ["languageCode": components[0]]
+            guard let languageCode = components.first, !languageCode.isEmpty else {
+                throw VisionProviderError.invalidArguments(
+                    "text_recognition_options.recognition_languages items must be non-empty strings"
+                )
+            }
+            var languageComponents: [String: String] = ["languageCode": languageCode]
             if components.count == 2 {
                 languageComponents["region"] = components[1]
             }
@@ -328,6 +337,21 @@ extension VisionProvider {
                 throw VisionProviderError.invalidArguments("\(key) items must be strings")
             }
             strings.append(string)
+        }
+        return strings
+    }
+
+    private func optionalNonEmptyStringArrayArgument(
+        in dictionary: [String: Any],
+        key: String,
+        label: String
+    ) throws -> [String]? {
+        guard let strings = try optionalStringArrayArgument(in: dictionary, key: key) else {
+            return nil
+        }
+
+        for string in strings where string.isEmpty {
+            throw VisionProviderError.invalidArguments("\(label) items must be non-empty strings")
         }
         return strings
     }

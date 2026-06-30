@@ -174,6 +174,21 @@ struct VisionProviderScanDocumentTests {
 
     @Test
     @MainActor
+    func scanDocumentRejectsEmptyRecognitionLanguage() throws {
+        let provider = VisionProvider(store: MockVisionStore())
+        let imageData = try VisionTestFixtures.sampleTextImageData()
+        let encoded = imageData.base64EncodedString()
+
+        let payloadJson = #"{"image_data":"\#(encoded)","text_recognition_options":{"recognition_languages":[""]}}"#
+        let response = provider.handle(operation: "scan_document", payloadJson: payloadJson)
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("recognition_languages") == true)
+    }
+
+    @Test
+    @MainActor
     func scanDocumentRejectsRegionOfInterestOutsideNormalizedBounds() throws {
         let provider = VisionProvider(store: MockVisionStore())
         let imageData = try VisionTestFixtures.sampleTextImageData()
