@@ -65,7 +65,7 @@ final class LocationFetcherRetentionBox: @unchecked Sendable {
 }
 
 @MainActor
-final class OneShotLocationFetcher: NSObject, MapKitLocationFetching, @preconcurrency CLLocationManagerDelegate {
+class OneShotLocationFetcher: NSObject, MapKitLocationFetching, @preconcurrency CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     private var completion: ((Result<CLLocation, Error>) -> Void)?
     override init() {
