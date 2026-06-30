@@ -1403,6 +1403,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "revision": { "type": "string", "enum": ["revision1"] },
         "region_of_interest": {
           "type": "object",
+          "description": "Normalized crop region. Per-field bounds are 0...1 for origin and (0,1] for size; the rectangle must also satisfy origin.x + size.width <= 1 and origin.y + size.height <= 1.",
           "properties": {
             "origin": {
               "type": "object",
@@ -2796,6 +2797,41 @@ mod tests {
     assert_eq!(number_property_maximum(size, "width"), Some(1.0));
     assert_eq!(number_property_exclusive_minimum(size, "height"), Some(0.0));
     assert_eq!(number_property_maximum(size, "height"), Some(1.0));
+  }
+
+  #[test]
+  fn scan_document_schema_documents_region_of_interest_fit_constraint() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_SCAN_DOCUMENT)
+      .expect("scan_document tool");
+    let schema = input_schema(tool);
+    let description = schema
+      .get("properties")
+      .and_then(|properties| properties.get("region_of_interest"))
+      .and_then(|region| region.get("description"))
+      .and_then(|value| value.as_str())
+      .unwrap_or("");
+    assert!(description.contains("origin.x + size.width <= 1"));
+    assert!(description.contains("origin.y + size.height <= 1"));
+    assert!(!scan_document_region_of_interest_fits_normalized_space(0.6, 0.2, 0.5, 0.5));
+    assert!(scan_document_region_of_interest_fits_normalized_space(0.1, 0.2, 0.5, 0.6));
+  }
+
+  fn scan_document_region_of_interest_fits_normalized_space(
+    origin_x: f64,
+    origin_y: f64,
+    width: f64,
+    height: f64,
+  ) -> bool {
+    (0.0..=1.0).contains(&origin_x)
+      && (0.0..=1.0).contains(&origin_y)
+      && width > 0.0
+      && width <= 1.0
+      && height > 0.0
+      && height <= 1.0
+      && origin_x + width <= 1.0
+      && origin_y + height <= 1.0
   }
 
   #[test]
