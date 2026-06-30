@@ -222,12 +222,12 @@ extension VisionProvider {
             throw VisionProviderError.invalidArguments("region_of_interest requires origin and size")
         }
 
-        let x = try requiredNumber(in: origin, key: "x", label: "region_of_interest.origin.x")
-        let y = try requiredNumber(in: origin, key: "y", label: "region_of_interest.origin.y")
+        let originX = try requiredNumber(in: origin, key: "x", label: "region_of_interest.origin.x")
+        let originY = try requiredNumber(in: origin, key: "y", label: "region_of_interest.origin.y")
         let width = try requiredNumber(in: size, key: "width", label: "region_of_interest.size.width")
         let height = try requiredNumber(in: size, key: "height", label: "region_of_interest.size.height")
 
-        return CGRect(x: x, y: y, width: width, height: height)
+        return CGRect(x: originX, y: originY, width: width, height: height)
     }
 
     private func optionalMaxCandidateCountArgument(in dictionary: [String: Any]) throws -> Int {
