@@ -45,6 +45,13 @@ struct LiveMapKitStoreGetCurrentLocationTests {
 
     @Test
     @MainActor
+    func getCurrentLocationUsesDefaultOneShotLocationFetcherFactory() {
+        let store = LiveMapKitStore()
+        #expect(store.makeLocationFetcher() is OneShotLocationFetcher)
+    }
+
+    @Test
+    @MainActor
     func getCurrentLocationTimesOutWhenFetcherNeverCompletes() {
         let fetcher = DeferredLocationFetcher()
         var store = LiveMapKitStore()
