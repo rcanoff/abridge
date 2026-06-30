@@ -47,7 +47,7 @@ enum VisionDocumentObservationSerialization {
             "supplemental_payload_data": base64DataValue(observation.supplementalPayloadData),
             "supplemental_composite_type": compositeTypeString(from: observation.supplementalCompositeType) ?? NSNull(),
             "is_gs1_data_carrier": observation.isGS1DataCarrier,
-            "symbology": String(describing: observation.symbology),
+            "symbology": barcodeSymbologyIdentifier(from: observation.symbology),
             "is_color_inverted": observation.isColorInverted,
             "top_left": normalizedPointJSONObject(from: observation.topLeft),
             "top_right": normalizedPointJSONObject(from: observation.topRight),
@@ -229,6 +229,17 @@ enum VisionDocumentObservationSerialization {
         case nil: nil
         @unknown default: nil
         }
+    }
+
+    static func barcodeSymbologyIdentifier(from symbology: BarcodeSymbology) -> String {
+        guard
+            let data = try? JSONEncoder().encode(symbology),
+            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let identifier = object.keys.first
+        else {
+            preconditionFailure("Failed to serialize BarcodeSymbology")
+        }
+        return identifier
     }
 
     private static func compositeTypeString(from type: BarcodeObservation.CompositeType?) -> String? {

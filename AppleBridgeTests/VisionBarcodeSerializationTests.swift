@@ -49,4 +49,19 @@ struct VisionBarcodeSerializationTests {
             #expect(object.keys.contains(key), "Missing barcode observation key: \(key)")
         }
     }
+
+    @Test
+    @MainActor
+    func barcodeObservationSymbologyUsesRawValue() throws {
+        let observations = try VisionTestFixtures.sampleBarcodeObservations()
+        let observation = try #require(observations.first)
+
+        let object = VisionBarcodeSerialization.barcodeObservationJSONObject(from: observation)
+        let symbology = try #require(object["symbology"] as? String)
+
+        #expect(symbology == VisionDocumentObservationSerialization.barcodeSymbologyIdentifier(from: observation.symbology))
+        #expect(!symbology.contains("(_rawValue:"))
+        #expect(!symbology.contains("BarcodeSymbology("))
+        #expect(symbology == "qr")
+    }
 }
