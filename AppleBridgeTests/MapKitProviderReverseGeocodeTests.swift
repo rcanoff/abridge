@@ -31,8 +31,7 @@ struct MapKitProviderReverseGeocodeTests {
     @Test
     @MainActor
     func reverseGeocodeReturnsSerializedResponse() throws {
-        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
-        let item = MKMapItem(placemark: placemark)
+        let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
         item.name = "1 Apple Park Way"
         let store = MockMapKitStore()
         store.reverseGeocodeResults = [[item]]

@@ -54,14 +54,15 @@ struct MapKitProviderOpenNavigationTests {
 
     @MainActor
     private func makeSerializedNavigationStore() -> MockMapKitStore {
-        let sourcePlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
-        let destinationPlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(
+        let sourceItem = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
+            latitude: 37.3346,
+            longitude: -122.0090
+        ))
+        sourceItem.name = "Navigation Source"
+        let destinationItem = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
             latitude: 37.7749,
             longitude: -122.4194
         ))
-        let sourceItem = MKMapItem(placemark: sourcePlacemark)
-        sourceItem.name = "Navigation Source"
-        let destinationItem = MKMapItem(placemark: destinationPlacemark)
         destinationItem.name = "Navigation Destination"
 
         let store = MockMapKitStore()

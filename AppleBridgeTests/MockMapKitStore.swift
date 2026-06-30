@@ -48,11 +48,9 @@ final class MockMapKitStore: MapKitStoreing {
     func calculateRoute(request: MapKitCalculateRouteRequest) throws -> MapKitCalculateRouteResult {
         lastCalculateRouteRequest = request
         if let first = calculateRouteResults.first { return first }
-        let sourcePlacemark = MKPlacemark(coordinate: request.source.coordinate)
-        let destinationPlacemark = MKPlacemark(coordinate: request.destination.coordinate)
         return MapKitCalculateRouteResult(
-            source: MKMapItem(placemark: sourcePlacemark),
-            destination: MKMapItem(placemark: destinationPlacemark),
+            source: MapKitTestFixtures.mapItem(coordinate: request.source.coordinate),
+            destination: MapKitTestFixtures.mapItem(coordinate: request.destination.coordinate),
             routes: []
         )
     }
@@ -70,12 +68,10 @@ final class MockMapKitStore: MapKitStoreing {
             return first
         }
 
-        let sourcePlacemark = MKPlacemark(coordinate: request.source.coordinate)
-        let destinationPlacemark = MKPlacemark(coordinate: request.destination.coordinate)
         let now = Date(timeIntervalSince1970: 1_718_000_000)
         return MapKitEstimateTravelTimeResult(
-            source: MKMapItem(placemark: sourcePlacemark),
-            destination: MKMapItem(placemark: destinationPlacemark),
+            source: MapKitTestFixtures.mapItem(coordinate: request.source.coordinate),
+            destination: MapKitTestFixtures.mapItem(coordinate: request.destination.coordinate),
             expectedTravelTime: 0,
             distance: 0,
             expectedArrivalDate: now,
@@ -90,8 +86,7 @@ final class MockMapKitStore: MapKitStoreing {
             return first
         }
 
-        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 0, longitude: 0))
-        return MKMapItem(placemark: placemark)
+        return MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(latitude: 0, longitude: 0))
     }
 
     func openNavigation(request: MapKitOpenNavigationRequest) throws -> MapKitOpenNavigationResult {
@@ -100,11 +95,9 @@ final class MockMapKitStore: MapKitStoreing {
             return first
         }
 
-        let sourcePlacemark = MKPlacemark(coordinate: request.source.coordinate)
-        let destinationPlacemark = MKPlacemark(coordinate: request.destination.coordinate)
         return MapKitOpenNavigationResult(
-            source: MKMapItem(placemark: sourcePlacemark),
-            destination: MKMapItem(placemark: destinationPlacemark),
+            source: MapKitTestFixtures.mapItem(coordinate: request.source.coordinate),
+            destination: MapKitTestFixtures.mapItem(coordinate: request.destination.coordinate),
             transportType: request.transportType,
             directionsMode: nil,
             opened: true

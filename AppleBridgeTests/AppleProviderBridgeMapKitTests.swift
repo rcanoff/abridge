@@ -9,8 +9,7 @@ struct AppleProviderBridgeMapKitTests {
     @Test
     @MainActor
     func callProviderMapKitSearchPlacesSucceedsWithMockStore() throws {
-        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
-        let item = MKMapItem(placemark: placemark)
+        let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
         item.name = "Mock Cafe"
         let store = MockMapKitStore()
         store.authorizationStatus = .authorized
@@ -34,8 +33,7 @@ struct AppleProviderBridgeMapKitTests {
     @Test
     @MainActor
     func callProviderMapKitSearchNearbySucceedsWithMockStore() throws {
-        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
-        let item = MKMapItem(placemark: placemark)
+        let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
         item.name = "Nearby Mock Cafe"
         let store = MockMapKitStore()
         store.authorizationStatus = .authorized
@@ -59,8 +57,7 @@ struct AppleProviderBridgeMapKitTests {
     @Test
     @MainActor
     func callProviderMapKitReverseGeocodeSucceedsWithMockStore() throws {
-        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
-        let item = MKMapItem(placemark: placemark)
+        let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
         item.name = "Reverse Mock Address"
         let store = MockMapKitStore()
         store.authorizationStatus = .authorized
@@ -84,8 +81,10 @@ struct AppleProviderBridgeMapKitTests {
     @Test
     @MainActor
     func callProviderMapKitForwardGeocodeSucceedsWithMockStore() throws {
-        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
-        let item = MKMapItem(placemark: placemark)
+        let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
+            latitude: 37.3346,
+            longitude: -122.0090
+        ))
         item.name = "Forward Mock Address"
         let store = MockMapKitStore()
         store.authorizationStatus = .authorized
@@ -109,14 +108,11 @@ struct AppleProviderBridgeMapKitTests {
     @Test
     @MainActor
     func callProviderMapKitCalculateRouteSucceedsWithMockStore() throws {
-        let sourcePlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
-        let destinationPlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(
-            latitude: 37.7749,
-            longitude: -122.4194
-        ))
-        let sourceItem = MKMapItem(placemark: sourcePlacemark)
+        let sourceCoordinate = CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090)
+        let destinationCoordinate = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194)
+        let sourceItem = MapKitTestFixtures.mapItem(coordinate: sourceCoordinate)
         sourceItem.name = "Route Source"
-        let destinationItem = MKMapItem(placemark: destinationPlacemark)
+        let destinationItem = MapKitTestFixtures.mapItem(coordinate: destinationCoordinate)
         destinationItem.name = "Route Destination"
         let route = MapKitRouteData(
             name: "Mock Route",
@@ -124,7 +120,7 @@ struct AppleProviderBridgeMapKitTests {
             distance: 1000,
             expectedTravelTime: 600,
             transportType: .automobile,
-            polylineCoordinates: [sourcePlacemark.coordinate, destinationPlacemark.coordinate],
+            polylineCoordinates: [sourceCoordinate, destinationCoordinate],
             polylineTitle: nil,
             polylineSubtitle: nil,
             steps: [],
@@ -164,14 +160,15 @@ struct AppleProviderBridgeMapKitTests {
     @Test
     @MainActor
     func callProviderMapKitEstimateTravelTimeSucceedsWithMockStore() throws {
-        let sourcePlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
-        let destinationPlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(
+        let sourceItem = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
+            latitude: 37.3346,
+            longitude: -122.0090
+        ))
+        sourceItem.name = "ETA Source"
+        let destinationItem = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
             latitude: 37.7749,
             longitude: -122.4194
         ))
-        let sourceItem = MKMapItem(placemark: sourcePlacemark)
-        sourceItem.name = "ETA Source"
-        let destinationItem = MKMapItem(placemark: destinationPlacemark)
         destinationItem.name = "ETA Destination"
         let departureDate = Date(timeIntervalSince1970: 1_718_000_000)
         let store = MockMapKitStore()
@@ -213,8 +210,10 @@ struct AppleProviderBridgeMapKitTests {
     @Test
     @MainActor
     func callProviderMapKitLookupPlaceSucceedsWithMockStore() throws {
-        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
-        let item = MKMapItem(placemark: placemark)
+        let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
+            latitude: 37.3346,
+            longitude: -122.0090
+        ))
         item.name = "Bridge Lookup Place"
         let store = MockMapKitStore()
         store.authorizationStatus = .authorized
@@ -237,14 +236,15 @@ struct AppleProviderBridgeMapKitTests {
     @Test
     @MainActor
     func callProviderMapKitOpenNavigationSucceedsWithMockStore() throws {
-        let sourcePlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090))
-        let destinationPlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(
+        let sourceItem = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
+            latitude: 37.3346,
+            longitude: -122.0090
+        ))
+        sourceItem.name = "Navigation Source"
+        let destinationItem = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
             latitude: 37.7749,
             longitude: -122.4194
         ))
-        let sourceItem = MKMapItem(placemark: sourcePlacemark)
-        sourceItem.name = "Navigation Source"
-        let destinationItem = MKMapItem(placemark: destinationPlacemark)
         destinationItem.name = "Navigation Destination"
         let store = MockMapKitStore()
         store.authorizationStatus = .authorized

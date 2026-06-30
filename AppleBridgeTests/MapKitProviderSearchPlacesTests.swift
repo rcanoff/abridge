@@ -72,8 +72,7 @@ struct MapKitProviderSearchPlacesTests {
     @Test
     @MainActor
     func searchPlacesReturnsSerializedResponse() throws {
-        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
-        let item = MKMapItem(placemark: placemark)
+        let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
         item.name = "Mock Cafe"
         let store = MockMapKitStore()
         store.results = [MapKitSearchResult(mapItems: [item], boundingRegion: nil)]
