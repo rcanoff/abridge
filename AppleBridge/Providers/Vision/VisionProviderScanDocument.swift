@@ -137,12 +137,34 @@ extension VisionProvider {
             throw VisionProviderError.invalidArguments("region_of_interest requires origin and size")
         }
 
-        let originX = try requiredNumber(in: origin, key: "x", label: "region_of_interest.origin.x")
-        let originY = try requiredNumber(in: origin, key: "y", label: "region_of_interest.origin.y")
-        let width = try requiredNumber(in: size, key: "width", label: "region_of_interest.size.width")
-        let height = try requiredNumber(in: size, key: "height", label: "region_of_interest.size.height")
+        let originX = try requiredDouble(in: origin, key: "x", label: "region_of_interest.origin.x")
+        let originY = try requiredDouble(in: origin, key: "y", label: "region_of_interest.origin.y")
+        let width = try requiredDouble(in: size, key: "width", label: "region_of_interest.size.width")
+        let height = try requiredDouble(in: size, key: "height", label: "region_of_interest.size.height")
 
-        return NormalizedRect(x: Double(originX), y: Double(originY), width: Double(width), height: Double(height))
+        return try validatedNormalizedRect(x: originX, y: originY, width: width, height: height)
+    }
+
+    private func validatedNormalizedRect(
+        x: Double,
+        y: Double,
+        width: Double,
+        height: Double
+    ) throws -> NormalizedRect {
+        guard (0 ... 1).contains(x), (0 ... 1).contains(y) else {
+            throw VisionProviderError.invalidArguments("region_of_interest origin x and y must be between 0 and 1")
+        }
+        guard width > 0, width <= 1, height > 0, height <= 1 else {
+            throw VisionProviderError.invalidArguments(
+                "region_of_interest size width and height must be greater than 0 and at most 1"
+            )
+        }
+        guard x + width <= 1, y + height <= 1 else {
+            throw VisionProviderError.invalidArguments(
+                "region_of_interest must fit within the normalized coordinate space"
+            )
+        }
+        return NormalizedRect(x: x, y: y, width: width, height: height)
     }
 
     private func optionalTextRecognitionOptionsArgument(
@@ -155,13 +177,41 @@ extension VisionProvider {
             throw VisionProviderError.invalidArguments("text_recognition_options must be an object or null")
         }
 
-        var visionOptions = options
-        visionOptions.removeValue(forKey: "maximum_candidate_count")
-        guard !visionOptions.isEmpty else { return nil }
+        var payload = try defaultTextRecognitionOptionsPayload()
+        var hasOverride = false
 
+        if let minimumTextHeightFraction = try optionalNonNegativeDoubleArgument(
+            in: options,
+            key: "minimum_text_height_fraction",
+            label: "text_recognition_options.minimum_text_height_fraction"
+        ) {
+            payload["minimumTextHeightFraction"] = minimumTextHeightFraction
+            hasOverride = true
+        }
+        if let automaticallyDetectLanguage = try optionalBoolArgument(
+            in: options,
+            key: "automatically_detect_language"
+        ) {
+            payload["automaticallyDetectLanguage"] = automaticallyDetectLanguage
+            hasOverride = true
+        }
+        if let recognitionLanguages = try optionalRecognitionLanguagesPayload(in: options) {
+            payload["recognitionLanguages"] = recognitionLanguages
+            hasOverride = true
+        }
+        if let useLanguageCorrection = try optionalBoolArgument(in: options, key: "use_language_correction") {
+            payload["useLanguageCorrection"] = useLanguageCorrection
+            hasOverride = true
+        }
+        if let customWords = try optionalStringArrayArgument(in: options, key: "custom_words") {
+            payload["customWords"] = customWords
+            hasOverride = true
+        }
+
+        guard hasOverride else { return nil }
         return try decodeVisionRequestOptions(
             RecognizeDocumentsRequest.TextRecognitionOptions.self,
-            from: visionOptions,
+            from: payload,
             label: "text_recognition_options"
         )
     }
@@ -176,11 +226,110 @@ extension VisionProvider {
             throw VisionProviderError.invalidArguments("barcode_detection_options must be an object or null")
         }
 
+        var payload = try defaultBarcodeDetectionOptionsPayload()
+        var hasOverride = false
+
+        if let enabled = try optionalBoolArgument(in: options, key: "enabled") {
+            payload["enabled"] = enabled
+            hasOverride = true
+        }
+        if let symbologies = try optionalStringArrayArgument(in: options, key: "symbologies") {
+            payload["symbologies"] = symbologies.map { [$0: [:]] as [String: [String: String]] }
+            hasOverride = true
+        }
+        if let coalesceCompositeSymbologies = try optionalBoolArgument(
+            in: options,
+            key: "coalesce_composite_symbologies"
+        ) {
+            payload["coalesceCompositeSymbologies"] = coalesceCompositeSymbologies
+            hasOverride = true
+        }
+
+        guard hasOverride else { return nil }
         return try decodeVisionRequestOptions(
             RecognizeDocumentsRequest.BarcodeDetectionOptions.self,
-            from: options,
+            from: payload,
             label: "barcode_detection_options"
         )
+    }
+
+    private func defaultBarcodeDetectionOptionsPayload() throws -> [String: Any] {
+        let request = RecognizeDocumentsRequest()
+        let data = try JSONEncoder().encode(request.barcodeDetectionOptions)
+        guard let payload = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw VisionProviderError.invalidArguments("barcode_detection_options is invalid")
+        }
+        return payload
+    }
+
+    private func defaultTextRecognitionOptionsPayload() throws -> [String: Any] {
+        let request = RecognizeDocumentsRequest()
+        let data = try JSONEncoder().encode(request.textRecognitionOptions)
+        guard let payload = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw VisionProviderError.invalidArguments("text_recognition_options is invalid")
+        }
+        return payload
+    }
+
+    private func optionalRecognitionLanguagesPayload(in dictionary: [String: Any]) throws -> [[String: Any]]? {
+        guard let languageTags = try optionalStringArrayArgument(in: dictionary, key: "recognition_languages") else {
+            return nil
+        }
+
+        return languageTags.map { tag in
+            let components = tag.split(separator: "-", maxSplits: 1).map(String.init)
+            var languageComponents: [String: String] = ["languageCode": components[0]]
+            if components.count == 2 {
+                languageComponents["region"] = components[1]
+            }
+            return ["components": languageComponents]
+        }
+    }
+
+    private func optionalNonNegativeDoubleArgument(
+        in dictionary: [String: Any],
+        key: String,
+        label: String
+    ) throws -> Double? {
+        guard dictionary.keys.contains(key) else { return nil }
+        if dictionary[key] is NSNull { return nil }
+
+        let value: Double
+        switch dictionary[key] {
+        case let number as Double:
+            value = number
+        case let number as Int:
+            value = Double(number)
+        default:
+            throw VisionProviderError.invalidArguments("\(label) must be a number or null")
+        }
+
+        guard value >= 0 else {
+            throw VisionProviderError.invalidArguments("\(label) must be greater than or equal to 0")
+        }
+        return value
+    }
+
+    private func optionalStringArrayArgument(
+        in dictionary: [String: Any],
+        key: String
+    ) throws -> [String]? {
+        guard dictionary.keys.contains(key) else { return nil }
+        if dictionary[key] is NSNull { return nil }
+
+        guard let values = dictionary[key] as? [Any] else {
+            throw VisionProviderError.invalidArguments("\(key) must be an array or null")
+        }
+
+        var strings: [String] = []
+        strings.reserveCapacity(values.count)
+        for value in values {
+            guard let string = value as? String else {
+                throw VisionProviderError.invalidArguments("\(key) items must be strings")
+            }
+            strings.append(string)
+        }
+        return strings
     }
 
     private func optionalBoolArgument(in dictionary: [String: Any], key: String) throws -> Bool? {
@@ -223,12 +372,12 @@ extension VisionProvider {
         return value
     }
 
-    private func requiredNumber(in dictionary: [String: Any], key: String, label: String) throws -> CGFloat {
+    private func requiredDouble(in dictionary: [String: Any], key: String, label: String) throws -> Double {
         switch dictionary[key] {
         case let value as Double:
-            return CGFloat(value)
+            return value
         case let value as Int:
-            return CGFloat(value)
+            return Double(value)
         default:
             throw VisionProviderError.invalidArguments("\(label) must be a number")
         }
@@ -240,10 +389,8 @@ extension VisionProvider {
         label: String
     ) throws -> T {
         let data = try JSONSerialization.data(withJSONObject: dictionary)
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
         do {
-            return try decoder.decode(type, from: data)
+            return try JSONDecoder().decode(type, from: data)
         } catch {
             throw VisionProviderError.invalidArguments("\(label) is invalid: \(error.localizedDescription)")
         }

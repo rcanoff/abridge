@@ -1407,16 +1407,16 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
             "origin": {
               "type": "object",
               "properties": {
-                "x": { "type": "number" },
-                "y": { "type": "number" }
+                "x": { "type": "number", "minimum": 0, "maximum": 1 },
+                "y": { "type": "number", "minimum": 0, "maximum": 1 }
               },
               "required": ["x", "y"]
             },
             "size": {
               "type": "object",
               "properties": {
-                "width": { "type": "number" },
-                "height": { "type": "number" }
+                "width": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+                "height": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
               },
               "required": ["width", "height"]
             }
@@ -2317,6 +2317,30 @@ mod tests {
       .unwrap_or_default()
   }
 
+  fn number_property_minimum(schema: &serde_json::Value, property: &str) -> Option<f64> {
+    schema
+      .get("properties")
+      .and_then(|properties| properties.get(property))
+      .and_then(|property_schema| property_schema.get("minimum"))
+      .and_then(|value| value.as_f64())
+  }
+
+  fn number_property_maximum(schema: &serde_json::Value, property: &str) -> Option<f64> {
+    schema
+      .get("properties")
+      .and_then(|properties| properties.get(property))
+      .and_then(|property_schema| property_schema.get("maximum"))
+      .and_then(|value| value.as_f64())
+  }
+
+  fn number_property_exclusive_minimum(schema: &serde_json::Value, property: &str) -> Option<f64> {
+    schema
+      .get("properties")
+      .and_then(|properties| properties.get(property))
+      .and_then(|property_schema| property_schema.get("exclusiveMinimum"))
+      .and_then(|value| value.as_f64())
+  }
+
   fn string_property_min_length(schema: &serde_json::Value, property: &str) -> Option<u64> {
     schema
       .get("properties")
@@ -2742,6 +2766,36 @@ mod tests {
       .expect("scan_document tool");
     let schema = input_schema(tool);
     assert_eq!(string_property_min_length(&schema, "image_data"), Some(1));
+  }
+
+  #[test]
+  fn scan_document_schema_constrains_normalized_region_of_interest() {
+    let tool = all_tools()
+      .iter()
+      .find(|tool| tool.name == TOOL_SCAN_DOCUMENT)
+      .expect("scan_document tool");
+    let schema = input_schema(tool);
+    let region = schema
+      .get("properties")
+      .and_then(|properties| properties.get("region_of_interest"))
+      .expect("region_of_interest schema");
+    let origin = region
+      .get("properties")
+      .and_then(|properties| properties.get("origin"))
+      .expect("origin schema");
+    let size = region
+      .get("properties")
+      .and_then(|properties| properties.get("size"))
+      .expect("size schema");
+
+    assert_eq!(number_property_minimum(origin, "x"), Some(0.0));
+    assert_eq!(number_property_maximum(origin, "x"), Some(1.0));
+    assert_eq!(number_property_minimum(origin, "y"), Some(0.0));
+    assert_eq!(number_property_maximum(origin, "y"), Some(1.0));
+    assert_eq!(number_property_exclusive_minimum(size, "width"), Some(0.0));
+    assert_eq!(number_property_maximum(size, "width"), Some(1.0));
+    assert_eq!(number_property_exclusive_minimum(size, "height"), Some(0.0));
+    assert_eq!(number_property_maximum(size, "height"), Some(1.0));
   }
 
   #[test]

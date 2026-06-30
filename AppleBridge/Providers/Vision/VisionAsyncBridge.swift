@@ -35,24 +35,73 @@ enum VisionAsyncBridge {
         }
     }
 
-    static func waitForCompletion(
-        operation: String,
-        timeout: TimeInterval = defaultTimeout,
-        work: (@escaping () -> Void) -> Void
-    ) throws {
-        var done = false
-        work {
+    private final class CompletionBox: @unchecked Sendable {
+        private let lock = NSLock()
+        private var done = false
+        private var task: Task<Void, Never>?
+
+        func setTask(_ task: Task<Void, Never>) {
+            lock.lock()
+            defer { lock.unlock() }
+            self.task = task
+        }
+
+        func markDone() {
+            lock.lock()
+            defer { lock.unlock() }
             done = true
         }
 
+        func isDone() -> Bool {
+            lock.lock()
+            defer { lock.unlock() }
+            return done
+        }
+
+        func cancelTask() {
+            lock.lock()
+            defer { lock.unlock() }
+            task?.cancel()
+        }
+    }
+
+    static func perform<T>(
+        operation: String,
+        timeout: TimeInterval = defaultTimeout,
+        work: @Sendable @escaping () async throws -> T
+    ) throws -> T {
+        let result = AsyncBridgeResult<T>()
+        let completion = CompletionBox()
+
+        DispatchQueue.main.async {
+            let asyncTask = Task {
+                defer { completion.markDone() }
+                do {
+                    try Task.checkCancellation()
+                    let value = try await work()
+                    try Task.checkCancellation()
+                    result.setValue(value)
+                } catch is CancellationError {
+                    return
+                } catch {
+                    guard !Task.isCancelled else { return }
+                    result.setError(error)
+                }
+            }
+            completion.setTask(asyncTask)
+        }
+
         let deadline = Date().addingTimeInterval(timeout)
-        while !done, Date() < deadline {
+        while !completion.isDone(), Date() < deadline {
             pumpRunLoop(for: runLoopInterval)
         }
 
-        guard done else {
+        if !completion.isDone() {
+            completion.cancelTask()
             throw VisionProviderError.visionError("\(operation) timed out")
         }
+
+        return try result.get()
     }
 
     static func pumpRunLoop(for interval: TimeInterval) {
