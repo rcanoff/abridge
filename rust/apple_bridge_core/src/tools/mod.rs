@@ -173,7 +173,7 @@ const ALL_TOOLS: [ToolDefinition; 57] = [
     capability: capabilities::EVENTKIT_REMINDERS_SEARCH,
     provider: "eventkit",
     operation: "search_reminders",
-    description: "Search reminders with completion, due-date, and calendar filters",
+    description: "Fetch reminders via EventKit predicates only (no free-text search): completion_status incomplete → predicateForIncompleteReminders(withDueDateStarting:ending:calendars:); completed → predicateForCompletedReminders(withCompletionDateStarting:ending:calendars:); all → predicateForReminders(in:). Optional calendar_identifier scopes calendars. due_date_starting/due_date_ending only with incomplete; completion_date_starting/completion_date_ending only with completed; all has no date window in EventKit.",
   },
   ToolDefinition {
     name: TOOL_CREATE_REMINDER,
@@ -1002,13 +1002,35 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_SEARCH_REMINDERS => serde_json::json!({
       "type": "object",
       "properties": {
-        "calendar_identifier": { "type": "string" },
+        "calendar_identifier": {
+          "type": "string",
+          "description": "Optional reminder calendar identifier; when omitted, all reminder calendars are passed to the EventKit predicate"
+        },
         "completion_status": {
           "type": "string",
-          "enum": ["incomplete", "completed", "all"]
+          "enum": ["incomplete", "completed", "all"],
+          "description": "Selects which EventKit predicate API is used: incomplete, completed, or all (predicateForReminders). Defaults to all when omitted."
         },
-        "due_date_start": { "type": "string", "format": "date-time" },
-        "due_date_end": { "type": "string", "format": "date-time" }
+        "due_date_starting": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Maps to withDueDateStarting on predicateForIncompleteReminders; only valid when completion_status is incomplete"
+        },
+        "due_date_ending": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Maps to ending (due date) on predicateForIncompleteReminders; only valid when completion_status is incomplete"
+        },
+        "completion_date_starting": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Maps to withCompletionDateStarting on predicateForCompletedReminders; only valid when completion_status is completed"
+        },
+        "completion_date_ending": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Maps to ending (completion date) on predicateForCompletedReminders; only valid when completion_status is completed"
+        }
       }
     }),
     TOOL_CREATE_REMINDER => serde_json::json!({

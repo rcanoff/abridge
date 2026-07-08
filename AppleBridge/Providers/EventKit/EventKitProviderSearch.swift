@@ -8,11 +8,18 @@ extension EventKitProvider {
         case all
     }
 
+    /// Arguments map 1:1 onto EventKit reminder predicates (no post-fetch filtering).
+    ///
+    /// - `incomplete` → `predicateForIncompleteReminders(withDueDateStarting:ending:calendars:)`
+    /// - `completed` → `predicateForCompletedReminders(withCompletionDateStarting:ending:calendars:)`
+    /// - `all` → `predicateForReminders(in:)` (EventKit has no date window for this API)
     struct SearchRemindersArguments {
         let calendarIdentifier: String?
         let completionStatus: ReminderCompletionStatus
-        let dueDateStart: Date?
-        let dueDateEnd: Date?
+        let dueDateStarting: Date?
+        let dueDateEnding: Date?
+        let completionDateStarting: Date?
+        let completionDateEnding: Date?
     }
 
     func searchReminders(payloadJson: String) -> ProviderResponse {
@@ -24,8 +31,7 @@ extension EventKitProvider {
             let arguments = try parseSearchRemindersArguments(payloadJson)
             let calendars = try reminderCalendars(calendarIdentifier: arguments.calendarIdentifier)
             let predicate = searchPredicate(for: arguments, calendars: calendars)
-            var reminders = try store.fetchReminders(matching: predicate)
-            reminders = applyPostFetchFilters(to: reminders, arguments: arguments)
+            let reminders = try store.fetchReminders(matching: predicate)
             let payloadObjects = reminders.map(EventKitSerialization.reminderJSONObject)
             let payload = try EventKitSerialization.jsonString(from: payloadObjects)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
@@ -62,19 +68,17 @@ extension EventKitProvider {
         for arguments: SearchRemindersArguments,
         calendars: [EKCalendar]
     ) -> NSPredicate {
-        let hasDueDates = arguments.dueDateStart != nil || arguments.dueDateEnd != nil
-
         switch arguments.completionStatus {
         case .incomplete:
             return store.predicateForIncompleteReminders(
-                withDueDateStarting: hasDueDates ? arguments.dueDateStart : nil,
-                ending: hasDueDates ? arguments.dueDateEnd : nil,
+                withDueDateStarting: arguments.dueDateStarting,
+                ending: arguments.dueDateEnding,
                 calendars: calendars
             )
         case .completed:
             return store.predicateForCompletedReminders(
-                withCompletionDateStarting: nil,
-                ending: nil,
+                withCompletionDateStarting: arguments.completionDateStarting,
+                ending: arguments.completionDateEnding,
                 calendars: calendars
             )
         case .all:
@@ -82,45 +86,15 @@ extension EventKitProvider {
         }
     }
 
-    private func applyPostFetchFilters(
-        to reminders: [EKReminder],
-        arguments: SearchRemindersArguments
-    ) -> [EKReminder] {
-        var filtered = reminders
-
-        let hasDueDates = arguments.dueDateStart != nil || arguments.dueDateEnd != nil
-        if hasDueDates, arguments.completionStatus == .all || arguments.completionStatus == .completed {
-            filtered = filtered.filter { reminder in
-                guard let dueDate = dueDate(from: reminder.dueDateComponents) else {
-                    return false
-                }
-                if let start = arguments.dueDateStart, dueDate < start {
-                    return false
-                }
-                if let end = arguments.dueDateEnd, dueDate > end {
-                    return false
-                }
-                return true
-            }
-        }
-
-        return filtered
-    }
-
-    private func dueDate(from components: DateComponents?) -> Date? {
-        guard let components else {
-            return nil
-        }
-        return Calendar.current.date(from: components)
-    }
-
     private func parseSearchRemindersArguments(_ payloadJson: String) throws -> SearchRemindersArguments {
         guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return SearchRemindersArguments(
                 calendarIdentifier: nil,
                 completionStatus: .all,
-                dueDateStart: nil,
-                dueDateEnd: nil
+                dueDateStarting: nil,
+                dueDateEnding: nil,
+                completionDateStarting: nil,
+                completionDateEnding: nil
             )
         }
 
@@ -132,19 +106,78 @@ extension EventKitProvider {
 
         let calendarIdentifier = try optionalStringArgument(named: "calendar_identifier", in: dictionary)
         let completionStatus = try parseCompletionStatusArgument(in: dictionary)
-        let dueDateStart = try optionalISO8601DateArgument(named: "due_date_start", in: dictionary)
-        let dueDateEnd = try optionalISO8601DateArgument(named: "due_date_end", in: dictionary)
+        let dueDateStarting = try optionalISO8601DateArgument(named: "due_date_starting", in: dictionary)
+        let dueDateEnding = try optionalISO8601DateArgument(named: "due_date_ending", in: dictionary)
+        let completionDateStarting = try optionalISO8601DateArgument(
+            named: "completion_date_starting",
+            in: dictionary
+        )
+        let completionDateEnding = try optionalISO8601DateArgument(
+            named: "completion_date_ending",
+            in: dictionary
+        )
 
-        if let dueDateStart, let dueDateEnd, dueDateStart > dueDateEnd {
-            throw EventKitProviderError.invalidArguments("due_date_start must not be after due_date_end")
+        if let dueDateStarting, let dueDateEnding, dueDateStarting > dueDateEnding {
+            throw EventKitProviderError.invalidArguments(
+                "due_date_starting must not be after due_date_ending"
+            )
         }
+        if let completionDateStarting, let completionDateEnding,
+           completionDateStarting > completionDateEnding
+        {
+            throw EventKitProviderError.invalidArguments(
+                "completion_date_starting must not be after completion_date_ending"
+            )
+        }
+
+        try validateDateArgsForCompletionStatus(
+            completionStatus: completionStatus,
+            dueDateStarting: dueDateStarting,
+            dueDateEnding: dueDateEnding,
+            completionDateStarting: completionDateStarting,
+            completionDateEnding: completionDateEnding
+        )
 
         return SearchRemindersArguments(
             calendarIdentifier: calendarIdentifier,
             completionStatus: completionStatus,
-            dueDateStart: dueDateStart,
-            dueDateEnd: dueDateEnd
+            dueDateStarting: dueDateStarting,
+            dueDateEnding: dueDateEnding,
+            completionDateStarting: completionDateStarting,
+            completionDateEnding: completionDateEnding
         )
+    }
+
+    private func validateDateArgsForCompletionStatus(
+        completionStatus: ReminderCompletionStatus,
+        dueDateStarting: Date?,
+        dueDateEnding: Date?,
+        completionDateStarting: Date?,
+        completionDateEnding: Date?
+    ) throws {
+        let hasDueDates = dueDateStarting != nil || dueDateEnding != nil
+        let hasCompletionDates = completionDateStarting != nil || completionDateEnding != nil
+
+        switch completionStatus {
+        case .incomplete:
+            if hasCompletionDates {
+                throw EventKitProviderError.invalidArguments(
+                    "completion_date_starting/completion_date_ending apply only when completion_status is completed (EventKit withCompletionDateStarting/ending)"
+                )
+            }
+        case .completed:
+            if hasDueDates {
+                throw EventKitProviderError.invalidArguments(
+                    "due_date_starting/due_date_ending apply only when completion_status is incomplete (EventKit withDueDateStarting/ending)"
+                )
+            }
+        case .all:
+            if hasDueDates || hasCompletionDates {
+                throw EventKitProviderError.invalidArguments(
+                    "completion_status all maps to predicateForReminders(in:) which has no date window in EventKit; omit due_date_* and completion_date_* arguments"
+                )
+            }
+        }
     }
 
     private func parseCompletionStatusArgument(in dictionary: [String: Any]) throws -> ReminderCompletionStatus {
