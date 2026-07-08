@@ -11,14 +11,14 @@ struct EventKitProviderRecurrenceTests {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
         mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-recurrence")]
-        mockStore.reminders = [
-            EventKitTestSupport.makeReminder(
-                calendarItemIdentifier: "rem-recurrence-1",
-                calendarIdentifier: "list-recurrence",
-                title: "Recurring task",
-                notes: "unchanged"
-            ),
-        ]
+        let reminder = EventKitTestSupport.makeReminder(
+            calendarItemIdentifier: "rem-recurrence-1",
+            calendarIdentifier: "list-recurrence",
+            title: "Recurring task",
+            notes: "unchanged"
+        )
+        reminder.dueDateComponents = DateComponents(year: 2026, month: 7, day: 15, hour: 9, minute: 0)
+        mockStore.reminders = [reminder]
         let provider = EventKitProvider(store: mockStore)
 
         let payload =
@@ -63,6 +63,33 @@ struct EventKitProviderRecurrenceTests {
         #expect(response.payloadJson.contains("Clear recurrence"))
         #expect(mockStore.reminders.count == 1)
         #expect((mockStore.reminders[0].recurrenceRules ?? []).isEmpty)
+    }
+
+    @Test
+    @MainActor
+    func setReminderRecurrenceWithoutDueDateSurfacesEventKitConstraint() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-no-due")]
+        mockStore.reminders = [
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: "rem-no-due",
+                calendarIdentifier: "list-no-due",
+                title: "No due date"
+            ),
+        ]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "set_reminder_recurrence",
+            payloadJson: #"{"calendar_item_identifier":"rem-no-due","recurrence_rules":[{"frequency":"weekly"}]}"#
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("A repeating reminder must have a due date.") == true)
+        // Must not invent dueDateComponents to make save succeed
+        let due = mockStore.reminders[0].dueDateComponents
+        #expect(due == nil || (due?.year == nil && due?.month == nil && due?.day == nil))
     }
 
     @Test
