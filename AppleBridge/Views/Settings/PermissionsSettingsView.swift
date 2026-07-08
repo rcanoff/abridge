@@ -259,9 +259,9 @@ struct PermissionsSettingsView: View {
         let current = OSAccessGrantSnapshot(from: appStore)
         let becameAuthorized =
             (!previousOSGrants.reminders && current.reminders && permissionsStore.requiresAppleRemindersAccess)
-            || (!previousOSGrants.events && current.events && permissionsStore.requiresCalendarAccess)
-            || (!previousOSGrants.contacts && current.contacts && permissionsStore.requiresAppleContactsAccess)
-            || (!previousOSGrants.location && current.location && permissionsStore.requiresAppleLocationAccess)
+                || (!previousOSGrants.events && current.events && permissionsStore.requiresCalendarAccess)
+                || (!previousOSGrants.contacts && current.contacts && permissionsStore.requiresAppleContactsAccess)
+                || (!previousOSGrants.location && current.location && permissionsStore.requiresAppleLocationAccess)
         previousOSGrants = current
         guard becameAuthorized else { return }
         applyAfterMutation()
