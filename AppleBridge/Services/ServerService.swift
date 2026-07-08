@@ -81,8 +81,13 @@ actor ServerService: ServerServing {
                 host: host,
                 port: port,
                 bearerToken: token,
+                // Capability allowlist gates tools; providers must be registered for tools that
+                // declare them (eventkit, contacts, mapkit, vision, diagnostics).
                 enabledProviders: [
                     ProviderConfig(name: "eventkit", enabled: true),
+                    ProviderConfig(name: "contacts", enabled: true),
+                    ProviderConfig(name: "mapkit", enabled: true),
+                    ProviderConfig(name: "vision", enabled: true),
                     ProviderConfig(name: "diagnostics", enabled: true),
                 ],
                 enabledCapabilities: enabledCapabilities
