@@ -88,4 +88,55 @@ final class PermissionsStore {
                 || CapabilityCatalog.eventsCapabilities.contains { $0.id == id && $0.shipped }
         }
     }
+
+    func shippedCapabilityIDs(for kind: ProviderPermissionKind) -> [String] {
+        switch kind {
+        case .reminders:
+            CapabilityCatalog.remindersCapabilities.filter(\.shipped).map(\.id)
+        case .calendarsAndEvents:
+            (
+                CapabilityCatalog.calendarsCapabilities
+                    + CapabilityCatalog.eventsCapabilities
+            )
+            .filter(\.shipped)
+            .map(\.id)
+        case .contacts:
+            CapabilityCatalog.contactsCapabilities.filter(\.shipped).map(\.id)
+        case .mapkit:
+            CapabilityCatalog.mapkitCapabilities.filter(\.shipped).map(\.id)
+        case .vision:
+            CapabilityCatalog.visionCapabilities.filter(\.shipped).map(\.id)
+        }
+    }
+
+    func checkedShippedCount(for kind: ProviderPermissionKind) -> Int {
+        shippedCapabilityIDs(for: kind).filter { checkedCapabilityIDs.contains($0) }.count
+    }
+
+    func masterState(for kind: ProviderPermissionKind) -> ProviderMasterState {
+        let ids = shippedCapabilityIDs(for: kind)
+        return .compute(checked: checkedShippedCount(for: kind), totalShipped: ids.count)
+    }
+
+    func enableAllShipped(for kind: ProviderPermissionKind) {
+        for id in shippedCapabilityIDs(for: kind) {
+            checkedCapabilityIDs.insert(id)
+        }
+        persistCapabilities()
+    }
+
+    func disableAllShipped(for kind: ProviderPermissionKind) {
+        for id in shippedCapabilityIDs(for: kind) {
+            checkedCapabilityIDs.remove(id)
+        }
+        persistCapabilities()
+    }
+
+    func setMasterEnabled(_ enabled: Bool, for kind: ProviderPermissionKind) {
+        if enabled {
+            enableAllShipped(for: kind)
+        } else {
+            disableAllShipped(for: kind)
+        }
+    }
 }
