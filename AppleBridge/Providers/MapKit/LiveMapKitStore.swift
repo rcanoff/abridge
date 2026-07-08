@@ -207,7 +207,8 @@ struct LiveMapKitStore: MapKitStoreing, @unchecked Sendable {
         let result = MapKitSearchFetch.AsyncBridgeResult<[MKMapItem]>()
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit reverse geocode") { complete in
-            Task {
+            // Detached so a main-thread waiter is not blocked behind MainActor Task scheduling.
+            Task.detached {
                 defer { complete() }
                 do {
                     let mapItems = try await mkRequest.mapItems
@@ -234,7 +235,7 @@ struct LiveMapKitStore: MapKitStoreing, @unchecked Sendable {
         let result = MapKitSearchFetch.AsyncBridgeResult<[MKMapItem]>()
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit forward geocode") { complete in
-            Task {
+            Task.detached {
                 defer { complete() }
                 do {
                     let mapItems = try await mkRequest.mapItems
@@ -328,7 +329,7 @@ struct LiveMapKitStore: MapKitStoreing, @unchecked Sendable {
         let result = MapKitSearchFetch.AsyncBridgeResult<MKMapItem>()
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit place lookup") { complete in
-            Task {
+            Task.detached {
                 defer { complete() }
                 do {
                     let mapItem = try await mkRequest.mapItem
