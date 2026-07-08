@@ -70,19 +70,19 @@ extension EventKitProvider {
     ) -> NSPredicate {
         switch arguments.completionStatus {
         case .incomplete:
-            return store.predicateForIncompleteReminders(
+            store.predicateForIncompleteReminders(
                 withDueDateStarting: arguments.dueDateStarting,
                 ending: arguments.dueDateEnding,
                 calendars: calendars
             )
         case .completed:
-            return store.predicateForCompletedReminders(
+            store.predicateForCompletedReminders(
                 withCompletionDateStarting: arguments.completionDateStarting,
                 ending: arguments.completionDateEnding,
                 calendars: calendars
             )
         case .all:
-            return store.predicateForReminders(in: calendars)
+            store.predicateForReminders(in: calendars)
         }
     }
 
