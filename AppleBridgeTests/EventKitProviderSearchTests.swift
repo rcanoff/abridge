@@ -1,7 +1,7 @@
+@testable import AppleBridge
 import EventKit
 import Foundation
 import Testing
-@testable import AppleBridge
 
 @Suite("EventKitProviderSearch")
 struct EventKitProviderSearchTests {
@@ -79,8 +79,9 @@ struct EventKitProviderSearchTests {
         let start = formatter.string(from: startDate)
         let end = formatter.string(from: endDate)
 
-        let payload =
-            #"{"completion_status":"incomplete","due_date_starting":"\#(start)","due_date_ending":"\#(end)"}"#
+        let payload = """
+        {"completion_status":"incomplete","due_date_starting":"\(start)","due_date_ending":"\(end)"}
+        """.trimmingCharacters(in: .whitespacesAndNewlines)
         let response = provider.handle(
             operation: "search_reminders",
             payloadJson: payload
@@ -130,8 +131,9 @@ struct EventKitProviderSearchTests {
         let start = formatter.string(from: startDate)
         let end = formatter.string(from: endDate)
 
-        let payload =
-            #"{"completion_status":"completed","completion_date_starting":"\#(start)","completion_date_ending":"\#(end)"}"#
+        let payload = """
+        {"completion_status":"completed","completion_date_starting":"\(start)","completion_date_ending":"\(end)"}
+        """.trimmingCharacters(in: .whitespacesAndNewlines)
         let response = provider.handle(
             operation: "search_reminders",
             payloadJson: payload
@@ -270,5 +272,4 @@ struct EventKitProviderSearchTests {
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("permission_denied") == true)
     }
-
 }
