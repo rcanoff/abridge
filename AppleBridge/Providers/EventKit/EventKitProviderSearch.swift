@@ -106,45 +106,58 @@ extension EventKitProvider {
 
         let calendarIdentifier = try optionalStringArgument(named: "calendar_identifier", in: dictionary)
         let completionStatus = try parseCompletionStatusArgument(in: dictionary)
-        let dueDateStarting = try optionalISO8601DateArgument(named: "due_date_starting", in: dictionary)
-        let dueDateEnding = try optionalISO8601DateArgument(named: "due_date_ending", in: dictionary)
-        let completionDateStarting = try optionalISO8601DateArgument(
-            named: "completion_date_starting",
-            in: dictionary
-        )
-        let completionDateEnding = try optionalISO8601DateArgument(
-            named: "completion_date_ending",
-            in: dictionary
-        )
-
-        if let dueDateStarting, let dueDateEnding, dueDateStarting > dueDateEnding {
-            throw EventKitProviderError.invalidArguments(
-                "due_date_starting must not be after due_date_ending"
-            )
-        }
-        if let completionDateStarting, let completionDateEnding,
-           completionDateStarting > completionDateEnding
-        {
-            throw EventKitProviderError.invalidArguments(
-                "completion_date_starting must not be after completion_date_ending"
-            )
-        }
-
+        let dates = try parseSearchDateArguments(in: dictionary)
         try validateDateArgsForCompletionStatus(
             completionStatus: completionStatus,
-            dueDateStarting: dueDateStarting,
-            dueDateEnding: dueDateEnding,
-            completionDateStarting: completionDateStarting,
-            completionDateEnding: completionDateEnding
+            dueDateStarting: dates.dueStarting,
+            dueDateEnding: dates.dueEnding,
+            completionDateStarting: dates.completionStarting,
+            completionDateEnding: dates.completionEnding
         )
 
         return SearchRemindersArguments(
             calendarIdentifier: calendarIdentifier,
             completionStatus: completionStatus,
-            dueDateStarting: dueDateStarting,
-            dueDateEnding: dueDateEnding,
-            completionDateStarting: completionDateStarting,
-            completionDateEnding: completionDateEnding
+            dueDateStarting: dates.dueStarting,
+            dueDateEnding: dates.dueEnding,
+            completionDateStarting: dates.completionStarting,
+            completionDateEnding: dates.completionEnding
+        )
+    }
+
+    private struct SearchDateArguments {
+        let dueStarting: Date?
+        let dueEnding: Date?
+        let completionStarting: Date?
+        let completionEnding: Date?
+    }
+
+    private func parseSearchDateArguments(in dictionary: [String: Any]) throws -> SearchDateArguments {
+        let dueStarting = try optionalISO8601DateArgument(named: "due_date_starting", in: dictionary)
+        let dueEnding = try optionalISO8601DateArgument(named: "due_date_ending", in: dictionary)
+        let completionStarting = try optionalISO8601DateArgument(
+            named: "completion_date_starting",
+            in: dictionary
+        )
+        let completionEnding = try optionalISO8601DateArgument(
+            named: "completion_date_ending",
+            in: dictionary
+        )
+        if let dueStarting, let dueEnding, dueStarting > dueEnding {
+            throw EventKitProviderError.invalidArguments(
+                "due_date_starting must not be after due_date_ending"
+            )
+        }
+        if let completionStarting, let completionEnding, completionStarting > completionEnding {
+            throw EventKitProviderError.invalidArguments(
+                "completion_date_starting must not be after completion_date_ending"
+            )
+        }
+        return SearchDateArguments(
+            dueStarting: dueStarting,
+            dueEnding: dueEnding,
+            completionStarting: completionStarting,
+            completionEnding: completionEnding
         )
     }
 
@@ -162,19 +175,22 @@ extension EventKitProvider {
         case .incomplete:
             if hasCompletionDates {
                 throw EventKitProviderError.invalidArguments(
-                    "completion_date_starting/completion_date_ending apply only when completion_status is completed (EventKit withCompletionDateStarting/ending)"
+                    "completion_date_* apply only with completion_status completed "
+                        + "(EventKit withCompletionDateStarting/ending)"
                 )
             }
         case .completed:
             if hasDueDates {
                 throw EventKitProviderError.invalidArguments(
-                    "due_date_starting/due_date_ending apply only when completion_status is incomplete (EventKit withDueDateStarting/ending)"
+                    "due_date_* apply only with completion_status incomplete "
+                        + "(EventKit withDueDateStarting/ending)"
                 )
             }
         case .all:
             if hasDueDates || hasCompletionDates {
                 throw EventKitProviderError.invalidArguments(
-                    "completion_status all maps to predicateForReminders(in:) which has no date window in EventKit; omit due_date_* and completion_date_* arguments"
+                    "completion_status all uses predicateForReminders(in:) with no date window; "
+                        + "omit due_date_* and completion_date_*"
                 )
             }
         }
