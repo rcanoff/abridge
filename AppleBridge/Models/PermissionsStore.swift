@@ -110,10 +110,10 @@ final class PermissionsStore {
     }
 
     func checkedShippedCount(for kind: ProviderPermissionKind) -> Int {
-        shippedCapabilityIDs(for: kind).filter { checkedCapabilityIDs.contains($0) }.count
+        shippedCapabilityIDs(for: kind).count(where: { checkedCapabilityIDs.contains($0) })
     }
 
-    func masterState(for kind: ProviderPermissionKind) -> ProviderMasterState {
+    func enableState(for kind: ProviderPermissionKind) -> ProviderEnableState {
         let ids = shippedCapabilityIDs(for: kind)
         return .compute(checked: checkedShippedCount(for: kind), totalShipped: ids.count)
     }
@@ -132,7 +132,7 @@ final class PermissionsStore {
         persistCapabilities()
     }
 
-    func setMasterEnabled(_ enabled: Bool, for kind: ProviderPermissionKind) {
+    func setProviderEnabled(_ enabled: Bool, for kind: ProviderPermissionKind) {
         if enabled {
             enableAllShipped(for: kind)
         } else {

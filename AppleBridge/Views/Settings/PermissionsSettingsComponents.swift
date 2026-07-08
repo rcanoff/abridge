@@ -1,90 +1,6 @@
 import AppKit
 import SwiftUI
 
-struct RemindersMCPPermissionsGroup: View {
-    let capabilityBinding: (String) -> Binding<Bool>
-
-    var body: some View {
-        Section {
-            ForEach(CapabilityCatalog.remindersCapabilities) { capability in
-                Toggle(capability.label, isOn: capabilityBinding(capability.id))
-            }
-        } header: {
-            Text("Reminders")
-        }
-    }
-}
-
-struct CalendarsMCPPermissionsGroup: View {
-    let capabilityBinding: (String) -> Binding<Bool>
-
-    var body: some View {
-        Section {
-            ForEach(CapabilityCatalog.calendarsCapabilities) { capability in
-                Toggle(capability.label, isOn: capabilityBinding(capability.id))
-            }
-        } header: {
-            Text("Calendars")
-        }
-    }
-}
-
-struct EventsMCPPermissionsGroup: View {
-    let capabilityBinding: (String) -> Binding<Bool>
-
-    var body: some View {
-        Section {
-            ForEach(CapabilityCatalog.eventsCapabilities) { capability in
-                Toggle(capability.label, isOn: capabilityBinding(capability.id))
-            }
-        } header: {
-            Text("Events")
-        }
-    }
-}
-
-struct ContactsMCPPermissionsGroup: View {
-    let capabilityBinding: (String) -> Binding<Bool>
-
-    var body: some View {
-        Section {
-            ForEach(CapabilityCatalog.contactsCapabilities) { capability in
-                Toggle(capability.label, isOn: capabilityBinding(capability.id))
-            }
-        } header: {
-            Text("Contacts")
-        }
-    }
-}
-
-struct MapKitMCPPermissionsGroup: View {
-    let capabilityBinding: (String) -> Binding<Bool>
-
-    var body: some View {
-        Section {
-            ForEach(CapabilityCatalog.mapkitCapabilities) { capability in
-                Toggle(capability.label, isOn: capabilityBinding(capability.id))
-            }
-        } header: {
-            Text("MapKit")
-        }
-    }
-}
-
-struct VisionMCPPermissionsGroup: View {
-    let capabilityBinding: (String) -> Binding<Bool>
-
-    var body: some View {
-        Section {
-            ForEach(CapabilityCatalog.visionCapabilities) { capability in
-                Toggle(capability.label, isOn: capabilityBinding(capability.id))
-            }
-        } header: {
-            Text("Vision")
-        }
-    }
-}
-
 enum SystemSettingsIcon {
     static let image: NSImage = {
         let workspace = NSWorkspace.shared
@@ -97,195 +13,233 @@ enum SystemSettingsIcon {
     }()
 }
 
-struct AppleRemindersPermissionRow: View {
-    let required: Bool
+struct AppleOSAccessActionsRow: View {
+    let title: String
     let granted: Bool
-    let isRequestingPermission: Bool
+    let isDeniedOrRestricted: Bool
+    let isRequesting: Bool
+    let onRequest: () -> Void
     let onOpenSystemSettings: () -> Void
-    let onRequestPermissions: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Reminders Full Access")
-                ApplePermissionAccessStatusLabel(required: required, granted: granted)
+        HStack(spacing: 8) {
+            Button(granted ? "Access granted" : "Request access", action: onRequest)
+                .disabled(granted || isDeniedOrRestricted || isRequesting)
+
+            Button(action: onOpenSystemSettings) {
+                Image(nsImage: SystemSettingsIcon.image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 20, height: 20)
             }
+            .buttonStyle(.borderless)
+            .help("Open System Settings")
+            .accessibilityLabel("Open \(title) System Settings")
+        }
+    }
+}
 
-            Spacer(minLength: 8)
+struct ProviderCapabilityAdvancedSection: View {
+    let groups: [(header: String?, items: [CapabilityDefinition])]
+    let showInactiveFootnote: Bool
+    let capabilityBinding: (String) -> Binding<Bool>
+    let onEnableAll: () -> Void
+    let onDisableAll: () -> Void
 
-            HStack(spacing: 8) {
-                Button("Request Permissions", action: onRequestPermissions)
-                    .buttonStyle(.borderless)
-                    .disabled(granted || isRequestingPermission)
-
-                Button(action: onOpenSystemSettings) {
-                    Image(nsImage: SystemSettingsIcon.image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 20, height: 20)
+    var body: some View {
+        DisclosureGroup("Customize tools…") {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 12) {
+                    Button("Enable all", action: onEnableAll)
+                        .buttonStyle(.borderless)
+                    Button("Disable all", action: onDisableAll)
+                        .buttonStyle(.borderless)
                 }
-                .buttonStyle(.borderless)
-                .accessibilityLabel("Open Reminders System Settings")
-                .help("Open Reminders System Settings")
+
+                ForEach(Array(groups.enumerated()), id: \.offset) { _, group in
+                    if let header = group.header {
+                        Text(header)
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.secondary)
+                            .textCase(.uppercase)
+                            .padding(.top, 4)
+                    }
+
+                    ForEach(group.items) { capability in
+                        Toggle(capability.label, isOn: capabilityBinding(capability.id))
+                    }
+                }
+
+                if showInactiveFootnote {
+                    Text("Saved for MCP; tools stay inactive until macOS access is granted.")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
             }
+            .padding(.top, 6)
+        }
+    }
+}
+
+struct ProviderPermissionsCard: View {
+    let kind: ProviderPermissionKind
+    let status: ProviderPermissionStatus
+    let checkedShippedCount: Int
+    let enableState: ProviderEnableState
+    let osAccessTitle: String?
+    let osAccessStatusLabel: String
+    let osGrantsReadAccess: Bool
+    let osIsDeniedOrRestricted: Bool
+    let isRequesting: Bool
+    let capabilityGroups: [(header: String?, items: [CapabilityDefinition])]
+    let capabilityBinding: (String) -> Binding<Bool>
+    let onEnableChange: (Bool) -> Void
+    let onEnableAll: () -> Void
+    let onDisableAll: () -> Void
+    let onRequestAccess: () -> Void
+    let onOpenSystemSettings: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 16) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(kind.title, systemImage: symbolName)
+                        .font(.headline)
+
+                    statusLine
+
+                    Text(osSummaryText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer(minLength: 8)
+
+                VStack(alignment: .trailing, spacing: 8) {
+                    useWithMCPToggle
+
+                    if kind.needsOSAccess, let osAccessTitle {
+                        AppleOSAccessActionsRow(
+                            title: osAccessTitle,
+                            granted: osGrantsReadAccess,
+                            isDeniedOrRestricted: osIsDeniedOrRestricted,
+                            isRequesting: isRequesting,
+                            onRequest: onRequestAccess,
+                            onOpenSystemSettings: onOpenSystemSettings
+                        )
+                    }
+                }
+            }
+
+            ProviderCapabilityAdvancedSection(
+                groups: capabilityGroups,
+                showInactiveFootnote: showInactiveFootnote,
+                capabilityBinding: capabilityBinding,
+                onEnableAll: onEnableAll,
+                onDisableAll: onDisableAll
+            )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .contain)
     }
-}
 
-struct AppleCalendarsPermissionRow: View {
-    let required: Bool
-    let granted: Bool
-    let isRequestingPermission: Bool
-    let onOpenSystemSettings: () -> Void
-    let onRequestPermissions: () -> Void
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Calendars Full Access")
-                ApplePermissionAccessStatusLabel(required: required, granted: granted)
-            }
-
-            Spacer(minLength: 8)
-
-            HStack(spacing: 8) {
-                Button("Request Permissions", action: onRequestPermissions)
-                    .buttonStyle(.borderless)
-                    .disabled(granted || isRequestingPermission)
-
-                Button(action: onOpenSystemSettings) {
-                    Image(nsImage: SystemSettingsIcon.image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 20, height: 20)
+    private var useWithMCPToggle: some View {
+        HStack(spacing: 8) {
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("Use with MCP")
+                    .font(.subheadline)
+                if enableState == .mixed {
+                    Text("Custom selection")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
-                .buttonStyle(.borderless)
-                .accessibilityLabel("Open Calendars System Settings")
-                .help("Open Calendars System Settings")
             }
+            Toggle("Use with MCP", isOn: useWithMCPBinding)
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .accessibilityLabel("Use with MCP")
+                .accessibilityValue(useWithMCPAccessibilityValue)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .contain)
     }
-}
 
-struct AppleContactsPermissionRow: View {
-    let required: Bool
-    let granted: Bool
-    let isRequestingPermission: Bool
-    let onOpenSystemSettings: () -> Void
-    let onRequestPermissions: () -> Void
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Contacts Access")
-                ApplePermissionAccessStatusLabel(required: required, granted: granted)
-            }
-
-            Spacer(minLength: 8)
-
-            HStack(spacing: 8) {
-                Button("Request Permissions", action: onRequestPermissions)
-                    .buttonStyle(.borderless)
-                    .disabled(granted || isRequestingPermission)
-
-                Button(action: onOpenSystemSettings) {
-                    Image(nsImage: SystemSettingsIcon.image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 20, height: 20)
-                }
-                .buttonStyle(.borderless)
-                .accessibilityLabel("Open Contacts System Settings")
-                .help("Open Contacts System Settings")
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .contain)
-    }
-}
-
-struct AppleLocationPermissionRow: View {
-    let required: Bool
-    let granted: Bool
-    let isRequestingPermission: Bool
-    let onOpenSystemSettings: () -> Void
-    let onRequestPermissions: () -> Void
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Location Access")
-                ApplePermissionAccessStatusLabel(required: required, granted: granted)
-            }
-
-            Spacer(minLength: 8)
-
-            HStack(spacing: 8) {
-                Button("Request Permissions", action: onRequestPermissions)
-                    .buttonStyle(.borderless)
-                    .disabled(granted || isRequestingPermission)
-
-                Button(action: onOpenSystemSettings) {
-                    Image(nsImage: SystemSettingsIcon.image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 20, height: 20)
-                }
-                .buttonStyle(.borderless)
-                .accessibilityLabel("Open Location System Settings")
-                .help("Open Location System Settings")
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .contain)
-    }
-}
-
-struct ApplePermissionAccessStatusLabel: View {
-    let required: Bool
-    let granted: Bool
-
-    var body: some View {
-        HStack(spacing: 0) {
-            Text(presentation.contextLabel)
-                .foregroundStyle(presentation.contextColor)
-            Text(" · ")
+    private var statusLine: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(statusColor)
+                .frame(width: 8, height: 8)
+            Text(status.label)
+                .fontWeight(.semibold)
+                .foregroundStyle(statusColor)
+            Text("·")
                 .foregroundStyle(.secondary)
-            Text(presentation.accessLabel)
-                .foregroundStyle(presentation.accessColor)
+            Text(statusDetail)
+                .foregroundStyle(.secondary)
         }
+        .font(.caption)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityText)
+        .accessibilityLabel("\(status.label). \(statusDetail)")
     }
 
-    private var presentation: Presentation {
-        Presentation(required: required, granted: granted)
+    private var useWithMCPBinding: Binding<Bool> {
+        Binding(
+            get: { enableState != .off },
+            set: { onEnableChange($0) }
+        )
     }
 
-    private var accessibilityText: String {
-        "\(presentation.contextLabel), \(presentation.accessLabel)"
+    private var useWithMCPAccessibilityValue: String {
+        switch enableState {
+        case .off: "Off"
+        case .on: "On"
+        case .mixed: "Mixed"
+        }
     }
 
-    private struct Presentation {
-        let contextLabel: String
-        let accessLabel: String
-        let contextColor: Color
-        let accessColor: Color
+    private var showInactiveFootnote: Bool {
+        checkedShippedCount > 0 && kind.needsOSAccess && !osGrantsReadAccess
+    }
 
-        init(required: Bool, granted: Bool) {
-            contextLabel = required ? "Required" : "Not in use"
-            accessLabel = granted ? "Granted" : "Not granted"
-            contextColor = .secondary
+    private var osSummaryText: String {
+        if kind.needsOSAccess, let osAccessTitle {
+            return "Apple: \(osAccessTitle) — \(osAccessStatusLabel)"
+        }
+        return osAccessStatusLabel
+    }
 
-            if required {
-                accessColor = granted ? .green : .red
-            } else {
-                accessColor = .secondary
+    private var statusDetail: String {
+        switch status {
+        case .notInUse:
+            return "Turn on to expose tools to MCP clients."
+        case .needsAccess:
+            return "Saved for MCP; inactive until macOS access is granted."
+        case .blocked:
+            return "macOS access denied — open System Settings to fix."
+        case .ready:
+            let unit = checkedShippedCount == 1 ? "tool" : "tools"
+            if kind.needsOSAccess {
+                return "\(checkedShippedCount) \(unit) live for MCP."
             }
+            return "\(checkedShippedCount) \(unit) enabled."
+        }
+    }
+
+    private var statusColor: Color {
+        switch status {
+        case .notInUse: .secondary
+        case .needsAccess: .orange
+        case .blocked: .red
+        case .ready: .green
+        }
+    }
+
+    private var symbolName: String {
+        switch kind {
+        case .reminders: "checklist"
+        case .calendarsAndEvents: "calendar"
+        case .contacts: "person.crop.circle"
+        case .mapkit: "mappin.and.ellipse"
+        case .vision: "eye"
         }
     }
 }

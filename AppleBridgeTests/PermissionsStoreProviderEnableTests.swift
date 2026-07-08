@@ -1,9 +1,9 @@
+@testable import AppleBridge
 import Foundation
 import Testing
-@testable import AppleBridge
 
-@Suite("PermissionsStoreProviderMaster")
-struct PermissionsStoreProviderMasterTests {
+@Suite("PermissionsStoreProviderEnable")
+struct PermissionsStoreProviderEnableTests {
     @MainActor
     private func makeStore(suite: String) throws -> (PermissionsStore, UserDefaults) {
         let defaults = try #require(UserDefaults(suiteName: suite))
@@ -14,31 +14,31 @@ struct PermissionsStoreProviderMasterTests {
     @Test
     @MainActor
     func enableAllRemindersChecksEveryShippedID() throws {
-        let (store, _) = try makeStore(suite: "PermissionsStoreProviderMaster.enableAll")
+        let (store, _) = try makeStore(suite: "PermissionsStoreProviderEnable.enableAll")
         store.enableAllShipped(for: .reminders)
         let shipped = CapabilityCatalog.remindersCapabilities.filter(\.shipped).map(\.id)
         for id in shipped {
             #expect(store.checkedCapabilityIDs.contains(id))
         }
-        #expect(store.masterState(for: .reminders) == .on)
+        #expect(store.enableState(for: .reminders) == .on)
         #expect(store.requiresAppleRemindersAccess)
     }
 
     @Test
     @MainActor
     func disableAllRemindersClearsShippedOnly() throws {
-        let (store, _) = try makeStore(suite: "PermissionsStoreProviderMaster.disableAll")
+        let (store, _) = try makeStore(suite: "PermissionsStoreProviderEnable.disableAll")
         store.enableAllShipped(for: .reminders)
         store.enableAllShipped(for: .contacts)
         store.disableAllShipped(for: .reminders)
-        #expect(store.masterState(for: .reminders) == .off)
-        #expect(store.masterState(for: .contacts) == .on)
+        #expect(store.enableState(for: .reminders) == .off)
+        #expect(store.enableState(for: .contacts) == .on)
     }
 
     @Test
     @MainActor
     func calendarsAndEventsSpansBothCatalogs() throws {
-        let (store, _) = try makeStore(suite: "PermissionsStoreProviderMaster.calEvents")
+        let (store, _) = try makeStore(suite: "PermissionsStoreProviderEnable.calEvents")
         store.enableAllShipped(for: .calendarsAndEvents)
         #expect(store.requiresCalendarAccess)
         let cal = CapabilityCatalog.calendarsCapabilities.filter(\.shipped).count
@@ -49,8 +49,8 @@ struct PermissionsStoreProviderMasterTests {
     @Test
     @MainActor
     func mixedWhenPartial() throws {
-        let (store, _) = try makeStore(suite: "PermissionsStoreProviderMaster.mixed")
+        let (store, _) = try makeStore(suite: "PermissionsStoreProviderEnable.mixed")
         store.setChecked(true, for: "read")
-        #expect(store.masterState(for: .reminders) == .mixed)
+        #expect(store.enableState(for: .reminders) == .mixed)
     }
 }

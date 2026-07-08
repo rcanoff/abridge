@@ -36,6 +36,7 @@
 		14226CD8103C108E637CA750 /* VisionProviderRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBC6976ABC8D4502D41CBF /* VisionProviderRouting.swift */; };
 		14EEE63F84E039A033483CF5 /* StalledEventKitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6E8DA79BFB87C1E5EB17DE6 /* StalledEventKitStore.swift */; };
 		15DCFA8BDE7077BA571D3946 /* MapKitProviderEstimateTravelTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = A41C6338982199AEC496DA5A /* MapKitProviderEstimateTravelTime.swift */; };
+		164BBC867EF6D274E59A06E2 /* PermissionsStoreProviderEnableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CD08CE3DAE40B512D6B3BD6 /* PermissionsStoreProviderEnableTests.swift */; };
 		166364FE12D879C775551542 /* MCPSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E21358C562DC754EF1E627 /* MCPSettingsView.swift */; };
 		16E629C5FE2EA7A09A14AB9B /* EventKitProviderUpdateValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A474AA4DA74F6A5010AC742C /* EventKitProviderUpdateValidationTests.swift */; };
 		1733DA4FCE3563644DFD3F96 /* VisionProviderDetectFacesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BED458AC38A8E4DCD207CEE3 /* VisionProviderDetectFacesTests.swift */; };
@@ -89,7 +90,6 @@
 		3F8851FDC8D3A68CDE1A429E /* EventKitProviderListEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACFBEE0223231412B9E7B9ED /* EventKitProviderListEvents.swift */; };
 		40A49CF67208468F10F2F686 /* EventsPermissionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 771729BE30517069205B688E /* EventsPermissionStatusTests.swift */; };
 		411D3C428976905336C0F387 /* MockVisionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B044267435D4629F942B9D6D /* MockVisionStore.swift */; };
-		418DA03E66F88A0C7A6769A8 /* PermissionsStoreProviderMasterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21EF7EA9967CCD21C5BCDEB3 /* PermissionsStoreProviderMasterTests.swift */; };
 		41E7D796EF24A3239CBCD1BA /* EventKitProviderCreateList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BD928B033E86D4CD99874FD /* EventKitProviderCreateList.swift */; };
 		430D89DF4A3CB7C36B948554 /* ContactsProviderLinkContacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 046FE7CE9A79EDD06049F8F4 /* ContactsProviderLinkContacts.swift */; };
 		443320E7C46B01BAAA95E468 /* AppleProviderBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC41FD68BF0BAD78C417BECE /* AppleProviderBridge.swift */; };
@@ -391,7 +391,6 @@
 		20F1D88B31B8CB80294AFECD /* VisionProviderDetectBarcodes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProviderDetectBarcodes.swift; sourceTree = "<group>"; };
 		2129FE8EDB586593AB94360F /* EventKitProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderTests.swift; sourceTree = "<group>"; };
 		2136C2A9047D56A8E55B0828 /* MockMapKitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockMapKitStore.swift; sourceTree = "<group>"; };
-		21EF7EA9967CCD21C5BCDEB3 /* PermissionsStoreProviderMasterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsStoreProviderMasterTests.swift; sourceTree = "<group>"; };
 		23B47919010B7951C8809C18 /* MapKitProviderSearchArguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderSearchArguments.swift; sourceTree = "<group>"; };
 		240D13B144D61AE1B8788964 /* VisionAsyncBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionAsyncBridge.swift; sourceTree = "<group>"; };
 		2480A0E2CA4CA3D0BB12CCA5 /* MockContactsPermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockContactsPermissionService.swift; sourceTree = "<group>"; };
@@ -502,6 +501,7 @@
 		772B92620CCC71A3BCD31E20 /* MockAppleBridgeAppStoreMaker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockAppleBridgeAppStoreMaker.swift; sourceTree = "<group>"; };
 		7781DD70656B544B65554875 /* MockContactsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockContactsStore.swift; sourceTree = "<group>"; };
 		7B4D56A8BE9577545A4ACEF9 /* RemindersPermissionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionServiceTests.swift; sourceTree = "<group>"; };
+		7CD08CE3DAE40B512D6B3BD6 /* PermissionsStoreProviderEnableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsStoreProviderEnableTests.swift; sourceTree = "<group>"; };
 		7DDA92655228AB9984921A7B /* DeveloperSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeveloperSettingsView.swift; sourceTree = "<group>"; };
 		801E768B9113CDD711DD95EF /* ContactsProviderUpdateGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsProviderUpdateGroup.swift; sourceTree = "<group>"; };
 		81A80134291BC796CD15880C /* SingleInstanceChecking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleInstanceChecking.swift; sourceTree = "<group>"; };
@@ -854,7 +854,7 @@
 				B044267435D4629F942B9D6D /* MockVisionStore.swift */,
 				D0B4B00DDB089DF5C1AD807B /* PermissionsStoreContactsTests.swift */,
 				16F1EDF2067BE05FE4B3E0D1 /* PermissionsStoreMapKitTests.swift */,
-				21EF7EA9967CCD21C5BCDEB3 /* PermissionsStoreProviderMasterTests.swift */,
+				7CD08CE3DAE40B512D6B3BD6 /* PermissionsStoreProviderEnableTests.swift */,
 				05D37BAEC8A9B5B70BE008DE /* PermissionsStoreTests.swift */,
 				D353DD3A35BC92BEEB789825 /* PermissionsStoreVisionTests.swift */,
 				6148D470F577320471A166D2 /* ProviderPermissionPresentationTests.swift */,
@@ -1526,7 +1526,7 @@
 				411D3C428976905336C0F387 /* MockVisionStore.swift in Sources */,
 				4D6D05F5C88BA8325CCC8222 /* PermissionsStoreContactsTests.swift in Sources */,
 				9CAF8C50D871F9BCCDC77676 /* PermissionsStoreMapKitTests.swift in Sources */,
-				418DA03E66F88A0C7A6769A8 /* PermissionsStoreProviderMasterTests.swift in Sources */,
+				164BBC867EF6D274E59A06E2 /* PermissionsStoreProviderEnableTests.swift in Sources */,
 				714D4E2C8A4606615A72C4AE /* PermissionsStoreTests.swift in Sources */,
 				657C42579CEB7E3DD43826A6 /* PermissionsStoreVisionTests.swift in Sources */,
 				0FA2E26B1A006491E4A0FEC5 /* ProviderPermissionPresentationTests.swift in Sources */,

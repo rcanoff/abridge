@@ -7,7 +7,9 @@ enum ProviderPermissionKind: String, CaseIterable, Identifiable {
     case mapkit
     case vision
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var title: String {
         switch self {
@@ -53,12 +55,12 @@ enum ProviderPermissionStatus: Equatable {
     }
 }
 
-enum ProviderMasterState: Equatable {
+enum ProviderEnableState: Equatable {
     case off
     case on
     case mixed
 
-    static func compute(checked: Int, totalShipped: Int) -> ProviderMasterState {
+    static func compute(checked: Int, totalShipped: Int) -> ProviderEnableState {
         guard totalShipped > 0 else { return .off }
         if checked <= 0 { return .off }
         if checked >= totalShipped { return .on }
