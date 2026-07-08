@@ -20,7 +20,7 @@ extension EventKitProvider {
             guard let reminder = try store.fetchReminder(withIdentifier: reminderID) else {
                 return errorResponse(
                     code: "invalid_arguments",
-                    message: "Unknown reminder_id: \(reminderID)"
+                    message: "Unknown calendar_item_identifier: \(reminderID)"
                 )
             }
 

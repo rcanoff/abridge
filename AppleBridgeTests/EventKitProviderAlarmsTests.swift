@@ -23,7 +23,7 @@ struct EventKitProviderAlarmsTests {
 
         let response = provider.handle(
             operation: "set_reminder_alarms",
-            payloadJson: #"{"reminder_id":"rem-alarms-1","alarms":[{"relative_offset":-300}]}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-alarms-1","alarms":[{"relative_offset":-300}]}"#
         )
 
         #expect(response.ok == true)
@@ -53,7 +53,7 @@ struct EventKitProviderAlarmsTests {
 
         let response = provider.handle(
             operation: "set_reminder_alarms",
-            payloadJson: #"{"reminder_id":"rem-clear-1","alarms":[]}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-clear-1","alarms":[]}"#
         )
 
         #expect(response.ok == true)
@@ -76,7 +76,7 @@ struct EventKitProviderAlarmsTests {
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("reminder_id is required") == true)
+        #expect(response.errorJson?.contains("calendar_item_identifier is required") == true)
     }
 
     @Test
@@ -88,7 +88,7 @@ struct EventKitProviderAlarmsTests {
 
         let response = provider.handle(
             operation: "set_reminder_alarms",
-            payloadJson: #"{"reminder_id":"rem-1"}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-1"}"#
         )
 
         #expect(response.ok == false)
@@ -105,12 +105,12 @@ struct EventKitProviderAlarmsTests {
 
         let response = provider.handle(
             operation: "set_reminder_alarms",
-            payloadJson: #"{"reminder_id":"missing","alarms":[]}"#
+            payloadJson: #"{"calendar_item_identifier":"missing","alarms":[]}"#
         )
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("Unknown reminder_id") == true)
+        #expect(response.errorJson?.contains("Unknown calendar_item_identifier") == true)
     }
 
     @Test
@@ -122,7 +122,7 @@ struct EventKitProviderAlarmsTests {
 
         let response = provider.handle(
             operation: "set_reminder_alarms",
-            payloadJson: #"{"reminder_id":"rem-1","alarms":[]}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-1","alarms":[]}"#
         )
 
         #expect(response.ok == false)

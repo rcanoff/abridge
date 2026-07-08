@@ -654,7 +654,7 @@ fn tools_call_capability_disabled_without_provider_call() {
 fn tools_call_dispatches_list_reminders() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"eventkit.reminders.list_reminders","arguments":{"list_id":"list-1"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"eventkit.reminders.list_reminders","arguments":{"calendar_identifier":"list-1"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.read".into()]),
@@ -677,7 +677,7 @@ fn tools_call_dispatches_list_reminders() {
 fn tools_call_dispatches_get_reminder() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"eventkit.reminders.get_reminder","arguments":{"reminder_id":"rem-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"eventkit.reminders.get_reminder","arguments":{"calendar_item_identifier":"rem-42"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.read".into()]),
@@ -831,7 +831,7 @@ fn mcp_tools_list_includes_update_reminder_when_edit_capability_enabled() {
 fn tools_call_dispatches_move_reminder() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":20,"method":"tools/call","params":{"name":"eventkit.reminders.move_reminder","arguments":{"reminder_id":"rem-42","calendar_identifier":"list-2"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":20,"method":"tools/call","params":{"name":"eventkit.reminders.move_reminder","arguments":{"calendar_item_identifier":"rem-42","calendar_identifier":"list-2"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.edit".into()]),
@@ -855,7 +855,7 @@ fn tools_call_dispatches_move_reminder() {
 fn tools_call_dispatches_update_reminder() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":19,"method":"tools/call","params":{"name":"eventkit.reminders.update_reminder","arguments":{"reminder_id":"rem-42","title":"Updated title","notes":"2%","priority":4}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":19,"method":"tools/call","params":{"name":"eventkit.reminders.update_reminder","arguments":{"calendar_item_identifier":"rem-42","title":"Updated title","notes":"2%","priority":4}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.edit".into()]),
@@ -901,7 +901,7 @@ fn mcp_tools_list_includes_complete_tools_when_complete_capability_enabled() {
 fn tools_call_dispatches_complete_reminder() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":22,"method":"tools/call","params":{"name":"eventkit.reminders.complete_reminder","arguments":{"reminder_id":"rem-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":22,"method":"tools/call","params":{"name":"eventkit.reminders.complete_reminder","arguments":{"calendar_item_identifier":"rem-42"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.complete".into()]),
@@ -924,7 +924,7 @@ fn tools_call_dispatches_complete_reminder() {
 fn tools_call_dispatches_uncomplete_reminder() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":23,"method":"tools/call","params":{"name":"eventkit.reminders.uncomplete_reminder","arguments":{"reminder_id":"rem-99"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":23,"method":"tools/call","params":{"name":"eventkit.reminders.uncomplete_reminder","arguments":{"calendar_item_identifier":"rem-99"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.complete".into()]),
@@ -971,7 +971,7 @@ fn mcp_tools_list_includes_set_reminder_alarms_when_alarms_capability_enabled() 
 fn tools_call_dispatches_set_reminder_alarms() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":25,"method":"tools/call","params":{"name":"eventkit.reminders.set_reminder_alarms","arguments":{"reminder_id":"rem-42","alarms":[{"relative_offset":-300}]}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":25,"method":"tools/call","params":{"name":"eventkit.reminders.set_reminder_alarms","arguments":{"calendar_item_identifier":"rem-42","alarms":[{"relative_offset":-300}]}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.alarms".into()]),
@@ -1067,7 +1067,7 @@ fn mcp_tools_list_includes_set_reminder_recurrence_when_recurrence_capability_en
 fn tools_call_dispatches_set_reminder_recurrence() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":27,"method":"tools/call","params":{"name":"eventkit.reminders.set_reminder_recurrence","arguments":{"reminder_id":"rem-42","recurrence_rules":[{"frequency":"daily","interval":1}]}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":27,"method":"tools/call","params":{"name":"eventkit.reminders.set_reminder_recurrence","arguments":{"calendar_item_identifier":"rem-42","recurrence_rules":[{"frequency":"daily","interval":1}]}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.recurrence".into()]),
@@ -1251,7 +1251,7 @@ fn mcp_tools_list_includes_delete_reminder_when_delete_capability_enabled() {
 fn tools_call_dispatches_delete_reminder() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":29,"method":"tools/call","params":{"name":"eventkit.reminders.delete_reminder","arguments":{"reminder_id":"rem-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":29,"method":"tools/call","params":{"name":"eventkit.reminders.delete_reminder","arguments":{"calendar_item_identifier":"rem-42"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.delete".into()]),

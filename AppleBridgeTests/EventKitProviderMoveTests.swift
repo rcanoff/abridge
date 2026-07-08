@@ -24,7 +24,7 @@ struct EventKitProviderMoveTests {
 
         let response = provider.handle(
             operation: "move_reminder",
-            payloadJson: #"{"reminder_id":"rem-move-1","calendar_identifier":"list-target"}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-move-1","calendar_identifier":"list-target"}"#
         )
 
         #expect(response.ok == true)
@@ -52,7 +52,7 @@ struct EventKitProviderMoveTests {
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("reminder_id is required") == true)
+        #expect(response.errorJson?.contains("calendar_item_identifier is required") == true)
     }
 
     @Test
@@ -64,7 +64,7 @@ struct EventKitProviderMoveTests {
 
         let response = provider.handle(
             operation: "move_reminder",
-            payloadJson: #"{"reminder_id":"rem-1"}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-1"}"#
         )
 
         #expect(response.ok == false)
@@ -81,12 +81,12 @@ struct EventKitProviderMoveTests {
 
         let response = provider.handle(
             operation: "move_reminder",
-            payloadJson: #"{"reminder_id":"missing","calendar_identifier":"list-target"}"#
+            payloadJson: #"{"calendar_item_identifier":"missing","calendar_identifier":"list-target"}"#
         )
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("Unknown reminder_id") == true)
+        #expect(response.errorJson?.contains("Unknown calendar_item_identifier") == true)
     }
 
     @Test
@@ -106,7 +106,7 @@ struct EventKitProviderMoveTests {
 
         let response = provider.handle(
             operation: "move_reminder",
-            payloadJson: #"{"reminder_id":"rem-bad-cal","calendar_identifier":"missing-list"}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-bad-cal","calendar_identifier":"missing-list"}"#
         )
 
         #expect(response.ok == false)
@@ -123,7 +123,7 @@ struct EventKitProviderMoveTests {
 
         let response = provider.handle(
             operation: "move_reminder",
-            payloadJson: #"{"reminder_id":"rem-1","calendar_identifier":"list-target"}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-1","calendar_identifier":"list-target"}"#
         )
 
         #expect(response.ok == false)

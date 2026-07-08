@@ -159,14 +159,14 @@ const ALL_TOOLS: [ToolDefinition; 57] = [
     capability: capabilities::EVENTKIT_REMINDERS_READ,
     provider: "eventkit",
     operation: "list_reminders",
-    description: "List reminders, optionally filtered by list_id",
+    description: "List reminders, optionally filtered by calendar_identifier",
   },
   ToolDefinition {
     name: TOOL_GET_REMINDER,
     capability: capabilities::EVENTKIT_REMINDERS_READ,
     provider: "eventkit",
     operation: "get_reminder",
-    description: "Get a single reminder by reminder_id",
+    description: "Get a single reminder by calendar_item_identifier",
   },
   ToolDefinition {
     name: TOOL_SEARCH_REMINDERS,
@@ -194,21 +194,21 @@ const ALL_TOOLS: [ToolDefinition; 57] = [
     capability: capabilities::EVENTKIT_REMINDERS_EDIT,
     provider: "eventkit",
     operation: "update_reminder",
-    description: "Update an existing reminder by reminder_id with optional EventKit fields",
+    description: "Update an existing reminder by calendar_item_identifier with optional EventKit fields",
   },
   ToolDefinition {
     name: TOOL_MOVE_REMINDER,
     capability: capabilities::EVENTKIT_REMINDERS_EDIT,
     provider: "eventkit",
     operation: "move_reminder",
-    description: "Move a reminder to another list by reminder_id and target calendar_identifier",
+    description: "Move a reminder to another list by calendar_item_identifier and target calendar_identifier",
   },
   ToolDefinition {
     name: TOOL_DELETE_REMINDER,
     capability: capabilities::EVENTKIT_REMINDERS_DELETE,
     provider: "eventkit",
     operation: "delete_reminder",
-    description: "Delete a reminder by reminder_id",
+    description: "Delete a reminder by calendar_item_identifier",
   },
   ToolDefinition {
     name: TOOL_DELETE_LIST,
@@ -222,21 +222,21 @@ const ALL_TOOLS: [ToolDefinition; 57] = [
     capability: capabilities::EVENTKIT_REMINDERS_COMPLETE,
     provider: "eventkit",
     operation: "complete_reminder",
-    description: "Mark a reminder as completed by reminder_id",
+    description: "Mark a reminder as completed by calendar_item_identifier",
   },
   ToolDefinition {
     name: TOOL_UNCOMPLETE_REMINDER,
     capability: capabilities::EVENTKIT_REMINDERS_COMPLETE,
     provider: "eventkit",
     operation: "uncomplete_reminder",
-    description: "Mark a reminder as incomplete by reminder_id",
+    description: "Mark a reminder as incomplete by calendar_item_identifier",
   },
   ToolDefinition {
     name: TOOL_SET_REMINDER_ALARMS,
     capability: capabilities::EVENTKIT_REMINDERS_ALARMS,
     provider: "eventkit",
     operation: "set_reminder_alarms",
-    description: "Replace a reminder's alarms by reminder_id; pass an empty array to remove all",
+    description: "Replace a reminder's alarms by calendar_item_identifier; pass an empty array to remove all",
   },
   ToolDefinition {
     name: TOOL_SET_EVENT_ALARMS,
@@ -250,7 +250,7 @@ const ALL_TOOLS: [ToolDefinition; 57] = [
     capability: capabilities::EVENTKIT_REMINDERS_RECURRENCE,
     provider: "eventkit",
     operation: "set_reminder_recurrence",
-    description: "Replace a reminder's recurrence rules by reminder_id; pass an empty array to remove all",
+    description: "Replace a reminder's recurrence rules by calendar_item_identifier; pass an empty array to remove all",
   },
   ToolDefinition {
     name: TOOL_SET_EVENT_RECURRENCE,
@@ -989,15 +989,15 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_LIST_REMINDERS => serde_json::json!({
       "type": "object",
       "properties": {
-        "list_id": { "type": "string" }
+        "calendar_identifier": { "type": "string" }
       }
     }),
     TOOL_GET_REMINDER => serde_json::json!({
       "type": "object",
       "properties": {
-        "reminder_id": { "type": "string" }
+        "calendar_item_identifier": { "type": "string" }
       },
-      "required": ["reminder_id"]
+      "required": ["calendar_item_identifier"]
     }),
     TOOL_SEARCH_REMINDERS => serde_json::json!({
       "type": "object",
@@ -1033,7 +1033,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_UPDATE_REMINDER => serde_json::json!({
       "type": "object",
       "properties": {
-        "reminder_id": { "type": "string" },
+        "calendar_item_identifier": { "type": "string" },
         "calendar_identifier": { "type": "string" },
         "title": { "type": "string" },
         "notes": { "type": ["string", "null"] },
@@ -1048,22 +1048,22 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "alarms": alarms_array_schema(true),
         "recurrence_rules": recurrence_rules_array_schema(true)
       },
-      "required": ["reminder_id"]
+      "required": ["calendar_item_identifier"]
     }),
     TOOL_MOVE_REMINDER => serde_json::json!({
       "type": "object",
       "properties": {
-        "reminder_id": { "type": "string" },
+        "calendar_item_identifier": { "type": "string" },
         "calendar_identifier": { "type": "string" }
       },
-      "required": ["reminder_id", "calendar_identifier"]
+      "required": ["calendar_item_identifier", "calendar_identifier"]
     }),
     TOOL_DELETE_REMINDER => serde_json::json!({
       "type": "object",
       "properties": {
-        "reminder_id": { "type": "string" }
+        "calendar_item_identifier": { "type": "string" }
       },
-      "required": ["reminder_id"]
+      "required": ["calendar_item_identifier"]
     }),
     TOOL_DELETE_LIST | TOOL_DELETE_CALENDAR => serde_json::json!({
       "type": "object",
@@ -1075,9 +1075,9 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_COMPLETE_REMINDER | TOOL_UNCOMPLETE_REMINDER => serde_json::json!({
       "type": "object",
       "properties": {
-        "reminder_id": { "type": "string" }
+        "calendar_item_identifier": { "type": "string" }
       },
-      "required": ["reminder_id"]
+      "required": ["calendar_item_identifier"]
     }),
     TOOL_LIST_CONTACTS | TOOL_LIST_GROUPS => serde_json::json!({
       "type": "object",
@@ -1610,10 +1610,10 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_SET_REMINDER_ALARMS => serde_json::json!({
       "type": "object",
       "properties": {
-        "reminder_id": { "type": "string" },
+        "calendar_item_identifier": { "type": "string" },
         "alarms": alarms_array_schema(false)
       },
-      "required": ["reminder_id", "alarms"]
+      "required": ["calendar_item_identifier", "alarms"]
     }),
     TOOL_SET_EVENT_ALARMS => serde_json::json!({
       "type": "object",
@@ -1626,10 +1626,10 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_SET_REMINDER_RECURRENCE => serde_json::json!({
       "type": "object",
       "properties": {
-        "reminder_id": { "type": "string" },
+        "calendar_item_identifier": { "type": "string" },
         "recurrence_rules": recurrence_rules_array_schema(false)
       },
-      "required": ["reminder_id", "recurrence_rules"]
+      "required": ["calendar_item_identifier", "recurrence_rules"]
     }),
     TOOL_SET_EVENT_RECURRENCE => serde_json::json!({
       "type": "object",

@@ -17,7 +17,7 @@ extension EventKitProvider {
             guard let reminder = try store.fetchReminder(withIdentifier: arguments.reminderID) else {
                 return errorResponse(
                     code: "invalid_arguments",
-                    message: "Unknown reminder_id: \(arguments.reminderID)"
+                    message: "Unknown calendar_item_identifier: \(arguments.reminderID)"
                 )
             }
 
@@ -45,7 +45,7 @@ extension EventKitProvider {
 
     private func parseMoveReminderArguments(_ payloadJson: String) throws -> MoveReminderArguments {
         guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("reminder_id is required")
+            throw EventKitProviderError.invalidArguments("calendar_item_identifier is required")
         }
 
         guard let data = payloadJson.data(using: .utf8) else {

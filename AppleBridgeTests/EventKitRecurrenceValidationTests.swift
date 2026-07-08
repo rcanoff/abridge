@@ -26,12 +26,12 @@ struct EventKitRecurrenceValidationTests {
 
         let response = provider.handle(
             operation: "set_reminder_recurrence",
-            payloadJson: #"{"reminder_id":"   ","recurrence_rules":[]}"#
+            payloadJson: #"{"calendar_item_identifier":"   ","recurrence_rules":[]}"#
         )
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("reminder_id must not be empty") == true)
+        #expect(response.errorJson?.contains("calendar_item_identifier must not be empty") == true)
     }
 
     @Test
@@ -42,7 +42,7 @@ struct EventKitRecurrenceValidationTests {
         let response = provider.handle(
             operation: "set_reminder_recurrence",
             payloadJson: """
-            {"reminder_id":"rem-rec-val","recurrence_rules":[{"frequency":"hourly"}]}
+            {"calendar_item_identifier":"rem-rec-val","recurrence_rules":[{"frequency":"hourly"}]}
             """
         )
 
@@ -58,7 +58,7 @@ struct EventKitRecurrenceValidationTests {
 
         let response = provider.handle(
             operation: "set_reminder_recurrence",
-            payloadJson: #"{"reminder_id":"rem-rec-val","recurrence_rules":null}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-rec-val","recurrence_rules":null}"#
         )
 
         #expect(response.ok == false)

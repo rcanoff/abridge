@@ -51,7 +51,7 @@ struct AppleProviderBridgeTests {
         let request = ProviderRequest(
             provider: "eventkit",
             operation: "list_reminders",
-            payloadJson: #"{"list_id":123}"#
+            payloadJson: #"{"calendar_identifier":123}"#
         )
 
         let response = bridge.callProvider(request: request)
@@ -110,7 +110,7 @@ struct AppleProviderBridgeTests {
         let request = ProviderRequest(
             provider: "eventkit",
             operation: "update_reminder",
-            payloadJson: #"{"reminder_id":"r-upd","title":"After"}"#
+            payloadJson: #"{"calendar_item_identifier":"r-upd","title":"After"}"#
         )
         let response = bridge.callProvider(request: request)
         #expect(response.ok == true)
@@ -136,7 +136,7 @@ struct AppleProviderBridgeTests {
         let request = ProviderRequest(
             provider: "eventkit",
             operation: "move_reminder",
-            payloadJson: #"{"reminder_id":"r-move","calendar_identifier":"list-dst"}"#
+            payloadJson: #"{"calendar_item_identifier":"r-move","calendar_identifier":"list-dst"}"#
         )
         let response = bridge.callProvider(request: request)
         #expect(response.ok == true)
@@ -160,7 +160,7 @@ struct AppleProviderBridgeTests {
         let request = ProviderRequest(
             provider: "eventkit",
             operation: "complete_reminder",
-            payloadJson: #"{"reminder_id":"r-done"}"#
+            payloadJson: #"{"calendar_item_identifier":"r-done"}"#
         )
         let response = bridge.callProvider(request: request)
         #expect(response.ok == true)
@@ -184,7 +184,7 @@ struct AppleProviderBridgeTests {
         let request = ProviderRequest(
             provider: "eventkit",
             operation: "set_reminder_alarms",
-            payloadJson: #"{"reminder_id":"r-alarm","alarms":[{"relative_offset":-300}]}"#
+            payloadJson: #"{"calendar_item_identifier":"r-alarm","alarms":[{"relative_offset":-300}]}"#
         )
         let response = bridge.callProvider(request: request)
         #expect(response.ok == true)
@@ -209,7 +209,7 @@ struct AppleProviderBridgeTests {
         let request = ProviderRequest(
             provider: "eventkit",
             operation: "uncomplete_reminder",
-            payloadJson: #"{"reminder_id":"r-reopen"}"#
+            payloadJson: #"{"calendar_item_identifier":"r-reopen"}"#
         )
         let response = bridge.callProvider(request: request)
         #expect(response.ok == true)
@@ -232,7 +232,7 @@ struct AppleProviderBridgeTests {
         let request = ProviderRequest(
             provider: "eventkit",
             operation: "get_reminder",
-            payloadJson: #"{"reminder_id":"r1"}"#
+            payloadJson: #"{"calendar_item_identifier":"r1"}"#
         )
         let response = bridge.callProvider(request: request)
         #expect(response.ok == true)

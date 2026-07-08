@@ -251,8 +251,8 @@ final class EventKitProvider {
         }
 
         do {
-            let listID = try parseListIDArguments(payloadJson)
-            let predicate = try reminderPredicate(listID: listID)
+            let calendarIdentifier = try parseOptionalCalendarIdentifierArguments(payloadJson)
+            let predicate = try reminderPredicate(listID: calendarIdentifier)
             let reminders = try store.fetchReminders(matching: predicate)
             let payloadObjects = reminders.map(EventKitSerialization.reminderJSONObject)
             let payload = try EventKitSerialization.jsonString(from: payloadObjects)
@@ -272,7 +272,10 @@ final class EventKitProvider {
         do {
             let reminderID = try parseReminderIDArguments(payloadJson)
             guard let reminder = try store.fetchReminder(withIdentifier: reminderID) else {
-                return errorResponse(code: "invalid_arguments", message: "Unknown reminder_id: \(reminderID)")
+                return errorResponse(
+                    code: "invalid_arguments",
+                    message: "Unknown calendar_item_identifier: \(reminderID)"
+                )
             }
             let payload = try EventKitSerialization.jsonString(
                 from: EventKitSerialization.reminderJSONObject(from: reminder)
@@ -309,7 +312,7 @@ final class EventKitProvider {
         return dictionary
     }
 
-    private func parseListIDArguments(_ payloadJson: String) throws -> String? {
+    private func parseOptionalCalendarIdentifierArguments(_ payloadJson: String) throws -> String? {
         guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return nil
         }
@@ -320,24 +323,24 @@ final class EventKitProvider {
 
         let dictionary = try parseJSONObject(from: data)
 
-        guard dictionary.keys.contains("list_id") else {
+        guard dictionary.keys.contains("calendar_identifier") else {
             return nil
         }
 
-        if let listID = dictionary["list_id"] as? String {
-            return listID
+        if let calendarIdentifier = dictionary["calendar_identifier"] as? String {
+            return calendarIdentifier
         }
 
-        if dictionary["list_id"] is NSNull {
+        if dictionary["calendar_identifier"] is NSNull {
             return nil
         }
 
-        throw EventKitProviderError.invalidArguments("list_id must be a string or null")
+        throw EventKitProviderError.invalidArguments("calendar_identifier must be a string or null")
     }
 
     func parseReminderIDArguments(_ payloadJson: String) throws -> String {
         guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("reminder_id is required")
+            throw EventKitProviderError.invalidArguments("calendar_item_identifier is required")
         }
 
         guard let data = payloadJson.data(using: .utf8) else {
@@ -346,13 +349,13 @@ final class EventKitProvider {
 
         let dictionary = try parseJSONObject(from: data)
 
-        guard let reminderID = dictionary["reminder_id"] as? String else {
-            throw EventKitProviderError.invalidArguments("reminder_id is required")
+        guard let reminderID = dictionary["calendar_item_identifier"] as? String else {
+            throw EventKitProviderError.invalidArguments("calendar_item_identifier is required")
         }
 
         let trimmed = reminderID.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
-            throw EventKitProviderError.invalidArguments("reminder_id must not be empty")
+            throw EventKitProviderError.invalidArguments("calendar_item_identifier must not be empty")
         }
 
         return reminderID

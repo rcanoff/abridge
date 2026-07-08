@@ -26,7 +26,7 @@ struct EventKitProviderUpdateValidationTests {
 
         let response = provider.handle(
             operation: "update_reminder",
-            payloadJson: #"{"reminder_id":"rem-val","priority":true}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-val","priority":true}"#
         )
 
         #expect(response.ok == false)
@@ -40,7 +40,7 @@ struct EventKitProviderUpdateValidationTests {
 
         let response = provider.handle(
             operation: "update_reminder",
-            payloadJson: #"{"reminder_id":"rem-val","time_zone":"Not/A/Zone"}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-val","time_zone":"Not/A/Zone"}"#
         )
 
         #expect(response.ok == false)
@@ -55,7 +55,7 @@ struct EventKitProviderUpdateValidationTests {
 
         let response = provider.handle(
             operation: "update_reminder",
-            payloadJson: #"{"reminder_id":"rem-val","title":"   "}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-val","title":"   "}"#
         )
 
         #expect(response.ok == false)
@@ -70,7 +70,7 @@ struct EventKitProviderUpdateValidationTests {
 
         let response = provider.handle(
             operation: "update_reminder",
-            payloadJson: #"{"reminder_id":"rem-val","priority":10}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-val","priority":10}"#
         )
 
         #expect(response.ok == false)
@@ -85,7 +85,7 @@ struct EventKitProviderUpdateValidationTests {
 
         let response = provider.handle(
             operation: "update_reminder",
-            payloadJson: #"{"reminder_id":"rem-val","is_completed":null}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-val","is_completed":null}"#
         )
 
         #expect(response.ok == false)
@@ -101,7 +101,7 @@ struct EventKitProviderUpdateValidationTests {
 
         let response = provider.handle(
             operation: "update_reminder",
-            payloadJson: #"{"reminder_id":"rem-val","notes":null}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-val","notes":null}"#
         )
 
         #expect(response.ok == true)

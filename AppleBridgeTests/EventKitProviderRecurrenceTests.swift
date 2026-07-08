@@ -21,9 +21,11 @@ struct EventKitProviderRecurrenceTests {
         ]
         let provider = EventKitProvider(store: mockStore)
 
+        let payload =
+            #"{"calendar_item_identifier":"rem-recurrence-1","recurrence_rules":[{"frequency":"daily","interval":2}]}"#
         let response = provider.handle(
             operation: "set_reminder_recurrence",
-            payloadJson: #"{"reminder_id":"rem-recurrence-1","recurrence_rules":[{"frequency":"daily","interval":2}]}"#
+            payloadJson: payload
         )
 
         #expect(response.ok == true)
@@ -54,7 +56,7 @@ struct EventKitProviderRecurrenceTests {
 
         let response = provider.handle(
             operation: "set_reminder_recurrence",
-            payloadJson: #"{"reminder_id":"rem-clear-recurrence-1","recurrence_rules":[]}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-clear-recurrence-1","recurrence_rules":[]}"#
         )
 
         #expect(response.ok == true)
@@ -77,7 +79,7 @@ struct EventKitProviderRecurrenceTests {
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("reminder_id is required") == true)
+        #expect(response.errorJson?.contains("calendar_item_identifier is required") == true)
     }
 
     @Test
@@ -89,7 +91,7 @@ struct EventKitProviderRecurrenceTests {
 
         let response = provider.handle(
             operation: "set_reminder_recurrence",
-            payloadJson: #"{"reminder_id":"rem-1"}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-1"}"#
         )
 
         #expect(response.ok == false)
@@ -106,12 +108,12 @@ struct EventKitProviderRecurrenceTests {
 
         let response = provider.handle(
             operation: "set_reminder_recurrence",
-            payloadJson: #"{"reminder_id":"missing","recurrence_rules":[]}"#
+            payloadJson: #"{"calendar_item_identifier":"missing","recurrence_rules":[]}"#
         )
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("Unknown reminder_id") == true)
+        #expect(response.errorJson?.contains("Unknown calendar_item_identifier") == true)
     }
 
     @Test
@@ -123,7 +125,7 @@ struct EventKitProviderRecurrenceTests {
 
         let response = provider.handle(
             operation: "set_reminder_recurrence",
-            payloadJson: #"{"reminder_id":"rem-1","recurrence_rules":[]}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-1","recurrence_rules":[]}"#
         )
 
         #expect(response.ok == false)

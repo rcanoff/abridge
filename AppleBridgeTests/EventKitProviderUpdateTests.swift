@@ -22,7 +22,7 @@ struct EventKitProviderUpdateTests {
 
         let response = provider.handle(
             operation: "update_reminder",
-            payloadJson: #"{"reminder_id":"rem-update-1","title":"Updated title"}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-update-1","title":"Updated title"}"#
         )
 
         #expect(response.ok == true)
@@ -50,7 +50,7 @@ struct EventKitProviderUpdateTests {
         let provider = EventKitProvider(store: mockStore)
 
         let payloadJson = """
-        {"reminder_id":"rem-update-2","notes":"Updated notes","priority":3,\
+        {"calendar_item_identifier":"rem-update-2","notes":"Updated notes","priority":3,\
         "due_date_components":{"year":2026,"month":7,"day":1}}
         """
         let response = provider.handle(operation: "update_reminder", payloadJson: payloadJson)
@@ -82,7 +82,7 @@ struct EventKitProviderUpdateTests {
 
         let response = provider.handle(
             operation: "update_reminder",
-            payloadJson: #"{"reminder_id":"rem-move","calendar_identifier":"list-b"}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-move","calendar_identifier":"list-b"}"#
         )
 
         #expect(response.ok == true)
@@ -104,7 +104,7 @@ struct EventKitProviderUpdateTests {
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("reminder_id is required") == true)
+        #expect(response.errorJson?.contains("calendar_item_identifier is required") == true)
     }
 
     @Test
@@ -116,12 +116,12 @@ struct EventKitProviderUpdateTests {
 
         let response = provider.handle(
             operation: "update_reminder",
-            payloadJson: #"{"reminder_id":"missing","title":"Nope"}"#
+            payloadJson: #"{"calendar_item_identifier":"missing","title":"Nope"}"#
         )
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("Unknown reminder_id") == true)
+        #expect(response.errorJson?.contains("Unknown calendar_item_identifier") == true)
     }
 
     @Test
@@ -141,7 +141,7 @@ struct EventKitProviderUpdateTests {
 
         let response = provider.handle(
             operation: "update_reminder",
-            payloadJson: #"{"reminder_id":"rem-bad-cal","calendar_identifier":"missing-list"}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-bad-cal","calendar_identifier":"missing-list"}"#
         )
 
         #expect(response.ok == false)
@@ -158,7 +158,7 @@ struct EventKitProviderUpdateTests {
 
         let response = provider.handle(
             operation: "update_reminder",
-            payloadJson: #"{"reminder_id":"rem-1","title":"Task"}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-1","title":"Task"}"#
         )
 
         #expect(response.ok == false)

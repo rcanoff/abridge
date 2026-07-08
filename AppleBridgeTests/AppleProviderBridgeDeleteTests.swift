@@ -21,7 +21,7 @@ struct AppleProviderBridgeDeleteTests {
         let request = ProviderRequest(
             provider: "eventkit",
             operation: "delete_reminder",
-            payloadJson: #"{"reminder_id":"r-delete"}"#
+            payloadJson: #"{"calendar_item_identifier":"r-delete"}"#
         )
         let response = bridge.callProvider(request: request)
         #expect(response.ok == true)
