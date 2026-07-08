@@ -7,8 +7,9 @@ enum MapKitSearchFetch {
     /// Upper bound for blocking the main actor while MapKit delivers its callback.
     static let defaultTimeout: TimeInterval = 30
 
-    /// Modes pumped while waiting so MapKit callbacks and user-input sources stay serviced.
-    static let runLoopModes: [RunLoop.Mode] = [.default, .eventTracking]
+    /// Modes pumped while waiting so MapKit callbacks, GCD main-queue work, and UI sources stay serviced.
+    /// Include `.common` so sources registered for common modes (typical for modern MapKit) can fire.
+    static let runLoopModes: [RunLoop.Mode] = [.default, .common, .eventTracking]
 
     static let runLoopInterval: TimeInterval = 0.01
 
@@ -53,7 +54,7 @@ enum MapKitSearchFetch {
             done = true
         }
 
-        // MapKit delivers the completion on the main run loop. Pump explicitly on `.main`
+        // MapKit / GCD deliver work on the main run loop. Pump explicitly on `.main`
         // (not `.current`) so this stays correct when called via `DispatchQueue.main.sync`.
         let deadline = Date().addingTimeInterval(timeout)
         while !done, Date() < deadline {
@@ -70,6 +71,34 @@ enum MapKitSearchFetch {
         let perModeInterval = interval / Double(runLoopModes.count)
         for mode in runLoopModes {
             RunLoop.main.run(mode: mode, before: Date(timeIntervalSinceNow: perModeInterval))
+        }
+    }
+
+    /// Schedule work that must progress while `waitForCompletion` blocks the main actor.
+    ///
+    /// Bare `Task { @MainActor in … }` never runs under that wait (MainActor is busy), so
+    /// `complete()` never fires and we hit the 30s timeout. Enqueue on GCD main first so
+    /// run-loop pumping can start the work.
+    static func scheduleOnMainRunLoop(_ body: @escaping @MainActor () -> Void) {
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {
+                body()
+            }
+        }
+    }
+
+    /// Bridge async MapKit APIs while `waitForCompletion` pumps the main run loop.
+    ///
+    /// Hop via GCD main, then start an unstructured `Task` **without** `@MainActor`.
+    /// Annotating the Task with `@MainActor` re-queues the body on the blocked MainActor
+    /// executor and restores the timeout deadlock. Known-good pattern from `lookupPlace`.
+    ///
+    /// Not `@Sendable`: MapKit request objects are non-Sendable and must stay on this path.
+    static func scheduleAsyncBridge(_ body: @escaping () async -> Void) {
+        DispatchQueue.main.async {
+            Task {
+                await body()
+            }
         }
     }
 }
@@ -99,10 +128,13 @@ struct LiveMapKitStore: MapKitStoreing {
         var searchError: Error?
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit search") { complete in
-            search.start { result, error in
-                response = result
-                searchError = error
-                complete()
+            // Start search from the main run loop so callbacks can fire while we pump.
+            MapKitSearchFetch.scheduleOnMainRunLoop {
+                search.start { result, error in
+                    response = result
+                    searchError = error
+                    complete()
+                }
             }
         }
 
@@ -127,10 +159,12 @@ struct LiveMapKitStore: MapKitStoreing {
         var searchError: Error?
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit nearby search") { complete in
-            search.start { result, error in
-                response = result
-                searchError = error
-                complete()
+            MapKitSearchFetch.scheduleOnMainRunLoop {
+                search.start { result, error in
+                    response = result
+                    searchError = error
+                    complete()
+                }
             }
         }
 
@@ -152,27 +186,21 @@ struct LiveMapKitStore: MapKitStoreing {
         guard let mkRequest = MKReverseGeocodingRequest(location: location) else {
             throw MapKitProviderError.mapkitError("MapKit reverse geocode request could not be created")
         }
-        var mapItems: [MKMapItem]?
-        var geocodeError: Error?
+        let result = MapKitSearchFetch.AsyncBridgeResult<[MKMapItem]>()
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit reverse geocode") { complete in
-            Task { @MainActor in
+            MapKitSearchFetch.scheduleAsyncBridge {
                 defer { complete() }
                 do {
-                    mapItems = try await mkRequest.mapItems
+                    let mapItems = try await mkRequest.mapItems
+                    result.setValue(mapItems)
                 } catch {
-                    geocodeError = error
+                    result.setError(error)
                 }
             }
         }
 
-        if let geocodeError {
-            throw geocodeError
-        }
-        guard let mapItems else {
-            throw MapKitProviderError.mapkitError("MapKit reverse geocode returned no response")
-        }
-        return mapItems
+        return try result.get()
     }
 
     func forwardGeocode(request: MapKitForwardGeocodeRequest) throws -> [MKMapItem] {
@@ -185,27 +213,21 @@ struct LiveMapKitStore: MapKitStoreing {
         if let preferredLocale = request.preferredLocale {
             mkRequest.preferredLocale = preferredLocale
         }
-        var mapItems: [MKMapItem]?
-        var geocodeError: Error?
+        let result = MapKitSearchFetch.AsyncBridgeResult<[MKMapItem]>()
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit forward geocode") { complete in
-            Task { @MainActor in
+            MapKitSearchFetch.scheduleAsyncBridge {
                 defer { complete() }
                 do {
-                    mapItems = try await mkRequest.mapItems
+                    let mapItems = try await mkRequest.mapItems
+                    result.setValue(mapItems)
                 } catch {
-                    geocodeError = error
+                    result.setError(error)
                 }
             }
         }
 
-        if let geocodeError {
-            throw geocodeError
-        }
-        guard let mapItems else {
-            throw MapKitProviderError.mapkitError("MapKit forward geocode returned no response")
-        }
-        return mapItems
+        return try result.get()
     }
 
     func calculateRoute(request: MapKitCalculateRouteRequest) throws -> MapKitCalculateRouteResult {
@@ -220,27 +242,25 @@ struct LiveMapKitStore: MapKitStoreing {
         mkRequest.highwayPreference = request.highwayPreference
 
         let directions = MKDirections(request: mkRequest)
-        var response: MKDirections.Response?
-        var directionsError: Error?
+        let result = MapKitSearchFetch.AsyncBridgeResult<MKDirections.Response>()
 
+        // Completion-handler API (not async/await Task) so run-loop pumping delivers work.
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit directions") { complete in
-            Task { @MainActor in
-                defer { complete() }
-                do {
-                    response = try await directions.calculate()
-                } catch {
-                    directionsError = error
+            MapKitSearchFetch.scheduleOnMainRunLoop {
+                directions.calculate { response, error in
+                    if let error {
+                        result.setError(error)
+                    } else if let response {
+                        result.setValue(response)
+                    } else {
+                        result.setError(MapKitProviderError.mapkitError("MapKit directions returned no response"))
+                    }
+                    complete()
                 }
             }
         }
 
-        if let directionsError {
-            throw directionsError
-        }
-        guard let response else {
-            throw MapKitProviderError.mapkitError("MapKit directions returned no response")
-        }
-
+        let response = try result.get()
         return MapKitCalculateRouteResult(
             source: response.source,
             destination: response.destination,
@@ -257,27 +277,24 @@ struct LiveMapKitStore: MapKitStoreing {
         mkRequest.arrivalDate = request.arrivalDate
 
         let directions = MKDirections(request: mkRequest)
-        var response: MKDirections.ETAResponse?
-        var directionsError: Error?
+        let result = MapKitSearchFetch.AsyncBridgeResult<MKDirections.ETAResponse>()
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit ETA") { complete in
-            Task { @MainActor in
-                defer { complete() }
-                do {
-                    response = try await directions.calculateETA()
-                } catch {
-                    directionsError = error
+            MapKitSearchFetch.scheduleOnMainRunLoop {
+                directions.calculateETA { response, error in
+                    if let error {
+                        result.setError(error)
+                    } else if let response {
+                        result.setValue(response)
+                    } else {
+                        result.setError(MapKitProviderError.mapkitError("MapKit ETA returned no response"))
+                    }
+                    complete()
                 }
             }
         }
 
-        if let directionsError {
-            throw directionsError
-        }
-        guard let response else {
-            throw MapKitProviderError.mapkitError("MapKit ETA returned no response")
-        }
-
+        let response = try result.get()
         return MapKitEstimateTravelTimeResult(
             source: response.source,
             destination: response.destination,
@@ -298,16 +315,13 @@ struct LiveMapKitStore: MapKitStoreing {
         let result = MapKitSearchFetch.AsyncBridgeResult<MKMapItem>()
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit place lookup") { complete in
-            // Schedule via GCD so run-loop pumping can deliver work while this @MainActor
-            // method blocks synchronously (Task { @MainActor } alone can deadlock here).
-            DispatchQueue.main.async {
-                Task {
-                    defer { complete() }
-                    do {
-                        try await result.setValue(mkRequest.mapItem)
-                    } catch {
-                        result.setError(error)
-                    }
+            MapKitSearchFetch.scheduleAsyncBridge {
+                defer { complete() }
+                do {
+                    let mapItem = try await mkRequest.mapItem
+                    result.setValue(mapItem)
+                } catch {
+                    result.setError(error)
                 }
             }
         }
