@@ -4,6 +4,19 @@ struct PermissionsSettingsView: View {
     @Bindable var permissionsStore: PermissionsStore
     @Bindable var settingsStore: SettingsStore
     @Bindable var appStore: AppStore
+    /// Previous OS grant flags for external System Settings reconciliation after refresh.
+    @State private var previousOSGrants: OSAccessGrantSnapshot
+
+    init(
+        permissionsStore: PermissionsStore,
+        settingsStore: SettingsStore,
+        appStore: AppStore
+    ) {
+        self.permissionsStore = permissionsStore
+        self.settingsStore = settingsStore
+        self.appStore = appStore
+        _previousOSGrants = State(initialValue: OSAccessGrantSnapshot(from: appStore))
+    }
 
     var body: some View {
         Form {
@@ -25,26 +38,30 @@ struct PermissionsSettingsView: View {
         .formStyle(.grouped)
         .navigationTitle("Permissions")
         .onAppear {
-            appStore.refreshStatus()
             permissionsStore.reloadFromSettings()
+            refreshStatusAndReapplyIfAccessGranted()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            appStore.refreshStatus()
+            refreshStatusAndReapplyIfAccessGranted()
         }
         .onChange(of: appStore.permissionStatus.grantsReadAccess) { _, remindersAuthorized in
             guard remindersAuthorized, permissionsStore.requiresAppleRemindersAccess else { return }
+            previousOSGrants.reminders = true
             applyAfterMutation()
         }
         .onChange(of: appStore.calendarPermissionStatus.grantsReadAccess) { _, eventsAuthorized in
             guard eventsAuthorized, permissionsStore.requiresCalendarAccess else { return }
+            previousOSGrants.events = true
             applyAfterMutation()
         }
         .onChange(of: appStore.contactsPermissionStatus.grantsReadAccess) { _, contactsAuthorized in
             guard contactsAuthorized, permissionsStore.requiresAppleContactsAccess else { return }
+            previousOSGrants.contacts = true
             applyAfterMutation()
         }
         .onChange(of: appStore.locationPermissionStatus.grantsReadAccess) { _, locationAuthorized in
             guard locationAuthorized, permissionsStore.requiresAppleLocationAccess else { return }
+            previousOSGrants.location = true
             applyAfterMutation()
         }
         .safeAreaInset(edge: .bottom) {
@@ -233,6 +250,36 @@ struct PermissionsSettingsView: View {
                 locationAuthorized: appStore.locationPermissionStatus.grantsReadAccess
             )
         }
+    }
+
+    /// Refresh TCC status, then apply saved MCP caps when any required OS access newly became granted
+    /// (e.g. user returned from System Settings). Covers cases where SwiftUI `.onChange` may not fire.
+    private func refreshStatusAndReapplyIfAccessGranted() {
+        appStore.refreshStatus()
+        let current = OSAccessGrantSnapshot(from: appStore)
+        let becameAuthorized =
+            (!previousOSGrants.reminders && current.reminders && permissionsStore.requiresAppleRemindersAccess)
+            || (!previousOSGrants.events && current.events && permissionsStore.requiresCalendarAccess)
+            || (!previousOSGrants.contacts && current.contacts && permissionsStore.requiresAppleContactsAccess)
+            || (!previousOSGrants.location && current.location && permissionsStore.requiresAppleLocationAccess)
+        previousOSGrants = current
+        guard becameAuthorized else { return }
+        applyAfterMutation()
+    }
+}
+
+@MainActor
+private struct OSAccessGrantSnapshot: Equatable {
+    var reminders: Bool
+    var events: Bool
+    var contacts: Bool
+    var location: Bool
+
+    init(from appStore: AppStore) {
+        reminders = appStore.permissionStatus.grantsReadAccess
+        events = appStore.calendarPermissionStatus.grantsReadAccess
+        contacts = appStore.contactsPermissionStatus.grantsReadAccess
+        location = appStore.locationPermissionStatus.grantsReadAccess
     }
 }
 
