@@ -250,7 +250,7 @@ const ALL_TOOLS: [ToolDefinition; 57] = [
     capability: capabilities::EVENTKIT_REMINDERS_RECURRENCE,
     provider: "eventkit",
     operation: "set_reminder_recurrence",
-    description: "Replace a reminder's recurrence rules by calendar_item_identifier; pass an empty array to remove all",
+    description: "Replace EKReminder.recurrenceRules by calendar_item_identifier; pass an empty array to remove all. EventKit requires dueDateComponents on a repeating reminder (Apple: \"A repeating reminder must have a due date.\"); set due_date_components via create_reminder/update_reminder first. This tool does not invent a due date.",
   },
   ToolDefinition {
     name: TOOL_SET_EVENT_RECURRENCE,
@@ -1647,6 +1647,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     }),
     TOOL_SET_REMINDER_RECURRENCE => serde_json::json!({
       "type": "object",
+      "description": "Sets EKReminder.recurrenceRules. Non-empty rules require dueDateComponents first (EventKit constraint); empty array clears rules. Does not invent a due date.",
       "properties": {
         "calendar_item_identifier": { "type": "string" },
         "recurrence_rules": recurrence_rules_array_schema(false)

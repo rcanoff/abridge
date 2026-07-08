@@ -10,13 +10,13 @@ struct AppleProviderBridgeRecurrenceTests {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
         mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-recurrence")]
-        mockStore.reminders = [
-            EventKitTestSupport.makeReminder(
-                calendarItemIdentifier: "r-recurrence",
-                calendarIdentifier: "list-recurrence",
-                title: "Task"
-            ),
-        ]
+        let reminder = EventKitTestSupport.makeReminder(
+            calendarItemIdentifier: "r-recurrence",
+            calendarIdentifier: "list-recurrence",
+            title: "Task"
+        )
+        reminder.dueDateComponents = DateComponents(year: 2026, month: 7, day: 15, hour: 9, minute: 0)
+        mockStore.reminders = [reminder]
         let bridge = AppleProviderBridge(eventKitProvider: EventKitProvider(store: mockStore))
         let request = ProviderRequest(
             provider: "eventkit",

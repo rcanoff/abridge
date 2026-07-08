@@ -143,6 +143,18 @@ final class MockEventKitStore: EventKitStoreing {
     func saveReminder(_ reminder: EKReminder, commit: Bool) throws {
         guard commit else { return }
 
+        // Mirror EventKit: repeating reminders require dueDateComponents with a date.
+        let hasRecurrence = !(reminder.recurrenceRules ?? []).isEmpty
+        let due = reminder.dueDateComponents
+        let hasDueDate = due != nil && (due?.year != nil || due?.month != nil || due?.day != nil)
+        if hasRecurrence, !hasDueDate {
+            throw NSError(
+                domain: "EKErrorDomain",
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "A repeating reminder must have a due date."]
+            )
+        }
+
         let existingID = reminder.calendarItemIdentifier
         if existingID.isEmpty {
             reminder.setValue("mock-rem-\(nextReminderID)", forKey: "calendarItemIdentifier")
