@@ -222,14 +222,14 @@ const ALL_TOOLS: [ToolDefinition; 57] = [
     capability: capabilities::EVENTKIT_REMINDERS_COMPLETE,
     provider: "eventkit",
     operation: "complete_reminder",
-    description: "Mark a reminder as completed by calendar_item_identifier",
+    description: "Set EKReminder.isCompleted = true for calendar_item_identifier (EventKit sets completionDate). Re-fetches after save. For recurring reminders, EventKit advances the series so the obtainable item is typically the next incomplete occurrence (is_completed may be false).",
   },
   ToolDefinition {
     name: TOOL_UNCOMPLETE_REMINDER,
     capability: capabilities::EVENTKIT_REMINDERS_COMPLETE,
     provider: "eventkit",
     operation: "uncomplete_reminder",
-    description: "Mark a reminder as incomplete by calendar_item_identifier",
+    description: "Set EKReminder.isCompleted = false for calendar_item_identifier (EventKit clears completionDate). Re-fetches after save.",
   },
   ToolDefinition {
     name: TOOL_SET_REMINDER_ALARMS,

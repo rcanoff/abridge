@@ -155,6 +155,29 @@ final class MockEventKitStore: EventKitStoreing {
             )
         }
 
+        // Mirror EventKit: completing a recurring reminder advances the series — only the
+        // next incomplete occurrence remains obtainable (isCompleted false, due advances).
+        if hasRecurrence, reminder.isCompleted {
+            reminder.isCompleted = false
+            reminder.completionDate = nil
+            if var components = reminder.dueDateComponents,
+               let current = Calendar.current.date(from: components),
+               let rule = reminder.recurrenceRules?.first
+            {
+                let next = Self.nextOccurrenceDate(after: current, rule: rule) ?? current
+                components = Calendar.current.dateComponents(
+                    [.year, .month, .day, .hour, .minute, .second],
+                    from: next
+                )
+                reminder.dueDateComponents = components
+            }
+        } else if reminder.isCompleted, reminder.completionDate == nil {
+            // EventKit sets completionDate when isCompleted becomes true.
+            reminder.completionDate = Date()
+        } else if !reminder.isCompleted {
+            reminder.completionDate = nil
+        }
+
         let existingID = reminder.calendarItemIdentifier
         if existingID.isEmpty {
             reminder.setValue("mock-rem-\(nextReminderID)", forKey: "calendarItemIdentifier")
@@ -235,6 +258,19 @@ final class MockEventKitStore: EventKitStoreing {
 
     private func isEventCalendar(_ calendar: EKCalendar) -> Bool {
         calendar.allowedEntityTypes.contains(.event) && !calendar.allowedEntityTypes.contains(.reminder)
+    }
+
+    /// Advances due date by the rule's frequency and interval (test double for series advance).
+    private static func nextOccurrenceDate(after current: Date, rule: EKRecurrenceRule) -> Date? {
+        let interval = max(rule.interval, 1)
+        let component: Calendar.Component = switch rule.frequency {
+        case .daily: .day
+        case .weekly: .weekOfYear
+        case .monthly: .month
+        case .yearly: .year
+        @unknown default: .day
+        }
+        return Calendar.current.date(byAdding: component, value: interval, to: current)
     }
 
     func makeTestCalendar(calendarIdentifier: String, title: String = "Test List") -> EKCalendar {
