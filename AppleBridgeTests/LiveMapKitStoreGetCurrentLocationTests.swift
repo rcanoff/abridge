@@ -118,8 +118,7 @@ struct LiveMapKitStoreGetCurrentLocationTests {
     }
 }
 
-@MainActor
-private final class SimulatedLocationManager: MapKitLocationManaging {
+private final class SimulatedLocationManager: MapKitLocationManaging, @unchecked Sendable {
     weak var delegate: CLLocationManagerDelegate?
     var deferredOutcome: Result<CLLocation, Error>?
     var fetcherAliveAtRequest: (() -> Bool)?
@@ -134,12 +133,9 @@ private final class SimulatedLocationManager: MapKitLocationManaging {
         scheduleDelegateDelivery(deferredOutcome)
     }
 
-    private nonisolated func scheduleDelegateDelivery(_ outcome: Result<CLLocation, Error>) {
+    private func scheduleDelegateDelivery(_ outcome: Result<CLLocation, Error>) {
         Timer.scheduledTimer(withTimeInterval: 0.001, repeats: false) { [weak self] _ in
-            guard let self else { return }
-            MainActor.assumeIsolated {
-                self.deliverDelegateOutcome(outcome)
-            }
+            self?.deliverDelegateOutcome(outcome)
         }
     }
 
@@ -157,19 +153,16 @@ private final class SimulatedLocationManager: MapKitLocationManaging {
     }
 }
 
-@MainActor
-private final class DeferredLocationFetcher: MapKitLocationFetching {
+private final class DeferredLocationFetcher: MapKitLocationFetching, @unchecked Sendable {
     var deferredOutcome: Result<CLLocation, Error>?
     private(set) var requestCount = 0
 
     func requestLocation(completion: @escaping (Result<CLLocation, Error>) -> Void) {
         requestCount += 1
-        guard deferredOutcome != nil else { return }
+        guard let deferredOutcome else { return }
 
         Timer.scheduledTimer(withTimeInterval: 0.001, repeats: false) { _ in
-            if let deferredOutcome = self.deferredOutcome {
-                completion(deferredOutcome)
-            }
+            completion(deferredOutcome)
         }
     }
 }

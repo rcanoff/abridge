@@ -48,6 +48,16 @@ enum LiveLocationAuthorization {
     static func authorizationStatus() -> CLAuthorizationStatus {
         manager.authorizationStatus
     }
+
+    /// Safe from any thread (short `main.sync` hop when needed).
+    nonisolated static func authorizationStatusFromAnyThread() -> CLAuthorizationStatus {
+        if Thread.isMainThread {
+            return MainActor.assumeIsolated { authorizationStatus() }
+        }
+        return DispatchQueue.main.sync {
+            MainActor.assumeIsolated { authorizationStatus() }
+        }
+    }
 }
 
 /// Shared location permission service for UI + MapKit MCP gates so both see the same sticky status.
