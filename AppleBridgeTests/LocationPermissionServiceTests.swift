@@ -49,6 +49,43 @@ struct LocationPermissionServiceTests {
 
     @Test
     @MainActor
+    func stickyGrantSurvivesAuthorizedThenNotDeterminedRefreshFlap() async throws {
+        var systemStatus: CLAuthorizationStatus = .notDetermined
+        let service = LocationPermissionService(
+            authorizationStatusProvider: { systemStatus },
+            requestAccessHandler: { .authorized }
+        )
+
+        systemStatus = .authorizedAlways
+        _ = try await service.requestAccess()
+        #expect(service.currentStatus().grantsReadAccess)
+
+        // Mimic the Ready → Needs access flap: system briefly reports authorized (clears old
+        // weak cache patterns), then notDetermined on the next didBecomeActive refresh.
+        systemStatus = .authorizedAlways
+        #expect(service.currentStatus().grantsReadAccess)
+        systemStatus = .notDetermined
+        #expect(service.currentStatus().grantsReadAccess)
+    }
+
+    @Test
+    @MainActor
+    func stickyGrantClearsWhenSystemReportsDenied() async throws {
+        var systemStatus: CLAuthorizationStatus = .authorizedAlways
+        let service = LocationPermissionService(
+            authorizationStatusProvider: { systemStatus },
+            requestAccessHandler: { .authorized }
+        )
+        _ = try await service.requestAccess()
+        #expect(service.currentStatus().grantsReadAccess)
+
+        systemStatus = .denied
+        #expect(service.currentStatus() == .denied)
+        #expect(service.currentStatus().grantsReadAccess == false)
+    }
+
+    @Test
+    @MainActor
     func waitUntilDeterminedTimesOutWhenAuthorizationStaysNotDetermined() async {
         let timeout: TimeInterval = 0.1
         let started = ContinuousClock.now
