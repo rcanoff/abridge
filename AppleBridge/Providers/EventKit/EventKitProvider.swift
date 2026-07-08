@@ -272,7 +272,10 @@ final class EventKitProvider {
         do {
             let reminderID = try parseReminderIDArguments(payloadJson)
             guard let reminder = try store.fetchReminder(withIdentifier: reminderID) else {
-                return errorResponse(code: "invalid_arguments", message: "Unknown calendar_item_identifier: \(reminderID)")
+                return errorResponse(
+                    code: "invalid_arguments",
+                    message: "Unknown calendar_item_identifier: \(reminderID)"
+                )
             }
             let payload = try EventKitSerialization.jsonString(
                 from: EventKitSerialization.reminderJSONObject(from: reminder)
