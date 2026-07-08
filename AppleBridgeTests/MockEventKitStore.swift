@@ -155,6 +155,28 @@ final class MockEventKitStore: EventKitStoreing {
             )
         }
 
+        // Mirror EventKit: completing a recurring reminder advances the series — only the
+        // next incomplete occurrence remains obtainable (isCompleted false, due advances).
+        if hasRecurrence, reminder.isCompleted {
+            reminder.isCompleted = false
+            reminder.completionDate = nil
+            if var components = reminder.dueDateComponents,
+               let current = Calendar.current.date(from: components)
+            {
+                let next = Calendar.current.date(byAdding: .day, value: 1, to: current) ?? current
+                components = Calendar.current.dateComponents(
+                    [.year, .month, .day, .hour, .minute, .second],
+                    from: next
+                )
+                reminder.dueDateComponents = components
+            }
+        } else if reminder.isCompleted, reminder.completionDate == nil {
+            // EventKit sets completionDate when isCompleted becomes true.
+            reminder.completionDate = Date()
+        } else if !reminder.isCompleted {
+            reminder.completionDate = nil
+        }
+
         let existingID = reminder.calendarItemIdentifier
         if existingID.isEmpty {
             reminder.setValue("mock-rem-\(nextReminderID)", forKey: "calendarItemIdentifier")

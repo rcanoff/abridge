@@ -1,4 +1,5 @@
 @testable import AppleBridge
+import EventKit
 import Foundation
 import Testing
 
@@ -67,6 +68,36 @@ struct EventKitProviderCompleteTests {
         #expect(mockStore.reminders.count == 1)
         #expect(mockStore.reminders[0].isCompleted == false)
         #expect(mockStore.reminders[0].completionDate == nil)
+    }
+
+    @Test
+    @MainActor
+    func completeRecurringReminderAdvancesSeriesPerEventKit() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-rec-complete")]
+        let reminder = EventKitTestSupport.makeReminder(
+            calendarItemIdentifier: "rem-rec-complete",
+            calendarIdentifier: "list-rec-complete",
+            title: "Weekly",
+            isCompleted: false
+        )
+        reminder.dueDateComponents = DateComponents(year: 2026, month: 9, day: 1, hour: 9, minute: 0)
+        reminder.recurrenceRules = [EKRecurrenceRule(recurrenceWith: .weekly, interval: 1, end: nil)]
+        mockStore.reminders = [reminder]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "complete_reminder",
+            payloadJson: #"{"calendar_item_identifier":"rem-rec-complete"}"#
+        )
+
+        #expect(response.ok == true)
+        // EventKit: next incomplete occurrence is what remains obtainable
+        #expect(response.payloadJson.contains("\"is_completed\":false"))
+        #expect(mockStore.reminders[0].isCompleted == false)
+        #expect(mockStore.reminders[0].completionDate == nil)
+        #expect(!(mockStore.reminders[0].recurrenceRules ?? []).isEmpty)
     }
 
     @Test
