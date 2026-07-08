@@ -161,9 +161,10 @@ final class MockEventKitStore: EventKitStoreing {
             reminder.isCompleted = false
             reminder.completionDate = nil
             if var components = reminder.dueDateComponents,
-               let current = Calendar.current.date(from: components)
+               let current = Calendar.current.date(from: components),
+               let rule = reminder.recurrenceRules?.first
             {
-                let next = Calendar.current.date(byAdding: .day, value: 1, to: current) ?? current
+                let next = Self.nextOccurrenceDate(after: current, rule: rule) ?? current
                 components = Calendar.current.dateComponents(
                     [.year, .month, .day, .hour, .minute, .second],
                     from: next
@@ -257,6 +258,19 @@ final class MockEventKitStore: EventKitStoreing {
 
     private func isEventCalendar(_ calendar: EKCalendar) -> Bool {
         calendar.allowedEntityTypes.contains(.event) && !calendar.allowedEntityTypes.contains(.reminder)
+    }
+
+    /// Advances due date by the rule's frequency and interval (test double for series advance).
+    private static func nextOccurrenceDate(after current: Date, rule: EKRecurrenceRule) -> Date? {
+        let interval = max(rule.interval, 1)
+        let component: Calendar.Component = switch rule.frequency {
+        case .daily: .day
+        case .weekly: .weekOfYear
+        case .monthly: .month
+        case .yearly: .year
+        @unknown default: .day
+        }
+        return Calendar.current.date(byAdding: component, value: interval, to: current)
     }
 
     func makeTestCalendar(calendarIdentifier: String, title: String = "Test List") -> EKCalendar {

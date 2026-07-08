@@ -98,6 +98,9 @@ struct EventKitProviderCompleteTests {
         #expect(mockStore.reminders[0].isCompleted == false)
         #expect(mockStore.reminders[0].completionDate == nil)
         #expect(!(mockStore.reminders[0].recurrenceRules ?? []).isEmpty)
+        // Weekly interval 1 → due advances by one week
+        #expect(mockStore.reminders[0].dueDateComponents?.day == 8)
+        #expect(mockStore.reminders[0].dueDateComponents?.month == 9)
     }
 
     @Test
