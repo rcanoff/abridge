@@ -21,7 +21,7 @@ struct AppleProviderBridgeRecurrenceTests {
         let request = ProviderRequest(
             provider: "eventkit",
             operation: "set_reminder_recurrence",
-            payloadJson: #"{"reminder_id":"r-recurrence","recurrence_rules":[{"frequency":"daily"}]}"#
+            payloadJson: #"{"calendar_item_identifier":"r-recurrence","recurrence_rules":[{"frequency":"daily"}]}"#
         )
         let response = bridge.callProvider(request: request)
         #expect(response.ok == true)

@@ -26,12 +26,12 @@ struct EventKitProviderCompleteValidationTests {
 
         let response = provider.handle(
             operation: "complete_reminder",
-            payloadJson: #"{"reminder_id":"   "}"#
+            payloadJson: #"{"calendar_item_identifier":"   "}"#
         )
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("reminder_id must not be empty") == true)
+        #expect(response.errorJson?.contains("calendar_item_identifier must not be empty") == true)
     }
 
     @Test
@@ -41,11 +41,11 @@ struct EventKitProviderCompleteValidationTests {
 
         let response = provider.handle(
             operation: "uncomplete_reminder",
-            payloadJson: #"{"reminder_id":"   "}"#
+            payloadJson: #"{"calendar_item_identifier":"   "}"#
         )
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("reminder_id must not be empty") == true)
+        #expect(response.errorJson?.contains("calendar_item_identifier must not be empty") == true)
     }
 }

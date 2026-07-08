@@ -83,7 +83,7 @@ struct EventKitProviderTests {
 
         let response = provider.handle(
             operation: "get_reminder",
-            payloadJson: #"{"reminder_id":"rem-1"}"#
+            payloadJson: #"{"calendar_item_identifier":"rem-1"}"#
         )
 
         #expect(response.ok == true)
@@ -109,12 +109,12 @@ struct EventKitProviderTests {
 
         let response = provider.handle(
             operation: "get_reminder",
-            payloadJson: #"{"reminder_id":" rem-1 "}"#
+            payloadJson: #"{"calendar_item_identifier":" rem-1 "}"#
         )
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("Unknown reminder_id:  rem-1 ") == true)
+        #expect(response.errorJson?.contains("Unknown calendar_item_identifier:  rem-1 ") == true)
     }
 
     @Test
@@ -126,7 +126,7 @@ struct EventKitProviderTests {
 
         let response = provider.handle(
             operation: "get_reminder",
-            payloadJson: #"{"reminder_id":"missing"}"#
+            payloadJson: #"{"calendar_item_identifier":"missing"}"#
         )
 
         #expect(response.ok == false)
@@ -183,7 +183,7 @@ struct EventKitProviderTests {
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("reminder_id is required") == true)
+        #expect(response.errorJson?.contains("calendar_item_identifier is required") == true)
     }
 
     @Test
