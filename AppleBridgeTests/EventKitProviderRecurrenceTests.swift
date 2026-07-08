@@ -21,9 +21,11 @@ struct EventKitProviderRecurrenceTests {
         ]
         let provider = EventKitProvider(store: mockStore)
 
+        let payload =
+            #"{"calendar_item_identifier":"rem-recurrence-1","recurrence_rules":[{"frequency":"daily","interval":2}]}"#
         let response = provider.handle(
             operation: "set_reminder_recurrence",
-            payloadJson: #"{"calendar_item_identifier":"rem-recurrence-1","recurrence_rules":[{"frequency":"daily","interval":2}]}"#
+            payloadJson: payload
         )
 
         #expect(response.ok == true)
