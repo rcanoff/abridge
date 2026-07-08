@@ -109,7 +109,8 @@ struct LiveMapKitStore: MapKitStoreing {
     var locationFetchTimeout: TimeInterval = MapKitSearchFetch.defaultTimeout
 
     func locationAuthorizationStatus() -> CLAuthorizationStatus {
-        CLLocationManager().authorizationStatus
+        // Retained manager — ephemeral instances can flap TCC status under Debug/ad-hoc.
+        LiveLocationAuthorization.authorizationStatus()
     }
 
     func searchPlaces(request: MapKitSearchRequest) throws -> MapKitSearchResult {

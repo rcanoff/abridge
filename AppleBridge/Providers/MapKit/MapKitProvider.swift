@@ -10,19 +10,33 @@ enum MapKitProviderError: Error, Equatable {
 
 @MainActor
 enum LiveMapKitEnvironment {
-    static let sharedProvider = MapKitProvider()
+    /// Uses the same sticky `LocationPermissionService` as Permissions UI / SettingsStore.
+    static let sharedProvider = MapKitProvider(
+        store: LiveMapKitStore(),
+        locationPermissionChecking: LiveLocationPermission.service
+    )
 }
 
 @MainActor
 struct MapKitProvider {
     let store: any MapKitStoreing
+    /// When set (production), MCP location gates match UI sticky reconciliation.
+    /// Tests omit this and fall back to the store's raw `CLAuthorizationStatus`.
+    private let locationPermissionChecking: (any LocationPermissionChecking)?
 
-    init(store: any MapKitStoreing = LiveMapKitStore()) {
+    init(
+        store: any MapKitStoreing = LiveMapKitStore(),
+        locationPermissionChecking: (any LocationPermissionChecking)? = nil
+    ) {
         self.store = store
+        self.locationPermissionChecking = locationPermissionChecking
     }
 
     var isLocationAuthorized: Bool {
-        LocationPermissionStatusMapper.map(store.locationAuthorizationStatus()).grantsReadAccess
+        if let locationPermissionChecking {
+            return locationPermissionChecking.currentStatus().grantsReadAccess
+        }
+        return LocationPermissionStatusMapper.map(store.locationAuthorizationStatus()).grantsReadAccess
     }
 
     func parseJSONObject(from data: Data) throws -> [String: Any] {

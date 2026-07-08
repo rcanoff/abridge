@@ -39,6 +39,23 @@ enum LocationAuthorizationWait {
     }
 }
 
+/// Process-stable CoreLocation status reader. Ephemeral `CLLocationManager()` instances
+/// can flap between authorized and notDetermined under ad-hoc Debug builds; retain one manager.
+@MainActor
+enum LiveLocationAuthorization {
+    static let manager = CLLocationManager()
+
+    static func authorizationStatus() -> CLAuthorizationStatus {
+        manager.authorizationStatus
+    }
+}
+
+/// Shared location permission service for UI + MapKit MCP gates so both see the same sticky status.
+@MainActor
+enum LiveLocationPermission {
+    static let service = LocationPermissionService()
+}
+
 @MainActor
 final class LocationPermissionService: LocationPermissionChecking {
     typealias AuthorizationStatusProvider = @MainActor () -> CLAuthorizationStatus
@@ -46,7 +63,7 @@ final class LocationPermissionService: LocationPermissionChecking {
 
     private let authorizationStatusProvider: AuthorizationStatusProvider
     private let requestAccessHandler: RequestAccessHandler
-    private var sessionStatus: LocationPermissionStatus?
+    private var reconciliationState: LocationPermissionStatusReconciliation.State
 
     init(
         authorizationStatusProvider: AuthorizationStatusProvider? = nil,
@@ -54,30 +71,38 @@ final class LocationPermissionService: LocationPermissionChecking {
         authorizationRequestTimeout: TimeInterval = LocationAuthorizationWait.defaultTimeout
     ) {
         self.authorizationStatusProvider = authorizationStatusProvider ?? {
-            CLLocationManager().authorizationStatus
+            LiveLocationAuthorization.authorizationStatus()
         }
         self.requestAccessHandler = requestAccessHandler ?? {
             try await Self.requestAccess(timeout: authorizationRequestTimeout)
         }
+
+        let initialStatus = LocationPermissionStatusMapper.map(self.authorizationStatusProvider())
+        reconciliationState = LocationPermissionStatusReconciliation.initialState(for: initialStatus)
     }
 
     func currentStatus() -> LocationPermissionStatus {
-        let mapped = LocationPermissionStatusMapper.map(authorizationStatusProvider())
-        if mapped != .notDetermined {
-            sessionStatus = nil
-            return mapped
-        }
-        return sessionStatus ?? mapped
+        resolveStatus(from: authorizationStatusProvider())
     }
 
     func requestAccess() async throws -> LocationPermissionStatus {
         let result = try await requestAccessHandler()
-        if result.grantsReadAccess {
-            sessionStatus = result
-        } else {
-            sessionStatus = nil
-        }
-        return result
+        reconciliationState = LocationPermissionStatusReconciliation.afterRequest(
+            result: result,
+            state: reconciliationState
+        )
+        // Re-resolve so a successful grant is sticky even if the next system poll is stale.
+        return resolveStatus(from: authorizationStatusProvider())
+    }
+
+    private func resolveStatus(from clStatus: CLAuthorizationStatus) -> LocationPermissionStatus {
+        let mapped = LocationPermissionStatusMapper.map(clStatus)
+        let resolved = LocationPermissionStatusReconciliation.resolve(
+            systemStatus: mapped,
+            state: reconciliationState
+        )
+        reconciliationState = resolved.state
+        return resolved.status
     }
 
     private static func requestAccess(
