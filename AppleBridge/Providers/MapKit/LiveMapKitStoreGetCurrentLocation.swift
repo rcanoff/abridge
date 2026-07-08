@@ -1,12 +1,10 @@
 import CoreLocation
 import Foundation
 
-@MainActor
 protocol MapKitLocationFetching: AnyObject {
     func requestLocation(completion: @escaping (Result<CLLocation, Error>) -> Void)
 }
 
-@MainActor
 protocol MapKitLocationManaging: AnyObject {
     var delegate: CLLocationManagerDelegate? { get set }
     func requestLocation()
@@ -19,9 +17,13 @@ extension LiveMapKitStore {
         let result = MapKitSearchFetch.AsyncBridgeResult<CLLocation>()
         let retention = LocationFetcherRetentionBox()
 
-        try waitForCurrentLocationCompletion(retention: retention) { complete in
+        try MapKitSearchFetch.waitForCompletion(
+            operation: "CoreLocation request",
+            timeout: locationFetchTimeout
+        ) { complete in
             let fetcher = makeLocationFetcher()
             retention.setFetcher(fetcher)
+            retention.keepAliveDuringPump()
             fetcher.requestLocation { outcome in
                 retention.setFetcher(nil)
                 switch outcome {
@@ -32,26 +34,6 @@ extension LiveMapKitStore {
             }
         }
         return try result.get()
-    }
-
-    private func waitForCurrentLocationCompletion(
-        retention: LocationFetcherRetentionBox,
-        work: (@escaping () -> Void) -> Void
-    ) throws {
-        var done = false
-        work {
-            done = true
-        }
-
-        let deadline = Date().addingTimeInterval(locationFetchTimeout)
-        while !done, Date() < deadline {
-            retention.keepAliveDuringPump()
-            MapKitSearchFetch.pumpRunLoop(for: MapKitSearchFetch.runLoopInterval)
-        }
-
-        guard done else {
-            throw MapKitProviderError.mapkitError("CoreLocation request timed out")
-        }
     }
 }
 
@@ -72,8 +54,7 @@ final class LocationFetcherRetentionBox: @unchecked Sendable {
     }
 }
 
-@MainActor
-final class OneShotLocationFetcher: NSObject, MapKitLocationFetching, @preconcurrency CLLocationManagerDelegate {
+final class OneShotLocationFetcher: NSObject, MapKitLocationFetching, CLLocationManagerDelegate {
     private let manager: any MapKitLocationManaging
     private var completion: ((Result<CLLocation, Error>) -> Void)?
 
@@ -83,12 +64,16 @@ final class OneShotLocationFetcher: NSObject, MapKitLocationFetching, @preconcur
         manager.delegate = self
     }
 
+    /// Callers must invoke on the main queue (`waitForCompletion` schedules work there).
     func requestLocation(completion: @escaping (Result<CLLocation, Error>) -> Void) {
-        self.completion = completion; manager.requestLocation()
+        assert(Thread.isMainThread, "OneShotLocationFetcher.requestLocation requires main thread")
+        self.completion = completion
+        manager.requestLocation()
     }
 
     func locationManager(_: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let completion else { return }; self.completion = nil
+        guard let completion else { return }
+        self.completion = nil
         if let location = locations.last {
             completion(.success(location))
         } else {
@@ -97,6 +82,8 @@ final class OneShotLocationFetcher: NSObject, MapKitLocationFetching, @preconcur
     }
 
     func locationManager(_: CLLocationManager, didFailWithError error: Error) {
-        guard let completion else { return }; self.completion = nil; completion(.failure(error))
+        guard let completion else { return }
+        self.completion = nil
+        completion(.failure(error))
     }
 }

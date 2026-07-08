@@ -109,7 +109,6 @@ struct MapKitOpenNavigationResult {
     let opened: Bool
 }
 
-@MainActor
 protocol MapKitStoreing {
     func locationAuthorizationStatus() -> CLAuthorizationStatus
     func searchPlaces(request: MapKitSearchRequest) throws -> MapKitSearchResult

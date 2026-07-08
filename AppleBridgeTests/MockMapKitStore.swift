@@ -2,8 +2,7 @@
 import CoreLocation
 import MapKit
 
-@MainActor
-final class MockMapKitStore: MapKitStoreing {
+final class MockMapKitStore: MapKitStoreing, @unchecked Sendable {
     var authorizationStatus: CLAuthorizationStatus = .authorized
     var results: [MapKitSearchResult] = []
     var nearbyResults: [MapKitSearchResult] = []

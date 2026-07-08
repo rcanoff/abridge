@@ -8,35 +8,50 @@ enum MapKitProviderError: Error, Equatable {
     case invalidArguments(String)
 }
 
-@MainActor
 enum LiveMapKitEnvironment {
     /// Uses the same sticky `LocationPermissionService` as Permissions UI / SettingsStore.
-    static let sharedProvider = MapKitProvider(
+    /// Immutable after lazy init; process-wide singleton for the menu-bar agent.
+    nonisolated(unsafe) static let sharedProvider = MapKitProvider(
         store: LiveMapKitStore(),
-        locationPermissionChecking: LiveLocationPermission.service
+        locationGrantsReadAccess: {
+            if Thread.isMainThread {
+                return MainActor.assumeIsolated {
+                    LiveLocationPermission.service.currentStatus().grantsReadAccess
+                }
+            }
+            return DispatchQueue.main.sync {
+                MainActor.assumeIsolated {
+                    LiveLocationPermission.service.currentStatus().grantsReadAccess
+                }
+            }
+        }
     )
 }
 
-@MainActor
+/// Not `@MainActor`: Rust FFI calls this from background threads. Holding `main.sync` across
+/// MapKit waits prevents network completions; `MapKitSearchFetch.waitForCompletion` hops starts
+/// to main and waits off-main instead.
 struct MapKitProvider {
     let store: any MapKitStoreing
-    /// When set (production), MCP location gates match UI sticky reconciliation.
-    /// Tests omit this and fall back to the store's raw `CLAuthorizationStatus`.
-    private let locationPermissionChecking: (any LocationPermissionChecking)?
+    /// Production uses sticky `LiveLocationPermission`; tests fall back to store CL status.
+    private let locationGrantsReadAccess: () -> Bool
 
     init(
         store: any MapKitStoreing = LiveMapKitStore(),
-        locationPermissionChecking: (any LocationPermissionChecking)? = nil
+        locationGrantsReadAccess: (() -> Bool)? = nil
     ) {
         self.store = store
-        self.locationPermissionChecking = locationPermissionChecking
+        if let locationGrantsReadAccess {
+            self.locationGrantsReadAccess = locationGrantsReadAccess
+        } else {
+            self.locationGrantsReadAccess = {
+                LocationPermissionStatusMapper.map(store.locationAuthorizationStatus()).grantsReadAccess
+            }
+        }
     }
 
     var isLocationAuthorized: Bool {
-        if let locationPermissionChecking {
-            return locationPermissionChecking.currentStatus().grantsReadAccess
-        }
-        return LocationPermissionStatusMapper.map(store.locationAuthorizationStatus()).grantsReadAccess
+        locationGrantsReadAccess()
     }
 
     func parseJSONObject(from data: Data) throws -> [String: Any] {

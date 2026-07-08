@@ -6,7 +6,8 @@ import Foundation
 final class AppleProviderBridge: ProviderBridge, Sendable {
     private let makeEventKitProvider: @MainActor @Sendable () -> EventKitProvider
     private let makeContactsProvider: @MainActor @Sendable () -> ContactsProvider
-    private let makeMapKitProvider: @MainActor @Sendable () -> MapKitProvider
+    /// Not MainActor: MapKit handle waits off-main; a full `main.sync` hop deadlocks MapKit network APIs.
+    private let makeMapKitProvider: @Sendable () -> MapKitProvider
     private let makeVisionProvider: @MainActor @Sendable () -> VisionProvider
 
     init(
@@ -16,7 +17,7 @@ final class AppleProviderBridge: ProviderBridge, Sendable {
         makeContactsProvider: @escaping @MainActor @Sendable () -> ContactsProvider = {
             LiveContactsEnvironment.sharedProvider
         },
-        makeMapKitProvider: @escaping @MainActor @Sendable () -> MapKitProvider = {
+        makeMapKitProvider: @escaping @Sendable () -> MapKitProvider = {
             LiveMapKitEnvironment.sharedProvider
         },
         makeVisionProvider: @escaping @MainActor @Sendable () -> VisionProvider = {
@@ -42,10 +43,10 @@ final class AppleProviderBridge: ProviderBridge, Sendable {
         self.init(makeContactsProvider: { [contactsProvider] in contactsProvider })
     }
 
-    /// Test seam: capture the injected MapKit provider on the main actor.
-    @MainActor
+    /// Test seam: capture the injected MapKit provider.
     convenience init(mapKitProvider: MapKitProvider) {
-        self.init(makeMapKitProvider: { [mapKitProvider] in mapKitProvider })
+        nonisolated(unsafe) let provider = mapKitProvider
+        self.init(makeMapKitProvider: { provider })
     }
 
     /// Test seam: capture the injected Vision provider on the main actor.
@@ -67,10 +68,10 @@ final class AppleProviderBridge: ProviderBridge, Sendable {
                 return provider.handle(operation: request.operation, payloadJson: request.payloadJson)
             }
         case "mapkit":
-            return Self.performOnMainActor { [makeMapKitProvider] in
-                let provider = makeMapKitProvider()
-                return provider.handle(operation: request.operation, payloadJson: request.payloadJson)
-            }
+            // Do not use `performOnMainActor` / `main.sync` for the whole call. MapKit network
+            // APIs never complete while the main queue is blocked; the store waits off-main.
+            let provider = makeMapKitProvider()
+            return provider.handle(operation: request.operation, payloadJson: request.payloadJson)
         case "vision":
             return Self.performOnMainActor { [makeVisionProvider] in
                 let provider = makeVisionProvider()

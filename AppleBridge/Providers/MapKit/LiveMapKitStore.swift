@@ -1,19 +1,22 @@
 import CoreLocation
 import Foundation
-import MapKit
+@preconcurrency import MapKit
 
-@MainActor
+/// Sync bridge helpers for MapKit/CoreLocation under the UniFFI sync FFI.
+///
+/// **Critical:** MapKit network APIs do not deliver completions while a main-queue item is blocked
+/// (including `DispatchQueue.main.sync` + `RunLoop` pumping). Start work on the main queue, then
+/// wait on a **background** thread so the main run loop stays free.
 enum MapKitSearchFetch {
-    /// Upper bound for blocking the main actor while MapKit delivers its callback.
+    /// Upper bound while waiting for MapKit / CoreLocation to finish.
     static let defaultTimeout: TimeInterval = 30
 
-    /// Modes pumped while waiting so MapKit callbacks, GCD main-queue work, and UI sources stay serviced.
-    /// Include `.common` so sources registered for common modes (typical for modern MapKit) can fire.
+    /// Modes pumped for main-thread waiters (unit tests / rare main callers).
     static let runLoopModes: [RunLoop.Mode] = [.default, .common, .eventTracking]
 
     static let runLoopInterval: TimeInterval = 0.01
 
-    /// Thread-safe handoff for sync/async MapKit and CoreLocation bridges that schedule callbacks or tasks.
+    /// Thread-safe handoff for sync/async MapKit and CoreLocation bridges.
     final class AsyncBridgeResult<T>: @unchecked Sendable {
         private let lock = NSLock()
         private var value: T?
@@ -44,73 +47,95 @@ enum MapKitSearchFetch {
         }
     }
 
+    private final class OnceFlag: @unchecked Sendable {
+        private let lock = NSLock()
+        private var fired = false
+
+        func fire(_ semaphore: DispatchSemaphore) {
+            lock.lock()
+            defer { lock.unlock() }
+            guard !fired else { return }
+            fired = true
+            semaphore.signal()
+        }
+
+        var hasFired: Bool {
+            lock.lock()
+            defer { lock.unlock() }
+            return fired
+        }
+    }
+
+    /// Starts `work` on the main queue (it must schedule MapKit and return quickly), then waits
+    /// until `complete` is called.
+    ///
+    /// - Off main (production FFI): `DispatchQueue.main.async` + semaphore wait on this thread.
+    /// - On main (tests): enqueue `work`, then pump the run loop until done or timeout.
     static func waitForCompletion(
         operation: String,
         timeout: TimeInterval = defaultTimeout,
-        work: (@escaping () -> Void) -> Void
+        work: @escaping (@escaping @Sendable () -> Void) -> Void
     ) throws {
-        var done = false
-        work {
-            done = true
+        // MapKit request types are non-Sendable; this bridge is single-flight per call.
+        nonisolated(unsafe) let startWork = work
+
+        if Thread.isMainThread {
+            // Unit tests only (production MapKit FFI is always off-main). Start work inline
+            // and pump so Timer / CoreLocation test seams fire. Prefer run-loop sources over
+            // bare `Task` in main-thread tests — Task may not progress under this pump.
+            let semaphore = DispatchSemaphore(value: 0)
+            let once = OnceFlag()
+            let complete: @Sendable () -> Void = { once.fire(semaphore) }
+            startWork(complete)
+            let deadline = Date().addingTimeInterval(timeout)
+            while !once.hasFired, Date() < deadline {
+                pumpRunLoop(for: runLoopInterval)
+            }
+            guard once.hasFired else {
+                throw MapKitProviderError.mapkitError("\(operation) timed out")
+            }
+            return
         }
 
-        // MapKit / GCD deliver work on the main run loop. Pump explicitly on `.main`
-        // (not `.current`) so this stays correct when called via `DispatchQueue.main.sync`.
-        let deadline = Date().addingTimeInterval(timeout)
-        while !done, Date() < deadline {
-            pumpRunLoop(for: runLoopInterval)
+        try waitOffMain(operation: operation, timeout: timeout, startWork: startWork)
+    }
+
+    /// Start MapKit on the main queue; wait on the calling (background) thread.
+    private static func waitOffMain(
+        operation: String,
+        timeout: TimeInterval,
+        startWork: @escaping (@escaping @Sendable () -> Void) -> Void
+    ) throws {
+        let semaphore = DispatchSemaphore(value: 0)
+        let once = OnceFlag()
+        let complete: @Sendable () -> Void = { once.fire(semaphore) }
+        nonisolated(unsafe) let startWork = startWork
+
+        DispatchQueue.main.async {
+            startWork(complete)
         }
 
-        guard done else {
+        let waitResult = semaphore.wait(timeout: .now() + timeout)
+        guard waitResult == .success else {
             throw MapKitProviderError.mapkitError("\(operation) timed out")
         }
     }
 
-    /// Pump common run loop modes so MapKit completions and UI events can fire during sync FFI waits.
     static func pumpRunLoop(for interval: TimeInterval) {
         let perModeInterval = interval / Double(runLoopModes.count)
         for mode in runLoopModes {
             RunLoop.main.run(mode: mode, before: Date(timeIntervalSinceNow: perModeInterval))
         }
     }
-
-    /// Schedule work that must progress while `waitForCompletion` blocks the main actor.
-    ///
-    /// Bare `Task { @MainActor in … }` never runs under that wait (MainActor is busy), so
-    /// `complete()` never fires and we hit the 30s timeout. Enqueue on GCD main first so
-    /// run-loop pumping can start the work.
-    static func scheduleOnMainRunLoop(_ body: @escaping @MainActor () -> Void) {
-        DispatchQueue.main.async {
-            MainActor.assumeIsolated {
-                body()
-            }
-        }
-    }
-
-    /// Bridge async MapKit APIs while `waitForCompletion` pumps the main run loop.
-    ///
-    /// Hop via GCD main, then start an unstructured `Task` **without** `@MainActor`.
-    /// Annotating the Task with `@MainActor` re-queues the body on the blocked MainActor
-    /// executor and restores the timeout deadlock. Known-good pattern from `lookupPlace`.
-    ///
-    /// Not `@Sendable`: MapKit request objects are non-Sendable and must stay on this path.
-    static func scheduleAsyncBridge(_ body: @escaping () async -> Void) {
-        DispatchQueue.main.async {
-            Task {
-                await body()
-            }
-        }
-    }
 }
 
-@MainActor
-struct LiveMapKitStore: MapKitStoreing {
-    var makeLocationFetcher: @MainActor () -> any MapKitLocationFetching = { OneShotLocationFetcher() }
+struct LiveMapKitStore: MapKitStoreing, @unchecked Sendable {
+    /// Test seam; not `@Sendable` so unit tests can inject MainActor fetcher mocks.
+    var makeLocationFetcher: () -> any MapKitLocationFetching = { OneShotLocationFetcher() }
     var locationFetchTimeout: TimeInterval = MapKitSearchFetch.defaultTimeout
 
     func locationAuthorizationStatus() -> CLAuthorizationStatus {
-        // Retained manager — ephemeral instances can flap TCC status under Debug/ad-hoc.
-        LiveLocationAuthorization.authorizationStatus()
+        LiveLocationAuthorization.authorizationStatusFromAnyThread()
     }
 
     func searchPlaces(request: MapKitSearchRequest) throws -> MapKitSearchResult {
@@ -125,26 +150,22 @@ struct LiveMapKitStore: MapKitStoreing {
         }
 
         let search = MKLocalSearch(request: mkRequest)
-        var response: MKLocalSearch.Response?
-        var searchError: Error?
+        let result = MapKitSearchFetch.AsyncBridgeResult<MKLocalSearch.Response>()
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit search") { complete in
-            // Start search from the main run loop so callbacks can fire while we pump.
-            MapKitSearchFetch.scheduleOnMainRunLoop {
-                search.start { result, error in
-                    response = result
-                    searchError = error
-                    complete()
+            search.start { response, error in
+                if let error {
+                    result.setError(error)
+                } else if let response {
+                    result.setValue(response)
+                } else {
+                    result.setError(MapKitProviderError.mapkitError("MapKit search returned no response"))
                 }
+                complete()
             }
         }
 
-        if let searchError {
-            throw searchError
-        }
-        guard let response else {
-            throw MapKitProviderError.mapkitError("MapKit search returned no response")
-        }
+        let response = try result.get()
         return MapKitSearchResult(mapItems: response.mapItems, boundingRegion: response.boundingRegion)
     }
 
@@ -156,30 +177,26 @@ struct LiveMapKitStore: MapKitStoreing {
         mkRequest.pointOfInterestFilter = request.pointOfInterestFilter
 
         let search = MKLocalSearch(request: mkRequest)
-        var response: MKLocalSearch.Response?
-        var searchError: Error?
+        let result = MapKitSearchFetch.AsyncBridgeResult<MKLocalSearch.Response>()
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit nearby search") { complete in
-            MapKitSearchFetch.scheduleOnMainRunLoop {
-                search.start { result, error in
-                    response = result
-                    searchError = error
-                    complete()
+            search.start { response, error in
+                if let error {
+                    result.setError(error)
+                } else if let response {
+                    result.setValue(response)
+                } else {
+                    result.setError(MapKitProviderError.mapkitError("MapKit search returned no response"))
                 }
+                complete()
             }
         }
 
-        if let searchError {
-            throw searchError
-        }
-        guard let response else {
-            throw MapKitProviderError.mapkitError("MapKit search returned no response")
-        }
+        let response = try result.get()
         return MapKitSearchResult(mapItems: response.mapItems, boundingRegion: response.boundingRegion)
     }
 
     func reverseGeocode(request: MapKitReverseGeocodeRequest) throws -> [MKMapItem] {
-        // macOS 26 SDK: MKReverseGeocodingRequest exposes only init(location:), not init(coordinate:).
         let location = CLLocation(
             latitude: request.coordinate.latitude,
             longitude: request.coordinate.longitude
@@ -190,7 +207,8 @@ struct LiveMapKitStore: MapKitStoreing {
         let result = MapKitSearchFetch.AsyncBridgeResult<[MKMapItem]>()
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit reverse geocode") { complete in
-            MapKitSearchFetch.scheduleAsyncBridge {
+            // Detached so a main-thread waiter is not blocked behind MainActor Task scheduling.
+            Task.detached {
                 defer { complete() }
                 do {
                     let mapItems = try await mkRequest.mapItems
@@ -217,7 +235,7 @@ struct LiveMapKitStore: MapKitStoreing {
         let result = MapKitSearchFetch.AsyncBridgeResult<[MKMapItem]>()
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit forward geocode") { complete in
-            MapKitSearchFetch.scheduleAsyncBridge {
+            Task.detached {
                 defer { complete() }
                 do {
                     let mapItems = try await mkRequest.mapItems
@@ -245,19 +263,16 @@ struct LiveMapKitStore: MapKitStoreing {
         let directions = MKDirections(request: mkRequest)
         let result = MapKitSearchFetch.AsyncBridgeResult<MKDirections.Response>()
 
-        // Completion-handler API (not async/await Task) so run-loop pumping delivers work.
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit directions") { complete in
-            MapKitSearchFetch.scheduleOnMainRunLoop {
-                directions.calculate { response, error in
-                    if let error {
-                        result.setError(error)
-                    } else if let response {
-                        result.setValue(response)
-                    } else {
-                        result.setError(MapKitProviderError.mapkitError("MapKit directions returned no response"))
-                    }
-                    complete()
+            directions.calculate { response, error in
+                if let error {
+                    result.setError(error)
+                } else if let response {
+                    result.setValue(response)
+                } else {
+                    result.setError(MapKitProviderError.mapkitError("MapKit directions returned no response"))
                 }
+                complete()
             }
         }
 
@@ -281,17 +296,15 @@ struct LiveMapKitStore: MapKitStoreing {
         let result = MapKitSearchFetch.AsyncBridgeResult<MKDirections.ETAResponse>()
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit ETA") { complete in
-            MapKitSearchFetch.scheduleOnMainRunLoop {
-                directions.calculateETA { response, error in
-                    if let error {
-                        result.setError(error)
-                    } else if let response {
-                        result.setValue(response)
-                    } else {
-                        result.setError(MapKitProviderError.mapkitError("MapKit ETA returned no response"))
-                    }
-                    complete()
+            directions.calculateETA { response, error in
+                if let error {
+                    result.setError(error)
+                } else if let response {
+                    result.setValue(response)
+                } else {
+                    result.setError(MapKitProviderError.mapkitError("MapKit ETA returned no response"))
                 }
+                complete()
             }
         }
 
@@ -316,7 +329,7 @@ struct LiveMapKitStore: MapKitStoreing {
         let result = MapKitSearchFetch.AsyncBridgeResult<MKMapItem>()
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit place lookup") { complete in
-            MapKitSearchFetch.scheduleAsyncBridge {
+            Task.detached {
                 defer { complete() }
                 do {
                     let mapItem = try await mkRequest.mapItem
