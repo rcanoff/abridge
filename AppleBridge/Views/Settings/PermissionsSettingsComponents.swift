@@ -46,8 +46,12 @@ struct ProviderCapabilityAdvancedSection: View {
     let onEnableAll: () -> Void
     let onDisableAll: () -> Void
 
+    @State private var isExpanded = false
+
     var body: some View {
-        DisclosureGroup("Customize tools…") {
+        // Bound DisclosureGroup + tappable label so text and chevron both toggle (macOS stock
+        // DisclosureGroup often only activates the chevron for string labels).
+        DisclosureGroup(isExpanded: $isExpanded) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 12) {
                     Button("Enable all", action: onEnableAll)
@@ -78,6 +82,12 @@ struct ProviderCapabilityAdvancedSection: View {
                 }
             }
             .padding(.top, 6)
+        } label: {
+            Text("Customize tools…")
+                .contentShape(Rectangle())
+                .onTapGesture { isExpanded.toggle() }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityHint(isExpanded ? "Collapses the tool list" : "Expands the tool list")
         }
     }
 }
