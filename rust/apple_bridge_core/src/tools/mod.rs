@@ -891,7 +891,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_GET_EVENT => serde_json::json!({
       "type": "object",
       "properties": {
-        "event_identifier": { "type": "string" }
+        "event_identifier": non_whitespace_string()
       },
       "required": ["event_identifier"]
     }),
@@ -908,8 +908,8 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_CREATE_EVENT => serde_json::json!({
       "type": "object",
       "properties": {
-        "calendar_identifier": { "type": "string" },
-        "title": { "type": "string" },
+        "calendar_identifier": non_whitespace_string(),
+        "title": non_whitespace_string(),
         "notes": { "type": "string" },
         "location": { "type": "string" },
         "url": { "type": "string" },
@@ -970,7 +970,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_CREATE_CALENDAR | TOOL_CREATE_LIST => serde_json::json!({
       "type": "object",
       "properties": {
-        "title": { "type": "string" },
+        "title": non_whitespace_string(),
         "cg_color": { "type": "object" },
         "source_identifier": { "type": "string" }
       },
@@ -1036,12 +1036,12 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_CREATE_REMINDER => serde_json::json!({
       "type": "object",
       "properties": {
-        "calendar_identifier": { "type": "string" },
-        "title": { "type": "string" },
+        "calendar_identifier": non_whitespace_string(),
+        "title": non_whitespace_string(),
         "notes": { "type": "string" },
         "location": { "type": "string" },
         "url": { "type": "string" },
-        "priority": { "type": "integer" },
+        "priority": { "type": "integer", "minimum": 0, "maximum": 9 },
         "due_date_components": { "type": "object" },
         "start_date_components": { "type": "object" },
         "time_zone": { "type": "string" },
@@ -1061,7 +1061,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "notes": { "type": ["string", "null"] },
         "location": { "type": ["string", "null"] },
         "url": { "type": ["string", "null"] },
-        "priority": { "type": "integer" },
+        "priority": { "type": "integer", "minimum": 0, "maximum": 9 },
         "due_date_components": { "type": ["object", "null"] },
         "start_date_components": { "type": ["object", "null"] },
         "time_zone": { "type": ["string", "null"] },

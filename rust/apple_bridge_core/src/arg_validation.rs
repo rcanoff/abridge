@@ -325,7 +325,7 @@ fn validate_offset(offset: &str) -> Result<(), ()> {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crate::tools::{TOOL_CREATE_EVENT, TOOL_GET_EVENT, TOOL_LIST_LISTS, resolve_tool};
+  use crate::tools::{TOOL_CREATE_EVENT, TOOL_CREATE_REMINDER, TOOL_GET_EVENT, TOOL_LIST_LISTS, resolve_tool};
   use serde_json::json;
 
   #[test]
@@ -387,5 +387,30 @@ mod tests {
     let schema = json!({ "type": "string", "format": "date-time" });
     let err = validate_against_schema(&schema, &json!("2024-1-5T1:2:3Z"), "$").expect_err("bad width");
     assert!(err.contains("date-time"), "{err}");
+  }
+
+  #[test]
+  fn create_reminder_schema_rejects_whitespace_only_title() {
+    let tool = resolve_tool(TOOL_CREATE_REMINDER).expect("tool");
+    let err = validate_tool_arguments(tool, &json!({ "calendar_identifier": "c1", "title": "   " }))
+      .expect_err("whitespace title");
+    assert!(
+      err.contains("non-whitespace") || err.contains("title") || err.contains("pattern"),
+      "{err}"
+    );
+  }
+
+  #[test]
+  fn create_reminder_schema_rejects_priority_out_of_range() {
+    let tool = resolve_tool(TOOL_CREATE_REMINDER).expect("tool");
+    let err = validate_tool_arguments(
+      tool,
+      &json!({ "calendar_identifier": "c1", "title": "T", "priority": 99 }),
+    )
+    .expect_err("priority");
+    assert!(
+      err.contains("maximum") || err.contains("priority") || err.contains("99"),
+      "{err}"
+    );
   }
 }

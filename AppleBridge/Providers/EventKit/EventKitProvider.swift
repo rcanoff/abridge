@@ -201,6 +201,8 @@ enum LiveEventKitEnvironment {
     static let sharedProvider = EventKitProvider()
 }
 
+/// EventKit adapter: JSON ↔ Apple types. Pure schema validation is Rust (`arg_validation`).
+/// This layer keeps mapping/runtime checks (permission, unknown ids, TimeZone).
 @MainActor
 final class EventKitProvider {
     let store: any EventKitStoreing
