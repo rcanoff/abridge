@@ -6,10 +6,10 @@ import Testing
 @Suite("MenuBarNativeMenu")
 struct MenuBarNativeMenuTests {
     @Test(arguments: [
-        (ServerRunState.running, "● MCP Server Running"),
-        (ServerRunState.stopped, "● MCP Server Stopped"),
-        (ServerRunState.starting, "● MCP Server Starting…"),
-        (ServerRunState.error("bind failed"), "● MCP Server Error"),
+        (ServerRunState.running, "MCP Server Running"),
+        (ServerRunState.stopped, "MCP Server Stopped"),
+        (ServerRunState.starting, "MCP Server Starting…"),
+        (ServerRunState.error("bind failed"), "MCP Server Error"),
     ])
     func statusLabelMapsRunState(runState: ServerRunState, expectedLabel: String) {
         #expect(MenuBarMCPStatusFormatting.statusLabel(for: runState) == expectedLabel)

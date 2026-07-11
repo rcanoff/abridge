@@ -4,13 +4,13 @@ enum MenuBarMCPStatusFormatting {
     static func statusLabel(for runState: ServerRunState) -> String {
         switch runState {
         case .running:
-            "● MCP Server Running"
+            "MCP Server Running"
         case .stopped:
-            "● MCP Server Stopped"
+            "MCP Server Stopped"
         case .starting:
-            "● MCP Server Starting…"
+            "MCP Server Starting…"
         case .error:
-            "● MCP Server Error"
+            "MCP Server Error"
         }
     }
 
@@ -24,15 +24,6 @@ enum MenuBarMCPStatusFormatting {
             .yellow
         case .error:
             .red
-        }
-    }
-
-    static func statusUsesSecondaryAccent(for runState: ServerRunState) -> Bool {
-        switch runState {
-        case .stopped, .starting:
-            true
-        case .running, .error:
-            false
         }
     }
 }
