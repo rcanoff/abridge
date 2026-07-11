@@ -14,6 +14,7 @@ use axum::{
 use serde_json::Value;
 
 use crate::{
+  arg_validation,
   config::{ProviderConfig, ProviderRequest},
   providers::ProviderBridge,
   tools::{self, ToolDefinition},
@@ -153,6 +154,12 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
     .get("arguments")
     .cloned()
     .unwrap_or_else(|| serde_json::json!({}));
+
+  // Enforce the advertised inputSchema before any provider hop (including diagnostics).
+  if let Err(message) = arg_validation::validate_tool_arguments(tool, &arguments) {
+    record_tool_call(name, false);
+    return tool_error_response(id, "invalid_arguments", &message);
+  }
 
   if tool.name == tools::TOOL_GET_USAGE_LOG {
     let limit = parse_usage_log_limit(&arguments);

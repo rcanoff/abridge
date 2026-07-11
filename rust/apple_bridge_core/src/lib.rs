@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+mod arg_validation;
 mod auth;
 mod capabilities;
 mod config;
