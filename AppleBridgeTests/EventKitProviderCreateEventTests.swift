@@ -95,24 +95,6 @@ struct EventKitProviderCreateEventTests {
 
     @Test
     @MainActor
-    func createEventMissingCalendarIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
-        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
-        // before ProviderBridge. This offline provider path no longer re-validates that shape.
-        let value = SchemaTrustedPayload.requiredString([:], "any")
-        #expect(value == "")
-    }
-
-    @Test
-    @MainActor
-    func createEventMissingTitleReturnsInvalidArguments_schemaOwnedByRust() {
-        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
-        // before ProviderBridge. This offline provider path no longer re-validates that shape.
-        let value = SchemaTrustedPayload.requiredString([:], "any")
-        #expect(value == "")
-    }
-
-    @Test
-    @MainActor
     func createEventUnknownCalendarReturnsInvalidArguments() {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess

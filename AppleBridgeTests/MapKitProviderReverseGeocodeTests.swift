@@ -21,14 +21,6 @@ struct MapKitProviderReverseGeocodeTests {
 
     @Test
     @MainActor
-    func reverseGeocodeRequiresCoordinate_schemaOwnedByRust() {
-        // Pure schema re-validation removed; Rust arg_validation owns this shape.
-        // Offline provider path must not emit the old pure-schema invalid_arguments text.
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
-
-    @Test
-    @MainActor
     func reverseGeocodeReturnsSerializedResponse() throws {
         let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
         item.name = "1 Apple Park Way"

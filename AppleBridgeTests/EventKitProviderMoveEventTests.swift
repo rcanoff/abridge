@@ -50,22 +50,6 @@ struct EventKitProviderMoveEventTests {
 
     @Test
     @MainActor
-    func moveEventMissingEventIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
-        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
-        // before ProviderBridge. This offline provider path no longer re-validates that shape.
-        let value = SchemaTrustedPayload.requiredString([:], "any")
-        #expect(value == "")
-    }
-
-    @Test
-    @MainActor
-    func moveEventMissingCalendarIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
-        // Pure schema (required/non-empty) enforced in Rust before ProviderBridge.
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
-
-    @Test
-    @MainActor
     func moveEventUnknownIDReturnsInvalidArguments() {
         let (provider, mockStore) = providerWithEvent()
 

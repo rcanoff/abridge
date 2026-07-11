@@ -7,15 +7,6 @@ import Vision
 struct VisionProviderRecognizeTextTests {
     @Test
     @MainActor
-    func recognizeTextRequiresImageData_schemaOwnedByRust() {
-        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
-        // before ProviderBridge. This offline provider path no longer re-validates that shape.
-        let value = SchemaTrustedPayload.requiredString([:], "any")
-        #expect(value == "")
-    }
-
-    @Test
-    @MainActor
     func recognizeTextRejectsInvalidBase64() {
         let provider = VisionProvider(store: MockVisionStore())
         let response = provider.handle(

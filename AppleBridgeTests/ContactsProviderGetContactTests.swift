@@ -106,12 +106,6 @@ struct ContactsProviderGetContactTests {
 
     @Test
     @MainActor
-    func getContactMissingContactIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
-
-    @Test
-    @MainActor
     func getContactUnknownContactIdentifierReturnsInvalidArguments() {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .authorized

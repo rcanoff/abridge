@@ -43,10 +43,8 @@ extension EventKitProvider {
         let dictionary = try parseJSONObject(from: data)
         let eventIdentifier = try parseEventIdentifierArguments(payloadJson)
 
-        guard let recurrenceRules = try EventKitDeserialization.recurrenceRules(from: dictionary["recurrence_rules"])
-        else {
-            throw EventKitProviderError.invalidArguments("recurrence_rules must be an array")
-        }
+        let rulesRaw = SchemaTrustedPayload.requiredArray(dictionary, "recurrence_rules")
+        let recurrenceRules = try EventKitDeserialization.recurrenceRules(from: rulesRaw) ?? []
 
         return SetEventRecurrenceArguments(eventIdentifier: eventIdentifier, recurrenceRules: recurrenceRules)
     }

@@ -2,12 +2,43 @@
 import Foundation
 import Testing
 
-/// Phase B: pure schema shape is Rust-owned; Swift providers map Apple-side only.
+/// Phase B AC3: pure schema shape is Rust-owned. Offline `provider.handle` with schema-required
+/// top-level keys omitted must not dual-validate those keys as pure-schema errors.
 @Suite("ProviderSchemaOwnership")
 struct ProviderSchemaOwnershipTests {
+    /// Pure-schema dual-validation patterns for a **top-level** key only (not nested paths like
+    /// `source.coordinate`).
+    private func assertNoTopLevelPureSchemaDualValidation(
+        _ response: ProviderResponse,
+        keys: [String],
+        sourceLocation: SourceLocation = #_sourceLocation
+    ) {
+        guard let errorJson = response.errorJson else {
+            return
+        }
+        for key in keys {
+            let banned = [
+                "\(key) is required",
+                "\(key) must not be empty",
+                "\(key) must be an array",
+                "\(key) must be an object",
+                "\(key) must be an array or null",
+                "\(key) must be an object or null",
+                "\(key) must be a string",
+            ]
+            for phrase in banned {
+                #expect(
+                    errorJson.contains(phrase) == false,
+                    "unexpected pure-schema dual-validation for top-level '\(key)': \(phrase) in \(errorJson)",
+                    sourceLocation: sourceLocation
+                )
+            }
+        }
+    }
+
     @Test
     @MainActor
-    func createReminderDoesNotEmitPureSchemaRequiredTitle() {
+    func createReminderMissingTitleDoesNotPureSchemaDualValidate() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
         mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-1")]
@@ -16,51 +47,12 @@ struct ProviderSchemaOwnershipTests {
             operation: "create_reminder",
             payloadJson: #"{"calendar_identifier":"list-1"}"#
         )
-        #expect(response.errorJson?.contains("title is required") != true)
-        #expect(response.errorJson?.contains("title must not be empty") != true)
+        assertNoTopLevelPureSchemaDualValidation(response, keys: ["title", "calendar_identifier"])
     }
 
     @Test
     @MainActor
-    func createGroupDoesNotEmitPureSchemaEmptyName() {
-        let mock = MockContactsStore()
-        mock.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mock)
-        let response = provider.handle(
-            operation: "create_group",
-            payloadJson: #"{"container_identifier":"c1","name":"   "}"#
-        )
-        #expect(response.errorJson?.contains("name must not be empty") != true)
-        #expect(response.errorJson?.contains("container_identifier must not be empty") != true)
-    }
-
-    @Test
-    @MainActor
-    func linkContactsDoesNotEmitPureSchemaEmptyFrom() {
-        let mock = MockContactsStore()
-        mock.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mock)
-        let response = provider.handle(
-            operation: "link_contacts",
-            payloadJson: #"{"from_contact_identifier":"","to_contact_identifier":"b"}"#
-        )
-        #expect(response.errorJson?.contains("from_contact_identifier must not be empty") != true)
-    }
-
-    @Test
-    @MainActor
-    func listEventsDoesNotEmitPureSchemaRequiredStartDate() {
-        let mockStore = MockEventKitStore()
-        mockStore.authorizationStatus = .fullAccess
-        let provider = EventKitProvider(store: mockStore)
-        let response = provider.handle(operation: "list_events", payloadJson: "{}")
-        #expect(response.errorJson?.contains("start_date is required") != true)
-        #expect(response.errorJson?.contains("end_date is required") != true)
-    }
-
-    @Test
-    @MainActor
-    func setEventAlarmsDoesNotEmitPureSchemaRequiredAlarmsKey() {
+    func setEventAlarmsMissingAlarmsDoesNotPureSchemaDualValidate() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
         let provider = EventKitProvider(store: mockStore)
@@ -68,27 +60,106 @@ struct ProviderSchemaOwnershipTests {
             operation: "set_event_alarms",
             payloadJson: #"{"event_identifier":"e1"}"#
         )
-        #expect(response.errorJson?.contains("alarms is required") != true)
+        assertNoTopLevelPureSchemaDualValidation(response, keys: ["alarms", "event_identifier"])
+        // Missing alarms maps to empty list; unknown event is runtime.
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("Unknown event_identifier") == true)
     }
 
     @Test
     @MainActor
-    func searchPlacesDoesNotEmitPureSchemaRequiredQuery() {
-        let store = MockMapKitStore()
-        let provider = MapKitProvider(store: store, locationGrantsReadAccess: { true })
-        let response = provider.handle(operation: "search_places", payloadJson: "{}")
-        #expect(response.errorJson?.contains("query is required") != true)
-        #expect(response.errorJson?.contains("query must not be empty") != true)
+    func setReminderAlarmsMissingAlarmsDoesNotPureSchemaDualValidate() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        let provider = EventKitProvider(store: mockStore)
+        let response = provider.handle(
+            operation: "set_reminder_alarms",
+            payloadJson: #"{"calendar_item_identifier":"r1"}"#
+        )
+        assertNoTopLevelPureSchemaDualValidation(response, keys: ["alarms", "calendar_item_identifier"])
     }
 
     @Test
     @MainActor
-    func openNavigationDoesNotEmitPureSchemaRequiredSourceKey() {
+    func setEventRecurrenceMissingRulesDoesNotPureSchemaDualValidate() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        let provider = EventKitProvider(store: mockStore)
+        let response = provider.handle(
+            operation: "set_event_recurrence",
+            payloadJson: #"{"event_identifier":"e1"}"#
+        )
+        assertNoTopLevelPureSchemaDualValidation(response, keys: ["recurrence_rules", "event_identifier"])
+        #expect(response.errorJson?.contains("Unknown event_identifier") == true)
+    }
+
+    @Test
+    @MainActor
+    func setReminderRecurrenceMissingRulesDoesNotPureSchemaDualValidate() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        let provider = EventKitProvider(store: mockStore)
+        let response = provider.handle(
+            operation: "set_reminder_recurrence",
+            payloadJson: #"{"calendar_item_identifier":"r1"}"#
+        )
+        assertNoTopLevelPureSchemaDualValidation(response, keys: ["recurrence_rules", "calendar_item_identifier"])
+    }
+
+    @Test
+    @MainActor
+    func openNavigationMissingSourceDoesNotPureSchemaDualValidateTopLevel() {
         let store = MockMapKitStore()
         let provider = MapKitProvider(store: store, locationGrantsReadAccess: { true })
         let response = provider.handle(operation: "open_navigation", payloadJson: "{}")
-        #expect(response.errorJson?.contains("\"source is required\"") != true)
-        #expect(response.errorJson?.contains("source is required") != true)
+        assertNoTopLevelPureSchemaDualValidation(response, keys: ["source", "destination"])
+        // Nested coordinate mapping may still fail — that is not top-level pure schema.
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("source must be an object") != true)
+        #expect(response.errorJson?.contains("destination must be an object") != true)
+    }
+
+    @Test
+    @MainActor
+    func calculateRouteMissingEndpointsDoesNotPureSchemaDualValidateTopLevel() {
+        let store = MockMapKitStore()
+        let provider = MapKitProvider(store: store, locationGrantsReadAccess: { true })
+        let response = provider.handle(operation: "calculate_route", payloadJson: "{}")
+        assertNoTopLevelPureSchemaDualValidation(response, keys: ["source", "destination"])
+        #expect(response.errorJson?.contains("source must be an object") != true)
+    }
+
+    @Test
+    @MainActor
+    func estimateTravelTimeMissingEndpointsDoesNotPureSchemaDualValidateTopLevel() {
+        let store = MockMapKitStore()
+        let provider = MapKitProvider(store: store, locationGrantsReadAccess: { true })
+        let response = provider.handle(operation: "estimate_travel_time", payloadJson: "{}")
+        assertNoTopLevelPureSchemaDualValidation(response, keys: ["source", "destination"])
+        #expect(response.errorJson?.contains("source must be an object") != true)
+    }
+
+    @Test
+    @MainActor
+    func createGroupMissingNameDoesNotPureSchemaDualValidate() {
+        let mock = MockContactsStore()
+        mock.authorizationStatus = .authorized
+        let provider = ContactsProvider(store: mock)
+        let response = provider.handle(
+            operation: "create_group",
+            payloadJson: #"{"container_identifier":"c1"}"#
+        )
+        assertNoTopLevelPureSchemaDualValidation(response, keys: ["name", "container_identifier"])
+    }
+
+    @Test
+    @MainActor
+    func listEventsMissingDatesDoesNotPureSchemaDualValidate() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        let provider = EventKitProvider(store: mockStore)
+        let response = provider.handle(operation: "list_events", payloadJson: "{}")
+        assertNoTopLevelPureSchemaDualValidation(response, keys: ["start_date", "end_date"])
     }
 
     @Test
@@ -103,19 +174,5 @@ struct ProviderSchemaOwnershipTests {
         )
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("Unknown event_identifier") == true)
-    }
-
-    @Test
-    @MainActor
-    func moveReminderDoesNotEmitPureSchemaEmptyCalendar() {
-        let mockStore = MockEventKitStore()
-        mockStore.authorizationStatus = .fullAccess
-        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-1")]
-        let provider = EventKitProvider(store: mockStore)
-        let response = provider.handle(
-            operation: "move_reminder",
-            payloadJson: #"{"calendar_item_identifier":"r1","calendar_identifier":""}"#
-        )
-        #expect(response.errorJson?.contains("calendar_identifier must not be empty") != true)
     }
 }

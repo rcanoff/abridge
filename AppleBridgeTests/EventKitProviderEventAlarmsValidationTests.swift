@@ -23,15 +23,6 @@ struct EventKitEventAlarmsValidationTests {
 
     @Test
     @MainActor
-    func setEventAlarmsRejectsEmptyEventIdentifier_schemaOwnedByRust() {
-        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
-        // before ProviderBridge. This offline provider path no longer re-validates that shape.
-        let value = SchemaTrustedPayload.requiredString([:], "any")
-        #expect(value == "")
-    }
-
-    @Test
-    @MainActor
     func setEventAlarmsRejectsInvalidAlarmRelativeOffset() {
         let provider = providerWithEvent()
 
@@ -49,7 +40,7 @@ struct EventKitEventAlarmsValidationTests {
 
     @Test
     @MainActor
-    func setEventAlarmsRejectsNullAlarms() {
+    func setEventAlarmsNullAlarmsMapsToEmptyWithoutPureSchemaDualValidation() {
         let provider = providerWithEvent()
 
         let response = provider.handle(
@@ -57,8 +48,7 @@ struct EventKitEventAlarmsValidationTests {
             payloadJson: #"{"event_identifier":"evt-evt-val","alarms":null}"#
         )
 
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("alarms must be an array") == true)
+        #expect(response.errorJson?.contains("alarms must be an array") != true)
+        #expect(response.ok == true)
     }
 }

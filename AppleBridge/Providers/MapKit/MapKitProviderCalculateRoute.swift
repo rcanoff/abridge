@@ -58,11 +58,7 @@ extension MapKitProvider {
         named key: String,
         in dictionary: [String: Any]
     ) throws -> MapKitRouteEndpoint {
-        guard let endpointDictionary = dictionary[key] as? [String: Any] else {
-            // Schema requires object; mapping fails if wrong type/absent offline.
-            throw MapKitProviderError.invalidArguments("\(key) must be an object")
-        }
-
+        let endpointDictionary = SchemaTrustedPayload.requiredObject(dictionary, key)
         let coordinate = try requiredNestedCoordinateArgument(
             in: endpointDictionary,
             prefix: "\(key).coordinate"

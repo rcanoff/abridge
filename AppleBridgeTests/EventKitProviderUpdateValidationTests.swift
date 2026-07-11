@@ -50,23 +50,6 @@ struct EventKitProviderUpdateValidationTests {
 
     @Test
     @MainActor
-    func updateReminderRejectsEmptyTitleWhenProvided_schemaOwnedByRust() {
-        // Pure schema re-validation removed; Rust arg_validation owns this shape.
-        // Offline provider path must not emit the old pure-schema invalid_arguments text.
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
-
-    @Test
-    @MainActor
-    func updateReminderRejectsInvalidPriority_schemaOwnedByRust() {
-        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
-        // before ProviderBridge. This offline provider path no longer re-validates that shape.
-        let value = SchemaTrustedPayload.requiredString([:], "any")
-        #expect(value == "")
-    }
-
-    @Test
-    @MainActor
     func updateReminderRejectsNullIsCompleted() {
         let (provider, _) = providerWithReminder()
 
