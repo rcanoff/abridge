@@ -33,10 +33,6 @@ extension ContactsProvider {
     }
 
     private func parseSearchContactsArguments(_ payloadJson: String) throws -> SearchContactsArguments {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw ContactsProviderError.invalidArguments("at least one search field required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw ContactsProviderError.invalidArguments("Arguments must be valid UTF-8")
         }

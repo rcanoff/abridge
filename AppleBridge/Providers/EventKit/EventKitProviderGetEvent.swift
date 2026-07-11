@@ -27,25 +27,12 @@ extension EventKitProvider {
     }
 
     func parseEventIdentifierArguments(_ payloadJson: String) throws -> String {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("event_identifier is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
 
         let dictionary = try parseJSONObject(from: data)
-
-        guard let eventIdentifier = dictionary["event_identifier"] as? String else {
-            throw EventKitProviderError.invalidArguments("event_identifier is required")
-        }
-
-        let trimmed = eventIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            throw EventKitProviderError.invalidArguments("event_identifier must not be empty")
-        }
-
-        return trimmed
+        // Required non-empty event_identifier is schema-owned (Rust).
+        return SchemaTrustedPayload.requiredString(dictionary, "event_identifier")
     }
 }

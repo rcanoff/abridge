@@ -21,10 +21,6 @@ extension MapKitProvider {
     }
 
     private func parseForwardGeocodeArguments(_ payloadJson: String) throws -> MapKitForwardGeocodeRequest {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw MapKitProviderError.invalidArguments("address is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw MapKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
@@ -41,24 +37,8 @@ extension MapKitProvider {
     }
 
     private func requiredAddressArgument(in dictionary: [String: Any]) throws -> String {
-        guard dictionary.keys.contains("address") else {
-            throw MapKitProviderError.invalidArguments("address is required")
-        }
-
-        if dictionary["address"] is NSNull {
-            throw MapKitProviderError.invalidArguments("address is required")
-        }
-
-        guard let address = dictionary["address"] as? String else {
-            throw MapKitProviderError.invalidArguments("address must be a string")
-        }
-
-        let trimmed = address.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            throw MapKitProviderError.invalidArguments("address must not be empty")
-        }
-
-        return trimmed
+        // Required non-empty address is schema-owned (Rust).
+        SchemaTrustedPayload.requiredString(dictionary, "address")
     }
 
     private func optionalPreferredLocaleArgument(in dictionary: [String: Any]) throws -> Locale? {
@@ -75,9 +55,6 @@ extension MapKitProvider {
         }
 
         let trimmed = identifier.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            throw MapKitProviderError.invalidArguments("preferred_locale must not be empty")
-        }
 
         return Locale(identifier: trimmed)
     }

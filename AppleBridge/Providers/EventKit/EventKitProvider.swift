@@ -341,26 +341,13 @@ final class EventKitProvider {
     }
 
     func parseReminderIDArguments(_ payloadJson: String) throws -> String {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("calendar_item_identifier is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
 
         let dictionary = try parseJSONObject(from: data)
-
-        guard let reminderID = dictionary["calendar_item_identifier"] as? String else {
-            throw EventKitProviderError.invalidArguments("calendar_item_identifier is required")
-        }
-
-        let trimmed = reminderID.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            throw EventKitProviderError.invalidArguments("calendar_item_identifier must not be empty")
-        }
-
-        return reminderID
+        // Required non-empty calendar_item_identifier is schema-owned (Rust).
+        return SchemaTrustedPayload.requiredString(dictionary, "calendar_item_identifier")
     }
 
     private func reminderPredicate(listID: String?) throws -> NSPredicate {

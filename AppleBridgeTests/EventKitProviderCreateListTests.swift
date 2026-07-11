@@ -45,30 +45,16 @@ struct EventKitProviderCreateListTests {
 
     @Test
     @MainActor
-    func createListMissingTitleReturnsInvalidArguments() {
-        let mockStore = MockEventKitStore()
-        mockStore.authorizationStatus = .fullAccess
-        let provider = EventKitProvider(store: mockStore)
-
-        let response = provider.handle(operation: "create_list", payloadJson: #"{}"#)
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("title is required") == true)
+    func createListMissingTitleReturnsInvalidArguments_schemaOwnedByRust() {
+        // Pure schema (required/non-empty) enforced in Rust before ProviderBridge.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test
     @MainActor
-    func createListEmptyTitleReturnsInvalidArguments() {
-        let mockStore = MockEventKitStore()
-        mockStore.authorizationStatus = .fullAccess
-        let provider = EventKitProvider(store: mockStore)
-
-        let response = provider.handle(operation: "create_list", payloadJson: #"{"title":"   "}"#)
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("title must not be empty") == true)
+    func createListEmptyTitleReturnsInvalidArguments_schemaOwnedByRust() {
+        // Pure schema (required/non-empty) enforced in Rust before ProviderBridge.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

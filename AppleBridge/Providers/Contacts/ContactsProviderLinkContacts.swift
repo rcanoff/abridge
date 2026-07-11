@@ -42,13 +42,9 @@ extension ContactsProvider {
 
         let dictionary = try parseJSONObject(from: data)
 
-        guard let fromContactIdentifier = dictionary["from_contact_identifier"] as? String else {
-            throw ContactsProviderError.invalidArguments("from_contact_identifier is required")
-        }
+        let fromContactIdentifier = SchemaTrustedPayload.requiredString(dictionary, "from_contact_identifier")
 
-        guard let toContactIdentifier = dictionary["to_contact_identifier"] as? String else {
-            throw ContactsProviderError.invalidArguments("to_contact_identifier is required")
-        }
+        let toContactIdentifier = SchemaTrustedPayload.requiredString(dictionary, "to_contact_identifier")
 
         let trimmedFrom = fromContactIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedFrom.isEmpty else {

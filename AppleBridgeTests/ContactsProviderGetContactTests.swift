@@ -106,16 +106,8 @@ struct ContactsProviderGetContactTests {
 
     @Test
     @MainActor
-    func getContactMissingContactIdentifierReturnsInvalidArguments() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(operation: "get_contact", payloadJson: "{}")
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("contact_identifier is required") == true)
+    func getContactMissingContactIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

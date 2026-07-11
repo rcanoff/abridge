@@ -25,10 +25,6 @@ extension MapKitProvider {
     }
 
     private func parseSearchPlacesArguments(_ payloadJson: String) throws -> MapKitSearchRequest {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw MapKitProviderError.invalidArguments("query is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw MapKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
@@ -48,24 +44,8 @@ extension MapKitProvider {
     }
 
     private func requiredQueryArgument(in dictionary: [String: Any]) throws -> String {
-        guard dictionary.keys.contains("query") else {
-            throw MapKitProviderError.invalidArguments("query is required")
-        }
-
-        if dictionary["query"] is NSNull {
-            throw MapKitProviderError.invalidArguments("query is required")
-        }
-
-        guard let query = dictionary["query"] as? String else {
-            throw MapKitProviderError.invalidArguments("query must be a string")
-        }
-
-        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            throw MapKitProviderError.invalidArguments("query must not be empty")
-        }
-
-        return trimmed
+        // Required non-empty query is schema-owned (Rust).
+        SchemaTrustedPayload.requiredString(dictionary, "query")
     }
 
     private func optionalRegionPriorityArgument(

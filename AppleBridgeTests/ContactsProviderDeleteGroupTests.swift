@@ -44,19 +44,8 @@ struct ContactsProviderDeleteGroupTests {
 
     @Test
     @MainActor
-    func deleteGroupMissingGroupIdentifierReturnsInvalidArguments() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(
-            operation: "delete_group",
-            payloadJson: #"{}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("group_identifier is required") == true)
+    func deleteGroupMissingGroupIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

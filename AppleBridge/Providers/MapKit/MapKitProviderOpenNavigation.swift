@@ -22,10 +22,6 @@ extension MapKitProvider {
     }
 
     private func parseOpenNavigationArguments(_ payloadJson: String) throws -> MapKitOpenNavigationRequest {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw MapKitProviderError.invalidArguments("source is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw MapKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }

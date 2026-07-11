@@ -44,10 +44,6 @@ extension EventKitProvider {
     }
 
     private func parseMoveReminderArguments(_ payloadJson: String) throws -> MoveReminderArguments {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("calendar_item_identifier is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
@@ -55,9 +51,7 @@ extension EventKitProvider {
         let dictionary = try parseJSONObject(from: data)
         let reminderID = try parseReminderIDArguments(payloadJson)
 
-        guard let calendarIdentifier = dictionary["calendar_identifier"] as? String else {
-            throw EventKitProviderError.invalidArguments("calendar_identifier is required")
-        }
+        let calendarIdentifier = SchemaTrustedPayload.requiredString(dictionary, "calendar_identifier")
         let trimmedCalendar = calendarIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedCalendar.isEmpty else {
             throw EventKitProviderError.invalidArguments("calendar_identifier must not be empty")

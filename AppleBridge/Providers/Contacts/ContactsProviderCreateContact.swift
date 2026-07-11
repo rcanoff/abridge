@@ -43,14 +43,10 @@ extension ContactsProvider {
 
         let dictionary = try parseJSONObject(from: data)
 
-        guard let containerIdentifier = dictionary["container_identifier"] as? String else {
-            throw ContactsProviderError.invalidArguments("container_identifier is required")
-        }
-        let trimmedContainer = containerIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedContainer.isEmpty else {
-            throw ContactsProviderError.invalidArguments("container_identifier must not be empty")
-        }
+        // Required non-empty container_identifier is schema-owned (Rust).
+        let trimmedContainer = SchemaTrustedPayload.requiredString(dictionary, "container_identifier")
 
+        // Apple Contacts policy: at least one name field (not pure JSON Schema required-key).
         guard hasNonEmptyTrimmedName(in: dictionary) else {
             throw ContactsProviderError.invalidArguments(
                 "At least one of given_name, family_name, or organization_name is required"

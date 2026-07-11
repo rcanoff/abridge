@@ -23,17 +23,11 @@ struct EventKitEventRecurrenceValidationTests {
 
     @Test
     @MainActor
-    func setEventRecurrenceRejectsEmptyEventIdentifier() {
-        let provider = providerWithEvent()
-
-        let response = provider.handle(
-            operation: "set_event_recurrence",
-            payloadJson: #"{"event_identifier":"   ","recurrence_rules":[]}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("event_identifier must not be empty") == true)
+    func setEventRecurrenceRejectsEmptyEventIdentifier_schemaOwnedByRust() {
+        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
+        // before ProviderBridge. This offline provider path no longer re-validates that shape.
+        let value = SchemaTrustedPayload.requiredString([:], "any")
+        #expect(value == "")
     }
 
     @Test

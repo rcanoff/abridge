@@ -27,27 +27,19 @@ extension ContactsProvider {
     }
 
     func parseCreateGroupArguments(_ payloadJson: String) throws -> CreateGroupArguments {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw ContactsProviderError.invalidArguments("container_identifier and name are required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw ContactsProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
 
         let dictionary = try parseJSONObject(from: data)
 
-        guard let containerIdentifier = dictionary["container_identifier"] as? String else {
-            throw ContactsProviderError.invalidArguments("container_identifier is required")
-        }
+        let containerIdentifier = SchemaTrustedPayload.requiredString(dictionary, "container_identifier")
         let trimmedContainer = containerIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedContainer.isEmpty else {
             throw ContactsProviderError.invalidArguments("container_identifier must not be empty")
         }
 
-        guard let name = dictionary["name"] as? String else {
-            throw ContactsProviderError.invalidArguments("name is required")
-        }
+        let name = SchemaTrustedPayload.requiredString(dictionary, "name")
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else {
             throw ContactsProviderError.invalidArguments("name must not be empty")

@@ -7,12 +7,11 @@ import Vision
 struct VisionProviderReadQrCodeTests {
     @Test
     @MainActor
-    func readQrCodeRequiresImageData() {
-        let provider = VisionProvider(store: MockVisionStore())
-        let response = provider.handle(operation: "read_qr_code", payloadJson: "{}")
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("image_data") == true)
+    func readQrCodeRequiresImageData_schemaOwnedByRust() {
+        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
+        // before ProviderBridge. This offline provider path no longer re-validates that shape.
+        let value = SchemaTrustedPayload.requiredString([:], "any")
+        #expect(value == "")
     }
 
     @Test

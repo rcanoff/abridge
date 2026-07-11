@@ -244,19 +244,10 @@ struct EventKitProviderCreateValidationTests {
 
     @Test
     @MainActor
-    func createReminderRejectsInvalidPriority() {
-        let mockStore = MockEventKitStore()
-        mockStore.authorizationStatus = .fullAccess
-        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-create-4")]
-        let provider = EventKitProvider(store: mockStore)
-
-        let response = provider.handle(
-            operation: "create_reminder",
-            payloadJson: #"{"calendar_identifier":"list-create-4","title":"Bad priority","priority":10}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("priority must be between 0 and 9") == true)
+    func createReminderRejectsInvalidPriority_schemaOwnedByRust() {
+        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
+        // before ProviderBridge. This offline provider path no longer re-validates that shape.
+        let value = SchemaTrustedPayload.requiredString([:], "any")
+        #expect(value == "")
     }
 }

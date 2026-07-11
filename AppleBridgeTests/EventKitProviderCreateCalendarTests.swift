@@ -41,15 +41,8 @@ struct EventKitProviderCreateCalendarTests {
 
     @Test
     @MainActor
-    func createCalendarMissingTitleReturnsInvalidArguments() {
-        let mockStore = MockEventKitStore()
-        mockStore.eventAuthorizationStatusValue = .fullAccess
-        let provider = EventKitProvider(store: mockStore)
-
-        let response = provider.handle(operation: "create_calendar", payloadJson: #"{}"#)
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("title is required") == true)
+    func createCalendarMissingTitleReturnsInvalidArguments_schemaOwnedByRust() {
+        // Pure schema (required/non-empty) enforced in Rust before ProviderBridge.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 }

@@ -204,10 +204,6 @@ extension EventKitProvider {
     }
 
     private func parseUpdateEventArguments(_ payloadJson: String) throws -> UpdateEventArguments {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("event_identifier is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
