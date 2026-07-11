@@ -17,21 +17,19 @@ pub fn validate_tool_arguments(tool: &ToolDefinition, arguments: &Value) -> Resu
 
 fn validate_against_schema(schema: &Value, instance: &Value, path: &str) -> Result<(), String> {
   // Sibling keywords are conjunctive with oneOf/anyOf (JSON Schema).
+  // `oneOf` requires exactly one successful alternative.
   if let Some(one_of) = schema.get("oneOf").and_then(Value::as_array) {
     let mut errors = Vec::new();
-    let mut matched = false;
+    let mut match_count = 0usize;
     for (index, sub) in one_of.iter().enumerate() {
       match validate_against_schema(sub, instance, path) {
-        Ok(()) => {
-          matched = true;
-          break;
-        }
+        Ok(()) => match_count += 1,
         Err(err) => errors.push(format!("oneOf[{index}]: {err}")),
       }
     }
-    if !matched {
+    if match_count != 1 {
       return Err(format!(
-        "{path}: does not match any oneOf alternative ({})",
+        "{path}: oneOf requires exactly one matching alternative (matched {match_count}; {})",
         errors.join("; ")
       ));
     }
@@ -207,16 +205,102 @@ fn json_type_name(instance: &Value) -> &'static str {
   }
 }
 
-/// Lenient ISO-8601 / RFC 3339 check (presence of date and time separators).
+/// RFC 3339 / ISO-8601 date-time subset used by MCP tool schemas.
+/// Accepts `YYYY-MM-DDTHH:MM:SS[.fff]Z` or offset `±HH:MM`.
 fn looks_like_iso8601_date_time(text: &str) -> bool {
-  // Accept common EventKit/MCP forms: `2024-01-01T12:00:00Z`, with offset, fractional seconds.
-  if text.len() < 16 {
-    return false;
+  parse_rfc3339_date_time(text).is_ok()
+}
+
+fn parse_rfc3339_date_time(text: &str) -> Result<(), ()> {
+  let (date, rest) = text.split_once('T').or_else(|| text.split_once('t')).ok_or(())?;
+  let mut date_parts = date.split('-');
+  let year: i32 = date_parts.next().ok_or(())?.parse().map_err(|_| ())?;
+  let month: u32 = date_parts.next().ok_or(())?.parse().map_err(|_| ())?;
+  let day: u32 = date_parts.next().ok_or(())?.parse().map_err(|_| ())?;
+  if date_parts.next().is_some() || !(1..=12).contains(&month) {
+    return Err(());
   }
-  let bytes = text.as_bytes();
-  bytes.get(4) == Some(&b'-')
-    && bytes.get(7) == Some(&b'-')
-    && (bytes.get(10) == Some(&b'T') || bytes.get(10) == Some(&b't') || bytes.get(10) == Some(&b' '))
+  if day == 0 || day > days_in_month(year, month) {
+    return Err(());
+  }
+
+  let (time, offset) = split_time_and_offset(rest)?;
+  let mut time_parts = time.split(':');
+  let hour: u32 = time_parts.next().ok_or(())?.parse().map_err(|_| ())?;
+  let minute: u32 = time_parts.next().ok_or(())?.parse().map_err(|_| ())?;
+  let second_raw = time_parts.next().ok_or(())?;
+  if time_parts.next().is_some() || hour > 23 || minute > 59 {
+    return Err(());
+  }
+  let (second_str, fraction) = match second_raw.split_once('.') {
+    Some((sec, frac)) => (sec, Some(frac)),
+    None => (second_raw, None),
+  };
+  let second: u32 = second_str.parse().map_err(|_| ())?;
+  if second > 60 {
+    return Err(());
+  }
+  if let Some(frac) = fraction {
+    if frac.is_empty() || !frac.chars().all(|c| c.is_ascii_digit()) {
+      return Err(());
+    }
+  }
+  validate_offset(offset)
+}
+
+fn days_in_month(year: i32, month: u32) -> u32 {
+  match month {
+    1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+    4 | 6 | 9 | 11 => 30,
+    2 if is_leap_year(year) => 29,
+    2 => 28,
+    _ => 0,
+  }
+}
+
+fn is_leap_year(year: i32) -> bool {
+  (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
+}
+
+fn split_time_and_offset(rest: &str) -> Result<(&str, &str), ()> {
+  if let Some(time) = rest.strip_suffix('Z').or_else(|| rest.strip_suffix('z')) {
+    return Ok((time, "Z"));
+  }
+  if let Some(idx) = rest.rfind(['+', '-']) {
+    if idx == 0 {
+      return Err(());
+    }
+    return Ok((&rest[..idx], &rest[idx..]));
+  }
+  Err(())
+}
+
+fn validate_offset(offset: &str) -> Result<(), ()> {
+  if offset.eq_ignore_ascii_case("Z") {
+    return Ok(());
+  }
+  if offset.len() != 6 {
+    return Err(());
+  }
+  let bytes = offset.as_bytes();
+  if bytes[0] != b'+' && bytes[0] != b'-' {
+    return Err(());
+  }
+  if bytes[3] != b':' {
+    return Err(());
+  }
+  let hours: u32 = std::str::from_utf8(&bytes[1..3])
+    .map_err(|_| ())?
+    .parse()
+    .map_err(|_| ())?;
+  let minutes: u32 = std::str::from_utf8(&bytes[4..6])
+    .map_err(|_| ())?
+    .parse()
+    .map_err(|_| ())?;
+  if hours > 23 || minutes > 59 {
+    return Err(());
+  }
+  Ok(())
 }
 
 #[cfg(test)]
@@ -252,5 +336,30 @@ mod tests {
   fn accepts_empty_object_for_list_lists() {
     let tool = resolve_tool(TOOL_LIST_LISTS).expect("tool");
     validate_tool_arguments(tool, &json!({})).expect("valid");
+  }
+
+  #[test]
+  fn one_of_rejects_when_multiple_alternatives_match() {
+    let schema = json!({
+      "oneOf": [
+        { "type": "string" },
+        { "type": "string", "minLength": 1 }
+      ]
+    });
+    let err = validate_against_schema(&schema, &json!("ab"), "$").expect_err("multi match");
+    assert!(err.contains("exactly one"), "{err}");
+  }
+
+  #[test]
+  fn date_time_rejects_impossible_calendar_values() {
+    let schema = json!({ "type": "string", "format": "date-time" });
+    let err = validate_against_schema(&schema, &json!("2024-99-99T12:00:00Z"), "$").expect_err("bad date");
+    assert!(err.contains("date-time"), "{err}");
+  }
+
+  #[test]
+  fn date_time_accepts_rfc3339_utc() {
+    let schema = json!({ "type": "string", "format": "date-time" });
+    validate_against_schema(&schema, &json!("2024-01-15T12:30:00Z"), "$").expect("valid");
   }
 }
