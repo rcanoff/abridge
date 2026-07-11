@@ -12,6 +12,7 @@ mod mcp;
 mod providers;
 mod server;
 mod tools;
+mod typed_args;
 mod usage_audit;
 
 pub use config::{ProviderConfig, ProviderRequest, ProviderResponse, ServerConfig, validate_config};

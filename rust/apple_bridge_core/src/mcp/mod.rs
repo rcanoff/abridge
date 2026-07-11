@@ -161,6 +161,15 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
     return tool_error_response(id, "invalid_arguments", &message);
   }
 
+  // Phase C: typed/normalize high-traffic create/update args after schema validation.
+  let arguments = match crate::typed_args::normalize_tool_arguments(tool, arguments) {
+    Ok(value) => value,
+    Err(message) => {
+      record_tool_call(name, false);
+      return tool_error_response(id, "invalid_arguments", &message);
+    }
+  };
+
   if tool.name == tools::TOOL_GET_USAGE_LOG {
     let limit = parse_usage_log_limit(&arguments);
     record_tool_call(name, true);
