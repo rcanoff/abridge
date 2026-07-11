@@ -259,3 +259,284 @@ mod tests {
     assert!(!is_allowed_in_v1("eventkit.reminders.write"));
   }
 }
+
+/// UI group for Settings capability rows (mirrors previous Swift sections).
+pub const SETTINGS_GROUP_REMINDERS: &str = "reminders";
+pub const SETTINGS_GROUP_CALENDARS: &str = "calendars";
+pub const SETTINGS_GROUP_EVENTS: &str = "events";
+pub const SETTINGS_GROUP_CONTACTS: &str = "contacts";
+pub const SETTINGS_GROUP_MAPKIT: &str = "mapkit";
+pub const SETTINGS_GROUP_VISION: &str = "vision";
+
+/// Settings catalog entry — single source of truth for capability IDs shown in the app.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct SettingsCapabilityDefinition {
+  pub group: String,
+  pub id: String,
+  pub capability_id: String,
+  pub label: String,
+  pub shipped: bool,
+}
+
+fn settings_entry(
+  group: &str,
+  id: &str,
+  capability_id: &str,
+  label: &str,
+  shipped: bool,
+) -> SettingsCapabilityDefinition {
+  SettingsCapabilityDefinition {
+    group: group.to_owned(),
+    id: id.to_owned(),
+    capability_id: capability_id.to_owned(),
+    label: label.to_owned(),
+    shipped,
+  }
+}
+
+/// Canonical Settings capability list. Labels/UI ids match historical Swift catalog.
+pub fn settings_capability_catalog() -> Vec<SettingsCapabilityDefinition> {
+  vec![
+    // reminders
+    settings_entry(SETTINGS_GROUP_REMINDERS, "read", EVENTKIT_REMINDERS_READ, "Read", true),
+    settings_entry(
+      SETTINGS_GROUP_REMINDERS,
+      "create",
+      EVENTKIT_REMINDERS_CREATE,
+      "Create",
+      true,
+    ),
+    settings_entry(SETTINGS_GROUP_REMINDERS, "edit", EVENTKIT_REMINDERS_EDIT, "Edit", true),
+    settings_entry(
+      SETTINGS_GROUP_REMINDERS,
+      "delete",
+      EVENTKIT_REMINDERS_DELETE,
+      "Delete",
+      true,
+    ),
+    settings_entry(
+      SETTINGS_GROUP_REMINDERS,
+      "complete",
+      EVENTKIT_REMINDERS_COMPLETE,
+      "Complete",
+      true,
+    ),
+    settings_entry(
+      SETTINGS_GROUP_REMINDERS,
+      "alarms",
+      EVENTKIT_REMINDERS_ALARMS,
+      "Alarms",
+      true,
+    ),
+    settings_entry(
+      SETTINGS_GROUP_REMINDERS,
+      "recurrence",
+      EVENTKIT_REMINDERS_RECURRENCE,
+      "Recurrence",
+      true,
+    ),
+    settings_entry(
+      SETTINGS_GROUP_REMINDERS,
+      "search",
+      EVENTKIT_REMINDERS_SEARCH,
+      "Search",
+      true,
+    ),
+    // calendars
+    settings_entry(
+      SETTINGS_GROUP_CALENDARS,
+      "calendars-read",
+      EVENTKIT_CALENDARS_READ,
+      "Read",
+      true,
+    ),
+    settings_entry(
+      SETTINGS_GROUP_CALENDARS,
+      "calendars-create",
+      EVENTKIT_CALENDARS_CREATE,
+      "Create",
+      true,
+    ),
+    settings_entry(
+      SETTINGS_GROUP_CALENDARS,
+      "calendars-edit",
+      EVENTKIT_CALENDARS_EDIT,
+      "Edit",
+      true,
+    ),
+    settings_entry(
+      SETTINGS_GROUP_CALENDARS,
+      "calendars-delete",
+      EVENTKIT_CALENDARS_DELETE,
+      "Delete",
+      true,
+    ),
+    // events
+    settings_entry(SETTINGS_GROUP_EVENTS, "events-read", EVENTKIT_EVENTS_READ, "Read", true),
+    settings_entry(
+      SETTINGS_GROUP_EVENTS,
+      "events-search",
+      EVENTKIT_EVENTS_SEARCH,
+      "Search",
+      true,
+    ),
+    settings_entry(
+      SETTINGS_GROUP_EVENTS,
+      "events-create",
+      EVENTKIT_EVENTS_CREATE,
+      "Create",
+      true,
+    ),
+    settings_entry(SETTINGS_GROUP_EVENTS, "events-edit", EVENTKIT_EVENTS_EDIT, "Edit", true),
+    settings_entry(
+      SETTINGS_GROUP_EVENTS,
+      "events-delete",
+      EVENTKIT_EVENTS_DELETE,
+      "Delete",
+      true,
+    ),
+    settings_entry(
+      SETTINGS_GROUP_EVENTS,
+      "events-alarms",
+      EVENTKIT_EVENTS_ALARMS,
+      "Alarms",
+      true,
+    ),
+    settings_entry(
+      SETTINGS_GROUP_EVENTS,
+      "events-recurrence",
+      EVENTKIT_EVENTS_RECURRENCE,
+      "Recurrence",
+      true,
+    ),
+    // invitations: tools exist; Settings ships=false until live RSVP API
+    settings_entry(
+      SETTINGS_GROUP_EVENTS,
+      "events-invitations",
+      EVENTKIT_EVENTS_INVITATIONS,
+      "Invitations",
+      false,
+    ),
+    // contacts
+    settings_entry(SETTINGS_GROUP_CONTACTS, "contacts-read", CONTACTS_READ, "Read", true),
+    settings_entry(
+      SETTINGS_GROUP_CONTACTS,
+      "contacts-search",
+      CONTACTS_SEARCH,
+      "Search",
+      true,
+    ),
+    settings_entry(
+      SETTINGS_GROUP_CONTACTS,
+      "contacts-create",
+      CONTACTS_CREATE,
+      "Create",
+      true,
+    ),
+    settings_entry(SETTINGS_GROUP_CONTACTS, "contacts-edit", CONTACTS_EDIT, "Edit", true),
+    settings_entry(
+      SETTINGS_GROUP_CONTACTS,
+      "contacts-delete",
+      CONTACTS_DELETE,
+      "Delete",
+      true,
+    ),
+    // mapkit
+    settings_entry(SETTINGS_GROUP_MAPKIT, "mapkit-search", MAPKIT_SEARCH, "Search", true),
+    settings_entry(SETTINGS_GROUP_MAPKIT, "mapkit-geocode", MAPKIT_GEOCODE, "Geocode", true),
+    settings_entry(SETTINGS_GROUP_MAPKIT, "mapkit-routing", MAPKIT_ROUTING, "Routing", true),
+    settings_entry(
+      SETTINGS_GROUP_MAPKIT,
+      "mapkit-navigation",
+      MAPKIT_NAVIGATION,
+      "Navigation",
+      true,
+    ),
+    settings_entry(
+      SETTINGS_GROUP_MAPKIT,
+      "mapkit-location",
+      MAPKIT_LOCATION,
+      "Location",
+      true,
+    ),
+    settings_entry(SETTINGS_GROUP_MAPKIT, "mapkit-read", MAPKIT_READ, "Read", true),
+    // vision
+    settings_entry(SETTINGS_GROUP_VISION, "vision-text", VISION_TEXT, "Text", true),
+    settings_entry(
+      SETTINGS_GROUP_VISION,
+      "vision-document",
+      VISION_DOCUMENT,
+      "Document",
+      true,
+    ),
+    settings_entry(
+      SETTINGS_GROUP_VISION,
+      "vision-barcodes",
+      VISION_BARCODES,
+      "Barcodes",
+      true,
+    ),
+    settings_entry(SETTINGS_GROUP_VISION, "vision-faces", VISION_FACES, "Faces", true),
+  ]
+}
+
+/// UniFFI export: Settings consumes this list; do not hand-maintain a second ID table in Swift.
+#[uniffi::export]
+pub fn list_settings_capabilities() -> Vec<SettingsCapabilityDefinition> {
+  settings_capability_catalog()
+}
+
+#[cfg(test)]
+mod catalog_tests {
+  use super::{
+    EVENTKIT_EVENTS_INVITATIONS, EVENTKIT_REMINDERS_READ, SETTINGS_GROUP_REMINDERS, is_allowed_in_v1,
+    list_settings_capabilities, settings_capability_catalog,
+  };
+
+  #[test]
+  fn catalog_includes_reminders_read_with_label() {
+    let entry = settings_capability_catalog()
+      .into_iter()
+      .find(|e| e.capability_id == EVENTKIT_REMINDERS_READ)
+      .expect("reminders read");
+    assert_eq!(entry.group, SETTINGS_GROUP_REMINDERS);
+    assert_eq!(entry.id, "read");
+    assert_eq!(entry.label, "Read");
+    assert!(entry.shipped);
+  }
+
+  #[test]
+  fn catalog_has_expected_count_and_unique_capability_ids() {
+    let catalog = settings_capability_catalog();
+    assert_eq!(catalog.len(), 35);
+    let mut ids: Vec<_> = catalog.iter().map(|e| e.capability_id.clone()).collect();
+    ids.sort();
+    ids.dedup();
+    assert_eq!(ids.len(), 35);
+  }
+
+  #[test]
+  fn every_catalog_capability_is_allowed_in_v1() {
+    for entry in settings_capability_catalog() {
+      assert!(
+        is_allowed_in_v1(&entry.capability_id),
+        "not allowlisted: {}",
+        entry.capability_id
+      );
+    }
+  }
+
+  #[test]
+  fn invitations_capability_is_present_but_not_shipped() {
+    let entry = settings_capability_catalog()
+      .into_iter()
+      .find(|e| e.capability_id == EVENTKIT_EVENTS_INVITATIONS)
+      .expect("invitations");
+    assert!(!entry.shipped);
+  }
+
+  #[test]
+  fn uniffi_export_matches_catalog() {
+    assert_eq!(list_settings_capabilities(), settings_capability_catalog());
+  }
+}

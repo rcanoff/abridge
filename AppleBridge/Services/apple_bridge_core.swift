@@ -1058,6 +1058,75 @@ public func FfiConverterTypeServerStatus_lower(_ value: ServerStatus) -> RustBuf
 }
 
 
+/**
+ * Settings catalog entry — single source of truth for capability IDs shown in the app.
+ */
+public struct SettingsCapabilityDefinition: Equatable, Hashable {
+    public var group: String
+    public var id: String
+    public var capabilityId: String
+    public var label: String
+    public var shipped: Bool
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(group: String, id: String, capabilityId: String, label: String, shipped: Bool) {
+        self.group = group
+        self.id = id
+        self.capabilityId = capabilityId
+        self.label = label
+        self.shipped = shipped
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension SettingsCapabilityDefinition: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSettingsCapabilityDefinition: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SettingsCapabilityDefinition {
+        return
+            try SettingsCapabilityDefinition(
+                group: FfiConverterString.read(from: &buf), 
+                id: FfiConverterString.read(from: &buf), 
+                capabilityId: FfiConverterString.read(from: &buf), 
+                label: FfiConverterString.read(from: &buf), 
+                shipped: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SettingsCapabilityDefinition, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.group, into: &buf)
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.capabilityId, into: &buf)
+        FfiConverterString.write(value.label, into: &buf)
+        FfiConverterBool.write(value.shipped, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSettingsCapabilityDefinition_lift(_ buf: RustBuffer) throws -> SettingsCapabilityDefinition {
+    return try FfiConverterTypeSettingsCapabilityDefinition.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSettingsCapabilityDefinition_lower(_ value: SettingsCapabilityDefinition) -> RustBuffer {
+    return FfiConverterTypeSettingsCapabilityDefinition.lower(value)
+}
+
+
 public struct UsageAuditEntry: Equatable, Hashable {
     public var timestampUtc: String
     public var eventType: String
@@ -1496,6 +1565,31 @@ fileprivate struct FfiConverterSequenceTypeProviderStatus: FfiConverterRustBuffe
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeSettingsCapabilityDefinition: FfiConverterRustBuffer {
+    typealias SwiftType = [SettingsCapabilityDefinition]
+
+    public static func write(_ value: [SettingsCapabilityDefinition], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeSettingsCapabilityDefinition.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [SettingsCapabilityDefinition] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [SettingsCapabilityDefinition]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeSettingsCapabilityDefinition.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeUsageAuditEntry: FfiConverterRustBuffer {
     typealias SwiftType = [UsageAuditEntry]
 
@@ -1549,6 +1643,15 @@ public func stopServer(handle: ServerHandle)throws   {try rustCallWithError(FfiC
     )
 }
 }
+/**
+ * UniFFI export: Settings consumes this list; do not hand-maintain a second ID table in Swift.
+ */
+public func listSettingsCapabilities() -> [SettingsCapabilityDefinition]  {
+    return try!  FfiConverterSequenceTypeSettingsCapabilityDefinition.lift(try! rustCall() {
+    uniffi_apple_bridge_core_fn_func_list_settings_capabilities($0
+    )
+})
+}
 
 private enum InitializationResult {
     case ok
@@ -1578,6 +1681,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_apple_bridge_core_checksum_func_stop_server() != 44171) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_apple_bridge_core_checksum_func_list_settings_capabilities() != 9227) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_apple_bridge_core_checksum_method_serverhandle_record_api_key_rotation() != 40851) {

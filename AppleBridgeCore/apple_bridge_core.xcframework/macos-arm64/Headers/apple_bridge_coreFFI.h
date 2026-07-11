@@ -335,6 +335,12 @@ void uniffi_apple_bridge_core_fn_func_start_server(uint64_t handle, RustCallStat
 void uniffi_apple_bridge_core_fn_func_stop_server(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_APPLE_BRIDGE_CORE_FN_FUNC_LIST_SETTINGS_CAPABILITIES
+#define UNIFFI_FFIDEF_UNIFFI_APPLE_BRIDGE_CORE_FN_FUNC_LIST_SETTINGS_CAPABILITIES
+RustBuffer uniffi_apple_bridge_core_fn_func_list_settings_capabilities(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_FFI_APPLE_BRIDGE_CORE_RUSTBUFFER_ALLOC
 #define UNIFFI_FFIDEF_FFI_APPLE_BRIDGE_CORE_RUSTBUFFER_ALLOC
 RustBuffer ffi_apple_bridge_core_rustbuffer_alloc(uint64_t size, RustCallStatus *_Nonnull out_status
@@ -622,6 +628,12 @@ uint16_t uniffi_apple_bridge_core_checksum_func_start_server(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_APPLE_BRIDGE_CORE_CHECKSUM_FUNC_STOP_SERVER
 #define UNIFFI_FFIDEF_UNIFFI_APPLE_BRIDGE_CORE_CHECKSUM_FUNC_STOP_SERVER
 uint16_t uniffi_apple_bridge_core_checksum_func_stop_server(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_APPLE_BRIDGE_CORE_CHECKSUM_FUNC_LIST_SETTINGS_CAPABILITIES
+#define UNIFFI_FFIDEF_UNIFFI_APPLE_BRIDGE_CORE_CHECKSUM_FUNC_LIST_SETTINGS_CAPABILITIES
+uint16_t uniffi_apple_bridge_core_checksum_func_list_settings_capabilities(void
     
 );
 #endif
