@@ -31,6 +31,7 @@ enum LiveMapKitEnvironment {
 /// Not `@MainActor`: Rust FFI calls this from background threads. Holding `main.sync` across
 /// MapKit waits prevents network completions; `MapKitSearchFetch.waitForCompletion` hops starts
 /// to main and waits off-main instead.
+/// Adapter layer; pure schema validation is Rust (`arg_validation`).
 struct MapKitProvider {
     let store: any MapKitStoreing
     /// Production uses sticky `LiveLocationPermission`; tests fall back to store CL status.
