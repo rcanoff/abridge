@@ -38,11 +38,4 @@ struct EventKitProviderCreateCalendarTests {
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("permission_denied") == true)
     }
-
-    @Test
-    @MainActor
-    func createCalendarMissingTitleReturnsInvalidArguments_schemaOwnedByRust() {
-        // Pure schema (required/non-empty) enforced in Rust before ProviderBridge.
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
 }

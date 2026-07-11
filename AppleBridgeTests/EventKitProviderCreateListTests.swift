@@ -45,20 +45,6 @@ struct EventKitProviderCreateListTests {
 
     @Test
     @MainActor
-    func createListMissingTitleReturnsInvalidArguments_schemaOwnedByRust() {
-        // Pure schema (required/non-empty) enforced in Rust before ProviderBridge.
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
-
-    @Test
-    @MainActor
-    func createListEmptyTitleReturnsInvalidArguments_schemaOwnedByRust() {
-        // Pure schema (required/non-empty) enforced in Rust before ProviderBridge.
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
-
-    @Test
-    @MainActor
     func createListUnknownSourceIdentifierReturnsInvalidArguments() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess

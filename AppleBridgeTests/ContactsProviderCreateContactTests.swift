@@ -94,15 +94,6 @@ struct ContactsProviderCreateContactTests {
 
     @Test
     @MainActor
-    func createContactMissingContainerIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
-        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
-        // before ProviderBridge. This offline provider path no longer re-validates that shape.
-        let value = SchemaTrustedPayload.requiredString([:], "any")
-        #expect(value == "")
-    }
-
-    @Test
-    @MainActor
     func createContactMissingNameReturnsInvalidArguments() {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .authorized

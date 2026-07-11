@@ -43,9 +43,8 @@ extension EventKitProvider {
         let dictionary = try parseJSONObject(from: data)
         let eventIdentifier = try parseEventIdentifierArguments(payloadJson)
 
-        guard let alarms = try EventKitDeserialization.alarms(from: dictionary["alarms"]) else {
-            throw EventKitProviderError.invalidArguments("alarms must be an array")
-        }
+        let alarmsRaw = SchemaTrustedPayload.requiredArray(dictionary, "alarms")
+        let alarms = try EventKitDeserialization.alarms(from: alarmsRaw) ?? []
 
         return SetEventAlarmsArguments(eventIdentifier: eventIdentifier, alarms: alarms)
     }

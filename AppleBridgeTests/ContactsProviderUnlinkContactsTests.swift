@@ -80,18 +80,6 @@ struct ContactsProviderUnlinkContactsTests {
 
     @Test
     @MainActor
-    func unlinkContactsMissingIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
-
-    @Test
-    @MainActor
-    func unlinkContactsEmptyIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
-
-    @Test
-    @MainActor
     func unlinkContactsPermissionDeniedWhenUnauthorized() {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .denied

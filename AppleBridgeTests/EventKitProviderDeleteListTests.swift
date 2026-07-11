@@ -29,13 +29,6 @@ struct EventKitProviderDeleteListTests {
 
     @Test
     @MainActor
-    func deleteListMissingCalendarIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
-        // Pure schema (required/non-empty) enforced in Rust before ProviderBridge.
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
-
-    @Test
-    @MainActor
     func deleteListDoesNotTrimCalendarIdentifierForLookup() {
         let mockStore = MockEventKitStore()
         mockStore.authorizationStatus = .fullAccess
@@ -69,13 +62,6 @@ struct EventKitProviderDeleteListTests {
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
         #expect(response.errorJson?.contains("Unknown calendar_identifier") == true)
-    }
-
-    @Test
-    @MainActor
-    func deleteListRejectsEmptyCalendarIdentifier_schemaOwnedByRust() {
-        // Pure schema (required/non-empty) enforced in Rust before ProviderBridge.
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

@@ -54,38 +54,6 @@ struct ContactsProviderSearchContactsTests {
 
     @Test
     @MainActor
-    func searchContactsRejectsEmptyName_schemaOwnedByRust() {
-        // Pure schema re-validation removed; Rust arg_validation owns this shape.
-        // Offline provider path must not emit the old pure-schema invalid_arguments text.
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
-
-    @Test
-    @MainActor
-    func searchContactsRejectsWhitespaceOnlyName_schemaOwnedByRust() {
-        // Pure schema re-validation removed; Rust arg_validation owns this shape.
-        // Offline provider path must not emit the old pure-schema invalid_arguments text.
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
-
-    @Test
-    @MainActor
-    func searchContactsRejectsEmptyEmailAddress_schemaOwnedByRust() {
-        // Pure schema re-validation removed; Rust arg_validation owns this shape.
-        // Offline provider path must not emit the old pure-schema invalid_arguments text.
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
-
-    @Test
-    @MainActor
-    func searchContactsRejectsEmptyPhoneNumber_schemaOwnedByRust() {
-        // Pure schema re-validation removed; Rust arg_validation owns this shape.
-        // Offline provider path must not emit the old pure-schema invalid_arguments text.
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
-
-    @Test
-    @MainActor
     func searchContactsTrimsSearchFieldsBeforeLookup() throws {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .authorized

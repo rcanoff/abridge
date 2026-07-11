@@ -44,12 +44,6 @@ struct ContactsProviderDeleteContactTests {
 
     @Test
     @MainActor
-    func deleteContactMissingContactIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
-
-    @Test
-    @MainActor
     func deleteContactPermissionDeniedWhenUnauthorized() {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .denied

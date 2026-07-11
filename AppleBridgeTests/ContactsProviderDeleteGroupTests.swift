@@ -44,12 +44,6 @@ struct ContactsProviderDeleteGroupTests {
 
     @Test
     @MainActor
-    func deleteGroupMissingGroupIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
-        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
-    }
-
-    @Test
-    @MainActor
     func deleteGroupPermissionDeniedWhenUnauthorized() {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .denied

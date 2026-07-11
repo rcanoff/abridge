@@ -18,15 +18,6 @@ struct MapKitProviderSearchPlacesTests {
 
     @Test
     @MainActor
-    func searchPlacesRequiresQuery_schemaOwnedByRust() {
-        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
-        // before ProviderBridge. This offline provider path no longer re-validates that shape.
-        let value = SchemaTrustedPayload.requiredString([:], "any")
-        #expect(value == "")
-    }
-
-    @Test
-    @MainActor
     func searchPlacesRejectsUnsupportedResultTypes() {
         let provider = MapKitProvider(store: MockMapKitStore())
         let response = provider.handle(

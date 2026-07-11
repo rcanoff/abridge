@@ -241,13 +241,4 @@ struct EventKitProviderCreateValidationTests {
         #expect(response.errorJson?.contains("invalid_arguments") == true)
         #expect(response.errorJson?.contains("either end_date or occurrence_count") == true)
     }
-
-    @Test
-    @MainActor
-    func createReminderRejectsInvalidPriority_schemaOwnedByRust() {
-        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
-        // before ProviderBridge. This offline provider path no longer re-validates that shape.
-        let value = SchemaTrustedPayload.requiredString([:], "any")
-        #expect(value == "")
-    }
 }

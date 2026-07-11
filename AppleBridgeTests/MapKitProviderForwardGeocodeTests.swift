@@ -21,15 +21,6 @@ struct MapKitProviderForwardGeocodeTests {
 
     @Test
     @MainActor
-    func forwardGeocodeRequiresAddress_schemaOwnedByRust() {
-        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
-        // before ProviderBridge. This offline provider path no longer re-validates that shape.
-        let value = SchemaTrustedPayload.requiredString([:], "any")
-        #expect(value == "")
-    }
-
-    @Test
-    @MainActor
     func forwardGeocodeReturnsSerializedResponse() throws {
         let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
             latitude: 37.3346,
