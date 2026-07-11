@@ -3,7 +3,7 @@ import Foundation
 
 @MainActor
 final class LiveContactsStore: ContactsStoreing {
-    private let contactStore: CNContactStore
+    let contactStore: CNContactStore
     private let contactLinking: any ContactsLinkingPerforming
     private let contactUnlinking: any ContactsUnlinkingPerforming
 
@@ -189,7 +189,7 @@ final class LiveContactsStore: ContactsStoreing {
         do {
             try contactStore.execute(saveRequest)
         } catch {
-            throw ContactsProviderError.contactsError(error.localizedDescription)
+            throw ContactsSaveErrorMapping.map(error, wroteNote: !contact.note.isEmpty)
         }
 
         guard let saved = try fetchContact(identifier: contact.identifier) else {
@@ -289,7 +289,10 @@ final class LiveContactsStore: ContactsStoreing {
         do {
             try contactStore.execute(saveRequest)
         } catch {
-            throw ContactsProviderError.contactsError(error.localizedDescription)
+            throw ContactsSaveErrorMapping.map(
+                error,
+                wroteNote: fields["note"] != nil && !(fields["note"] is NSNull)
+            )
         }
 
         guard let saved = try fetchContact(identifier: identifier) else {
@@ -331,27 +334,5 @@ final class LiveContactsStore: ContactsStoreing {
         let saveRequest = CNSaveRequest()
         try contactUnlinking.unlink(contactMutable, in: saveRequest)
         try contactStore.execute(saveRequest)
-    }
-
-    private func fetchGroup(identifier: String) throws -> CNGroup? {
-        do {
-            let groups = try contactStore.groups(
-                matching: CNGroup.predicateForGroups(withIdentifiers: [identifier])
-            )
-            return groups.first
-        } catch {
-            throw ContactsProviderError.contactsError(error.localizedDescription)
-        }
-    }
-
-    private func unifiedContacts(matching predicate: NSPredicate) throws -> [CNContact] {
-        do {
-            return try contactStore.unifiedContacts(
-                matching: predicate,
-                keysToFetch: ContactsKeyDescriptors.all
-            )
-        } catch {
-            throw ContactsProviderError.contactsError(error.localizedDescription)
-        }
     }
 }
