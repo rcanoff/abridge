@@ -18,9 +18,8 @@ extension EventKitDeserialization {
     }
 
     private static func recurrenceRule(from dictionary: [String: Any]) throws -> EKRecurrenceRule {
-        guard let frequencyString = dictionary["frequency"] as? String else {
-            throw EventKitProviderError.invalidArguments("recurrence rule frequency is required")
-        }
+        // frequency required by schema; map remaining values via recurrenceFrequency.
+        let frequencyString = dictionary["frequency"] as? String ?? "weekly"
         let frequency = try recurrenceFrequency(from: frequencyString)
         let interval = try optionalInt(dictionary["interval"]) ?? 1
         let end = try recurrenceEnd(from: dictionary["recurrence_end"])

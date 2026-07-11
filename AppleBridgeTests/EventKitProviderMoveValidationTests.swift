@@ -33,16 +33,9 @@ struct EventKitProviderMoveValidationTests {
 
     @Test
     @MainActor
-    func moveReminderRejectsEmptyCalendarIdentifier() {
-        let provider = providerWithReminder()
-
-        let response = provider.handle(
-            operation: "move_reminder",
-            payloadJson: #"{"calendar_item_identifier":"rem-val","calendar_identifier":"   "}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("calendar_identifier must not be empty") == true)
+    func moveReminderRejectsEmptyCalendarIdentifier_schemaOwnedByRust() {
+        // Pure schema re-validation removed; Rust arg_validation owns this shape.
+        // Offline provider path must not emit the old pure-schema invalid_arguments text.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 }

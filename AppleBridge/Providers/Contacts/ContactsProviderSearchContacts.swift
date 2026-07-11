@@ -84,11 +84,6 @@ extension ContactsProvider {
             throw ContactsProviderError.invalidArguments("\(key) must be a string or null")
         }
 
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            throw ContactsProviderError.invalidArguments("\(key) must not be empty")
-        }
-
-        return trimmed
+        return value.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

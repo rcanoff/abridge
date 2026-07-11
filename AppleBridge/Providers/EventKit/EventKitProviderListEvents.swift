@@ -39,12 +39,8 @@ extension EventKitProvider {
 
         let dictionary = try parseJSONObject(from: data)
 
-        guard let startDate = try requiredISO8601DateArgument(named: "start_date", in: dictionary) else {
-            throw EventKitProviderError.invalidArguments("start_date is required")
-        }
-        guard let endDate = try requiredISO8601DateArgument(named: "end_date", in: dictionary) else {
-            throw EventKitProviderError.invalidArguments("end_date is required")
-        }
+        let startDate = try requiredISO8601DateArgument(named: "start_date", in: dictionary) ?? Date.distantPast
+        let endDate = try requiredISO8601DateArgument(named: "end_date", in: dictionary) ?? Date.distantFuture
 
         if startDate > endDate {
             throw EventKitProviderError.invalidArguments("start_date must not be after end_date")
@@ -65,7 +61,7 @@ extension EventKitProvider {
         }
 
         if dictionary[key] is NSNull {
-            throw EventKitProviderError.invalidArguments("\(key) is required")
+            return nil
         }
 
         guard let value = dictionary[key] as? String else {

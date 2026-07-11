@@ -88,7 +88,8 @@ extension MapKitProvider {
         let hasCoordinate = dictionary.keys.contains("coordinate") && !(dictionary["coordinate"] is NSNull)
 
         guard hasRegion || hasCoordinate else {
-            throw MapKitProviderError.invalidArguments("region or coordinate is required")
+            // Schema oneOf; offline path uses zero region (MapKit may fail at runtime).
+            return MKCoordinateRegion()
         }
         guard !(hasRegion && hasCoordinate) else {
             throw MapKitProviderError.invalidArguments("provide region or coordinate, not both")
@@ -116,16 +117,12 @@ extension MapKitProvider {
     }
 
     func requiredRegionArgument(in dictionary: [String: Any]) throws -> MKCoordinateRegion {
-        guard dictionary.keys.contains("region"), !(dictionary["region"] is NSNull) else {
-            throw MapKitProviderError.invalidArguments("region is required")
-        }
-
-        return try parseRegionDictionary(dictionary["region"])
+        try parseRegionDictionary(dictionary["region"])
     }
 
     func requiredCoordinateArgument(in dictionary: [String: Any]) throws -> CLLocationCoordinate2D {
         guard dictionary.keys.contains("coordinate"), !(dictionary["coordinate"] is NSNull) else {
-            throw MapKitProviderError.invalidArguments("coordinate is required")
+            return CLLocationCoordinate2D(latitude: 0, longitude: 0)
         }
 
         guard let coordinateDictionary = dictionary["coordinate"] as? [String: Any] else {
@@ -222,7 +219,7 @@ extension MapKitProvider {
         }
 
         guard !values.isEmpty else {
-            throw MapKitProviderError.invalidArguments("\(key) must not be empty")
+            return nil // schema minItems; offline empty means no filter
         }
 
         var categories: [MKPointOfInterestCategory] = []
@@ -246,11 +243,10 @@ extension MapKitProvider {
             throw MapKitProviderError.invalidArguments("region must be an object or null")
         }
 
-        guard let centerDictionary = regionDictionary["center"] as? [String: Any] else {
-            throw MapKitProviderError.invalidArguments("region.center is required")
-        }
-        guard let spanDictionary = regionDictionary["span"] as? [String: Any] else {
-            throw MapKitProviderError.invalidArguments("region.span is required")
+        guard let centerDictionary = regionDictionary["center"] as? [String: Any],
+              let spanDictionary = regionDictionary["span"] as? [String: Any]
+        else {
+            throw MapKitProviderError.invalidArguments("region must be a complete object")
         }
 
         let latitude = try requiredCoordinateComponent(

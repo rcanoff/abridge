@@ -33,17 +33,9 @@ extension ContactsProvider {
 
         let dictionary = try parseJSONObject(from: data)
 
-        let containerIdentifier = SchemaTrustedPayload.requiredString(dictionary, "container_identifier")
-        let trimmedContainer = containerIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedContainer.isEmpty else {
-            throw ContactsProviderError.invalidArguments("container_identifier must not be empty")
-        }
+        let trimmedContainer = SchemaTrustedPayload.requiredString(dictionary, "container_identifier")
 
-        let name = SchemaTrustedPayload.requiredString(dictionary, "name")
-        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedName.isEmpty else {
-            throw ContactsProviderError.invalidArguments("name must not be empty")
-        }
+        let trimmedName = SchemaTrustedPayload.requiredString(dictionary, "name")
 
         return CreateGroupArguments(containerIdentifier: trimmedContainer, name: trimmedName)
     }

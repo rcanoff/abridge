@@ -45,7 +45,7 @@ extension ContactsDeserialization {
 
     static func contactType(from value: Any?) throws -> CNContactType {
         guard let string = try optionalString(value) else {
-            throw ContactsProviderError.invalidArguments("contact_type must be a string")
+            return .person // schema enum; offline default
         }
         switch string {
         case "person":

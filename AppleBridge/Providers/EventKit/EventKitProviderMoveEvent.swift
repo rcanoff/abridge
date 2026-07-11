@@ -51,11 +51,7 @@ extension EventKitProvider {
         let dictionary = try parseJSONObject(from: data)
         let eventIdentifier = try parseEventIdentifierArguments(payloadJson)
 
-        let calendarIdentifier = SchemaTrustedPayload.requiredString(dictionary, "calendar_identifier")
-        let trimmedCalendar = calendarIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedCalendar.isEmpty else {
-            throw EventKitProviderError.invalidArguments("calendar_identifier must not be empty")
-        }
+        let trimmedCalendar = SchemaTrustedPayload.requiredString(dictionary, "calendar_identifier")
 
         return MoveEventArguments(eventIdentifier: eventIdentifier, calendarIdentifier: trimmedCalendar)
     }

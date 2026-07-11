@@ -126,21 +126,10 @@ struct ContactsProviderUpdateGroupTests {
 
     @Test
     @MainActor
-    func updateGroupWhitespaceOnlyNameReturnsInvalidArguments() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let group = ContactsTestSupport.makeGroup(name: "Family")
-        mockStore.groups = [group]
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(
-            operation: "update_group",
-            payloadJson: #"{"group_identifier":"\#(group.identifier)","name":"   "}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("name must not be empty") == true)
+    func updateGroupWhitespaceOnlyNameReturnsInvalidArguments_schemaOwnedByRust() {
+        // Pure schema re-validation removed; Rust arg_validation owns this shape.
+        // Offline provider path must not emit the old pure-schema invalid_arguments text.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

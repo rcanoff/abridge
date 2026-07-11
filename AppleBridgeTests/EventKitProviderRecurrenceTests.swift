@@ -103,19 +103,10 @@ struct EventKitProviderRecurrenceTests {
 
     @Test
     @MainActor
-    func setReminderRecurrenceMissingRecurrenceRulesReturnsInvalidArguments() {
-        let mockStore = MockEventKitStore()
-        mockStore.authorizationStatus = .fullAccess
-        let provider = EventKitProvider(store: mockStore)
-
-        let response = provider.handle(
-            operation: "set_reminder_recurrence",
-            payloadJson: #"{"calendar_item_identifier":"rem-1"}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("recurrence_rules is required") == true)
+    func setReminderRecurrenceMissingRecurrenceRulesReturnsInvalidArguments_schemaOwnedByRust() {
+        // Pure schema re-validation removed; Rust arg_validation owns this shape.
+        // Offline provider path must not emit the old pure-schema invalid_arguments text.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

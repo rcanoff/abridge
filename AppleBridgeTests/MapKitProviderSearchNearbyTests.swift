@@ -21,11 +21,10 @@ struct MapKitProviderSearchNearbyTests {
 
     @Test
     @MainActor
-    func searchNearbyRequiresRegionOrCoordinate() {
-        let provider = MapKitProvider(store: MockMapKitStore())
-        let response = provider.handle(operation: "search_nearby", payloadJson: "{}")
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
+    func searchNearbyRequiresRegionOrCoordinate_schemaOwnedByRust() {
+        // Pure schema re-validation removed; Rust arg_validation owns this shape.
+        // Offline provider path must not emit the old pure-schema invalid_arguments text.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

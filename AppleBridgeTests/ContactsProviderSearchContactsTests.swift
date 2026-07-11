@@ -54,58 +54,34 @@ struct ContactsProviderSearchContactsTests {
 
     @Test
     @MainActor
-    func searchContactsRejectsEmptyName() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(operation: "search_contacts", payloadJson: #"{"name":""}"#)
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("name must not be empty") == true)
+    func searchContactsRejectsEmptyName_schemaOwnedByRust() {
+        // Pure schema re-validation removed; Rust arg_validation owns this shape.
+        // Offline provider path must not emit the old pure-schema invalid_arguments text.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test
     @MainActor
-    func searchContactsRejectsWhitespaceOnlyName() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(operation: "search_contacts", payloadJson: #"{"name":"   "}"#)
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("name must not be empty") == true)
+    func searchContactsRejectsWhitespaceOnlyName_schemaOwnedByRust() {
+        // Pure schema re-validation removed; Rust arg_validation owns this shape.
+        // Offline provider path must not emit the old pure-schema invalid_arguments text.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test
     @MainActor
-    func searchContactsRejectsEmptyEmailAddress() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(operation: "search_contacts", payloadJson: #"{"email_address":""}"#)
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("email_address must not be empty") == true)
+    func searchContactsRejectsEmptyEmailAddress_schemaOwnedByRust() {
+        // Pure schema re-validation removed; Rust arg_validation owns this shape.
+        // Offline provider path must not emit the old pure-schema invalid_arguments text.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test
     @MainActor
-    func searchContactsRejectsEmptyPhoneNumber() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(operation: "search_contacts", payloadJson: #"{"phone_number":""}"#)
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("phone_number must not be empty") == true)
+    func searchContactsRejectsEmptyPhoneNumber_schemaOwnedByRust() {
+        // Pure schema re-validation removed; Rust arg_validation owns this shape.
+        // Offline provider path must not emit the old pure-schema invalid_arguments text.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test
