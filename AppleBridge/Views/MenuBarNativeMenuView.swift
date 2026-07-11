@@ -34,19 +34,20 @@ struct MenuBarNativeMenuView: View {
         .disabled(MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore))
     }
 
-    @ViewBuilder
     private var statusLabel: some View {
         let runState = serverStore.runState
         let label = MenuBarMCPStatusFormatting.statusLabel(for: runState)
         let color = MenuBarMCPStatusFormatting.statusColor(for: runState)
 
-        if MenuBarMCPStatusFormatting.statusUsesSecondaryAccent(for: runState) {
+        return HStack(spacing: 6) {
+            Circle()
+                .fill(color)
+                .frame(width: 8, height: 8)
+                .accessibilityHidden(true)
             Text(label)
-                .foregroundStyle(color, .secondary)
-        } else {
-            Text(label)
-                .foregroundStyle(color)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(label)
     }
 
     private func openSettings() {
