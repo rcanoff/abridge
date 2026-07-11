@@ -27,6 +27,11 @@ struct PermissionsSettingsView: View {
                 )
                 .font(.callout)
                 .foregroundStyle(.secondary)
+
+                Button("Request all permissions") {
+                    Task { await appStore.requestAllPendingAccess() }
+                }
+                .disabled(!appStore.hasPendingOSAccessRequest || appStore.isRequestingAnyOSAccess)
             }
 
             ForEach(ProviderPermissionKind.allCases) { kind in
