@@ -16,6 +16,7 @@ enum LiveContactsEnvironment {
     static let sharedProvider = ContactsProvider()
 }
 
+/// Contacts adapter: JSON ↔ Contacts.framework. Pure schema validation is Rust.
 @MainActor
 final class ContactsProvider {
     let store: any ContactsStoreing
