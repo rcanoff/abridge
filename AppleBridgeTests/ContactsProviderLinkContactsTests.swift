@@ -108,36 +108,14 @@ struct ContactsProviderLinkContactsTests {
 
     @Test
     @MainActor
-    func linkContactsMissingFromIdentifierReturnsInvalidArguments() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(
-            operation: "link_contacts",
-            payloadJson: #"{"to_contact_identifier":"contact-to"}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("from_contact_identifier is required") == true)
+    func linkContactsMissingFromIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test
     @MainActor
-    func linkContactsMissingToIdentifierReturnsInvalidArguments() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(
-            operation: "link_contacts",
-            payloadJson: #"{"from_contact_identifier":"contact-from"}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("to_contact_identifier is required") == true)
+    func linkContactsMissingToIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

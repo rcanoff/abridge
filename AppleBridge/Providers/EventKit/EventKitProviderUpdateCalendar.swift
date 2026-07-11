@@ -69,22 +69,13 @@ extension EventKitProvider {
     }
 
     private func parseUpdateCalendarArguments(_ payloadJson: String) throws -> UpdateCalendarArguments {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("calendar_identifier is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
 
         let dictionary = try parseJSONObject(from: data)
 
-        guard let calendarIdentifier = dictionary["calendar_identifier"] as? String else {
-            throw EventKitProviderError.invalidArguments("calendar_identifier is required")
-        }
-        guard !calendarIdentifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("calendar_identifier must not be empty")
-        }
+        let calendarIdentifier = SchemaTrustedPayload.requiredString(dictionary, "calendar_identifier")
 
         return try UpdateCalendarArguments(
             calendarIdentifier: calendarIdentifier,

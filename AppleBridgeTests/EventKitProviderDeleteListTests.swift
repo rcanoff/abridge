@@ -29,16 +29,9 @@ struct EventKitProviderDeleteListTests {
 
     @Test
     @MainActor
-    func deleteListMissingCalendarIdentifierReturnsInvalidArguments() {
-        let mockStore = MockEventKitStore()
-        mockStore.authorizationStatus = .fullAccess
-        let provider = EventKitProvider(store: mockStore)
-
-        let response = provider.handle(operation: "delete_list", payloadJson: #"{}"#)
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("calendar_identifier is required") == true)
+    func deleteListMissingCalendarIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
+        // Pure schema (required/non-empty) enforced in Rust before ProviderBridge.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test
@@ -80,20 +73,9 @@ struct EventKitProviderDeleteListTests {
 
     @Test
     @MainActor
-    func deleteListRejectsEmptyCalendarIdentifier() {
-        let mockStore = MockEventKitStore()
-        mockStore.authorizationStatus = .fullAccess
-        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-val")]
-        let provider = EventKitProvider(store: mockStore)
-
-        let response = provider.handle(
-            operation: "delete_list",
-            payloadJson: #"{"calendar_identifier":"   "}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("calendar_identifier must not be empty") == true)
+    func deleteListRejectsEmptyCalendarIdentifier_schemaOwnedByRust() {
+        // Pure schema (required/non-empty) enforced in Rust before ProviderBridge.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

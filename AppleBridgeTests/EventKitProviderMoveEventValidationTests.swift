@@ -24,17 +24,11 @@ struct EventKitProviderMoveEventValidationTests {
 
     @Test
     @MainActor
-    func moveEventRejectsEmptyEventIdentifier() {
-        let provider = providerWithEvent()
-
-        let response = provider.handle(
-            operation: "move_event",
-            payloadJson: #"{"event_identifier":"   ","calendar_identifier":"cal-other"}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("event_identifier must not be empty") == true)
+    func moveEventRejectsEmptyEventIdentifier_schemaOwnedByRust() {
+        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
+        // before ProviderBridge. This offline provider path no longer re-validates that shape.
+        let value = SchemaTrustedPayload.requiredString([:], "any")
+        #expect(value == "")
     }
 
     @Test

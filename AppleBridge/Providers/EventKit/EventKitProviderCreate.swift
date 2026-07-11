@@ -74,12 +74,10 @@ extension EventKitProvider {
         from arguments: CreateReminderArguments,
         to reminder: EKReminder
     ) throws {
-        // Priority 0...9: schema-enforced on MCP; keep runtime guard for unit tests.
-        guard let priority = arguments.priority else { return }
-        guard (0 ... 9).contains(priority) else {
-            throw EventKitProviderError.invalidArguments("priority must be between 0 and 9")
+        // Priority range 0...9 is schema-owned (Rust inputSchema minimum/maximum).
+        if let priority = arguments.priority {
+            reminder.priority = priority
         }
-        reminder.priority = priority
     }
 
     private func applyOptionalDateFields(
@@ -105,29 +103,15 @@ extension EventKitProvider {
     }
 
     private func parseCreateReminderArguments(_ payloadJson: String) throws -> CreateReminderArguments {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("calendar_identifier and title are required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
 
         let dictionary = try parseJSONObject(from: data)
 
-        guard let calendarIdentifier = dictionary["calendar_identifier"] as? String else {
-            throw EventKitProviderError.invalidArguments("calendar_identifier is required")
-        }
-        guard !calendarIdentifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("calendar_identifier must not be empty")
-        }
-
-        guard let title = dictionary["title"] as? String else {
-            throw EventKitProviderError.invalidArguments("title is required")
-        }
-        guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("title must not be empty")
-        }
+        // Required non-empty calendar_identifier / title are schema-owned (Rust).
+        let calendarIdentifier = SchemaTrustedPayload.requiredString(dictionary, "calendar_identifier")
+        let title = SchemaTrustedPayload.requiredString(dictionary, "title")
 
         let timeZone: TimeZone?
         if let timeZoneIdentifier = try EventKitDeserialization.optionalString(dictionary["time_zone"]) {

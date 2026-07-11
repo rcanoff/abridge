@@ -22,10 +22,6 @@ extension MapKitProvider {
     }
 
     private func parseEstimateTravelTimeArguments(_ payloadJson: String) throws -> MapKitEstimateTravelTimeRequest {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw MapKitProviderError.invalidArguments("source is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw MapKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }

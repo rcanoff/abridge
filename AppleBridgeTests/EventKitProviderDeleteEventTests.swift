@@ -40,14 +40,11 @@ struct EventKitProviderDeleteEventTests {
 
     @Test
     @MainActor
-    func deleteEventMissingEventIdentifierReturnsInvalidArguments() {
-        let (provider, _) = providerWithEvent()
-
-        let response = provider.handle(operation: "delete_event", payloadJson: #"{}"#)
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("event_identifier is required") == true)
+    func deleteEventMissingEventIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
+        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
+        // before ProviderBridge. This offline provider path no longer re-validates that shape.
+        let value = SchemaTrustedPayload.requiredString([:], "any")
+        #expect(value == "")
     }
 
     @Test

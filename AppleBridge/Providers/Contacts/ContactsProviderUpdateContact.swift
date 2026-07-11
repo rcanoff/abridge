@@ -30,10 +30,6 @@ extension ContactsProvider {
     }
 
     func parseUpdateContactArguments(_ payloadJson: String) throws -> UpdateContactArguments {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw ContactsProviderError.invalidArguments("contact_identifier is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw ContactsProviderError.invalidArguments("Arguments must be valid UTF-8")
         }

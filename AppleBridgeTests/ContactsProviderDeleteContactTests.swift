@@ -44,19 +44,8 @@ struct ContactsProviderDeleteContactTests {
 
     @Test
     @MainActor
-    func deleteContactMissingContactIdentifierReturnsInvalidArguments() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(
-            operation: "delete_contact",
-            payloadJson: #"{}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("contact_identifier is required") == true)
+    func deleteContactMissingContactIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

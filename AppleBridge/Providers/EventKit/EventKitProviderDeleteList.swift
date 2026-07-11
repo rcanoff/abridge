@@ -3,26 +3,13 @@ import Foundation
 
 extension EventKitProvider {
     func parseCalendarIdentifierArguments(_ payloadJson: String) throws -> String {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("calendar_identifier is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
 
         let dictionary = try parseJSONObject(from: data)
 
-        guard let calendarIdentifier = dictionary["calendar_identifier"] as? String else {
-            throw EventKitProviderError.invalidArguments("calendar_identifier is required")
-        }
-
-        let trimmed = calendarIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            throw EventKitProviderError.invalidArguments("calendar_identifier must not be empty")
-        }
-
-        return calendarIdentifier
+        return SchemaTrustedPayload.requiredString(dictionary, "calendar_identifier")
     }
 
     func deleteList(payloadJson: String) -> ProviderResponse {

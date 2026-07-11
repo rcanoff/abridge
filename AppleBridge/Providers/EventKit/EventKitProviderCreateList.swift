@@ -55,22 +55,13 @@ extension EventKitProvider {
     }
 
     private func parseCreateListArguments(_ payloadJson: String) throws -> CreateListArguments {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("title is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
 
         let dictionary = try parseJSONObject(from: data)
 
-        guard let title = dictionary["title"] as? String else {
-            throw EventKitProviderError.invalidArguments("title is required")
-        }
-        guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("title must not be empty")
-        }
+        let title = SchemaTrustedPayload.requiredString(dictionary, "title")
 
         return try CreateListArguments(
             title: title,

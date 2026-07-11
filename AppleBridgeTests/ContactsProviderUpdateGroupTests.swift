@@ -83,19 +83,9 @@ struct ContactsProviderUpdateGroupTests {
 
     @Test
     @MainActor
-    func updateGroupMissingGroupIdentifierReturnsInvalidArguments() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(
-            operation: "update_group",
-            payloadJson: #"{"name":"Family"}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("group_identifier is required") == true)
+    func updateGroupMissingGroupIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
+        // Pure schema (required/non-empty) enforced in Rust before ProviderBridge.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

@@ -24,10 +24,6 @@ extension MapKitProvider {
     }
 
     private func parseSearchNearbyArguments(_ payloadJson: String) throws -> MapKitSearchNearbyRequest {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw MapKitProviderError.invalidArguments("region or coordinate is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw MapKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }

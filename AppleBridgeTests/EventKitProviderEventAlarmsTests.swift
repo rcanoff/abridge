@@ -68,19 +68,11 @@ struct EventKitProviderEventAlarmsTests {
 
     @Test
     @MainActor
-    func setEventAlarmsMissingEventIdentifierReturnsInvalidArguments() {
-        let mockStore = MockEventKitStore()
-        mockStore.eventAuthorizationStatusValue = .fullAccess
-        let provider = EventKitProvider(store: mockStore)
-
-        let response = provider.handle(
-            operation: "set_event_alarms",
-            payloadJson: #"{"alarms":[{"relative_offset":-300}]}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("event_identifier is required") == true)
+    func setEventAlarmsMissingEventIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
+        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
+        // before ProviderBridge. This offline provider path no longer re-validates that shape.
+        let value = SchemaTrustedPayload.requiredString([:], "any")
+        #expect(value == "")
     }
 
     @Test

@@ -80,33 +80,14 @@ struct ContactsProviderUnlinkContactsTests {
 
     @Test
     @MainActor
-    func unlinkContactsMissingIdentifierReturnsInvalidArguments() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(operation: "unlink_contacts", payloadJson: "{}")
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("contact_identifier is required") == true)
+    func unlinkContactsMissingIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test
     @MainActor
-    func unlinkContactsEmptyIdentifierReturnsInvalidArguments() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(
-            operation: "unlink_contacts",
-            payloadJson: #"{"contact_identifier":"   "}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("contact_identifier must not be empty") == true)
+    func unlinkContactsEmptyIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

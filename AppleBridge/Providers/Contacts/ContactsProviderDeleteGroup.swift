@@ -32,25 +32,12 @@ extension ContactsProvider {
     }
 
     func parseGroupIdentifierArguments(_ payloadJson: String) throws -> String {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw ContactsProviderError.invalidArguments("group_identifier is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw ContactsProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
 
         let dictionary = try parseJSONObject(from: data)
 
-        guard let groupIdentifier = dictionary["group_identifier"] as? String else {
-            throw ContactsProviderError.invalidArguments("group_identifier is required")
-        }
-
-        let trimmed = groupIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            throw ContactsProviderError.invalidArguments("group_identifier must not be empty")
-        }
-
-        return trimmed
+        return SchemaTrustedPayload.requiredString(dictionary, "group_identifier")
     }
 }

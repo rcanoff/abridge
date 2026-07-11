@@ -21,37 +21,13 @@ extension MapKitProvider {
     }
 
     private func parseLookupPlaceArguments(_ payloadJson: String) throws -> MapKitLookupPlaceRequest {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw MapKitProviderError.invalidArguments("identifier is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw MapKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
 
         let dictionary = try parseJSONObject(from: data)
-        let identifier = try requiredIdentifierArgument(in: dictionary)
+        // Required non-empty identifier is schema-owned (Rust).
+        let identifier = SchemaTrustedPayload.requiredString(dictionary, "identifier")
         return MapKitLookupPlaceRequest(identifier: identifier)
-    }
-
-    private func requiredIdentifierArgument(in dictionary: [String: Any]) throws -> String {
-        guard dictionary.keys.contains("identifier") else {
-            throw MapKitProviderError.invalidArguments("identifier is required")
-        }
-
-        if dictionary["identifier"] is NSNull {
-            throw MapKitProviderError.invalidArguments("identifier is required")
-        }
-
-        guard let identifier = dictionary["identifier"] as? String else {
-            throw MapKitProviderError.invalidArguments("identifier must be a string")
-        }
-
-        let trimmed = identifier.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            throw MapKitProviderError.invalidArguments("identifier must not be empty")
-        }
-
-        return trimmed
     }
 }

@@ -94,10 +94,6 @@ extension EventKitProvider {
     }
 
     private func parseCreateEventDictionary(_ payloadJson: String) throws -> [String: Any] {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("calendar_identifier and title are required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
@@ -106,22 +102,14 @@ extension EventKitProvider {
     }
 
     private func requiredNonEmptyString(named key: String, in dictionary: [String: Any]) throws -> String {
-        guard let value = dictionary[key] as? String else {
-            throw EventKitProviderError.invalidArguments("\(key) is required")
-        }
-        guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("\(key) must not be empty")
-        }
-        return value
+        // Required non-empty strings are schema-owned (Rust).
+        SchemaTrustedPayload.requiredString(dictionary, key)
     }
 
     private func requiredEventDateRange(in dictionary: [String: Any]) throws -> (Date, Date) {
-        guard let startDate = try requiredISO8601Date(named: "start_date", in: dictionary) else {
-            throw EventKitProviderError.invalidArguments("start_date is required")
-        }
-        guard let endDate = try requiredISO8601Date(named: "end_date", in: dictionary) else {
-            throw EventKitProviderError.invalidArguments("end_date is required")
-        }
+        // Presence of start/end is schema-owned; invalid ISO strings still fail as mapping errors.
+        let startDate = try requiredISO8601Date(named: "start_date", in: dictionary) ?? Date.distantPast
+        let endDate = try requiredISO8601Date(named: "end_date", in: dictionary) ?? Date.distantFuture
 
         if startDate > endDate {
             throw EventKitProviderError.invalidArguments("start_date must not be after end_date")
@@ -146,7 +134,7 @@ extension EventKitProvider {
         }
 
         if dictionary[key] is NSNull {
-            throw EventKitProviderError.invalidArguments("\(key) is required")
+            return nil
         }
 
         guard let value = dictionary[key] as? String else {

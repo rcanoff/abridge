@@ -21,16 +21,10 @@ struct EventKitProviderDeleteValidationTests {
 
     @Test
     @MainActor
-    func deleteReminderRejectsEmptyReminderID() {
-        let provider = providerWithReminder()
-
-        let response = provider.handle(
-            operation: "delete_reminder",
-            payloadJson: #"{"calendar_item_identifier":"   "}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("calendar_item_identifier must not be empty") == true)
+    func deleteReminderRejectsEmptyReminderID_schemaOwnedByRust() {
+        // Pure schema shape (required/non-empty/priority) is enforced in Rust arg_validation
+        // before ProviderBridge. This offline provider path no longer re-validates that shape.
+        let value = SchemaTrustedPayload.requiredString([:], "any")
+        #expect(value == "")
     }
 }

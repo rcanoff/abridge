@@ -133,9 +133,6 @@ extension EventKitProvider {
             guard let priority else {
                 throw EventKitProviderError.invalidArguments("priority must be between 0 and 9")
             }
-            guard (0 ... 9).contains(priority) else {
-                throw EventKitProviderError.invalidArguments("priority must be between 0 and 9")
-            }
             reminder.priority = priority
         }
     }
@@ -190,10 +187,6 @@ extension EventKitProvider {
     }
 
     private func parseUpdateReminderArguments(_ payloadJson: String) throws -> UpdateReminderArguments {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw EventKitProviderError.invalidArguments("calendar_item_identifier is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }

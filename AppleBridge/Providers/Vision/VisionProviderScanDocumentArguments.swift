@@ -1,14 +1,9 @@
-// swiftlint:disable file_length
 import CoreGraphics
 import Foundation
 import Vision
 
 extension VisionProvider {
     func parseScanDocumentArguments(_ payloadJson: String) throws -> VisionScanDocumentRequest {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw VisionProviderError.invalidArguments("image_data is required")
-        }
-
         guard let data = payloadJson.data(using: .utf8) else {
             throw VisionProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
@@ -36,27 +31,11 @@ extension VisionProvider {
     }
 
     private func requiredImageDataArgument(in dictionary: [String: Any]) throws -> Data {
-        guard dictionary.keys.contains("image_data") else {
-            throw VisionProviderError.invalidArguments("image_data is required")
-        }
-
-        if dictionary["image_data"] is NSNull {
-            throw VisionProviderError.invalidArguments("image_data is required")
-        }
-
-        guard let encoded = dictionary["image_data"] as? String else {
-            throw VisionProviderError.invalidArguments("image_data must be a string")
-        }
-
-        let trimmed = encoded.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            throw VisionProviderError.invalidArguments("image_data is required")
-        }
-
+        // Required non-empty image_data string is schema-owned; base64 decode is runtime.
+        let trimmed = SchemaTrustedPayload.requiredString(dictionary, "image_data")
         guard let data = Data(base64Encoded: trimmed) else {
             throw VisionProviderError.invalidArguments("image_data must be valid base64")
         }
-
         return data
     }
 
