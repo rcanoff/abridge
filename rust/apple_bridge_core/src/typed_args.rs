@@ -17,6 +17,10 @@ pub fn normalize_tool_arguments(tool: &ToolDefinition, arguments: Value) -> Resu
     tools::TOOL_CREATE_EVENT => normalize_typed::<CreateEventArgs>(arguments, "create_event"),
     tools::TOOL_UPDATE_REMINDER => normalize_typed::<UpdateReminderArgs>(arguments, "update_reminder"),
     tools::TOOL_UPDATE_EVENT => normalize_typed::<UpdateEventArgs>(arguments, "update_event"),
+    tools::TOOL_CREATE_CONTACT => normalize_typed::<CreateContactArgs>(arguments, "create_contact"),
+    tools::TOOL_UPDATE_CONTACT => normalize_typed::<UpdateContactArgs>(arguments, "update_contact"),
+    tools::TOOL_CALCULATE_ROUTE => normalize_typed::<CalculateRouteArgs>(arguments, "calculate_route"),
+    tools::TOOL_FORWARD_GEOCODE => normalize_typed::<ForwardGeocodeArgs>(arguments, "forward_geocode"),
     _ => Ok(arguments),
   }
 }
@@ -98,6 +102,49 @@ struct UpdateEventArgs {
   rest: Value,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+struct CreateContactArgs {
+  container_identifier: String,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
+  contact_type: Option<String>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
+  given_name: Option<String>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
+  family_name: Option<String>,
+  #[serde(flatten)]
+  rest: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+struct UpdateContactArgs {
+  contact_identifier: String,
+  #[serde(flatten)]
+  rest: Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+struct CalculateRouteArgs {
+  source: Value,
+  destination: Value,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
+  transport_type: Option<String>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
+  requests_alternate_routes: Option<bool>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
+  departure_date: Option<String>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
+  arrival_date: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+struct ForwardGeocodeArgs {
+  address: String,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
+  region: Option<Value>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
+  preferred_locale: Option<String>,
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -156,6 +203,35 @@ mod tests {
   }
 
   #[test]
+  fn create_contact_round_trips_container() {
+    let tool = resolve_tool(tools::TOOL_CREATE_CONTACT).expect("tool");
+    let out = normalize_tool_arguments(
+      tool,
+      json!({
+        "container_identifier": "default",
+        "given_name": "Ada"
+      }),
+    )
+    .expect("ok");
+    assert_eq!(out["container_identifier"], "default");
+    assert_eq!(out["given_name"], "Ada");
+  }
+
+  #[test]
+  fn calculate_route_requires_source_and_destination() {
+    let tool = resolve_tool(tools::TOOL_CALCULATE_ROUTE).expect("tool");
+    let out = normalize_tool_arguments(
+      tool,
+      json!({
+        "source": { "coordinate": { "latitude": 1.0, "longitude": 2.0 } },
+        "destination": { "coordinate": { "latitude": 3.0, "longitude": 4.0 } }
+      }),
+    )
+    .expect("ok");
+    assert!(out.get("source").is_some());
+    assert!(out.get("destination").is_some());
+  }
+
   fn create_reminder_typed_path_rejects_wrong_priority_type() {
     let tool = resolve_tool(tools::TOOL_CREATE_REMINDER).expect("tool");
     let err = normalize_tool_arguments(
