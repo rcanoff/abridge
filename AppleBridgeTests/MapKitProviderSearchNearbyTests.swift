@@ -81,4 +81,18 @@ struct MapKitProviderSearchNearbyTests {
         let request = try #require(store.lastNearbyRequest)
         #expect(request.pointOfInterestFilter != nil)
     }
+
+    @Test
+    func nearbySupportBuildsPointsOfInterestRequestNotTextSearchRequest() {
+        let region = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 37.77, longitude: -122.42),
+            latitudinalMeters: 1000,
+            longitudinalMeters: 1000
+        )
+        let request = MapKitNearbySearchSupport.pointsOfInterestRequest(region: region, filter: nil)
+        // Guards the regression: query-less nearby must use PointsOfInterestRequest (MKError 4 otherwise).
+        #expect(type(of: request) == MKLocalPointsOfInterestRequest.self)
+        #expect(request.region.center.latitude == region.center.latitude)
+        #expect(request.region.center.longitude == region.center.longitude)
+    }
 }

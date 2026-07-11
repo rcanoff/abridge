@@ -129,6 +129,21 @@ enum MapKitSearchFetch {
     }
 }
 
+/// Builds the MapKit request used for query-less nearby POI search.
+///
+/// `MKLocalSearch.Request` with only `resultTypes = .pointOfInterest` and no
+/// `naturalLanguageQuery` always fails with MKErrorDomain code 4 (placemark not found).
+enum MapKitNearbySearchSupport {
+    static func pointsOfInterestRequest(
+        region: MKCoordinateRegion,
+        filter: MKPointOfInterestFilter?
+    ) -> MKLocalPointsOfInterestRequest {
+        let request = MKLocalPointsOfInterestRequest(coordinateRegion: region)
+        request.pointOfInterestFilter = filter ?? .includingAll
+        return request
+    }
+}
+
 struct LiveMapKitStore: MapKitStoreing, @unchecked Sendable {
     /// Test seam; not `@Sendable` so unit tests can inject MainActor fetcher mocks.
     var makeLocationFetcher: () -> any MapKitLocationFetching = { OneShotLocationFetcher() }
@@ -170,12 +185,10 @@ struct LiveMapKitStore: MapKitStoreing, @unchecked Sendable {
     }
 
     func searchNearby(request: MapKitSearchNearbyRequest) throws -> MapKitSearchResult {
-        // `MKLocalSearch.Request` with only `resultTypes = .pointOfInterest` and no
-        // `naturalLanguageQuery` always fails with MKErrorDomain code 4 (placemark not found).
-        // Nearby POI discovery without a text query must use `MKLocalPointsOfInterestRequest`.
-        let poiRequest = MKLocalPointsOfInterestRequest(coordinateRegion: request.region)
-        poiRequest.pointOfInterestFilter = request.pointOfInterestFilter ?? .includingAll
-
+        let poiRequest = MapKitNearbySearchSupport.pointsOfInterestRequest(
+            region: request.region,
+            filter: request.pointOfInterestFilter
+        )
         let search = MKLocalSearch(request: poiRequest)
         let result = MapKitSearchFetch.AsyncBridgeResult<MKLocalSearch.Response>()
 
