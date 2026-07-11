@@ -44,9 +44,7 @@ extension EventKitProvider {
         case .absent:
             break
         case let .present(title):
-            guard let title, !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                throw EventKitProviderError.invalidArguments("title must not be empty")
-            }
+            guard let title else { return }
             calendar.title = title
         }
 
@@ -61,9 +59,7 @@ extension EventKitProvider {
         case .absent:
             break
         case let .present(sourceIdentifier):
-            guard let sourceIdentifier, !sourceIdentifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                throw EventKitProviderError.invalidArguments("source_identifier must not be empty")
-            }
+            guard let sourceIdentifier else { return }
             calendar.source = try resolveEventSource(sourceIdentifier: sourceIdentifier)
         }
     }

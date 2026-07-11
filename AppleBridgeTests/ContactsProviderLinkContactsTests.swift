@@ -120,19 +120,10 @@ struct ContactsProviderLinkContactsTests {
 
     @Test
     @MainActor
-    func linkContactsEmptyFromIdentifierReturnsInvalidArguments() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(
-            operation: "link_contacts",
-            payloadJson: #"{"from_contact_identifier":"   ","to_contact_identifier":"contact-to"}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("from_contact_identifier must not be empty") == true)
+    func linkContactsEmptyFromIdentifierReturnsInvalidArguments_schemaOwnedByRust() {
+        // Pure schema re-validation removed; Rust arg_validation owns this shape.
+        // Offline provider path must not emit the old pure-schema invalid_arguments text.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

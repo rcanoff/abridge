@@ -36,12 +36,7 @@ extension ContactsProvider {
 
         let dictionary = try parseJSONObject(from: data)
 
-        let groupIdentifier = SchemaTrustedPayload.requiredString(dictionary, "group_identifier")
-
-        let trimmedIdentifier = groupIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedIdentifier.isEmpty else {
-            throw ContactsProviderError.invalidArguments("group_identifier must not be empty")
-        }
+        let trimmedIdentifier = SchemaTrustedPayload.requiredString(dictionary, "group_identifier")
 
         var fields = dictionary
         fields.removeValue(forKey: "group_identifier")
@@ -56,9 +51,6 @@ extension ContactsProvider {
                 // Explicit null clears the group name.
             } else if let nameString = name as? String {
                 let trimmedName = nameString.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmedName.isEmpty else {
-                    throw ContactsProviderError.invalidArguments("name must not be empty")
-                }
                 fields["name"] = trimmedName
             } else {
                 throw ContactsProviderError.invalidArguments("name must be a string or null")

@@ -67,12 +67,7 @@ extension EventKitProvider {
         case .absent:
             return
         case let .present(calendarIdentifier):
-            guard let calendarIdentifier else {
-                throw EventKitProviderError.invalidArguments("calendar_identifier must not be empty")
-            }
-            guard !calendarIdentifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                throw EventKitProviderError.invalidArguments("calendar_identifier must not be empty")
-            }
+            guard let calendarIdentifier else { return }
             let calendars = try eventCalendars(calendarIdentifier: calendarIdentifier)
             guard let calendar = calendars.first else {
                 throw EventKitProviderError.invalidArguments(
@@ -88,9 +83,7 @@ extension EventKitProvider {
         case .absent:
             return
         case let .present(title):
-            guard let title, !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                throw EventKitProviderError.invalidArguments("title must not be empty")
-            }
+            guard let title else { return }
             event.title = title
         }
     }

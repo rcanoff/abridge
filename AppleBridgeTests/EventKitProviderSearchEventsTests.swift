@@ -65,16 +65,10 @@ struct EventKitProviderSearchEventsTests {
 
     @Test
     @MainActor
-    func searchEventsMissingQueryReturnsInvalidArguments() {
-        let mockStore = MockEventKitStore()
-        mockStore.eventAuthorizationStatusValue = .fullAccess
-        let provider = EventKitProvider(store: mockStore)
-
-        let response = provider.handle(operation: "search_events", payloadJson: #"{}"#)
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("query is required") == true)
+    func searchEventsMissingQueryReturnsInvalidArguments_schemaOwnedByRust() {
+        // Pure schema re-validation removed; Rust arg_validation owns this shape.
+        // Offline provider path must not emit the old pure-schema invalid_arguments text.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

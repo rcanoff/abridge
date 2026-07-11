@@ -43,9 +43,6 @@ extension EventKitProvider {
         let dictionary = try parseJSONObject(from: data)
         let reminderID = try parseReminderIDArguments(payloadJson)
 
-        guard dictionary.keys.contains("recurrence_rules") else {
-            throw EventKitProviderError.invalidArguments("recurrence_rules is required")
-        }
         guard let recurrenceRules = try EventKitDeserialization.recurrenceRules(from: dictionary["recurrence_rules"])
         else {
             throw EventKitProviderError.invalidArguments("recurrence_rules must be an array")

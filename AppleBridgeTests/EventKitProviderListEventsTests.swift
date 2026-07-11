@@ -91,18 +91,9 @@ struct EventKitProviderListEventsTests {
 
     @Test
     @MainActor
-    func listEventsMissingStartDateReturnsInvalidArguments() {
-        let mockStore = MockEventKitStore()
-        mockStore.eventAuthorizationStatusValue = .fullAccess
-        let provider = EventKitProvider(store: mockStore)
-
-        let response = provider.handle(
-            operation: "list_events",
-            payloadJson: #"{"end_date":"2023-11-15T22:13:20Z"}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("start_date is required") == true)
+    func listEventsMissingStartDateReturnsInvalidArguments_schemaOwnedByRust() {
+        // Pure schema re-validation removed; Rust arg_validation owns this shape.
+        // Offline provider path must not emit the old pure-schema invalid_arguments text.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 }

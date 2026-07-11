@@ -43,9 +43,6 @@ extension EventKitProvider {
         let dictionary = try parseJSONObject(from: data)
         let reminderID = try parseReminderIDArguments(payloadJson)
 
-        guard dictionary.keys.contains("alarms") else {
-            throw EventKitProviderError.invalidArguments("alarms is required")
-        }
         guard let alarms = try EventKitDeserialization.alarms(from: dictionary["alarms"]) else {
             throw EventKitProviderError.invalidArguments("alarms must be an array")
         }

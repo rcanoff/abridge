@@ -99,23 +99,8 @@ extension EventKitProvider {
     }
 
     private func requiredNonEmptyStringArgument(named key: String, in dictionary: [String: Any]) throws -> String {
-        guard dictionary.keys.contains(key) else {
-            throw EventKitProviderError.invalidArguments("\(key) is required")
-        }
-        if dictionary[key] is NSNull {
-            throw EventKitProviderError.invalidArguments("\(key) is required")
-        }
-
-        guard let value = dictionary[key] as? String else {
-            throw EventKitProviderError.invalidArguments("\(key) must be a string")
-        }
-
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            throw EventKitProviderError.invalidArguments("\(key) must not be empty")
-        }
-
-        return trimmed
+        // Schema owns required + non-empty.
+        SchemaTrustedPayload.requiredString(dictionary, key)
     }
 
     private func parseISO8601Date(_ value: String) -> Date? {

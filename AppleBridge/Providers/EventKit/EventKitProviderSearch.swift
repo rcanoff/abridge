@@ -206,7 +206,7 @@ extension EventKitProvider {
         }
 
         guard let rawValue = dictionary["completion_status"] as? String else {
-            throw EventKitProviderError.invalidArguments("completion_status must be a string")
+            return .all // schema type; offline default
         }
 
         guard let status = ReminderCompletionStatus(rawValue: rawValue) else {

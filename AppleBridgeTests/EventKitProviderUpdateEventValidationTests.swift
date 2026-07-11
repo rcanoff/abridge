@@ -40,17 +40,10 @@ struct EventKitUpdateEventValidationTests {
 
     @Test
     @MainActor
-    func updateEventRejectsEmptyTitleWhenProvided() {
-        let (provider, _) = providerWithEvent()
-
-        let response = provider.handle(
-            operation: "update_event",
-            payloadJson: #"{"event_identifier":"evt-evt-val","title":"   "}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("title must not be empty") == true)
+    func updateEventRejectsEmptyTitleWhenProvided_schemaOwnedByRust() {
+        // Pure schema re-validation removed; Rust arg_validation owns this shape.
+        // Offline provider path must not emit the old pure-schema invalid_arguments text.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

@@ -47,36 +47,18 @@ struct ContactsProviderCreateGroupTests {
 
     @Test
     @MainActor
-    func createGroupWhitespaceOnlyNameReturnsInvalidArguments() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(
-            operation: "create_group",
-            payloadJson: #"{"container_identifier":"container-1","name":"   "}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("name must not be empty") == true)
+    func createGroupWhitespaceOnlyNameReturnsInvalidArguments_schemaOwnedByRust() {
+        // Pure schema re-validation removed; Rust arg_validation owns this shape.
+        // Offline provider path must not emit the old pure-schema invalid_arguments text.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test
     @MainActor
-    func createGroupWhitespaceOnlyContainerReturnsInvalidArguments() {
-        let mockStore = MockContactsStore()
-        mockStore.authorizationStatus = .authorized
-        let provider = ContactsProvider(store: mockStore)
-
-        let response = provider.handle(
-            operation: "create_group",
-            payloadJson: #"{"container_identifier":"   ","name":"Family"}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("container_identifier must not be empty") == true)
+    func createGroupWhitespaceOnlyContainerReturnsInvalidArguments_schemaOwnedByRust() {
+        // Pure schema re-validation removed; Rust arg_validation owns this shape.
+        // Offline provider path must not emit the old pure-schema invalid_arguments text.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

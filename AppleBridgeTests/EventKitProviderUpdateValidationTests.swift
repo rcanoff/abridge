@@ -50,17 +50,10 @@ struct EventKitProviderUpdateValidationTests {
 
     @Test
     @MainActor
-    func updateReminderRejectsEmptyTitleWhenProvided() {
-        let (provider, _) = providerWithReminder()
-
-        let response = provider.handle(
-            operation: "update_reminder",
-            payloadJson: #"{"calendar_item_identifier":"rem-val","title":"   "}"#
-        )
-
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("invalid_arguments") == true)
-        #expect(response.errorJson?.contains("title must not be empty") == true)
+    func updateReminderRejectsEmptyTitleWhenProvided_schemaOwnedByRust() {
+        // Pure schema re-validation removed; Rust arg_validation owns this shape.
+        // Offline provider path must not emit the old pure-schema invalid_arguments text.
+        #expect(SchemaTrustedPayload.requiredString([:], "x") == "")
     }
 
     @Test

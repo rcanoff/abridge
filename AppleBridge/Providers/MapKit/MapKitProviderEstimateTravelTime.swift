@@ -50,15 +50,8 @@ extension MapKitProvider {
         named key: String,
         in dictionary: [String: Any]
     ) throws -> MapKitRouteEndpoint {
-        guard dictionary.keys.contains(key) else {
-            throw MapKitProviderError.invalidArguments("\(key) is required")
-        }
-
-        if dictionary[key] is NSNull {
-            throw MapKitProviderError.invalidArguments("\(key) is required")
-        }
-
         guard let endpointDictionary = dictionary[key] as? [String: Any] else {
+            // Schema requires object; mapping fails if wrong type/absent offline.
             throw MapKitProviderError.invalidArguments("\(key) must be an object")
         }
 
@@ -73,10 +66,6 @@ extension MapKitProvider {
         in dictionary: [String: Any],
         prefix: String
     ) throws -> CLLocationCoordinate2D {
-        guard dictionary.keys.contains("coordinate"), !(dictionary["coordinate"] is NSNull) else {
-            throw MapKitProviderError.invalidArguments("\(prefix) is required")
-        }
-
         guard let coordinateDictionary = dictionary["coordinate"] as? [String: Any] else {
             throw MapKitProviderError.invalidArguments("\(prefix) must be an object")
         }
