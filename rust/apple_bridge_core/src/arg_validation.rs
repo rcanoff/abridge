@@ -213,11 +213,14 @@ fn looks_like_iso8601_date_time(text: &str) -> bool {
 
 fn parse_rfc3339_date_time(text: &str) -> Result<(), ()> {
   let (date, rest) = text.split_once('T').or_else(|| text.split_once('t')).ok_or(())?;
-  let mut date_parts = date.split('-');
-  let year: i32 = date_parts.next().ok_or(())?.parse().map_err(|_| ())?;
-  let month: u32 = date_parts.next().ok_or(())?.parse().map_err(|_| ())?;
-  let day: u32 = date_parts.next().ok_or(())?.parse().map_err(|_| ())?;
-  if date_parts.next().is_some() || !(1..=12).contains(&month) {
+  // full-date = YYYY-MM-DD (fixed widths)
+  if date.len() != 10 || date.as_bytes().get(4) != Some(&b'-') || date.as_bytes().get(7) != Some(&b'-') {
+    return Err(());
+  }
+  let year = parse_fixed_digits(&date[0..4], 4)? as i32;
+  let month = parse_fixed_digits(&date[5..7], 2)?;
+  let day = parse_fixed_digits(&date[8..10], 2)?;
+  if !(1..=12).contains(&month) {
     return Err(());
   }
   if day == 0 || day > days_in_month(year, month) {
@@ -225,18 +228,27 @@ fn parse_rfc3339_date_time(text: &str) -> Result<(), ()> {
   }
 
   let (time, offset) = split_time_and_offset(rest)?;
-  let mut time_parts = time.split(':');
-  let hour: u32 = time_parts.next().ok_or(())?.parse().map_err(|_| ())?;
-  let minute: u32 = time_parts.next().ok_or(())?.parse().map_err(|_| ())?;
-  let second_raw = time_parts.next().ok_or(())?;
-  if time_parts.next().is_some() || hour > 23 || minute > 59 {
+  // partial-time = HH:MM:SS[.fff...] with fixed HH/MM/SS widths
+  let (second_raw, hour_minute) = {
+    let bytes = time.as_bytes();
+    if bytes.len() < 8 || bytes.get(2) != Some(&b':') || bytes.get(5) != Some(&b':') {
+      return Err(());
+    }
+    (&time[6..], &time[0..5])
+  };
+  let hour = parse_fixed_digits(&hour_minute[0..2], 2)?;
+  let minute = parse_fixed_digits(&hour_minute[3..5], 2)?;
+  if hour > 23 || minute > 59 {
     return Err(());
   }
   let (second_str, fraction) = match second_raw.split_once('.') {
     Some((sec, frac)) => (sec, Some(frac)),
     None => (second_raw, None),
   };
-  let second: u32 = second_str.parse().map_err(|_| ())?;
+  if second_str.len() != 2 {
+    return Err(());
+  }
+  let second = parse_fixed_digits(second_str, 2)?;
   if second > 60 {
     return Err(());
   }
@@ -246,6 +258,13 @@ fn parse_rfc3339_date_time(text: &str) -> Result<(), ()> {
     }
   }
   validate_offset(offset)
+}
+
+fn parse_fixed_digits(text: &str, width: usize) -> Result<u32, ()> {
+  if text.len() != width || !text.bytes().all(|b| b.is_ascii_digit()) {
+    return Err(());
+  }
+  text.parse().map_err(|_| ())
 }
 
 fn days_in_month(year: i32, month: u32) -> u32 {
@@ -361,5 +380,12 @@ mod tests {
   fn date_time_accepts_rfc3339_utc() {
     let schema = json!({ "type": "string", "format": "date-time" });
     validate_against_schema(&schema, &json!("2024-01-15T12:30:00Z"), "$").expect("valid");
+  }
+
+  #[test]
+  fn date_time_rejects_non_fixed_width_components() {
+    let schema = json!({ "type": "string", "format": "date-time" });
+    let err = validate_against_schema(&schema, &json!("2024-1-5T1:2:3Z"), "$").expect_err("bad width");
+    assert!(err.contains("date-time"), "{err}");
   }
 }
