@@ -13,6 +13,7 @@ final class AppStore {
     private(set) var isRequestingContactsPermission = false
     private(set) var locationPermissionStatus: LocationPermissionStatus = .unknown
     private(set) var isRequestingLocationPermission = false
+    private(set) var isRequestingAllPendingAccess = false
     private(set) var lastError: String?
 
     private let permissionService: any RemindersPermissionChecking
@@ -20,6 +21,23 @@ final class AppStore {
     private let contactsPermissionService: any ContactsPermissionChecking
     private let locationPermissionService: any LocationPermissionChecking
     private let urlOpener: any URLOpening
+
+    /// True when any OS-backed permission can still show a system prompt (`notDetermined` / `unknown`).
+    var hasPendingOSAccessRequest: Bool {
+        Self.isStillRequestable(permissionStatus)
+            || Self.isStillRequestable(calendarPermissionStatus)
+            || Self.isStillRequestable(contactsPermissionStatus)
+            || Self.isStillRequestable(locationPermissionStatus)
+    }
+
+    /// True while any single or batch OS access request is in flight.
+    var isRequestingAnyOSAccess: Bool {
+        isRequestingAllPendingAccess
+            || isRequestingPermission
+            || isRequestingCalendarPermission
+            || isRequestingContactsPermission
+            || isRequestingLocationPermission
+    }
 
     init(
         permissionService: any RemindersPermissionChecking = RemindersPermissionService(),
@@ -119,6 +137,61 @@ final class AppStore {
         } catch {
             refreshLocationStatus()
             lastError = error.localizedDescription
+        }
+    }
+
+    /// Sequentially requests remaining OS privacy prompts: Reminders → Calendars → Contacts → Location.
+    /// Skips already decided statuses; stops on first error (`lastError`). Does not change MCP capability toggles.
+    func requestAllPendingAccess() async {
+        guard !isRequestingAllPendingAccess else { return }
+        guard hasPendingOSAccessRequest else { return }
+
+        isRequestingAllPendingAccess = true
+        defer { isRequestingAllPendingAccess = false }
+
+        if Self.isStillRequestable(permissionStatus) {
+            await requestAccess()
+            if lastError != nil { return }
+        }
+        if Self.isStillRequestable(calendarPermissionStatus) {
+            await requestCalendarAccess()
+            if lastError != nil { return }
+        }
+        if Self.isStillRequestable(contactsPermissionStatus) {
+            await requestContactsAccess()
+            if lastError != nil { return }
+        }
+        if Self.isStillRequestable(locationPermissionStatus) {
+            await requestLocationAccess()
+            if lastError != nil { return }
+        }
+    }
+
+    static func isStillRequestable(_ status: RemindersPermissionStatus) -> Bool {
+        switch status {
+        case .unknown, .notDetermined: true
+        case .authorized, .writeOnly, .denied, .restricted: false
+        }
+    }
+
+    static func isStillRequestable(_ status: EventsPermissionStatus) -> Bool {
+        switch status {
+        case .unknown, .notDetermined: true
+        case .authorized, .writeOnly, .denied, .restricted: false
+        }
+    }
+
+    static func isStillRequestable(_ status: ContactsPermissionStatus) -> Bool {
+        switch status {
+        case .unknown, .notDetermined: true
+        case .authorized, .limited, .denied, .restricted: false
+        }
+    }
+
+    static func isStillRequestable(_ status: LocationPermissionStatus) -> Bool {
+        switch status {
+        case .unknown, .notDetermined: true
+        case .authorized, .authorizedAlways, .denied, .restricted: false
         }
     }
 
