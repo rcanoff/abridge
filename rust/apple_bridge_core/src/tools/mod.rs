@@ -1110,14 +1110,14 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_GET_CONTACT | TOOL_DELETE_CONTACT => serde_json::json!({
       "type": "object",
       "properties": {
-        "contact_identifier": { "type": "string" }
+        "contact_identifier": non_whitespace_string()
       },
       "required": ["contact_identifier"]
     }),
     TOOL_DELETE_GROUP => serde_json::json!({
       "type": "object",
       "properties": {
-        "group_identifier": { "type": "string" }
+        "group_identifier": non_whitespace_string()
       },
       "required": ["group_identifier"]
     }),
