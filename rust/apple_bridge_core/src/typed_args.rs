@@ -232,6 +232,7 @@ mod tests {
     assert!(out.get("destination").is_some());
   }
 
+  #[test]
   fn create_reminder_typed_path_rejects_wrong_priority_type() {
     let tool = resolve_tool(tools::TOOL_CREATE_REMINDER).expect("tool");
     let err = normalize_tool_arguments(
