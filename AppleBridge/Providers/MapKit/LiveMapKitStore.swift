@@ -170,13 +170,13 @@ struct LiveMapKitStore: MapKitStoreing, @unchecked Sendable {
     }
 
     func searchNearby(request: MapKitSearchNearbyRequest) throws -> MapKitSearchResult {
-        let mkRequest = MKLocalSearch.Request()
-        mkRequest.region = request.region
-        mkRequest.regionPriority = .required
-        mkRequest.resultTypes = .pointOfInterest
-        mkRequest.pointOfInterestFilter = request.pointOfInterestFilter
+        // `MKLocalSearch.Request` with only `resultTypes = .pointOfInterest` and no
+        // `naturalLanguageQuery` always fails with MKErrorDomain code 4 (placemark not found).
+        // Nearby POI discovery without a text query must use `MKLocalPointsOfInterestRequest`.
+        let poiRequest = MKLocalPointsOfInterestRequest(coordinateRegion: request.region)
+        poiRequest.pointOfInterestFilter = request.pointOfInterestFilter ?? .includingAll
 
-        let search = MKLocalSearch(request: mkRequest)
+        let search = MKLocalSearch(request: poiRequest)
         let result = MapKitSearchFetch.AsyncBridgeResult<MKLocalSearch.Response>()
 
         try MapKitSearchFetch.waitForCompletion(operation: "MapKit nearby search") { complete in

@@ -63,4 +63,22 @@ struct MapKitProviderSearchNearbyTests {
         #expect(mapItems?.first?["name"] as? String == "Nearby Cafe")
         #expect(store.lastNearbyRequest != nil)
     }
+
+    @Test
+    @MainActor
+    func searchNearbyPassesIncludingCategoriesFilterToStore() throws {
+        let store = MockMapKitStore()
+        store.nearbyResults = [MapKitSearchResult(mapItems: [], boundingRegion: nil)]
+        let provider = MapKitProvider(store: store)
+        let response = provider.handle(
+            operation: "search_nearby",
+            payloadJson: """
+            {"coordinate":{"latitude":37.77,"longitude":-122.42},"radius_meters":1000,\
+            "including_categories":["MKPOICategoryCafe"]}
+            """
+        )
+        #expect(response.ok == true)
+        let request = try #require(store.lastNearbyRequest)
+        #expect(request.pointOfInterestFilter != nil)
+    }
 }
