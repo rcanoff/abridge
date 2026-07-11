@@ -74,6 +74,7 @@ extension EventKitProvider {
         from arguments: CreateReminderArguments,
         to reminder: EKReminder
     ) throws {
+        // Priority 0...9: schema-enforced on MCP; keep runtime guard for unit tests.
         guard let priority = arguments.priority else { return }
         guard (0 ... 9).contains(priority) else {
             throw EventKitProviderError.invalidArguments("priority must be between 0 and 9")
