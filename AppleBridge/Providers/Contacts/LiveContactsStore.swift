@@ -291,7 +291,7 @@ final class LiveContactsStore: ContactsStoreing {
         } catch {
             throw ContactsSaveErrorMapping.map(
                 error,
-                wroteNote: fields["note"] != nil && !(fields["note"] is NSNull)
+                wroteNote: fields.keys.contains("note")
             )
         }
 
