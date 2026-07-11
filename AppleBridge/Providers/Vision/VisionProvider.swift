@@ -11,6 +11,7 @@ enum LiveVisionEnvironment {
     static let sharedProvider = VisionProvider()
 }
 
+/// Adapter layer; pure schema validation is Rust (`arg_validation`).
 @MainActor
 struct VisionProvider {
     let store: any VisionStoreing
