@@ -25,6 +25,8 @@ extension ContactsDeserialization {
             set: { contact.phoneticOrganizationName = $0 }
         )
         try applyOptionalStringField("previous_family_name", from: dictionary, set: { contact.previousFamilyName = $0 })
+        // Note: writing `note` without com.apple.developer.contacts.notes fails on live CNSaveRequest
+        // (Cocoa 134092). Live store maps that error; mock stores still accept note for fidelity tests.
         try applyOptionalStringField("note", from: dictionary, set: { contact.note = $0 })
 
         if dictionary.keys.contains("image_data") {

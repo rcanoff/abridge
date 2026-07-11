@@ -27,7 +27,8 @@ enum ContactsSerialization {
             "phonetic_family_name": contact.phoneticFamilyName,
             "phonetic_organization_name": contact.phoneticOrganizationName,
             "previous_family_name": contact.previousFamilyName,
-            "note": contact.note,
+            // `CNContact.note` raises without the Contacts Notes entitlement; never call it raw.
+            "note": ABContactSafeNote(contact) as Any? ?? NSNull(),
             "image_data_available": contact.imageDataAvailable,
             "image_data": base64String(from: contact.imageData),
             "thumbnail_image_data": base64String(from: contact.thumbnailImageData),
