@@ -7,7 +7,7 @@
 #   --skip-notarization    Sign and package without notarizing; the DMG is for local checks only.
 #
 # Environment:
-#   DEVELOPMENT_TEAM         Team ID that owns the "Developer ID Application" certificate (required)
+#   APPLE_SIGNING_IDENTITY   Certificate name, e.g. "Developer ID Application: Name (TEAMID)" (required)
 #   NOTARY_KEYCHAIN_PROFILE  notarytool keychain profile (required unless --skip-notarization)
 #   NOTARY_KEYCHAIN          Keychain holding that profile (optional; default search list)
 #   SPARKLE_ED_KEY_FILE      Private EdDSA key file (optional; default: keychain account "apple-bridge")
@@ -37,7 +37,13 @@ for arg in "$@"; do
     esac
 done
 [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || usage
-: "${DEVELOPMENT_TEAM:?DEVELOPMENT_TEAM is required}"
+: "${APPLE_SIGNING_IDENTITY:?APPLE_SIGNING_IDENTITY is required}"
+identity_pattern='^Developer ID Application: .+ \(([A-Z0-9]{10})\)$'
+if [[ ! "$APPLE_SIGNING_IDENTITY" =~ $identity_pattern ]]; then
+    echo "error: APPLE_SIGNING_IDENTITY must be a \"Developer ID Application: Name (TEAMID)\" certificate name" >&2
+    exit 64
+fi
+team_id="${BASH_REMATCH[1]}"
 if $notarize; then
     : "${NOTARY_KEYCHAIN_PROFILE:?NOTARY_KEYCHAIN_PROFILE is required (or pass --skip-notarization)}"
 fi
@@ -53,11 +59,12 @@ export_dir="$build_dir/export"
 app="$export_dir/AppleBridge.app"
 dmg="$build_dir/AppleBridge-$version.dmg"
 
-identities="$(security find-identity -v -p codesigning | grep "\"Developer ID Application: .*($DEVELOPMENT_TEAM)\"" || true)"
+identities="$(security find-identity -v -p codesigning | grep -F "\"$APPLE_SIGNING_IDENTITY\"" || true)"
 if [[ "$(grep -c . <<<"$identities")" -ne 1 ]]; then
-    echo "error: expected exactly one Developer ID Application identity for team $DEVELOPMENT_TEAM" >&2
+    echo "error: expected exactly one valid codesigning identity named \"$APPLE_SIGNING_IDENTITY\"" >&2
     exit 1
 fi
+# The SHA-1 hash pins the exact certificate for xcodebuild, export, and codesign.
 signing_identity="$(awk '{print $2}' <<<"$identities")"
 
 notarize_and_staple() {
@@ -95,7 +102,7 @@ xcodebuild archive \
     -quiet \
     MARKETING_VERSION="$version" \
     CURRENT_PROJECT_VERSION="$build_number" \
-    DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM" \
+    DEVELOPMENT_TEAM="$team_id" \
     CODE_SIGN_STYLE=Manual \
     CODE_SIGN_IDENTITY="$signing_identity" \
     OTHER_CODE_SIGN_FLAGS=--timestamp
@@ -113,7 +120,7 @@ cat >"$build_dir/ExportOptions.plist" <<EOF
     <key>signingCertificate</key>
     <string>$signing_identity</string>
     <key>teamID</key>
-    <string>$DEVELOPMENT_TEAM</string>
+    <string>$team_id</string>
 </dict>
 </plist>
 EOF
