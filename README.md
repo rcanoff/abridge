@@ -191,3 +191,11 @@ Not automated in CI: EventKit permission dialogs, interactive Keychain, E2E MCP 
 - Install hooks: `git config core.hooksPath .githooks`
 - Agent rules: `AGENTS.md`
 - Deep reference: `docs/conventions.md`, `docs/architecture-bootstrap-guide.md`, `docs/prd.md`
+
+## License
+
+This repository is licensed under the [Apache License 2.0](LICENSE.md).
+
+## Security
+
+Report vulnerabilities privately. See [SECURITY.md](SECURITY.md).
