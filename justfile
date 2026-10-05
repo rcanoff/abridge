@@ -6,24 +6,6 @@ review *FLAGS='':
 review-strict:
     @local/review/bin/review.sh --strict
 
-verify-issue-120:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    chmod +x scripts/verify-issue-120.sh
-    scripts/verify-issue-120.sh
-
-verify-epic-90:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    chmod +x scripts/verify-epic-90-orchestration-gates.sh
-    scripts/verify-epic-90-orchestration-gates.sh
-
-verify-epic-90-phase4-order:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    chmod +x scripts/verify-epic-90-phase4-order.sh
-    scripts/verify-epic-90-phase4-order.sh
-
 test-swift:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -128,6 +110,3 @@ clean-rust: _rust-workspace
 
 rebuild: clean-rust build-rust
 
-# Orchestration gate checks for pr3b–pr3k reminder features (docs + PR history)
-verify-orchestration:
-    @scripts/verify-orchestration-gates.sh
