@@ -38,6 +38,7 @@ targets:
         CODE_SIGN_ENTITLEMENTS: AppleBridge/AppleBridge.entitlements
         ENABLE_HARDENED_RUNTIME: YES
         INFOPLIST_KEY_LSUIElement: YES
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
         INFOPLIST_KEY_NSRemindersUsageDescription: "Apple Bridge needs access to your reminders to expose them through the local MCP bridge."
         INFOPLIST_KEY_NSContactsUsageDescription: "Apple Bridge needs access to your contacts to expose them through the local MCP bridge."
         INFOPLIST_KEY_NSCalendarsUsageDescription: "Apple Bridge needs access to your calendars and events to expose them through the local MCP bridge."

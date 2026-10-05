@@ -1856,6 +1856,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AppleBridge/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Apple Bridge";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Apple Bridge needs full access to your calendars and events to expose them through the local MCP bridge.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "Apple Bridge needs access to your calendars and events to expose them through the local MCP bridge.";
@@ -1888,6 +1889,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AppleBridge/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Apple Bridge";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Apple Bridge needs full access to your calendars and events to expose them through the local MCP bridge.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "Apple Bridge needs access to your calendars and events to expose them through the local MCP bridge.";
