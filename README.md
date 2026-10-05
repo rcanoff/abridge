@@ -26,7 +26,19 @@ Access is two layers: macOS privacy permission, then per-capability MCP toggles 
 
 Binds to loopback. Apple frameworks remain the system of record.
 
-## Quick start
+## Install
+
+Requires macOS 26+ on Apple silicon.
+
+```sh
+brew install --cask rcanoff/tap/apple-bridge
+```
+
+Or download `AppleBridge-<version>.dmg` from [Releases](https://github.com/rcanoff/apple-bridge/releases) and drag Apple Bridge to Applications. Builds are Developer ID signed and notarized.
+
+Apple Bridge updates itself through Sparkle: **Check for Updates…** in the menu bar, plus scheduled checks once you allow them.
+
+## Build from source
 
 ```sh
 git clone git@github.com:rcanoff/apple-bridge.git
@@ -165,10 +177,11 @@ Settings tabs: MCP, Permissions, Diagnostics, Developer.
 | `just review` | Local agent code review |
 | `just gen-icon-svg` | Trace `icon/previews/mark.jpg` to SVG |
 | `just gen-menubar-icons` | Rasterize the SVG into the menu-bar template |
+| `just release-build <version>` | Signed, notarized DMG and Sparkle appcast in `build/release/` |
 
 ## CI
 
-GitHub Actions workflows are `workflow_dispatch` only. Run CI locally before pushing:
+CI workflows are `workflow_dispatch` only. Run CI locally before pushing:
 
 ```sh
 just preflight   # alias for `just ci`: Rust + macOS steps
@@ -183,6 +196,19 @@ just preflight   # alias for `just ci`: Rust + macOS steps
 Workflow definitions stay in `.github/workflows/`.
 
 Not automated in CI: EventKit permission dialogs, interactive Keychain, E2E MCP sessions. See `docs/conventions.md`.
+
+## Releasing
+
+Push a `vX.Y.Z` tag from `main`. The [Release workflow](.github/workflows/release.yml) builds the Rust core, archives a Developer ID signed build with the hardened runtime, notarizes and staples the app and DMG, generates the Sparkle `appcast.xml`, publishes both to a GitHub release, and updates the cask in [rcanoff/homebrew-tap](https://github.com/rcanoff/homebrew-tap). The workflow header lists the required repository secrets.
+
+```sh
+git tag v1.0.0 && git push origin v1.0.0
+```
+
+- `CFBundleShortVersionString` comes from the tag; `CFBundleVersion` is the commit count of the tagged commit, so Sparkle sees every release as newer.
+- The app reads its feed from `releases/latest/download/appcast.xml`, so the repository must be public for updates and Homebrew downloads to work.
+- The Sparkle EdDSA private key signs every update; keep a backup outside CI. Losing it strands installed copies on their current version.
+- Local build: `just release-build 1.0.0` (environment variables are documented at the top of `scripts/release.sh`); add `--skip-notarization` to check signing and packaging without submitting to Apple.
 
 ## Contributing
 

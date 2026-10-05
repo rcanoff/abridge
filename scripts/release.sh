@@ -1,0 +1,167 @@
+#!/usr/bin/env bash
+# Builds a Developer ID signed, notarized Apple Bridge DMG and its Sparkle appcast.
+#
+# Usage: scripts/release.sh <version> [--skip-notarization]
+#
+#   <version>              Marketing version (CFBundleShortVersionString), e.g. 1.2.0
+#   --skip-notarization    Sign and package without notarizing; the DMG is for local checks only.
+#
+# Environment:
+#   DEVELOPMENT_TEAM         Team ID that owns the "Developer ID Application" certificate (required)
+#   NOTARY_KEYCHAIN_PROFILE  notarytool keychain profile (required unless --skip-notarization)
+#   NOTARY_KEYCHAIN          Keychain holding that profile (optional; default search list)
+#   SPARKLE_ED_KEY_FILE      Private EdDSA key file (optional; default: keychain account "apple-bridge")
+#   BUILD_NUMBER             CFBundleVersion (optional; default: commit count of HEAD)
+#
+# Output: build/release/AppleBridge-<version>.dmg and build/release/appcast.xml
+set -euo pipefail
+
+readonly REPO_URL="https://github.com/rcanoff/apple-bridge"
+readonly SPARKLE_KEY_ACCOUNT="apple-bridge"
+
+usage() {
+    sed -n '2,16p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2
+    exit 64
+}
+
+version=""
+notarize=true
+for arg in "$@"; do
+    case "$arg" in
+    --skip-notarization) notarize=false ;;
+    -*) usage ;;
+    *)
+        [[ -z "$version" ]] || usage
+        version="$arg"
+        ;;
+    esac
+done
+[[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || usage
+: "${DEVELOPMENT_TEAM:?DEVELOPMENT_TEAM is required}"
+if $notarize; then
+    : "${NOTARY_KEYCHAIN_PROFILE:?NOTARY_KEYCHAIN_PROFILE is required (or pass --skip-notarization)}"
+fi
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$root"
+
+build_number="${BUILD_NUMBER:-$(git rev-list --count HEAD)}"
+build_dir="$root/build/release"
+packages_dir="$root/build/SourcePackages"
+archive="$build_dir/AppleBridge.xcarchive"
+export_dir="$build_dir/export"
+app="$export_dir/AppleBridge.app"
+dmg="$build_dir/AppleBridge-$version.dmg"
+
+identities="$(security find-identity -v -p codesigning | grep "\"Developer ID Application: .*($DEVELOPMENT_TEAM)\"" || true)"
+if [[ "$(grep -c . <<<"$identities")" -ne 1 ]]; then
+    echo "error: expected exactly one Developer ID Application identity for team $DEVELOPMENT_TEAM" >&2
+    exit 1
+fi
+signing_identity="$(awk '{print $2}' <<<"$identities")"
+
+notarize_and_staple() {
+    local submission="$1" staple_target="$2" result status submission_id
+    result="$(xcrun notarytool submit "$submission" \
+        --keychain-profile "$NOTARY_KEYCHAIN_PROFILE" \
+        ${NOTARY_KEYCHAIN:+--keychain "$NOTARY_KEYCHAIN"} \
+        --wait --output-format json)"
+    status="$(plutil -extract status raw - <<<"$result")"
+    submission_id="$(plutil -extract id raw - <<<"$result")"
+    if [[ "$status" != "Accepted" ]]; then
+        echo "error: notarization of $(basename "$submission") finished with status $status" >&2
+        xcrun notarytool log "$submission_id" \
+            --keychain-profile "$NOTARY_KEYCHAIN_PROFILE" \
+            ${NOTARY_KEYCHAIN:+--keychain "$NOTARY_KEYCHAIN"} >&2
+        exit 1
+    fi
+    xcrun stapler staple "$staple_target"
+}
+
+rm -rf "$build_dir"
+mkdir -p "$build_dir"
+
+echo "==> Building Rust core"
+just build-rust
+
+echo "==> Archiving Apple Bridge $version ($build_number)"
+xcodebuild archive \
+    -project AppleBridge.xcodeproj \
+    -scheme AppleBridge \
+    -configuration Release \
+    -destination 'generic/platform=macOS' \
+    -archivePath "$archive" \
+    -clonedSourcePackagesDirPath "$packages_dir" \
+    -quiet \
+    MARKETING_VERSION="$version" \
+    CURRENT_PROJECT_VERSION="$build_number" \
+    DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM" \
+    CODE_SIGN_STYLE=Manual \
+    CODE_SIGN_IDENTITY="$signing_identity" \
+    OTHER_CODE_SIGN_FLAGS=--timestamp
+
+echo "==> Exporting Developer ID build"
+cat >"$build_dir/ExportOptions.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>developer-id</string>
+    <key>signingStyle</key>
+    <string>manual</string>
+    <key>signingCertificate</key>
+    <string>$signing_identity</string>
+    <key>teamID</key>
+    <string>$DEVELOPMENT_TEAM</string>
+</dict>
+</plist>
+EOF
+xcodebuild -exportArchive \
+    -archivePath "$archive" \
+    -exportPath "$export_dir" \
+    -exportOptionsPlist "$build_dir/ExportOptions.plist" \
+    -quiet
+codesign --verify --deep --strict --verbose=2 "$app"
+
+if $notarize; then
+    echo "==> Notarizing app"
+    ditto -c -k --keepParent "$app" "$build_dir/AppleBridge-notarization.zip"
+    notarize_and_staple "$build_dir/AppleBridge-notarization.zip" "$app"
+fi
+
+echo "==> Creating DMG"
+staging="$build_dir/dmg"
+mkdir -p "$staging"
+ditto "$app" "$staging/AppleBridge.app"
+ln -s /Applications "$staging/Applications"
+hdiutil create -volname "Apple Bridge" -srcfolder "$staging" -fs APFS -format ULFO -ov "$dmg"
+codesign --sign "$signing_identity" --timestamp "$dmg"
+
+if $notarize; then
+    echo "==> Notarizing DMG"
+    notarize_and_staple "$dmg" "$dmg"
+    spctl --assess --type open --context context:primary-signature --verbose=2 "$dmg"
+    spctl --assess --type execute --verbose=2 "$app"
+fi
+
+echo "==> Generating appcast"
+appcast_dir="$build_dir/appcast"
+mkdir -p "$appcast_dir"
+cp "$dmg" "$appcast_dir/"
+if [[ -n "${SPARKLE_ED_KEY_FILE:-}" ]]; then
+    key_args=(--ed-key-file "$SPARKLE_ED_KEY_FILE")
+else
+    key_args=(--account "$SPARKLE_KEY_ACCOUNT")
+fi
+"$packages_dir/artifacts/sparkle/Sparkle/bin/generate_appcast" \
+    "${key_args[@]}" \
+    --download-url-prefix "$REPO_URL/releases/download/v$version/" \
+    --full-release-notes-url "$REPO_URL/releases/tag/v$version" \
+    --link "$REPO_URL" \
+    -o "$build_dir/appcast.xml" \
+    "$appcast_dir"
+
+echo "==> Done"
+echo "$dmg"
+echo "$build_dir/appcast.xml"

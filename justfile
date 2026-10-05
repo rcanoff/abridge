@@ -131,3 +131,7 @@ rebuild: clean-rust build-rust
 # Orchestration gate checks for pr3b–pr3k reminder features (docs + PR history)
 verify-orchestration:
     @scripts/verify-orchestration-gates.sh
+
+# Developer ID signed + notarized DMG and Sparkle appcast in build/release (env vars: scripts/release.sh).
+release-build VERSION *FLAGS:
+    scripts/release.sh {{VERSION}} {{FLAGS}}

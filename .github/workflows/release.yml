@@ -1,0 +1,126 @@
+name: Release
+
+# Publishes a Developer ID signed, notarized DMG and the Sparkle appcast for a `vX.Y.Z` tag,
+# then updates the cask in rcanoff/homebrew-tap.
+#
+# Repository secrets:
+#   DEVELOPER_ID_TEAM_ID                 Team ID that owns the Developer ID Application certificate
+#   DEVELOPER_ID_CERTIFICATE_P12_BASE64  Base64 of the exported Developer ID Application .p12
+#   DEVELOPER_ID_CERTIFICATE_PASSWORD    Password of that .p12
+#   NOTARY_API_KEY                       App Store Connect API key (.p8 contents) for notarytool
+#   NOTARY_API_KEY_ID                    Key ID of that API key
+#   NOTARY_API_ISSUER_ID                 Issuer ID of that API key
+#   SPARKLE_ED_PRIVATE_KEY               Sparkle EdDSA private key (`generate_keys --account apple-bridge -x`)
+#   HOMEBREW_TAP_TOKEN                   Token with contents write access to rcanoff/homebrew-tap
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history: CFBundleVersion is the commit count of the tagged commit.
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.85"
+          targets: aarch64-apple-darwin
+
+      - uses: extractions/setup-just@v2
+
+      - name: Install signing and notarization credentials
+        env:
+          CERTIFICATE_P12_BASE64: ${{ secrets.DEVELOPER_ID_CERTIFICATE_P12_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          NOTARY_API_KEY: ${{ secrets.NOTARY_API_KEY }}
+          NOTARY_API_KEY_ID: ${{ secrets.NOTARY_API_KEY_ID }}
+          NOTARY_API_ISSUER_ID: ${{ secrets.NOTARY_API_ISSUER_ID }}
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+        run: |
+          keychain="$RUNNER_TEMP/release.keychain-db"
+          keychain_password="$(uuidgen)"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          echo "RELEASE_KEYCHAIN=$keychain" >>"$GITHUB_ENV"
+
+          base64 --decode <<<"$CERTIFICATE_P12_BASE64" >"$RUNNER_TEMP/developer-id.p12"
+          security import "$RUNNER_TEMP/developer-id.p12" -k "$keychain" -P "$CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/security
+          rm "$RUNNER_TEMP/developer-id.p12"
+          existing_keychains=()
+          while IFS= read -r line; do
+            existing_keychains+=("$(xargs <<<"$line")")
+          done < <(security list-keychains -d user)
+          security list-keychains -d user -s "$keychain" "${existing_keychains[@]}"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain"
+
+          printf '%s\n' "$NOTARY_API_KEY" >"$RUNNER_TEMP/notary.p8"
+          xcrun notarytool store-credentials apple-bridge-notary \
+            --key "$RUNNER_TEMP/notary.p8" \
+            --key-id "$NOTARY_API_KEY_ID" \
+            --issuer "$NOTARY_API_ISSUER_ID" \
+            --keychain "$keychain"
+          rm "$RUNNER_TEMP/notary.p8"
+
+          printf '%s' "$SPARKLE_ED_PRIVATE_KEY" >"$RUNNER_TEMP/sparkle-ed-key"
+
+      - name: Build, notarize, and generate appcast
+        env:
+          DEVELOPMENT_TEAM: ${{ secrets.DEVELOPER_ID_TEAM_ID }}
+          NOTARY_KEYCHAIN_PROFILE: apple-bridge-notary
+          SPARKLE_ED_KEY_FILE: ${{ runner.temp }}/sparkle-ed-key
+        run: NOTARY_KEYCHAIN="$RELEASE_KEYCHAIN" just release-build "${GITHUB_REF_NAME#v}"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          gh release create "$GITHUB_REF_NAME" \
+            "build/release/AppleBridge-$version.dmg" \
+            build/release/appcast.xml \
+            --title "Apple Bridge $version" \
+            --generate-notes \
+            --verify-tag
+
+      - name: Update Homebrew cask
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          tap="$RUNNER_TEMP/homebrew-tap"
+          gh auth setup-git
+          git clone https://github.com/rcanoff/homebrew-tap.git "$tap"
+          mkdir -p "$tap/Casks"
+          scripts/homebrew-cask.sh "$version" "build/release/AppleBridge-$version.dmg" >"$tap/Casks/apple-bridge.rb"
+          git -C "$tap" add Casks/apple-bridge.rb
+          git -C "$tap" \
+            -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "apple-bridge $version"
+          git -C "$tap" push origin HEAD:main
+
+      - name: Remove signing credentials
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/sparkle-ed-key"
+          if [[ -n "${RELEASE_KEYCHAIN:-}" ]]; then
+            security delete-keychain "$RELEASE_KEYCHAIN"
+          fi

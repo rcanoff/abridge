@@ -255,6 +255,7 @@ just lint-swift       # SwiftLint strict
 just ci-rust          # Rust CI subset
 just ci-macos         # macOS CI subset
 just ci               # Full local CI parity
+just release-build X.Y.Z  # Signed + notarized DMG and Sparkle appcast (env: scripts/release.sh header)
 ```
 
 Regenerate Xcode project after `project.yml` changes:

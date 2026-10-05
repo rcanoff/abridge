@@ -200,6 +200,7 @@
 		946E8C9D3E412127B69C8AE9 /* AppleProviderBridgeListCalendarsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732F11CED2185A9CC3DDE300 /* AppleProviderBridgeListCalendarsTests.swift */; };
 		9476E428E07FF99B1610E36B /* VisionProviderScanDocumentArguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4353DF0AECD40BC499FEAE4 /* VisionProviderScanDocumentArguments.swift */; };
 		95362A38FEEAF494CEA7E608 /* ContactsRuntimeUnlinking.m in Sources */ = {isa = PBXBuildFile; fileRef = 89776D27F726F0BD62A62EDD /* ContactsRuntimeUnlinking.m */; };
+		963C2DA07E0D4858797C5CF7 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 55E783949C2FD3EEFB3286F2 /* Sparkle */; };
 		96D65FF6E735083A83502209 /* EventKitProviderGetEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABA761A62E110F5AA0D9D852 /* EventKitProviderGetEvent.swift */; };
 		96E3CF5D4BADF9D384DFEE46 /* EventsPermissionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885CAED8B8050BBC816094D4 /* EventsPermissionServiceTests.swift */; };
 		993464A4CABE192B7BA4AC12 /* EventsPermissionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ADA2DBCC17021D67E96E20F /* EventsPermissionStatus.swift */; };
@@ -314,6 +315,7 @@
 		E3E0157FE3592EA0B75D7A2B /* MenuBarMenuFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66DA7F4D02C9262AFF9E3C32 /* MenuBarMenuFormatting.swift */; };
 		E5898D3B4EE13617A2532557 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45B580B922B7E847CC513FC1 /* ServiceManagement.framework */; };
 		E590981476A94BA687881B51 /* ContactsSearchSupportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D361CD72225C44DCB61ECDED /* ContactsSearchSupportTests.swift */; };
+		E84E2246F3CA76EF02D37F1B /* SparkleUpdaterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFF3BE6BA0102F712D4DFB8A /* SparkleUpdaterService.swift */; };
 		E8D59ADBB4E3D2BDAECFD67C /* MapKitProviderEstimateTravelTimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31960DD8109950F6A3C3DB2 /* MapKitProviderEstimateTravelTimeTests.swift */; };
 		E8E5AB515A24E2E1ACE05376 /* VisionBarcodeSerializationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702E109293B015E9765ABA83 /* VisionBarcodeSerializationTests.swift */; };
 		E9BDD1CC228090BFE078B35D /* VisionTestFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5DE0E87FB1A1109F99E40FB /* VisionTestFixtures.swift */; };
@@ -715,16 +717,19 @@
 		F63C4A36971DB8F9CADA7306 /* EventKitProviderCreateCalendar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderCreateCalendar.swift; sourceTree = "<group>"; };
 		F799085F1440BFB7D9E74EC8 /* AppSettingsVisionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsVisionTests.swift; sourceTree = "<group>"; };
 		F8F8D62F07C979351CD35051 /* VisionProviderScanDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProviderScanDocument.swift; sourceTree = "<group>"; };
+		FA073423FB5661F100A3FD92 /* AppleBridge.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AppleBridge.entitlements; sourceTree = "<group>"; };
 		FA8959227DB90C4148572276 /* UsageAuditExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageAuditExport.swift; sourceTree = "<group>"; };
 		FB687A7DAFC334F2F543BB5C /* EventKitProviderDeleteEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderDeleteEvent.swift; sourceTree = "<group>"; };
 		FB9393CD505D3B5B10502571 /* EventKitProviderSearchEventsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderSearchEventsTests.swift; sourceTree = "<group>"; };
 		FBC7985B7514593F4E9D7D1C /* EventKitMockParticipantSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitMockParticipantSupport.swift; sourceTree = "<group>"; };
+		FC0133BF12855666310891CF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		FC32956F161D827139DE8DEE /* EventKitProviderListEventsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderListEventsTests.swift; sourceTree = "<group>"; };
 		FC5CA501CB9707ADA89A0324 /* ContactsPermissionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsPermissionServiceTests.swift; sourceTree = "<group>"; };
 		FC97BDFF38A3E96C7D394697 /* EventKitProviderTentativeInvitationValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderTentativeInvitationValidationTests.swift; sourceTree = "<group>"; };
 		FE3CBCB059A9C96EFB6FAF93 /* MapKitProviderReverseGeocode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderReverseGeocode.swift; sourceTree = "<group>"; };
 		FF82FBD77A790371CF51BC49 /* MockEventKitStoreEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockEventKitStoreEvents.swift; sourceTree = "<group>"; };
 		FFF30426DD27F169A58AB68E /* ContactsProviderListContacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsProviderListContacts.swift; sourceTree = "<group>"; };
+		FFF3BE6BA0102F712D4DFB8A /* SparkleUpdaterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkleUpdaterService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -734,6 +739,7 @@
 			files = (
 				1D62440B437C5B5D6DD2F200 /* apple_bridge_core.xcframework in Frameworks */,
 				E5898D3B4EE13617A2532557 /* ServiceManagement.framework in Frameworks */,
+				963C2DA07E0D4858797C5CF7 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -972,6 +978,7 @@
 				B34332B87B622ABB41D06752 /* ServerServing.swift */,
 				81A80134291BC796CD15880C /* SingleInstanceChecking.swift */,
 				E7F5667783ACEA479011AB5F /* SMAppLaunchAtLoginService.swift */,
+				FFF3BE6BA0102F712D4DFB8A /* SparkleUpdaterService.swift */,
 				0157FC066C71802B00A6F481 /* URLOpening.swift */,
 			);
 			path = Services;
@@ -982,6 +989,7 @@
 			children = (
 				3558E8E8BC9A1066E84B0DC4 /* AppIcon.icon */,
 				8C46E3ACDC1DD62B5A1DDDF4 /* AppleBridge-Bridging-Header.h */,
+				FA073423FB5661F100A3FD92 /* AppleBridge.entitlements */,
 				0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */,
 				332455E5B96441516AFA070A /* Assets.xcassets */,
 				C6D6F91117573DF21D7C70E9 /* ContactsRuntimeLinking.h */,
@@ -990,6 +998,7 @@
 				89776D27F726F0BD62A62EDD /* ContactsRuntimeUnlinking.m */,
 				4B9D3B4462BA74B83716DF90 /* ContactsSafeAccess.h */,
 				36DC5ABF8E105E0A9113EE03 /* ContactsSafeAccess.m */,
+				FC0133BF12855666310891CF /* Info.plist */,
 				3CF88E0B04748672F6E28BE8 /* MapKitKVCHelper.h */,
 				70AB2E77E202A93FC31002A7 /* MapKitKVCHelper.m */,
 				B85F46CDAA3C988BFBBC89D3 /* Models */,
@@ -1231,6 +1240,7 @@
 			);
 			name = AppleBridge;
 			packageProductDependencies = (
+				55E783949C2FD3EEFB3286F2 /* Sparkle */,
 			);
 			productName = AppleBridge;
 			productReference = CF8C2D151839110223826CC7 /* AppleBridge.app */;
@@ -1274,6 +1284,9 @@
 			);
 			mainGroup = C445D3CF93AA6A3A8FE7DA58;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				715BB17480F1450956B718A4 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 204749CD19AA8AD4DCE0E157 /* Products */;
 			projectDirPath = "";
@@ -1452,6 +1465,7 @@
 				BA971967C55DE01A0123591B /* SettingsWindowView.swift in Sources */,
 				0C32B636AAA73CC558228566 /* SharedCalendarsEventKitStore.swift in Sources */,
 				2628538BB01EFFB95EC15DB3 /* SingleInstanceChecking.swift in Sources */,
+				E84E2246F3CA76EF02D37F1B /* SparkleUpdaterService.swift in Sources */,
 				CE5FEA5F341DF203272C1953 /* StatusIndicator.swift in Sources */,
 				F2E3B333069A6A0F678C189C /* URLOpening.swift in Sources */,
 				EC7DBF7698C004AF8AC77AE7 /* UsageAuditExport.swift in Sources */,
@@ -1831,12 +1845,16 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = AppleBridge/AppleBridge.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 0;
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"AppleBridgeCore\"",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AppleBridge/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Apple Bridge";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Apple Bridge needs full access to your calendars and events to expose them through the local MCP bridge.";
@@ -1848,6 +1866,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MARKETING_VERSION = 0.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.applebridge.AppleBridge;
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "AppleBridge/AppleBridge-Bridging-Header.h";
@@ -1858,12 +1877,16 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = AppleBridge/AppleBridge.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 0;
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"AppleBridgeCore\"",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AppleBridge/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Apple Bridge";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Apple Bridge needs full access to your calendars and events to expose them through the local MCP bridge.";
@@ -1875,6 +1898,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MARKETING_VERSION = 0.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.applebridge.AppleBridge;
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "AppleBridge/AppleBridge-Bridging-Header.h";
@@ -1912,6 +1936,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		715BB17480F1450956B718A4 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = exactVersion;
+				version = 2.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		55E783949C2FD3EEFB3286F2 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 715BB17480F1450956B718A4 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0759E49E4001643275E5DB00 /* Project object */;
 }
