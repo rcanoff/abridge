@@ -6,6 +6,7 @@ struct SettingsWindowView: View {
     @Bindable var permissionsStore: PermissionsStore
     @Bindable var serverStore: ServerStore
     @Bindable var appStore: AppStore
+    let calendarSharingStore: CalendarSharingStore
 
     var body: some View {
         NavigationSplitView {
@@ -26,7 +27,8 @@ struct SettingsWindowView: View {
                     PermissionsSettingsView(
                         permissionsStore: permissionsStore,
                         settingsStore: settingsStore,
-                        appStore: appStore
+                        appStore: appStore,
+                        calendarSharingStore: calendarSharingStore
                     )
                 case .diagnostics:
                     DiagnosticsSettingsView(settingsStore: settingsStore)

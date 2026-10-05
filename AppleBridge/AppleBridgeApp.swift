@@ -14,6 +14,7 @@ struct AppleBridgeApp: App {
     @State private var appSettings: AppSettings
     @State private var permissionsStore: PermissionsStore
     @State private var settingsStore: SettingsStore
+    @State private var calendarSharingStore: CalendarSharingStore
     private let appQuitter: any AppQuitting
 
     init() {
@@ -54,6 +55,7 @@ struct AppleBridgeApp: App {
             _serverStore = State(initialValue: stores.serverStore)
             _permissionsStore = State(initialValue: stores.permissionsStore)
             _settingsStore = State(initialValue: stores.settingsStore)
+            _calendarSharingStore = State(initialValue: stores.calendarSharingStore)
             _store = State(initialValue: stores.store)
 
             guard !isRunningUnitTests else { return }
@@ -88,7 +90,8 @@ struct AppleBridgeApp: App {
                 settingsStore: settingsStore,
                 permissionsStore: permissionsStore,
                 serverStore: serverStore,
-                appStore: store
+                appStore: store,
+                calendarSharingStore: calendarSharingStore
             )
         }
         .defaultSize(width: 600, height: 460)
