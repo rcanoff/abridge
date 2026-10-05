@@ -50,6 +50,16 @@ open AppleBridge.xcodeproj
 
 Build and run the app, start the server from the menu bar, then point your MCP client at the endpoint above.
 
+Builds are ad-hoc signed by default, so every rebuild has a new signature and macOS asks again for Keychain access to the API key and for privacy permissions. To sign local builds with your development certificate instead, create `Configs/Local.xcconfig` (gitignored) with your team:
+
+```
+DEVELOPMENT_TEAM = <your team ID>
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = Apple Development
+```
+
+Choose **Always Allow** at the next Keychain prompt; later rebuilds keep that grant.
+
 ## Prerequisites
 
 macOS 26+, Xcode 26+, Rust 1.85+, [just](https://github.com/casey/just), [xcodegen](https://github.com/yonaskolb/XcodeGen), SwiftFormat, SwiftLint (`brew install swiftformat swiftlint`).

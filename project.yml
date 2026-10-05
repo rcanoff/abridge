@@ -11,6 +11,9 @@ settings:
     MACOSX_DEPLOYMENT_TARGET: "26.0"
     ARCHS: arm64
     EXCLUDED_ARCHS: x86_64
+configFiles:
+  Debug: Configs/Signing.xcconfig
+  Release: Configs/Signing.xcconfig
 packages:
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle

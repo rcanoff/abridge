@@ -396,6 +396,7 @@
 		0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBridgeApp.swift; sourceTree = "<group>"; };
 		0FFBE570B33CADFC64D6A7A3 /* RemindersPermissionStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionStatusTests.swift; sourceTree = "<group>"; };
 		1049F7ED134ECF8E2E7B5419 /* EventKitProviderComplete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderComplete.swift; sourceTree = "<group>"; };
+		109D19592521D0564452B6E0 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		11A1C6EFB21BDE0193DEC904 /* MenuBarQuitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarQuitTests.swift; sourceTree = "<group>"; };
 		11FB05FA5E0C5CC2B3971248 /* EventKitProviderDeclineInvitation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderDeclineInvitation.swift; sourceTree = "<group>"; };
 		13926FC196E096123C63EBA7 /* EventKitProviderCreate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderCreate.swift; sourceTree = "<group>"; };
@@ -753,6 +754,14 @@
 				99C0185B2328E52AB5EBDD1D /* StatusIndicator.swift */,
 			);
 			path = Design;
+			sourceTree = "<group>";
+		};
+		106319F15DBEF48A20085DA3 /* Configs */ = {
+			isa = PBXGroup;
+			children = (
+				109D19592521D0564452B6E0 /* Signing.xcconfig */,
+			);
+			path = Configs;
 			sourceTree = "<group>";
 		};
 		204749CD19AA8AD4DCE0E157 /* Products */ = {
@@ -1168,6 +1177,7 @@
 			children = (
 				63ABDAABA163B13CA550021A /* AppleBridge */,
 				27D0722E33C2A713E104325F /* AppleBridgeTests */,
+				106319F15DBEF48A20085DA3 /* Configs */,
 				BFBC2E392EBA57308AC5F8A8 /* Frameworks */,
 				204749CD19AA8AD4DCE0E157 /* Products */,
 			);
@@ -1701,6 +1711,7 @@
 		};
 		4EF98069CB96C74FA95C1719 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 109D19592521D0564452B6E0 /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = arm64;
@@ -1784,6 +1795,7 @@
 		};
 		9C8EEF4AE3D9D1C38A85BE5C /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 109D19592521D0564452B6E0 /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = arm64;

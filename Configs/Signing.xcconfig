@@ -1,0 +1,15 @@
+// Local code signing for Debug and Release builds from Xcode or `just test-swift`.
+//
+// Without an override, builds are ad-hoc signed: every build has a new signature, so macOS asks
+// again for Keychain access to the API key and for privacy permissions. A development identity
+// keeps the signature's designated requirement stable, so "Always Allow" sticks across rebuilds.
+//
+// Create Configs/Local.xcconfig (gitignored) with your team:
+//
+//   DEVELOPMENT_TEAM = <your team ID>
+//   CODE_SIGN_STYLE = Manual
+//   CODE_SIGN_IDENTITY = Apple Development
+//
+// Release archives (`just release-build`) pass their Developer ID signing on the command line.
+
+#include? "Local.xcconfig"

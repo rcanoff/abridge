@@ -12,3 +12,4 @@ AppleBridgeCore/
 local/
 *.profraw
 build/
+Configs/Local.xcconfig
