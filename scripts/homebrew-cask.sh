@@ -36,8 +36,11 @@ cask "apple-bridge" do
   zap trash: [
     "~/Library/Application Support/AppleBridge",
     "~/Library/Caches/com.applebridge.AppleBridge",
+    "~/Library/Caches/io.github.rcanoff.AppleBridge",
     "~/Library/HTTPStorages/com.applebridge.AppleBridge",
+    "~/Library/HTTPStorages/io.github.rcanoff.AppleBridge",
     "~/Library/Preferences/com.applebridge.AppleBridge.plist",
+    "~/Library/Preferences/io.github.rcanoff.AppleBridge.plist",
   ]
 end
 EOF

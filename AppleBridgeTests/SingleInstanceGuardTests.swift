@@ -129,7 +129,7 @@ struct SingleInstanceGuardTests {
     @Test
     func runningApplicationCheckerTreatsOtherInstanceAsDuplicate() {
         let checker = RunningApplicationInstanceChecker(
-            bundleIdentifier: { "com.applebridge.AppleBridge" },
+            bundleIdentifier: { "io.github.rcanoff.AppleBridge" },
             currentProcessIdentifier: { 100 },
             hasOtherRunningInstance: { _, _ in true }
         )
@@ -140,7 +140,7 @@ struct SingleInstanceGuardTests {
     @Test
     func runningApplicationCheckerTreatsOnlyCurrentInstanceAsNotDuplicate() {
         let checker = RunningApplicationInstanceChecker(
-            bundleIdentifier: { "com.applebridge.AppleBridge" },
+            bundleIdentifier: { "io.github.rcanoff.AppleBridge" },
             currentProcessIdentifier: { 100 },
             hasOtherRunningInstance: { _, _ in false }
         )

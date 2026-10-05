@@ -15,7 +15,7 @@ struct KeychainServiceIntegrationTests {
     private func makeService() -> KeychainService {
         let suffix = UUID().uuidString
         return KeychainService(
-            service: "com.applebridge.AppleBridge.tests.\(suffix)",
+            service: "io.github.rcanoff.AppleBridge.tests.\(suffix)",
             account: "bearer-token"
         )
     }

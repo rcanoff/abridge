@@ -21,6 +21,7 @@ struct KeychainService: BearerTokenPersisting {
     private let account: String
 
     init(
+        // Predates the io.github.rcanoff bundle ID; kept so existing API keys stay readable.
         service: String = "com.applebridge.AppleBridge.mcp-bearer-token",
         account: String = "default"
     ) {

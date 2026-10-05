@@ -1693,7 +1693,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.applebridge.AppleBridgeTests;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.rcanoff.AppleBridgeTests;
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AppleBridge.app/Contents/MacOS/AppleBridge";
 			};
@@ -1776,7 +1776,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.applebridge.AppleBridgeTests;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.rcanoff.AppleBridgeTests;
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AppleBridge.app/Contents/MacOS/AppleBridge";
 			};
@@ -1868,7 +1868,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.applebridge.AppleBridge;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.rcanoff.AppleBridge;
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "AppleBridge/AppleBridge-Bridging-Header.h";
 			};
@@ -1901,7 +1901,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.applebridge.AppleBridge;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.rcanoff.AppleBridge;
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "AppleBridge/AppleBridge-Bridging-Header.h";
 			};

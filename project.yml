@@ -1,6 +1,6 @@
 name: AppleBridge
 options:
-  bundleIdPrefix: com.applebridge
+  bundleIdPrefix: io.github.rcanoff
   deploymentTarget:
     macOS: "26.0"
   createIntermediateGroups: true
@@ -30,7 +30,7 @@ targets:
       - package: Sparkle
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.applebridge.AppleBridge
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.rcanoff.AppleBridge
         MARKETING_VERSION: "0.0.0"
         CURRENT_PROJECT_VERSION: "0"
         GENERATE_INFOPLIST_FILE: YES
