@@ -67,6 +67,7 @@
 		23D906B3D8E7DAE3E535D3F5 /* LocationPermissionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D0F8A8E5FBE1D62FC42E532 /* LocationPermissionStatusTests.swift */; };
 		2470AEE6A03578DB96CE2C91 /* LocationPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C889560329B34B956A2A749 /* LocationPermissionService.swift */; };
 		2498F41A8DA71959BBD8576B /* EventKitProviderMove.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76CF5BE2271C76FA3399537A /* EventKitProviderMove.swift */; };
+		25B94567205492D9A7B4BDDF /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 3558E8E8BC9A1066E84B0DC4 /* AppIcon.icon */; };
 		25C86A4A6DB63CE2F2ADBE95 /* AppleBridgeAppStoreMaking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A8023EBC0B79296B6028F35 /* AppleBridgeAppStoreMaking.swift */; };
 		2628538BB01EFFB95EC15DB3 /* SingleInstanceChecking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81A80134291BC796CD15880C /* SingleInstanceChecking.swift */; };
 		281ABBA91EB5719259B40FF0 /* ContactsProviderRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48092A064A9995535E8903E3 /* ContactsProviderRouting.swift */; };
@@ -184,6 +185,7 @@
 		8A919456F8A579AE70C1143E /* EventKitProviderSetEventAlarms.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8619B82D0F51DDA20F931D9 /* EventKitProviderSetEventAlarms.swift */; };
 		8C37D37C9BCB35C5B9E10735 /* BearerTokenMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F6BCA67AFCEE63192B87840 /* BearerTokenMigrationTests.swift */; };
 		8C744DE0ECED980784822061 /* ContactsProviderSearchContacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF47816BE5824BF9534F861 /* ContactsProviderSearchContacts.swift */; };
+		8DE8BE47455C7F5DEA039BA1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 332455E5B96441516AFA070A /* Assets.xcassets */; };
 		8E48E99B2477BC1E75002958 /* ContactsProviderUnlinkContacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F9DD5ABF487C75C2794D4A /* ContactsProviderUnlinkContacts.swift */; };
 		8F2E496FC5DFA996CF0A4AB5 /* EventKitDeserializationAlarms.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C810FA4ED893ADE6FF771DC /* EventKitDeserializationAlarms.swift */; };
 		8F9F23B6FD35878AC39BEADA /* AppStoreLocationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9859F9F61937957EA7CA7FA /* AppStoreLocationTests.swift */; };
@@ -430,11 +432,13 @@
 		30514C710B02364703AB8BEE /* ContactsProviderDeleteGroupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsProviderDeleteGroupTests.swift; sourceTree = "<group>"; };
 		314C8FA5EE6DC5AB3A535184 /* MapKitProviderGetCurrentLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderGetCurrentLocation.swift; sourceTree = "<group>"; };
 		32A79D84706744C840F4647C /* EventsPermissionChecking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsPermissionChecking.swift; sourceTree = "<group>"; };
+		332455E5B96441516AFA070A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		33C5DED88821173D83CB7D4A /* MapKitProviderLookupPlaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderLookupPlaceTests.swift; sourceTree = "<group>"; };
 		34388819C93666C7CAFE9389 /* MockContactsStoreCreateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockContactsStoreCreateTests.swift; sourceTree = "<group>"; };
 		34B9FE77E5C0721B14E910AC /* AppleProviderBridgeContactsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleProviderBridgeContactsTests.swift; sourceTree = "<group>"; };
 		34F173AAC105177E71E9A236 /* ServerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerService.swift; sourceTree = "<group>"; };
 		35213CFC6D84F7E31E8ACF67 /* MapKitSerializationPlacemark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitSerializationPlacemark.swift; sourceTree = "<group>"; };
+		3558E8E8BC9A1066E84B0DC4 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		35C077FA3285FB031A01B36E /* LiveEventKitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveEventKitStore.swift; sourceTree = "<group>"; };
 		3621DF968442AD3C3562EFAC /* RemindersPermissionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersPermissionStatus.swift; sourceTree = "<group>"; };
 		365678768DB6014A1A7C0A6F /* EventKitProviderMoveEventTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderMoveEventTests.swift; sourceTree = "<group>"; };
@@ -976,8 +980,10 @@
 		63ABDAABA163B13CA550021A /* AppleBridge */ = {
 			isa = PBXGroup;
 			children = (
+				3558E8E8BC9A1066E84B0DC4 /* AppIcon.icon */,
 				8C46E3ACDC1DD62B5A1DDDF4 /* AppleBridge-Bridging-Header.h */,
 				0E736EBC887B0A73475652F3 /* AppleBridgeApp.swift */,
+				332455E5B96441516AFA070A /* Assets.xcassets */,
 				C6D6F91117573DF21D7C70E9 /* ContactsRuntimeLinking.h */,
 				F585AB906D4A5D0F0C0EEDB9 /* ContactsRuntimeLinking.m */,
 				E405A97C97625C50DA5CA03F /* ContactsRuntimeUnlinking.h */,
@@ -1216,6 +1222,7 @@
 			buildConfigurationList = 936AC568B359137E34DA637C /* Build configuration list for PBXNativeTarget "AppleBridge" */;
 			buildPhases = (
 				0E1945A6D9EF59FFC193D471 /* Sources */,
+				125C9D7A345204E4FD23420B /* Resources */,
 				3CC7B226AB21A1F708F6CA2D /* Frameworks */,
 			);
 			buildRules = (
@@ -1277,6 +1284,18 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		125C9D7A345204E4FD23420B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				25B94567205492D9A7B4BDDF /* AppIcon.icon in Resources */,
+				8DE8BE47455C7F5DEA039BA1 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0E1945A6D9EF59FFC193D471 /* Sources */ = {

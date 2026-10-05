@@ -68,7 +68,7 @@ struct AppleBridgeApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("Apple Bridge", systemImage: "bell") {
+        MenuBarExtra {
             MenuBarNativeMenuView(
                 serverStore: serverStore,
                 settingsStore: settingsStore,
@@ -82,6 +82,10 @@ struct AppleBridgeApp: App {
             )) { _ in
                 refreshAppAndServerState()
             }
+        } label: {
+            Image("MenuBarMark")
+                .renderingMode(.template)
+                .accessibilityLabel("Apple Bridge")
         }
         .menuBarExtraStyle(.menu)
 
