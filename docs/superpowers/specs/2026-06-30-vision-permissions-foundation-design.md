@@ -32,7 +32,7 @@ Camera capture, photo-library access, and live capture pipelines are **out of sc
 ## Non-goals
 
 - Individual `vision.*` MCP tools (sibling sub-issues)
-- Rust tool registration or capability constants in `rust/apple_bridge_core`
+- Rust tool registration or capability constants in `rust/abridge_core`
 - `VisionPermissionService` or any TCC status/request plumbing
 - `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, or other image-capture plist keys
 - Menu bar popover Vision status
@@ -89,30 +89,30 @@ This foundation subtask does **not** define tool payloads. Any spec proposing pa
 
 | File | Responsibility |
 |------|----------------|
-| `AppleBridge/Providers/Vision/VisionProvider.swift` | Thin stub: returns `unknown_operation` for all ops |
-| `AppleBridgeTests/AppSettingsVisionTests.swift` | Vision capability server gating tests |
-| `AppleBridgeTests/PermissionsStoreVisionTests.swift` | Vision toggle gating seam tests |
-| `AppleBridgeTests/AppleProviderBridgeVisionTests.swift` | Bridge routes `vision` provider |
+| `ABridge/Providers/Vision/VisionProvider.swift` | Thin stub: returns `unknown_operation` for all ops |
+| `ABridgeTests/AppSettingsVisionTests.swift` | Vision capability server gating tests |
+| `ABridgeTests/PermissionsStoreVisionTests.swift` | Vision toggle gating seam tests |
+| `ABridgeTests/AppleProviderBridgeVisionTests.swift` | Bridge routes `vision` provider |
 
 ### Modified Swift files
 
 | File | Change |
 |------|--------|
-| `AppleBridge/Models/CapabilityCatalog.swift` | Add `visionCapabilities` |
-| `AppleBridge/Models/AppSettings.swift` | `enabledVisionCapabilityIDs`; extend `serverEnabledMCPCapabilityIDs` |
-| `AppleBridge/Models/PermissionsStore.swift` | Vision branch in `shouldApplySavedCapabilitiesAfterToggle` (no Apple gate) |
-| `AppleBridge/Views/Settings/PermissionsSettingsComponents.swift` | `VisionMCPPermissionsGroup` |
-| `AppleBridge/Views/Settings/PermissionsSettingsView.swift` | Vision MCP group; Apple Permissions footer note |
-| `AppleBridge/Providers/AppleProviderBridge.swift` | Route `provider == "vision"` to `VisionProvider` |
+| `ABridge/Models/CapabilityCatalog.swift` | Add `visionCapabilities` |
+| `ABridge/Models/AppSettings.swift` | `enabledVisionCapabilityIDs`; extend `serverEnabledMCPCapabilityIDs` |
+| `ABridge/Models/PermissionsStore.swift` | Vision branch in `shouldApplySavedCapabilitiesAfterToggle` (no Apple gate) |
+| `ABridge/Views/Settings/PermissionsSettingsComponents.swift` | `VisionMCPPermissionsGroup` |
+| `ABridge/Views/Settings/PermissionsSettingsView.swift` | Vision MCP group; Apple Permissions footer note |
+| `ABridge/Providers/AppleProviderBridge.swift` | Route `provider == "vision"` to `VisionProvider` |
 
 ### Explicitly unchanged
 
 | File | Reason |
 |------|--------|
 | `project.yml` | No TCC usage strings for payload-only V1 |
-| `AppleBridge/Models/AppStore.swift` | No Apple permission status for Vision |
-| `AppleBridge/Models/SettingsStore.swift` | No new authorization parameter — existing `applySavedCapabilities` signature unchanged |
-| `AppleBridge/Models/ApplePermissionAuthorization.swift` | No Vision authorization field |
+| `ABridge/Models/AppStore.swift` | No Apple permission status for Vision |
+| `ABridge/Models/SettingsStore.swift` | No new authorization parameter — existing `applySavedCapabilities` signature unchanged |
+| `ABridge/Models/ApplePermissionAuthorization.swift` | No Vision authorization field |
 
 ---
 

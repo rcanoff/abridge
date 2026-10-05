@@ -32,7 +32,7 @@ CoreLocation streaming (`location.start_updates` / continuous updates) is **out 
 ## Non-goals
 
 - Individual `mapkit.*` MCP tools (sibling sub-issues #104+)
-- Rust tool registration or capability constants in `rust/apple_bridge_core`
+- Rust tool registration or capability constants in `rust/abridge_core`
 - CoreLocation streaming provider or `location.*` tools
 - Menu bar popover location status
 - MapKit search/geocode/route JSON projection (deferred to tool subtasks)
@@ -82,35 +82,35 @@ Capability IDs follow `docs/conventions.md` provider naming (`mapkit.search`, `m
 
 | File | Responsibility |
 |------|----------------|
-| `AppleBridge/Models/LocationPermissionStatus.swift` | Status enum + `CLAuthorizationStatus` mapper |
-| `AppleBridge/Services/LocationPermissionChecking.swift` | Protocol |
-| `AppleBridge/Services/LocationPermissionService.swift` | Live service with injectable status/request handlers |
-| `AppleBridge/Providers/MapKit/MapKitProvider.swift` | Thin stub: returns `unknown_operation` for all ops |
-| `AppleBridgeTests/LocationPermissionServiceTests.swift` | Unit tests with mocked handlers |
-| `AppleBridgeTests/LocationPermissionStatusTests.swift` | Mapper tests |
-| `AppleBridgeTests/MockLocationPermissionService.swift` | Test double |
-| `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift` | Bridge routes `mapkit` provider |
-| `AppleBridgeTests/AppSettingsMapKitTests.swift` | MapKit capability gating tests |
-| `AppleBridgeTests/PermissionsStoreMapKitTests.swift` | MapKit gating tests |
+| `ABridge/Models/LocationPermissionStatus.swift` | Status enum + `CLAuthorizationStatus` mapper |
+| `ABridge/Services/LocationPermissionChecking.swift` | Protocol |
+| `ABridge/Services/LocationPermissionService.swift` | Live service with injectable status/request handlers |
+| `ABridge/Providers/MapKit/MapKitProvider.swift` | Thin stub: returns `unknown_operation` for all ops |
+| `ABridgeTests/LocationPermissionServiceTests.swift` | Unit tests with mocked handlers |
+| `ABridgeTests/LocationPermissionStatusTests.swift` | Mapper tests |
+| `ABridgeTests/MockLocationPermissionService.swift` | Test double |
+| `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Bridge routes `mapkit` provider |
+| `ABridgeTests/AppSettingsMapKitTests.swift` | MapKit capability gating tests |
+| `ABridgeTests/PermissionsStoreMapKitTests.swift` | MapKit gating tests |
 
 ### Modified Swift files
 
 | File | Change |
 |------|--------|
 | `project.yml` | Add `INFOPLIST_KEY_NSLocationUsageDescription` |
-| `AppleBridge/Models/CapabilityCatalog.swift` | Add `mapkitCapabilities` |
-| `AppleBridge/Models/AppSettings.swift` | `enabledMapKitCapabilityIDs`, extend `serverEnabledMCPCapabilityIDs(locationAuthorized:)` |
-| `AppleBridge/Models/PermissionsStore.swift` | `requiresAppleLocationAccess`, extend `shouldApplySavedCapabilitiesAfterToggle` |
-| `AppleBridge/Models/SettingsStore.swift` | Inject `locationPermissionService`; thread `locationAuthorized` through `applySavedCapabilities` / `serverEnabledCapabilities` |
-| `AppleBridge/Models/AppStore.swift` | Location permission status, request, open System Settings |
-| `AppleBridge/Views/Settings/PermissionsSettingsView.swift` | Location Apple row + MapKit MCP group; reapply on authorization change |
-| `AppleBridge/Providers/AppleProviderBridge.swift` | Route `provider == "mapkit"` to `MapKitProvider` |
-| `AppleBridge/Services/AppleBridgeAppStoreMaking.swift` | Wire `LocationPermissionService` into stores |
-| `AppleBridgeTests/SettingsStoreTests.swift` | `applySavedCapabilities` with `locationAuthorized` |
-| `AppleBridgeTests/MockAppleBridgeAppStoreMaker.swift` | Wire location service |
-| `AppleBridgeTests/PermissionsStoreTests.swift` | Add `locationAuthorized` to existing toggle tests |
-| `AppleBridgeTests/AppSettingsTests.swift` | Add `locationAuthorized` to existing gating tests |
-| `AppleBridgeTests/AppStoreTests.swift` | Location permission flow tests (if present, extend) |
+| `ABridge/Models/CapabilityCatalog.swift` | Add `mapkitCapabilities` |
+| `ABridge/Models/AppSettings.swift` | `enabledMapKitCapabilityIDs`, extend `serverEnabledMCPCapabilityIDs(locationAuthorized:)` |
+| `ABridge/Models/PermissionsStore.swift` | `requiresAppleLocationAccess`, extend `shouldApplySavedCapabilitiesAfterToggle` |
+| `ABridge/Models/SettingsStore.swift` | Inject `locationPermissionService`; thread `locationAuthorized` through `applySavedCapabilities` / `serverEnabledCapabilities` |
+| `ABridge/Models/AppStore.swift` | Location permission status, request, open System Settings |
+| `ABridge/Views/Settings/PermissionsSettingsView.swift` | Location Apple row + MapKit MCP group; reapply on authorization change |
+| `ABridge/Providers/AppleProviderBridge.swift` | Route `provider == "mapkit"` to `MapKitProvider` |
+| `ABridge/Services/ABridgeAppStoreMaking.swift` | Wire `LocationPermissionService` into stores |
+| `ABridgeTests/SettingsStoreTests.swift` | `applySavedCapabilities` with `locationAuthorized` |
+| `ABridgeTests/MockABridgeAppStoreMaker.swift` | Wire location service |
+| `ABridgeTests/PermissionsStoreTests.swift` | Add `locationAuthorized` to existing toggle tests |
+| `ABridgeTests/AppSettingsTests.swift` | Add `locationAuthorized` to existing gating tests |
+| `ABridgeTests/AppStoreTests.swift` | Location permission flow tests (if present, extend) |
 
 ---
 

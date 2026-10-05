@@ -119,28 +119,28 @@ Rust tools/call → ProviderBridge → MapKitProvider.search_nearby
 
 | File | Role |
 |------|------|
-| `AppleBridge/Providers/MapKit/MapKitProviderSearchArguments.swift` | Shared region/coordinate/POI-category argument parsing (extracted from `search_places`) |
-| `AppleBridge/Providers/MapKit/MapKitProviderSearchNearby.swift` | `search_nearby` operation handler |
-| `AppleBridgeTests/MapKitProviderSearchNearbyTests.swift` | Provider end-to-end tests |
+| `ABridge/Providers/MapKit/MapKitProviderSearchArguments.swift` | Shared region/coordinate/POI-category argument parsing (extracted from `search_places`) |
+| `ABridge/Providers/MapKit/MapKitProviderSearchNearby.swift` | `search_nearby` operation handler |
+| `ABridgeTests/MapKitProviderSearchNearbyTests.swift` | Provider end-to-end tests |
 
 ### Swift files (modify)
 
 | File | Change |
 |------|--------|
-| `AppleBridge/Providers/MapKit/MapKitStore.swift` | Add `MapKitSearchNearbyRequest` + `searchNearby(request:)` |
-| `AppleBridge/Providers/MapKit/LiveMapKitStore.swift` | `MKLocalSearch` POI-nearby wrapper |
-| `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift` | Dispatch `search_nearby` |
-| `AppleBridge/Providers/MapKit/MapKitProviderSearchPlaces.swift` | Use shared argument helpers |
-| `AppleBridgeTests/MockMapKitStore.swift` | Fake nearby results + `lastNearbyRequest` |
-| `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path for `search_nearby` |
+| `ABridge/Providers/MapKit/MapKitStore.swift` | Add `MapKitSearchNearbyRequest` + `searchNearby(request:)` |
+| `ABridge/Providers/MapKit/LiveMapKitStore.swift` | `MKLocalSearch` POI-nearby wrapper |
+| `ABridge/Providers/MapKit/MapKitProviderRouting.swift` | Dispatch `search_nearby` |
+| `ABridge/Providers/MapKit/MapKitProviderSearchPlaces.swift` | Use shared argument helpers |
+| `ABridgeTests/MockMapKitStore.swift` | Fake nearby results + `lastNearbyRequest` |
+| `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path for `search_nearby` |
 | `README.md` | Check off `mapkit.search_nearby` |
 
 ### Rust files (modify)
 
 | File | Change |
 |------|--------|
-| `rust/apple_bridge_core/src/tools/mod.rs` | `TOOL_SEARCH_NEARBY`, registration, input schema, unit tests; update `mapkit.search` tool-list test to expect **both** search tools |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
+| `rust/abridge_core/src/tools/mod.rs` | `TOOL_SEARCH_NEARBY`, registration, input schema, unit tests; update `mapkit.search` tool-list test to expect **both** search tools |
+| `rust/abridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
 
 **No changes** to `capabilities.rs` or `CapabilityCatalog.swift` — `mapkit.search` already shipped with #104.
 

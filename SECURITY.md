@@ -2,12 +2,12 @@
 
 ## Report a security issue
 
-Report security issues privately through [GitHub's security advisory form](https://github.com/rcanoff/apple-bridge/security/advisories/new). Do not report security vulnerabilities on the public issue tracker.
+Report security issues privately through [GitHub's security advisory form](https://github.com/rcanoff/abridge/security/advisories/new). Do not report security vulnerabilities on the public issue tracker.
 
 ## Vulnerability coordination
 
-Confirmed vulnerabilities are coordinated through the [GitHub Security Advisory](https://docs.github.com/en/code-security/security-advisories) opened for the issue. Affected parties include the reporter, users of Apple Bridge, and downstream maintainers where relevant.
+Confirmed vulnerabilities are coordinated through the [GitHub Security Advisory](https://docs.github.com/en/code-security/security-advisories) opened for the issue. Affected parties include the reporter, users of ABridge, and downstream maintainers where relevant.
 
 ## Security advisories
 
-Security fixes are disclosed through [GitHub release notes](https://github.com/rcanoff/apple-bridge/releases).
+Security fixes are disclosed through [GitHub release notes](https://github.com/rcanoff/abridge/releases).

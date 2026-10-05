@@ -97,31 +97,31 @@ Rust tools/call → ProviderBridge → MapKitProvider.reverse_geocode
 
 | File | Role |
 |------|------|
-| `AppleBridge/Providers/MapKit/MapKitProviderReverseGeocode.swift` | `reverse_geocode` operation handler |
-| `AppleBridgeTests/MapKitProviderReverseGeocodeTests.swift` | Provider end-to-end tests |
+| `ABridge/Providers/MapKit/MapKitProviderReverseGeocode.swift` | `reverse_geocode` operation handler |
+| `ABridgeTests/MapKitProviderReverseGeocodeTests.swift` | Provider end-to-end tests |
 
 ### Swift files (modify)
 
 | File | Change |
 |------|--------|
-| `AppleBridge/Providers/MapKit/MapKitStore.swift` | Add `MapKitReverseGeocodeRequest` + `reverseGeocode(request:)` |
-| `AppleBridge/Providers/MapKit/LiveMapKitStore.swift` | `MKReverseGeocodingRequest` blocking wrapper |
-| `AppleBridge/Providers/MapKit/MapKitSerialization.swift` | `reverseGeocodeResponseJSONObject(mapItems:)` |
-| `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift` | Dispatch `reverse_geocode` |
-| `AppleBridge/Models/CapabilityCatalog.swift` | `mapkit-geocode` → `shipped: true` |
-| `AppleBridgeTests/MockMapKitStore.swift` | Fake reverse-geocode results + `lastReverseGeocodeRequest` |
-| `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path for `reverse_geocode` |
-| `AppleBridgeTests/PermissionsStoreMapKitTests.swift` | Expect `mapkit-geocode` shipped |
-| `AppleBridgeTests/AppSettingsMapKitTests.swift` | Server gating includes `mapkit.geocode` when location authorized |
+| `ABridge/Providers/MapKit/MapKitStore.swift` | Add `MapKitReverseGeocodeRequest` + `reverseGeocode(request:)` |
+| `ABridge/Providers/MapKit/LiveMapKitStore.swift` | `MKReverseGeocodingRequest` blocking wrapper |
+| `ABridge/Providers/MapKit/MapKitSerialization.swift` | `reverseGeocodeResponseJSONObject(mapItems:)` |
+| `ABridge/Providers/MapKit/MapKitProviderRouting.swift` | Dispatch `reverse_geocode` |
+| `ABridge/Models/CapabilityCatalog.swift` | `mapkit-geocode` → `shipped: true` |
+| `ABridgeTests/MockMapKitStore.swift` | Fake reverse-geocode results + `lastReverseGeocodeRequest` |
+| `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path for `reverse_geocode` |
+| `ABridgeTests/PermissionsStoreMapKitTests.swift` | Expect `mapkit-geocode` shipped |
+| `ABridgeTests/AppSettingsMapKitTests.swift` | Server gating includes `mapkit.geocode` when location authorized |
 | `README.md` | Check off `mapkit.reverse_geocode` |
 
 ### Rust files (modify)
 
 | File | Change |
 |------|--------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `MAPKIT_GEOCODE` constant + `is_allowed_in_v1` |
-| `rust/apple_bridge_core/src/tools/mod.rs` | `TOOL_REVERSE_GEOCODE`, registration, input schema, unit tests |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
+| `rust/abridge_core/src/capabilities.rs` | `MAPKIT_GEOCODE` constant + `is_allowed_in_v1` |
+| `rust/abridge_core/src/tools/mod.rs` | `TOOL_REVERSE_GEOCODE`, registration, input schema, unit tests |
+| `rust/abridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
 
 ---
 

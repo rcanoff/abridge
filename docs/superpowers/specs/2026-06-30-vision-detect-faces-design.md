@@ -204,32 +204,32 @@ Rust tools/call → ProviderBridge → VisionProvider.detect_faces
 
 | File | Role |
 |------|------|
-| `AppleBridge/Providers/Vision/VisionFaceSerialization.swift` | `VNFaceObservation` / landmark region JSON |
-| `AppleBridge/Providers/Vision/VisionProviderDetectFaces.swift` | Operation handler |
-| `AppleBridgeTests/VisionFaceSerializationTests.swift` | Landmark projection completeness |
-| `AppleBridgeTests/VisionProviderDetectFacesTests.swift` | Provider end-to-end tests |
+| `ABridge/Providers/Vision/VisionFaceSerialization.swift` | `VNFaceObservation` / landmark region JSON |
+| `ABridge/Providers/Vision/VisionProviderDetectFaces.swift` | Operation handler |
+| `ABridgeTests/VisionFaceSerializationTests.swift` | Landmark projection completeness |
+| `ABridgeTests/VisionProviderDetectFacesTests.swift` | Provider end-to-end tests |
 
 ### Swift files (modify)
 
 | File | Change |
 |------|--------|
-| `AppleBridge/Providers/Vision/VisionSerialization.swift` | `detectFacesResponseJSONObject` wrapper delegating to face serialization |
-| `AppleBridge/Providers/Vision/VisionStore.swift` | `VisionDetectFacesRequest` + `detectFaces` on protocol |
-| `AppleBridge/Providers/Vision/LiveVisionStore.swift` | `VNDetectFaceLandmarksRequest` sync wrapper |
-| `AppleBridge/Providers/Vision/VisionProviderRouting.swift` | `detect_faces` dispatch |
-| `AppleBridgeTests/MockVisionStore.swift` | Fake face results for CI |
-| `AppleBridgeTests/AppleProviderBridgeVisionTests.swift` | Success path for `detect_faces` |
-| `AppleBridgeTests/AppSettingsVisionTests.swift` | Shipped capability server gating |
-| `AppleBridge/Models/CapabilityCatalog.swift` | `vision-faces` → `shipped: true` |
+| `ABridge/Providers/Vision/VisionSerialization.swift` | `detectFacesResponseJSONObject` wrapper delegating to face serialization |
+| `ABridge/Providers/Vision/VisionStore.swift` | `VisionDetectFacesRequest` + `detectFaces` on protocol |
+| `ABridge/Providers/Vision/LiveVisionStore.swift` | `VNDetectFaceLandmarksRequest` sync wrapper |
+| `ABridge/Providers/Vision/VisionProviderRouting.swift` | `detect_faces` dispatch |
+| `ABridgeTests/MockVisionStore.swift` | Fake face results for CI |
+| `ABridgeTests/AppleProviderBridgeVisionTests.swift` | Success path for `detect_faces` |
+| `ABridgeTests/AppSettingsVisionTests.swift` | Shipped capability server gating |
+| `ABridge/Models/CapabilityCatalog.swift` | `vision-faces` → `shipped: true` |
 | `README.md` | Check off `vision.detect_faces` |
 
 ### Rust files (modify)
 
 | File | Change |
 |------|--------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `VISION_FACES` constant + `is_allowed_in_v1` |
-| `rust/apple_bridge_core/src/tools/mod.rs` | `TOOL_DETECT_FACES`, registration, input schema, unit tests |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
+| `rust/abridge_core/src/capabilities.rs` | `VISION_FACES` constant + `is_allowed_in_v1` |
+| `rust/abridge_core/src/tools/mod.rs` | `TOOL_DETECT_FACES`, registration, input schema, unit tests |
+| `rust/abridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
 
 ---
 

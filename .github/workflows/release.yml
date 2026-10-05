@@ -11,7 +11,7 @@ name: Release
 #   APPLE_API_KEY               App Store Connect API key ID for notarytool
 #   APPLE_API_ISSUER            Issuer ID of that API key
 #   APPLE_API_KEY_CONTENT       Contents of that API key's .p8 file
-#   SPARKLE_ED_PRIVATE_KEY      Sparkle EdDSA private key (`generate_keys --account apple-bridge -x`)
+#   SPARKLE_ED_PRIVATE_KEY      Sparkle EdDSA private key (`generate_keys --account abridge -x`)
 #   HOMEBREW_TAP_TOKEN          Token with contents write access to rcanoff/homebrew-tap
 
 on:
@@ -74,7 +74,7 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain"
 
           printf '%s\n' "$APPLE_API_KEY_CONTENT" >"$RUNNER_TEMP/notary.p8"
-          xcrun notarytool store-credentials apple-bridge-notary \
+          xcrun notarytool store-credentials abridge-notary \
             --key "$RUNNER_TEMP/notary.p8" \
             --key-id "$APPLE_API_KEY" \
             --issuer "$APPLE_API_ISSUER" \
@@ -86,7 +86,7 @@ jobs:
       - name: Build, notarize, and generate appcast
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          NOTARY_KEYCHAIN_PROFILE: apple-bridge-notary
+          NOTARY_KEYCHAIN_PROFILE: abridge-notary
           SPARKLE_ED_KEY_FILE: ${{ runner.temp }}/sparkle-ed-key
         run: NOTARY_KEYCHAIN="$RELEASE_KEYCHAIN" just release-build "${GITHUB_REF_NAME#v}"
 
@@ -96,9 +96,9 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#v}"
           gh release create "$GITHUB_REF_NAME" \
-            "build/release/AppleBridge-$version.dmg" \
+            "build/release/ABridge-$version.dmg" \
             build/release/appcast.xml \
-            --title "Apple Bridge $version" \
+            --title "ABridge $version" \
             --generate-notes \
             --verify-tag
 
@@ -111,12 +111,12 @@ jobs:
           gh auth setup-git
           git clone https://github.com/rcanoff/homebrew-tap.git "$tap"
           mkdir -p "$tap/Casks"
-          scripts/homebrew-cask.sh "$version" "build/release/AppleBridge-$version.dmg" >"$tap/Casks/apple-bridge.rb"
-          git -C "$tap" add Casks/apple-bridge.rb
+          scripts/homebrew-cask.sh "$version" "build/release/ABridge-$version.dmg" >"$tap/Casks/abridge.rb"
+          git -C "$tap" add Casks/abridge.rb
           git -C "$tap" \
             -c user.name="github-actions[bot]" \
             -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            commit -m "apple-bridge $version"
+            commit -m "abridge $version"
           git -C "$tap" push origin HEAD:main
 
       - name: Remove signing credentials

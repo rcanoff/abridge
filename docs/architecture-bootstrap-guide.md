@@ -12,7 +12,7 @@ This document is generic. It does not describe any specific product domain, pers
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  AppleBridge.app                                                   │
+│  ABridge.app                                                   │
 │                                                                     │
 │  ┌───────────────────────────────────────────────────────────────┐  │
 │  │ SwiftUI Shell                                                 │  │
@@ -104,15 +104,15 @@ The result is a clean split: Swift owns platform integration, Rust owns the serv
 
 ## 2. Repository layout
 
-Target structure for a new project named `AppleBridge`:
+Target structure for a new project named `ABridge`:
 
 ```text
-AppleBridge/
-├── AppleBridge/
-│   ├── AppleBridgeApp.swift
+ABridge/
+├── ABridge/
+│   ├── ABridgeApp.swift
 │   ├── Models/
 │   ├── Services/
-│   │   ├── apple_bridge_core.swift   # GENERATED — do not edit
+│   │   ├── abridge_core.swift   # GENERATED — do not edit
 │   │   ├── CoreService.swift
 │   │   ├── ServerService.swift
 │   │   └── KeychainService.swift
@@ -123,15 +123,15 @@ AppleBridge/
 │   │   ├── HealthKit/
 │   │   └── PhotoKit/
 │   └── Views/
-├── AppleBridgeTests/
-├── AppleBridgeCore/
+├── ABridgeTests/
+├── ABridgeCore/
 ├── rust/
 │   ├── Cargo.toml
 │   ├── rustfmt.toml
 │   ├── build.rs
 │   ├── build-macos.sh
 │   ├── uniffi-bindgen.rs
-│   └── apple_bridge_core/
+│   └── abridge_core/
 │       └── src/
 │           ├── lib.rs
 │           ├── error.rs
@@ -151,11 +151,11 @@ AppleBridge/
 
 | Path | Edit? | Regenerate how |
 |------|-------|----------------|
-| `AppleBridgeCore/` | Never | `just build-rust` |
-| `AppleBridge/Services/apple_bridge_core.swift` | Never | Copy from `AppleBridgeCore/Sources/` after build |
-| `AppleBridge/Services/*Service.swift` | Yes | Hand-written wrappers |
-| `AppleBridge/Providers/` | Yes | Thin adapters over Apple frameworks |
-| `rust/apple_bridge_core/src/` | Yes | Source of truth for the embedded server and FFI API |
+| `ABridgeCore/` | Never | `just build-rust` |
+| `ABridge/Services/abridge_core.swift` | Never | Copy from `ABridgeCore/Sources/` after build |
+| `ABridge/Services/*Service.swift` | Yes | Hand-written wrappers |
+| `ABridge/Providers/` | Yes | Thin adapters over Apple frameworks |
+| `rust/abridge_core/src/` | Yes | Source of truth for the embedded server and FFI API |
 
 ### Module boundaries
 
@@ -195,7 +195,7 @@ rustup target add aarch64-apple-darwin
 
 ```toml
 [workspace]
-members = ["apple_bridge_core"]
+members = ["abridge_core"]
 resolver = "2"
 
 [workspace.package]
@@ -203,18 +203,18 @@ edition = "2024"
 rust-version = "1.85"
 ```
 
-`rust/apple_bridge_core/Cargo.toml`:
+`rust/abridge_core/Cargo.toml`:
 
 ```toml
 [package]
-name = "apple_bridge_core"
+name = "abridge_core"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 
 [lib]
 crate-type = ["lib", "staticlib"]
-name = "apple_bridge_core"
+name = "abridge_core"
 
 [dependencies]
 uniffi = { version = "0.31", features = ["cli"] }
@@ -268,7 +268,7 @@ fn main() {
 
 The app should start and stop the embedded server through a small exported API. Swift should not know the internals of the HTTP stack.
 
-`rust/apple_bridge_core/src/lib.rs`:
+`rust/abridge_core/src/lib.rs`:
 
 ```rust
 mod auth;
@@ -339,7 +339,7 @@ Rules:
 
 The embedded server needs a concrete runtime configuration and a single callback entry point for platform providers.
 
-`rust/apple_bridge_core/src/config.rs`:
+`rust/abridge_core/src/config.rs`:
 
 ```rust
 #[derive(Debug, Clone, uniffi::Record)]
@@ -371,7 +371,7 @@ pub struct ProviderResponse {
 }
 ```
 
-`rust/apple_bridge_core/src/diagnostics.rs`:
+`rust/abridge_core/src/diagnostics.rs`:
 
 ```rust
 #[derive(Debug, Clone, uniffi::Record)]
@@ -401,7 +401,7 @@ Validation guidance:
 
 Swift implements the provider bridge; Rust owns routing and calls into Swift only when platform APIs are required.
 
-`rust/apple_bridge_core/src/providers.rs`:
+`rust/abridge_core/src/providers.rs`:
 
 ```rust
 use crate::config::{ProviderRequest, ProviderResponse};
@@ -423,7 +423,7 @@ Design rules:
 
 The embedded server should be represented as a stateful Rust object with explicit lifecycle methods. Swift gets a handle, starts it, reads status, and stops it.
 
-`rust/apple_bridge_core/src/server.rs`:
+`rust/abridge_core/src/server.rs`:
 
 ```rust
 use std::sync::{Arc, Mutex};
@@ -512,50 +512,50 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-OUTPUT_DIR="$PROJECT_DIR/AppleBridgeCore"
-XCFRAMEWORK_DIR="$OUTPUT_DIR/apple_bridge_core.xcframework"
+OUTPUT_DIR="$PROJECT_DIR/ABridgeCore"
+XCFRAMEWORK_DIR="$OUTPUT_DIR/abridge_core.xcframework"
 
 cd "$SCRIPT_DIR"
 
-ARM64_LIB="target/aarch64-apple-darwin/release/libapple_bridge_core.a"
+ARM64_LIB="target/aarch64-apple-darwin/release/libabridge_core.a"
 
 echo "Building macOS arm64..."
-cargo build --release -p apple_bridge_core --target aarch64-apple-darwin
+cargo build --release -p abridge_core --target aarch64-apple-darwin
 
 mkdir -p "$OUTPUT_DIR/Sources"
 mkdir -p "$OUTPUT_DIR/Headers"
 
 MACOS_LIB_DIR="$OUTPUT_DIR/lib-macos-arm64"
 mkdir -p "$MACOS_LIB_DIR"
-cp "$ARM64_LIB" "$MACOS_LIB_DIR/libapple_bridge_core.a"
+cp "$ARM64_LIB" "$MACOS_LIB_DIR/libabridge_core.a"
 
 echo "Generating Swift bindings..."
-cargo run --release -p apple_bridge_core --bin uniffi-bindgen generate \
+cargo run --release -p abridge_core --bin uniffi-bindgen generate \
   --library "$ARM64_LIB" \
   --language swift \
   --out-dir "$OUTPUT_DIR/Sources"
 
-if [ -f "$OUTPUT_DIR/Sources/apple_bridge_coreFFI.h" ]; then
-  mv "$OUTPUT_DIR/Sources/apple_bridge_coreFFI.h" "$OUTPUT_DIR/Headers/"
+if [ -f "$OUTPUT_DIR/Sources/abridge_coreFFI.h" ]; then
+  mv "$OUTPUT_DIR/Sources/abridge_coreFFI.h" "$OUTPUT_DIR/Headers/"
 fi
 
 cat > "$OUTPUT_DIR/Headers/module.modulemap" << 'EOF'
-module apple_bridge_coreFFI {
-    header "apple_bridge_coreFFI.h"
+module abridge_coreFFI {
+    header "abridge_coreFFI.h"
     export *
 }
 EOF
 
 rm -rf "$XCFRAMEWORK_DIR"
 xcodebuild -create-xcframework \
-  -library "$MACOS_LIB_DIR/libapple_bridge_core.a" \
+  -library "$MACOS_LIB_DIR/libabridge_core.a" \
   -headers "$OUTPUT_DIR/Headers" \
   -output "$XCFRAMEWORK_DIR"
 
 rm -rf "$MACOS_LIB_DIR" "$OUTPUT_DIR/Headers"
 
-cp "$OUTPUT_DIR/Sources/apple_bridge_core.swift" \
-  "$PROJECT_DIR/AppleBridge/Services/apple_bridge_core.swift"
+cp "$OUTPUT_DIR/Sources/abridge_core.swift" \
+  "$PROJECT_DIR/ABridge/Services/abridge_core.swift"
 
 echo "Done: $XCFRAMEWORK_DIR"
 ```
@@ -568,16 +568,16 @@ just build-rust
 ### Step 7 — Create the Xcode macOS app
 
 1. Create a new macOS App project in Xcode with SwiftUI and Swift 6.
-2. Add `AppleBridgeCore/apple_bridge_core.xcframework` to the app target.
-3. Add `AppleBridge/Services/apple_bridge_core.swift` to the app target.
+2. Add `ABridgeCore/abridge_core.xcframework` to the app target.
+3. Add `ABridge/Services/abridge_core.swift` to the app target.
 4. Enable strict concurrency checks.
 5. Keep generated bindings separate from hand-written services.
 
 Minimum file structure:
 
 ```text
-AppleBridge/
-  AppleBridgeApp.swift
+ABridge/
+  ABridgeApp.swift
   Models/AppStore.swift
   Models/ServerSettings.swift
   Services/CoreService.swift
@@ -592,7 +592,7 @@ AppleBridge/
 
 Swift owns the app lifecycle and should explicitly start and stop the Rust server.
 
-`AppleBridge/Services/ServerService.swift`:
+`ABridge/Services/ServerService.swift`:
 
 ```swift
 import Foundation
@@ -634,13 +634,13 @@ final class ServerService {
 }
 ```
 
-`AppleBridge/AppleBridgeApp.swift`:
+`ABridge/ABridgeApp.swift`:
 
 ```swift
 import SwiftUI
 
 @main
-struct AppleBridgeApp: App {
+struct ABridgeApp: App {
     @State private var store = AppStore()
 
     var body: some Scene {
@@ -667,7 +667,7 @@ Lifecycle rules:
 
 Swift should own secure storage. Rust receives the bearer token only at runtime through `ServerConfig`.
 
-`AppleBridge/Services/KeychainService.swift`:
+`ABridge/Services/KeychainService.swift`:
 
 ```swift
 import Foundation
@@ -706,7 +706,7 @@ Rules:
 
 Swift implements a single bridge and dispatches to provider modules by name.
 
-`AppleBridge/Providers/AppleProviderBridge.swift`:
+`ABridge/Providers/AppleProviderBridge.swift`:
 
 ```swift
 import Foundation
@@ -744,7 +744,7 @@ Each Apple framework gets its own small module with one clear purpose.
 Example layout:
 
 ```text
-AppleBridge/Providers/
+ABridge/Providers/
   EventKit/
     EventKitProvider.swift
     EventKitModels.swift
@@ -857,7 +857,7 @@ Use one explicit runtime config record passed from Swift to Rust.
 
 ### Validation matrix
 
-Canonical contract for `validate_config()` in `rust/apple_bridge_core/src/config.rs`. PR specs implement rows by PR column; naming philosophy for provider IDs lives in `docs/conventions.md` § Providers and operations.
+Canonical contract for `validate_config()` in `rust/abridge_core/src/config.rs`. PR specs implement rows by PR column; naming philosophy for provider IDs lives in `docs/conventions.md` § Providers and operations.
 
 | Field | Rule | Error message | PR |
 |-------|------|---------------|-----|
@@ -997,11 +997,11 @@ Never discard the Rust error class at the Swift boundary. Translate it once, cen
 
 ### Changing the FFI API
 
-1. Edit Rust types/functions in `apple_bridge_core`
+1. Edit Rust types/functions in `abridge_core`
 2. `just lint-rust && TZ=UTC just test-rust`
 3. `just build-rust`
 4. Fix Swift call sites in hand-written services
-5. Never patch `apple_bridge_core.swift` manually
+5. Never patch `abridge_core.swift` manually
 
 ---
 
@@ -1070,7 +1070,7 @@ Never discard the Rust error class at the Swift boundary. Translate it once, cen
 
 ### Generated bindings
 
-- Treat generated `apple_bridge_core.swift` as read-only.
+- Treat generated `abridge_core.swift` as read-only.
 - Add hand-written wrappers in `Services/`.
 - Do not mix generated and hand-written code in one file.
 
@@ -1152,13 +1152,13 @@ Use it to test:
 
 ### Swift tests
 
-Create a `AppleBridgeTests` target and test the hand-written Swift services.
+Create a `ABridgeTests` target and test the hand-written Swift services.
 
 Example:
 
 ```swift
 import Testing
-@testable import AppleBridge
+@testable import ABridge
 
 @Suite("ServerService")
 struct ServerServiceTests {
@@ -1236,14 +1236,14 @@ lint-rust:
     cd rust && cargo clippy -- -D warnings
 
 test-swift:
-    TZ=UTC xcodebuild test -project AppleBridge.xcodeproj -scheme AppleBridge \
-        -only-testing:AppleBridgeTests -destination 'platform=macOS' -quiet
+    TZ=UTC xcodebuild test -project ABridge.xcodeproj -scheme ABridge \
+        -only-testing:ABridgeTests -destination 'platform=macOS' -quiet
 
 test-all: test-rust test-swift
 
 clean-rust:
     cd rust && cargo clean
-    rm -rf AppleBridgeCore
+    rm -rf ABridgeCore
 
 rebuild: clean-rust build-rust
 ```
@@ -1255,12 +1255,12 @@ rebuild: clean-rust build-rust
 Copy this when spinning up a project from the template:
 
 - [ ] Create Xcode macOS SwiftUI app target
-- [ ] Create Rust workspace with one `apple_bridge_core` crate
+- [ ] Create Rust workspace with one `abridge_core` crate
 - [ ] Add `error.rs`, `config.rs`, `auth.rs`, `server.rs`, `providers.rs`, `diagnostics.rs`, `logging.rs`
 - [ ] Export the Rust server lifecycle through UniFFI
 - [ ] Add `build-macos.sh` and `justfile`
 - [ ] Run `just build-rust`; link XCFramework in Xcode
-- [ ] Copy generated `apple_bridge_core.swift` into `AppleBridge/Services/`
+- [ ] Copy generated `abridge_core.swift` into `ABridge/Services/`
 - [ ] Add `ServerService.swift` and `KeychainService.swift`
 - [ ] Add `AppleProviderBridge.swift`
 - [ ] Add at least one provider module under `Providers/`
@@ -1281,8 +1281,8 @@ This template deliberately stops early. Each new app adds its own:
 | Settings persistence | Swift settings models + storage service |
 | Apple framework permissions | Swift services and providers |
 | Domain-specific request/response schemas | Rust `mcp.rs` and `providers.rs` |
-| Business logic | Rust `apple_bridge_core/src/` |
-| Provider-specific Apple integration | `AppleBridge/Providers/` |
+| Business logic | Rust `abridge_core/src/` |
+| Provider-specific Apple integration | `ABridge/Providers/` |
 | Status and diagnostics UI | SwiftUI views + `server_status()` polling |
 
 Keep the shell thin. Put server logic in Rust. Add Swift only where the platform requires it.

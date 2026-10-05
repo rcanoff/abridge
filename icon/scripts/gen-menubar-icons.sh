@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Rasterize icon/vectors/mark.svg to a macOS menu-bar template imageset.
-# Writes AppleBridge/Assets.xcassets/MenuBarMark.imageset (18/36/54 px, alpha-only).
+# Writes ABridge/Assets.xcassets/MenuBarMark.imageset (18/36/54 px, alpha-only).
 set -euo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 icons_dir=$(cd "$script_dir/.." && pwd)
 repo_root=$(cd "$icons_dir/.." && pwd)
 src="$icons_dir/vectors/mark.svg"
-dest="$repo_root/AppleBridge/Assets.xcassets/MenuBarMark.imageset"
+dest="$repo_root/ABridge/Assets.xcassets/MenuBarMark.imageset"
 point_size=18
 
 need() {

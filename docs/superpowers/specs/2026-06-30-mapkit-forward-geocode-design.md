@@ -105,35 +105,35 @@ Rust tools/call → ProviderBridge → MapKitProvider.forward_geocode
 
 | File | Role |
 |------|------|
-| `AppleBridge/Providers/MapKit/MapKitProviderForwardGeocode.swift` | `forward_geocode` operation handler |
-| `AppleBridgeTests/MapKitProviderForwardGeocodeTests.swift` | Provider end-to-end tests |
+| `ABridge/Providers/MapKit/MapKitProviderForwardGeocode.swift` | `forward_geocode` operation handler |
+| `ABridgeTests/MapKitProviderForwardGeocodeTests.swift` | Provider end-to-end tests |
 
 ### Swift files (modify)
 
 | File | Change |
 |------|--------|
-| `AppleBridge/Providers/MapKit/MapKitStore.swift` | Add `MapKitForwardGeocodeRequest` + `forwardGeocode(request:)` |
-| `AppleBridge/Providers/MapKit/LiveMapKitStore.swift` | `MKGeocodingRequest` blocking wrapper |
-| `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift` | Dispatch `forward_geocode` |
-| `AppleBridgeTests/MockMapKitStore.swift` | Fake forward-geocode results + `lastForwardGeocodeRequest` |
-| `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path for `forward_geocode` |
+| `ABridge/Providers/MapKit/MapKitStore.swift` | Add `MapKitForwardGeocodeRequest` + `forwardGeocode(request:)` |
+| `ABridge/Providers/MapKit/LiveMapKitStore.swift` | `MKGeocodingRequest` blocking wrapper |
+| `ABridge/Providers/MapKit/MapKitProviderRouting.swift` | Dispatch `forward_geocode` |
+| `ABridgeTests/MockMapKitStore.swift` | Fake forward-geocode results + `lastForwardGeocodeRequest` |
+| `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path for `forward_geocode` |
 | `README.md` | Check off `mapkit.forward_geocode` |
 
 ### Rust files (modify)
 
 | File | Change |
 |------|--------|
-| `rust/apple_bridge_core/src/tools/mod.rs` | `TOOL_FORWARD_GEOCODE`, registration, input schema, unit tests |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
+| `rust/abridge_core/src/tools/mod.rs` | `TOOL_FORWARD_GEOCODE`, registration, input schema, unit tests |
+| `rust/abridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
 
 ### No changes required
 
 | File | Reason |
 |------|--------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `MAPKIT_GEOCODE` shipped in #106 |
-| `AppleBridge/Models/CapabilityCatalog.swift` | `mapkit-geocode` already `shipped: true` |
-| `AppleBridgeTests/PermissionsStoreMapKitTests.swift` | Geocode toggle expectations covered in #106 |
-| `AppleBridgeTests/AppSettingsMapKitTests.swift` | Server gating for `mapkit.geocode` covered in #106 |
+| `rust/abridge_core/src/capabilities.rs` | `MAPKIT_GEOCODE` shipped in #106 |
+| `ABridge/Models/CapabilityCatalog.swift` | `mapkit-geocode` already `shipped: true` |
+| `ABridgeTests/PermissionsStoreMapKitTests.swift` | Geocode toggle expectations covered in #106 |
+| `ABridgeTests/AppSettingsMapKitTests.swift` | Server gating for `mapkit.geocode` covered in #106 |
 
 ---
 

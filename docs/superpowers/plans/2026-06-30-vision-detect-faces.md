@@ -6,7 +6,7 @@
 
 **Architecture:** Extend `VisionStore` + `VisionSerialization` from #114; `VNDetectFaceLandmarksRequest` via sync `VNImageRequestHandler` (same pattern as `recognize_text`); Rust tool registration with `vision.faces` capability; flip `vision-faces` to shipped; no Apple TCC gate per #151.
 
-**Tech Stack:** Rust (`apple_bridge_core`), Swift 6 + Vision + CoreGraphics, Swift Testing, UniFFI `ProviderBridge`
+**Tech Stack:** Rust (`abridge_core`), Swift 6 + Vision + CoreGraphics, Swift Testing, UniFFI `ProviderBridge`
 
 **Spec:** `docs/superpowers/specs/2026-06-30-vision-detect-faces-design.md`
 
@@ -18,19 +18,19 @@
 
 | File | Responsibility |
 |------|----------------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `VISION_FACES` constant |
-| `rust/apple_bridge_core/src/tools/mod.rs` | Tool registration + input schema |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | MCP integration tests |
-| `AppleBridge/Providers/Vision/VisionFaceSerialization.swift` | `VNFaceObservation` / landmark JSON |
-| `AppleBridge/Providers/Vision/VisionSerialization.swift` | `detectFacesResponseJSONObject` wrapper |
-| `AppleBridge/Providers/Vision/VisionStore.swift` | Detect-faces protocol seam |
-| `AppleBridge/Providers/Vision/LiveVisionStore.swift` | `VNDetectFaceLandmarksRequest` sync wrapper |
-| `AppleBridge/Providers/Vision/VisionProviderDetectFaces.swift` | `detect_faces` handler |
-| `AppleBridge/Providers/Vision/VisionProviderRouting.swift` | Operation dispatch |
-| `AppleBridgeTests/MockVisionStore.swift` | Deterministic face results |
-| `AppleBridgeTests/VisionFaceSerializationTests.swift` | Fidelity assertions |
-| `AppleBridgeTests/VisionProviderDetectFacesTests.swift` | Provider tests |
-| `AppleBridge/Models/CapabilityCatalog.swift` | Ship `vision-faces` |
+| `rust/abridge_core/src/capabilities.rs` | `VISION_FACES` constant |
+| `rust/abridge_core/src/tools/mod.rs` | Tool registration + input schema |
+| `rust/abridge_core/tests/mcp_protocol.rs` | MCP integration tests |
+| `ABridge/Providers/Vision/VisionFaceSerialization.swift` | `VNFaceObservation` / landmark JSON |
+| `ABridge/Providers/Vision/VisionSerialization.swift` | `detectFacesResponseJSONObject` wrapper |
+| `ABridge/Providers/Vision/VisionStore.swift` | Detect-faces protocol seam |
+| `ABridge/Providers/Vision/LiveVisionStore.swift` | `VNDetectFaceLandmarksRequest` sync wrapper |
+| `ABridge/Providers/Vision/VisionProviderDetectFaces.swift` | `detect_faces` handler |
+| `ABridge/Providers/Vision/VisionProviderRouting.swift` | Operation dispatch |
+| `ABridgeTests/MockVisionStore.swift` | Deterministic face results |
+| `ABridgeTests/VisionFaceSerializationTests.swift` | Fidelity assertions |
+| `ABridgeTests/VisionProviderDetectFacesTests.swift` | Provider tests |
+| `ABridge/Models/CapabilityCatalog.swift` | Ship `vision-faces` |
 | `README.md` | Check off tool |
 
 ---
@@ -38,9 +38,9 @@
 ### Task 1: Rust capability + tool registration
 
 **Files:**
-- Modify: `rust/apple_bridge_core/src/capabilities.rs`
-- Modify: `rust/apple_bridge_core/src/tools/mod.rs`
-- Test: `rust/apple_bridge_core/tests/mcp_protocol.rs` (Task 2)
+- Modify: `rust/abridge_core/src/capabilities.rs`
+- Modify: `rust/abridge_core/src/tools/mod.rs`
+- Test: `rust/abridge_core/tests/mcp_protocol.rs` (Task 2)
 
 - [ ] **Step 1: Add `VISION_FACES` to capabilities.rs**
 
@@ -151,7 +151,7 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add rust/apple_bridge_core/src/capabilities.rs rust/apple_bridge_core/src/tools/mod.rs
+git add rust/abridge_core/src/capabilities.rs rust/abridge_core/src/tools/mod.rs
 git commit -m "feat(vision): register detect_faces tool and vision.faces capability"
 ```
 
@@ -160,7 +160,7 @@ git commit -m "feat(vision): register detect_faces tool and vision.faces capabil
 ### Task 2: Rust MCP integration tests
 
 **Files:**
-- Modify: `rust/apple_bridge_core/tests/mcp_protocol.rs`
+- Modify: `rust/abridge_core/tests/mcp_protocol.rs`
 
 - [ ] **Step 1: Write failing integration tests**
 
@@ -186,7 +186,7 @@ Expected: PASS
 - [ ] **Step 3: Commit**
 
 ```bash
-git add rust/apple_bridge_core/tests/mcp_protocol.rs
+git add rust/abridge_core/tests/mcp_protocol.rs
 git commit -m "test(vision): add MCP integration tests for detect_faces"
 ```
 
@@ -195,9 +195,9 @@ git commit -m "test(vision): add MCP integration tests for detect_faces"
 ### Task 3: Face observation serialization
 
 **Files:**
-- Create: `AppleBridge/Providers/Vision/VisionFaceSerialization.swift`
-- Modify: `AppleBridge/Providers/Vision/VisionSerialization.swift`
-- Create: `AppleBridgeTests/VisionFaceSerializationTests.swift`
+- Create: `ABridge/Providers/Vision/VisionFaceSerialization.swift`
+- Modify: `ABridge/Providers/Vision/VisionSerialization.swift`
+- Create: `ABridgeTests/VisionFaceSerializationTests.swift`
 
 - [ ] **Step 1: Write failing serialization tests**
 
@@ -249,9 +249,9 @@ Expected: PASS for VisionFaceSerializationTests
 - [ ] **Step 5: Commit**
 
 ```bash
-git add AppleBridge/Providers/Vision/VisionFaceSerialization.swift \
-  AppleBridge/Providers/Vision/VisionSerialization.swift \
-  AppleBridgeTests/VisionFaceSerializationTests.swift
+git add ABridge/Providers/Vision/VisionFaceSerialization.swift \
+  ABridge/Providers/Vision/VisionSerialization.swift \
+  ABridgeTests/VisionFaceSerializationTests.swift
 git commit -m "feat(vision): add exhaustive VNFaceObservation serialization"
 ```
 
@@ -260,10 +260,10 @@ git commit -m "feat(vision): add exhaustive VNFaceObservation serialization"
 ### Task 4: VisionStore + LiveVisionStore
 
 **Files:**
-- Modify: `AppleBridge/Providers/Vision/VisionStore.swift`
-- Modify: `AppleBridge/Providers/Vision/LiveVisionStore.swift`
-- Modify: `AppleBridgeTests/MockVisionStore.swift`
-- Modify: `AppleBridgeTests/VisionTestFixtures.swift`
+- Modify: `ABridge/Providers/Vision/VisionStore.swift`
+- Modify: `ABridge/Providers/Vision/LiveVisionStore.swift`
+- Modify: `ABridgeTests/MockVisionStore.swift`
+- Modify: `ABridgeTests/VisionTestFixtures.swift`
 
 - [ ] **Step 1: Define protocol request type**
 
@@ -304,10 +304,10 @@ Hold canned `[VNFaceObservation]` (synthesized via `VNFaceObservation.faceObserv
 - [ ] **Step 4: Commit**
 
 ```bash
-git add AppleBridge/Providers/Vision/VisionStore.swift \
-  AppleBridge/Providers/Vision/LiveVisionStore.swift \
-  AppleBridgeTests/MockVisionStore.swift \
-  AppleBridgeTests/VisionTestFixtures.swift
+git add ABridge/Providers/Vision/VisionStore.swift \
+  ABridge/Providers/Vision/LiveVisionStore.swift \
+  ABridgeTests/MockVisionStore.swift \
+  ABridgeTests/VisionTestFixtures.swift
 git commit -m "feat(vision): add VisionStore detect_faces seam"
 ```
 
@@ -316,10 +316,10 @@ git commit -m "feat(vision): add VisionStore detect_faces seam"
 ### Task 5: VisionProvider detect_faces operation
 
 **Files:**
-- Create: `AppleBridge/Providers/Vision/VisionProviderDetectFaces.swift`
-- Modify: `AppleBridge/Providers/Vision/VisionProviderRouting.swift`
-- Create: `AppleBridgeTests/VisionProviderDetectFacesTests.swift`
-- Modify: `AppleBridgeTests/AppleProviderBridgeVisionTests.swift`
+- Create: `ABridge/Providers/Vision/VisionProviderDetectFaces.swift`
+- Modify: `ABridge/Providers/Vision/VisionProviderRouting.swift`
+- Create: `ABridgeTests/VisionProviderDetectFacesTests.swift`
+- Modify: `ABridgeTests/AppleProviderBridgeVisionTests.swift`
 
 - [ ] **Step 1: Write failing provider tests**
 
@@ -351,10 +351,10 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add AppleBridge/Providers/Vision/VisionProviderDetectFaces.swift \
-  AppleBridge/Providers/Vision/VisionProviderRouting.swift \
-  AppleBridgeTests/VisionProviderDetectFacesTests.swift \
-  AppleBridgeTests/AppleProviderBridgeVisionTests.swift
+git add ABridge/Providers/Vision/VisionProviderDetectFaces.swift \
+  ABridge/Providers/Vision/VisionProviderRouting.swift \
+  ABridgeTests/VisionProviderDetectFacesTests.swift \
+  ABridgeTests/AppleProviderBridgeVisionTests.swift
 git commit -m "feat(vision): implement detect_faces provider operation"
 ```
 
@@ -363,9 +363,9 @@ git commit -m "feat(vision): implement detect_faces provider operation"
 ### Task 6: Ship capability + README
 
 **Files:**
-- Modify: `AppleBridge/Models/CapabilityCatalog.swift`
+- Modify: `ABridge/Models/CapabilityCatalog.swift`
 - Modify: `README.md`
-- Modify: `AppleBridgeTests/AppSettingsVisionTests.swift`
+- Modify: `ABridgeTests/AppSettingsVisionTests.swift`
 
 - [ ] **Step 1: Flip capability shipped**
 
@@ -401,7 +401,7 @@ Expected: PASS (before merge)
 - [ ] **Step 6: Commit**
 
 ```bash
-git add AppleBridge/Models/CapabilityCatalog.swift README.md AppleBridgeTests/AppSettingsVisionTests.swift project.yml
+git add ABridge/Models/CapabilityCatalog.swift README.md ABridgeTests/AppSettingsVisionTests.swift project.yml
 git commit -m "feat(vision): ship vision.faces capability for detect_faces"
 ```
 

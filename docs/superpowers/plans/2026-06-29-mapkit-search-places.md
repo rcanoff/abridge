@@ -6,7 +6,7 @@
 
 **Architecture:** `MapKitStore` protocol seam; `MapKitSerialization` for faithful MapKit JSON; Rust tool registration with `mapkit.search` capability; flip `mapkit-search` to shipped; CoreLocation when-in-use gate per #150.
 
-**Tech Stack:** Rust (`apple_bridge_core`), Swift 6 + MapKit + CoreLocation, Swift Testing, UniFFI `ProviderBridge`
+**Tech Stack:** Rust (`abridge_core`), Swift 6 + MapKit + CoreLocation, Swift Testing, UniFFI `ProviderBridge`
 
 **Spec:** `docs/superpowers/specs/2026-06-29-mapkit-search-places-design.md`
 
@@ -16,19 +16,19 @@
 
 | File | Responsibility |
 |------|----------------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `MAPKIT_SEARCH` constant |
-| `rust/apple_bridge_core/src/tools/mod.rs` | Tool registration + input schema |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | MCP integration tests |
-| `AppleBridge/Providers/MapKit/MapKitSerialization.swift` | MKMapItem / MKPlacemark / region JSON |
-| `AppleBridge/Providers/MapKit/MapKitStore.swift` | Search protocol + auth seam |
-| `AppleBridge/Providers/MapKit/LiveMapKitStore.swift` | `MKLocalSearch` blocking wrapper |
-| `AppleBridge/Providers/MapKit/MapKitProvider.swift` | Provider shell + error helpers |
-| `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift` | Operation dispatch |
-| `AppleBridge/Providers/MapKit/MapKitProviderSearchPlaces.swift` | `search_places` handler |
-| `AppleBridgeTests/MockMapKitStore.swift` | Deterministic search results |
-| `AppleBridgeTests/MapKitSerializationTests.swift` | Fidelity assertions |
-| `AppleBridgeTests/MapKitProviderSearchPlacesTests.swift` | Provider tests |
-| `AppleBridge/Models/CapabilityCatalog.swift` | Ship `mapkit-search` |
+| `rust/abridge_core/src/capabilities.rs` | `MAPKIT_SEARCH` constant |
+| `rust/abridge_core/src/tools/mod.rs` | Tool registration + input schema |
+| `rust/abridge_core/tests/mcp_protocol.rs` | MCP integration tests |
+| `ABridge/Providers/MapKit/MapKitSerialization.swift` | MKMapItem / MKPlacemark / region JSON |
+| `ABridge/Providers/MapKit/MapKitStore.swift` | Search protocol + auth seam |
+| `ABridge/Providers/MapKit/LiveMapKitStore.swift` | `MKLocalSearch` blocking wrapper |
+| `ABridge/Providers/MapKit/MapKitProvider.swift` | Provider shell + error helpers |
+| `ABridge/Providers/MapKit/MapKitProviderRouting.swift` | Operation dispatch |
+| `ABridge/Providers/MapKit/MapKitProviderSearchPlaces.swift` | `search_places` handler |
+| `ABridgeTests/MockMapKitStore.swift` | Deterministic search results |
+| `ABridgeTests/MapKitSerializationTests.swift` | Fidelity assertions |
+| `ABridgeTests/MapKitProviderSearchPlacesTests.swift` | Provider tests |
+| `ABridge/Models/CapabilityCatalog.swift` | Ship `mapkit-search` |
 | `README.md` | Check off tool |
 
 ---
@@ -36,9 +36,9 @@
 ### Task 1: Rust capability + tool registration
 
 **Files:**
-- Modify: `rust/apple_bridge_core/src/capabilities.rs`
-- Modify: `rust/apple_bridge_core/src/tools/mod.rs`
-- Test: `rust/apple_bridge_core/tests/mcp_protocol.rs`
+- Modify: `rust/abridge_core/src/capabilities.rs`
+- Modify: `rust/abridge_core/src/tools/mod.rs`
+- Test: `rust/abridge_core/tests/mcp_protocol.rs`
 
 - [ ] **Step 1: Add `MAPKIT_SEARCH` to capabilities.rs**
 
@@ -160,7 +160,7 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add rust/apple_bridge_core/src/capabilities.rs rust/apple_bridge_core/src/tools/mod.rs
+git add rust/abridge_core/src/capabilities.rs rust/abridge_core/src/tools/mod.rs
 git commit -m "feat(mapkit): register mapkit.search_places MCP tool in Rust"
 ```
 
@@ -169,7 +169,7 @@ git commit -m "feat(mapkit): register mapkit.search_places MCP tool in Rust"
 ### Task 2: Rust MCP integration tests
 
 **Files:**
-- Modify: `rust/apple_bridge_core/tests/mcp_protocol.rs`
+- Modify: `rust/abridge_core/tests/mcp_protocol.rs`
 
 - [ ] **Step 1: Add mapkit config helper** (mirror `contacts_config_on_port`)
 
@@ -238,7 +238,7 @@ Expected: PASS
 - [ ] **Step 4: Commit**
 
 ```bash
-git add rust/apple_bridge_core/tests/mcp_protocol.rs
+git add rust/abridge_core/tests/mcp_protocol.rs
 git commit -m "test(mapkit): add MCP integration tests for search_places"
 ```
 
@@ -247,15 +247,15 @@ git commit -m "test(mapkit): add MCP integration tests for search_places"
 ### Task 3: MapKitSerialization (exhaustive MKMapItem)
 
 **Files:**
-- Create: `AppleBridge/Providers/MapKit/MapKitSerialization.swift`
-- Create: `AppleBridgeTests/MapKitSerializationTests.swift`
+- Create: `ABridge/Providers/MapKit/MapKitSerialization.swift`
+- Create: `ABridgeTests/MapKitSerializationTests.swift`
 
 - [ ] **Step 1: Write failing serialization test**
 
 ```swift
 import MapKit
 import Testing
-@testable import AppleBridge
+@testable import ABridge
 
 @Suite("MapKitSerialization")
 struct MapKitSerializationTests {
@@ -369,7 +369,7 @@ Expected: PASS for MapKitSerializationTests
 - [ ] **Step 5: Commit**
 
 ```bash
-git add AppleBridge/Providers/MapKit/MapKitSerialization.swift AppleBridgeTests/MapKitSerializationTests.swift
+git add ABridge/Providers/MapKit/MapKitSerialization.swift ABridgeTests/MapKitSerializationTests.swift
 git commit -m "feat(mapkit): add exhaustive MapKit serialization"
 ```
 
@@ -378,9 +378,9 @@ git commit -m "feat(mapkit): add exhaustive MapKit serialization"
 ### Task 4: MapKitStore + LiveMapKitStore
 
 **Files:**
-- Create: `AppleBridge/Providers/MapKit/MapKitStore.swift`
-- Create: `AppleBridge/Providers/MapKit/LiveMapKitStore.swift`
-- Create: `AppleBridgeTests/MockMapKitStore.swift`
+- Create: `ABridge/Providers/MapKit/MapKitStore.swift`
+- Create: `ABridge/Providers/MapKit/LiveMapKitStore.swift`
+- Create: `ABridgeTests/MockMapKitStore.swift`
 
 - [ ] **Step 1: Define protocol and result type**
 
@@ -474,9 +474,9 @@ final class MockMapKitStore: MapKitStoreing {
 - [ ] **Step 4: Commit**
 
 ```bash
-git add AppleBridge/Providers/MapKit/MapKitStore.swift \
-  AppleBridge/Providers/MapKit/LiveMapKitStore.swift \
-  AppleBridgeTests/MockMapKitStore.swift
+git add ABridge/Providers/MapKit/MapKitStore.swift \
+  ABridge/Providers/MapKit/LiveMapKitStore.swift \
+  ABridgeTests/MockMapKitStore.swift
 git commit -m "feat(mapkit): add MapKitStore search seam"
 ```
 
@@ -485,11 +485,11 @@ git commit -m "feat(mapkit): add MapKitStore search seam"
 ### Task 5: MapKitProvider search_places operation
 
 **Files:**
-- Modify: `AppleBridge/Providers/MapKit/MapKitProvider.swift`
-- Create: `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift`
-- Create: `AppleBridge/Providers/MapKit/MapKitProviderSearchPlaces.swift`
-- Create: `AppleBridgeTests/MapKitProviderSearchPlacesTests.swift`
-- Modify: `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift`
+- Modify: `ABridge/Providers/MapKit/MapKitProvider.swift`
+- Create: `ABridge/Providers/MapKit/MapKitProviderRouting.swift`
+- Create: `ABridge/Providers/MapKit/MapKitProviderSearchPlaces.swift`
+- Create: `ABridgeTests/MapKitProviderSearchPlacesTests.swift`
+- Modify: `ABridgeTests/AppleProviderBridgeMapKitTests.swift`
 
 - [ ] **Step 1: Write failing provider tests**
 
@@ -610,8 +610,8 @@ Expected: PASS
 - [ ] **Step 7: Commit**
 
 ```bash
-git add AppleBridge/Providers/MapKit/ AppleBridgeTests/MapKitProviderSearchPlacesTests.swift \
-  AppleBridgeTests/AppleProviderBridgeMapKitTests.swift
+git add ABridge/Providers/MapKit/ ABridgeTests/MapKitProviderSearchPlacesTests.swift \
+  ABridgeTests/AppleProviderBridgeMapKitTests.swift
 git commit -m "feat(mapkit): implement search_places provider operation"
 ```
 
@@ -620,10 +620,10 @@ git commit -m "feat(mapkit): implement search_places provider operation"
 ### Task 6: Ship capability + README
 
 **Files:**
-- Modify: `AppleBridge/Models/CapabilityCatalog.swift`
+- Modify: `ABridge/Models/CapabilityCatalog.swift`
 - Modify: `README.md`
-- Modify: `AppleBridgeTests/PermissionsStoreMapKitTests.swift` (update unshipped → shipped expectations)
-- Modify: `AppleBridgeTests/AppSettingsMapKitTests.swift`
+- Modify: `ABridgeTests/PermissionsStoreMapKitTests.swift` (update unshipped → shipped expectations)
+- Modify: `ABridgeTests/AppSettingsMapKitTests.swift`
 
 - [ ] **Step 1: Flip capability shipped**
 
@@ -650,8 +650,8 @@ Expected: PASS (before merge)
 - [ ] **Step 5: Commit**
 
 ```bash
-git add AppleBridge/Models/CapabilityCatalog.swift README.md AppleBridgeTests/PermissionsStoreMapKitTests.swift \
-  AppleBridgeTests/AppSettingsMapKitTests.swift
+git add ABridge/Models/CapabilityCatalog.swift README.md ABridgeTests/PermissionsStoreMapKitTests.swift \
+  ABridgeTests/AppSettingsMapKitTests.swift
 git commit -m "feat(mapkit): ship mapkit.search capability for search_places"
 ```
 

@@ -212,32 +212,32 @@ Rust tools/call → ProviderBridge → VisionProvider.recognize_text
 
 | File | Role |
 |------|------|
-| `AppleBridge/Providers/Vision/VisionSerialization.swift` | Exhaustive Vision type → JSON |
-| `AppleBridge/Providers/Vision/VisionStore.swift` | Protocol + request/result types |
-| `AppleBridge/Providers/Vision/LiveVisionStore.swift` | `VNImageRequestHandler` wrapper |
-| `AppleBridge/Providers/Vision/VisionProviderRecognizeText.swift` | Operation handler |
-| `AppleBridge/Providers/Vision/VisionProviderRouting.swift` | `handle(operation:)` dispatch |
-| `AppleBridgeTests/MockVisionStore.swift` | Fake OCR results for CI |
-| `AppleBridgeTests/VisionSerializationTests.swift` | Projection completeness |
-| `AppleBridgeTests/VisionProviderRecognizeTextTests.swift` | Provider end-to-end tests |
+| `ABridge/Providers/Vision/VisionSerialization.swift` | Exhaustive Vision type → JSON |
+| `ABridge/Providers/Vision/VisionStore.swift` | Protocol + request/result types |
+| `ABridge/Providers/Vision/LiveVisionStore.swift` | `VNImageRequestHandler` wrapper |
+| `ABridge/Providers/Vision/VisionProviderRecognizeText.swift` | Operation handler |
+| `ABridge/Providers/Vision/VisionProviderRouting.swift` | `handle(operation:)` dispatch |
+| `ABridgeTests/MockVisionStore.swift` | Fake OCR results for CI |
+| `ABridgeTests/VisionSerializationTests.swift` | Projection completeness |
+| `ABridgeTests/VisionProviderRecognizeTextTests.swift` | Provider end-to-end tests |
 
 ### Swift files (modify)
 
 | File | Change |
 |------|--------|
-| `AppleBridge/Providers/Vision/VisionProvider.swift` | Store injection + error helpers |
-| `AppleBridge/Models/CapabilityCatalog.swift` | `vision-text` → `shipped: true` |
-| `AppleBridgeTests/AppleProviderBridgeVisionTests.swift` | Success path with mock provider |
-| `AppleBridgeTests/AppSettingsVisionTests.swift` | Shipped capability server gating |
+| `ABridge/Providers/Vision/VisionProvider.swift` | Store injection + error helpers |
+| `ABridge/Models/CapabilityCatalog.swift` | `vision-text` → `shipped: true` |
+| `ABridgeTests/AppleProviderBridgeVisionTests.swift` | Success path with mock provider |
+| `ABridgeTests/AppSettingsVisionTests.swift` | Shipped capability server gating |
 | `README.md` | Check off `vision.recognize_text` |
 
 ### Rust files (modify)
 
 | File | Change |
 |------|--------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `VISION_TEXT` constant + `is_allowed_in_v1` |
-| `rust/apple_bridge_core/src/tools/mod.rs` | `TOOL_RECOGNIZE_TEXT`, registration, input schema, unit tests |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
+| `rust/abridge_core/src/capabilities.rs` | `VISION_TEXT` constant + `is_allowed_in_v1` |
+| `rust/abridge_core/src/tools/mod.rs` | `TOOL_RECOGNIZE_TEXT`, registration, input schema, unit tests |
+| `rust/abridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
 
 ---
 

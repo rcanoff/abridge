@@ -6,7 +6,7 @@
 
 **Architecture:** Extend `MapKitStore` with `openNavigation`; use `MKMapItem.openMaps` in `LiveMapKitStore`; map launch options to seam types for mockability; add response serializers to `MapKitSerialization`; Rust tool registration on `mapkit.navigation`; ship `mapkit-navigation` toggle; CoreLocation when-in-use gate per #150.
 
-**Tech Stack:** Rust (`apple_bridge_core`), Swift 6 + MapKit + CoreLocation, Swift Testing, UniFFI `ProviderBridge`
+**Tech Stack:** Rust (`abridge_core`), Swift 6 + MapKit + CoreLocation, Swift Testing, UniFFI `ProviderBridge`
 
 **Spec:** `docs/superpowers/specs/2026-06-30-mapkit-open-navigation-design.md`
 
@@ -16,20 +16,20 @@
 
 | File | Responsibility |
 |------|----------------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `MAPKIT_NAVIGATION` constant + v1 allowlist |
-| `rust/apple_bridge_core/src/tools/mod.rs` | `TOOL_OPEN_NAVIGATION` registration + input schema |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | MCP integration tests |
-| `AppleBridge/Providers/MapKit/MapKitStore.swift` | Request/result seam types + protocol method |
-| `AppleBridge/Providers/MapKit/LiveMapKitStore.swift` | `MKMapItem.openMaps` wrapper |
-| `AppleBridge/Providers/MapKit/MapKitSerialization.swift` | Open-navigation response serializer |
-| `AppleBridge/Providers/MapKit/MapKitProviderOpenNavigation.swift` | `open_navigation` handler |
-| `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift` | Operation dispatch |
-| `AppleBridge/Models/CapabilityCatalog.swift` | Ship `mapkit-navigation` |
-| `AppleBridgeTests/MockMapKitStore.swift` | Open-navigation mock seam |
-| `AppleBridgeTests/MapKitProviderOpenNavigationTests.swift` | Provider tests |
-| `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift` | Bridge routing test |
-| `AppleBridgeTests/AppSettingsMapKitTests.swift` | Navigation capability gating |
-| `AppleBridgeTests/PermissionsStoreMapKitTests.swift` | Navigation location requirement |
+| `rust/abridge_core/src/capabilities.rs` | `MAPKIT_NAVIGATION` constant + v1 allowlist |
+| `rust/abridge_core/src/tools/mod.rs` | `TOOL_OPEN_NAVIGATION` registration + input schema |
+| `rust/abridge_core/tests/mcp_protocol.rs` | MCP integration tests |
+| `ABridge/Providers/MapKit/MapKitStore.swift` | Request/result seam types + protocol method |
+| `ABridge/Providers/MapKit/LiveMapKitStore.swift` | `MKMapItem.openMaps` wrapper |
+| `ABridge/Providers/MapKit/MapKitSerialization.swift` | Open-navigation response serializer |
+| `ABridge/Providers/MapKit/MapKitProviderOpenNavigation.swift` | `open_navigation` handler |
+| `ABridge/Providers/MapKit/MapKitProviderRouting.swift` | Operation dispatch |
+| `ABridge/Models/CapabilityCatalog.swift` | Ship `mapkit-navigation` |
+| `ABridgeTests/MockMapKitStore.swift` | Open-navigation mock seam |
+| `ABridgeTests/MapKitProviderOpenNavigationTests.swift` | Provider tests |
+| `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Bridge routing test |
+| `ABridgeTests/AppSettingsMapKitTests.swift` | Navigation capability gating |
+| `ABridgeTests/PermissionsStoreMapKitTests.swift` | Navigation location requirement |
 | `README.md` | Check off tool |
 
 ---
@@ -37,8 +37,8 @@
 ### Task 1: Rust capability + tool registration
 
 **Files:**
-- Modify: `rust/apple_bridge_core/src/capabilities.rs`
-- Modify: `rust/apple_bridge_core/src/tools/mod.rs`
+- Modify: `rust/abridge_core/src/capabilities.rs`
+- Modify: `rust/abridge_core/src/tools/mod.rs`
 
 - [ ] **Step 1:** Add `MAPKIT_NAVIGATION` to capabilities.rs + v1 allowlist + tests
 - [ ] **Step 2:** Register `TOOL_OPEN_NAVIGATION` in tools/mod.rs (bump array 48 → 49)
@@ -52,7 +52,7 @@
 ### Task 2: Rust MCP integration tests
 
 **Files:**
-- Modify: `rust/apple_bridge_core/tests/mcp_protocol.rs`
+- Modify: `rust/abridge_core/tests/mcp_protocol.rs`
 
 - [ ] **Step 1:** `mcp_tools_list_includes_open_navigation_when_mapkit_navigation_enabled`
 - [ ] **Step 2:** `tools_call_dispatches_open_navigation`
@@ -64,10 +64,10 @@
 ### Task 3: MapKitStore seam + serialization
 
 **Files:**
-- Modify: `AppleBridge/Providers/MapKit/MapKitStore.swift`
-- Modify: `AppleBridge/Providers/MapKit/LiveMapKitStore.swift`
-- Modify: `AppleBridge/Providers/MapKit/MapKitSerialization.swift`
-- Modify: `AppleBridgeTests/MockMapKitStore.swift`
+- Modify: `ABridge/Providers/MapKit/MapKitStore.swift`
+- Modify: `ABridge/Providers/MapKit/LiveMapKitStore.swift`
+- Modify: `ABridge/Providers/MapKit/MapKitSerialization.swift`
+- Modify: `ABridgeTests/MockMapKitStore.swift`
 
 - [ ] **Step 1:** Add `MapKitOpenNavigationRequest`, `MapKitOpenNavigationResult`
 - [ ] **Step 2:** Implement `LiveMapKitStore.openNavigation` with `MKMapItem.openMaps`
@@ -81,10 +81,10 @@
 ### Task 4: MapKitProvider open_navigation operation
 
 **Files:**
-- Create: `AppleBridge/Providers/MapKit/MapKitProviderOpenNavigation.swift`
-- Modify: `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift`
-- Create: `AppleBridgeTests/MapKitProviderOpenNavigationTests.swift`
-- Modify: `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift`
+- Create: `ABridge/Providers/MapKit/MapKitProviderOpenNavigation.swift`
+- Modify: `ABridge/Providers/MapKit/MapKitProviderRouting.swift`
+- Create: `ABridgeTests/MapKitProviderOpenNavigationTests.swift`
+- Modify: `ABridgeTests/AppleProviderBridgeMapKitTests.swift`
 
 - [ ] **Step 1:** Write failing provider tests (permission, validation, success)
 - [ ] **Step 2:** Implement `openNavigation` handler + argument parsing
@@ -98,9 +98,9 @@
 ### Task 5: Ship capability + README + full verification
 
 **Files:**
-- Modify: `AppleBridge/Models/CapabilityCatalog.swift`
-- Modify: `AppleBridgeTests/AppSettingsMapKitTests.swift`
-- Modify: `AppleBridgeTests/PermissionsStoreMapKitTests.swift`
+- Modify: `ABridge/Models/CapabilityCatalog.swift`
+- Modify: `ABridgeTests/AppSettingsMapKitTests.swift`
+- Modify: `ABridgeTests/PermissionsStoreMapKitTests.swift`
 - Modify: `README.md`
 
 - [ ] **Step 1:** Set `mapkit-navigation` → `shipped: true`

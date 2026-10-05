@@ -10,5 +10,5 @@ enabledWorkflows:
   - coverage
 
 sessionDefaults:
-  projectPath: "./AppleBridge.xcodeproj"
-  scheme: "AppleBridge"
+  projectPath: "./ABridge.xcodeproj"
+  scheme: "ABridge"

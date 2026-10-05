@@ -6,7 +6,7 @@
 
 **Architecture:** Extend `VisionStore` + `VisionSerialization` from #114; `RecognizeDocumentsRequest` via async `ImageRequestHandler` bridged synchronously; Rust tool registration with `vision.document` capability; flip `vision-document` to shipped; no Apple TCC gate per #151.
 
-**Tech Stack:** Rust (`apple_bridge_core`), Swift 6 + Vision + DataDetection + CoreGraphics, Swift Testing, UniFFI `ProviderBridge`
+**Tech Stack:** Rust (`abridge_core`), Swift 6 + Vision + DataDetection + CoreGraphics, Swift Testing, UniFFI `ProviderBridge`
 
 **Spec:** `docs/superpowers/specs/2026-06-30-vision-scan-document-design.md`
 
@@ -18,19 +18,19 @@
 
 | File | Responsibility |
 |------|----------------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `VISION_DOCUMENT` constant |
-| `rust/apple_bridge_core/src/tools/mod.rs` | Tool registration + input schema |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | MCP integration tests |
-| `AppleBridge/Providers/Vision/VisionSerialization.swift` | Document tree / barcode / contour / Swift text JSON |
-| `AppleBridge/Providers/Vision/VisionAsyncBridge.swift` | Sync bridge for async Vision requests |
-| `AppleBridge/Providers/Vision/VisionStore.swift` | Scan-document protocol seam |
-| `AppleBridge/Providers/Vision/LiveVisionStore.swift` | `ImageRequestHandler` wrapper |
-| `AppleBridge/Providers/Vision/VisionProviderScanDocument.swift` | `scan_document` handler |
-| `AppleBridge/Providers/Vision/VisionProviderRouting.swift` | Operation dispatch |
-| `AppleBridgeTests/MockVisionStore.swift` | Deterministic document results |
-| `AppleBridgeTests/VisionDocumentSerializationTests.swift` | Fidelity assertions |
-| `AppleBridgeTests/VisionProviderScanDocumentTests.swift` | Provider tests |
-| `AppleBridge/Models/CapabilityCatalog.swift` | Ship `vision-document` |
+| `rust/abridge_core/src/capabilities.rs` | `VISION_DOCUMENT` constant |
+| `rust/abridge_core/src/tools/mod.rs` | Tool registration + input schema |
+| `rust/abridge_core/tests/mcp_protocol.rs` | MCP integration tests |
+| `ABridge/Providers/Vision/VisionSerialization.swift` | Document tree / barcode / contour / Swift text JSON |
+| `ABridge/Providers/Vision/VisionAsyncBridge.swift` | Sync bridge for async Vision requests |
+| `ABridge/Providers/Vision/VisionStore.swift` | Scan-document protocol seam |
+| `ABridge/Providers/Vision/LiveVisionStore.swift` | `ImageRequestHandler` wrapper |
+| `ABridge/Providers/Vision/VisionProviderScanDocument.swift` | `scan_document` handler |
+| `ABridge/Providers/Vision/VisionProviderRouting.swift` | Operation dispatch |
+| `ABridgeTests/MockVisionStore.swift` | Deterministic document results |
+| `ABridgeTests/VisionDocumentSerializationTests.swift` | Fidelity assertions |
+| `ABridgeTests/VisionProviderScanDocumentTests.swift` | Provider tests |
+| `ABridge/Models/CapabilityCatalog.swift` | Ship `vision-document` |
 | `README.md` | Check off tool |
 
 ---
@@ -38,8 +38,8 @@
 ### Task 1: Rust capability + tool registration
 
 **Files:**
-- Modify: `rust/apple_bridge_core/src/capabilities.rs`
-- Modify: `rust/apple_bridge_core/src/tools/mod.rs`
+- Modify: `rust/abridge_core/src/capabilities.rs`
+- Modify: `rust/abridge_core/src/tools/mod.rs`
 
 - [ ] **Step 1: Add `VISION_DOCUMENT` to capabilities.rs**
 
@@ -169,7 +169,7 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add rust/apple_bridge_core/src/capabilities.rs rust/apple_bridge_core/src/tools/mod.rs
+git add rust/abridge_core/src/capabilities.rs rust/abridge_core/src/tools/mod.rs
 git commit -m "feat(vision): register vision.scan_document MCP tool in Rust"
 ```
 
@@ -178,7 +178,7 @@ git commit -m "feat(vision): register vision.scan_document MCP tool in Rust"
 ### Task 2: Rust MCP integration tests
 
 **Files:**
-- Modify: `rust/apple_bridge_core/tests/mcp_protocol.rs`
+- Modify: `rust/abridge_core/tests/mcp_protocol.rs`
 
 - [ ] **Step 1: Write integration tests** (reuse `vision_config_on_port` from #114)
 
@@ -234,7 +234,7 @@ Expected: PASS
 - [ ] **Step 3: Commit**
 
 ```bash
-git add rust/apple_bridge_core/tests/mcp_protocol.rs
+git add rust/abridge_core/tests/mcp_protocol.rs
 git commit -m "test(vision): add MCP integration tests for scan_document"
 ```
 
@@ -243,9 +243,9 @@ git commit -m "test(vision): add MCP integration tests for scan_document"
 ### Task 3: VisionAsyncBridge + document serialization
 
 **Files:**
-- Create: `AppleBridge/Providers/Vision/VisionAsyncBridge.swift`
-- Modify: `AppleBridge/Providers/Vision/VisionSerialization.swift`
-- Create: `AppleBridgeTests/VisionDocumentSerializationTests.swift`
+- Create: `ABridge/Providers/Vision/VisionAsyncBridge.swift`
+- Modify: `ABridge/Providers/Vision/VisionSerialization.swift`
+- Create: `ABridgeTests/VisionDocumentSerializationTests.swift`
 
 - [ ] **Step 1: Extract async bridge from MapKit pattern**
 
@@ -283,9 +283,9 @@ Expected: PASS for VisionDocumentSerializationTests
 - [ ] **Step 5: Commit**
 
 ```bash
-git add AppleBridge/Providers/Vision/VisionAsyncBridge.swift \
-  AppleBridge/Providers/Vision/VisionSerialization.swift \
-  AppleBridgeTests/VisionDocumentSerializationTests.swift
+git add ABridge/Providers/Vision/VisionAsyncBridge.swift \
+  ABridge/Providers/Vision/VisionSerialization.swift \
+  ABridgeTests/VisionDocumentSerializationTests.swift
 git commit -m "feat(vision): add document observation serialization"
 ```
 
@@ -294,9 +294,9 @@ git commit -m "feat(vision): add document observation serialization"
 ### Task 4: VisionStore scan_document seam
 
 **Files:**
-- Modify: `AppleBridge/Providers/Vision/VisionStore.swift`
-- Modify: `AppleBridge/Providers/Vision/LiveVisionStore.swift`
-- Modify: `AppleBridgeTests/MockVisionStore.swift`
+- Modify: `ABridge/Providers/Vision/VisionStore.swift`
+- Modify: `ABridge/Providers/Vision/LiveVisionStore.swift`
+- Modify: `ABridgeTests/MockVisionStore.swift`
 
 - [ ] **Step 1: Define request/result types**
 
@@ -335,9 +335,9 @@ Hold canned `VisionScanDocumentResult`; record `lastScanDocumentRequest`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add AppleBridge/Providers/Vision/VisionStore.swift \
-  AppleBridge/Providers/Vision/LiveVisionStore.swift \
-  AppleBridgeTests/MockVisionStore.swift
+git add ABridge/Providers/Vision/VisionStore.swift \
+  ABridge/Providers/Vision/LiveVisionStore.swift \
+  ABridgeTests/MockVisionStore.swift
 git commit -m "feat(vision): add VisionStore scan_document seam"
 ```
 
@@ -346,10 +346,10 @@ git commit -m "feat(vision): add VisionStore scan_document seam"
 ### Task 5: VisionProvider scan_document operation
 
 **Files:**
-- Create: `AppleBridge/Providers/Vision/VisionProviderScanDocument.swift`
-- Modify: `AppleBridge/Providers/Vision/VisionProviderRouting.swift`
-- Create: `AppleBridgeTests/VisionProviderScanDocumentTests.swift`
-- Modify: `AppleBridgeTests/AppleProviderBridgeVisionTests.swift`
+- Create: `ABridge/Providers/Vision/VisionProviderScanDocument.swift`
+- Modify: `ABridge/Providers/Vision/VisionProviderRouting.swift`
+- Create: `ABridgeTests/VisionProviderScanDocumentTests.swift`
+- Modify: `ABridgeTests/AppleProviderBridgeVisionTests.swift`
 
 - [ ] **Step 1: Write failing provider tests**
 
@@ -383,10 +383,10 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add AppleBridge/Providers/Vision/VisionProviderScanDocument.swift \
-  AppleBridge/Providers/Vision/VisionProviderRouting.swift \
-  AppleBridgeTests/VisionProviderScanDocumentTests.swift \
-  AppleBridgeTests/AppleProviderBridgeVisionTests.swift
+git add ABridge/Providers/Vision/VisionProviderScanDocument.swift \
+  ABridge/Providers/Vision/VisionProviderRouting.swift \
+  ABridgeTests/VisionProviderScanDocumentTests.swift \
+  ABridgeTests/AppleProviderBridgeVisionTests.swift
 git commit -m "feat(vision): implement scan_document provider operation"
 ```
 
@@ -395,9 +395,9 @@ git commit -m "feat(vision): implement scan_document provider operation"
 ### Task 6: Ship capability + README + full verification
 
 **Files:**
-- Modify: `AppleBridge/Models/CapabilityCatalog.swift`
+- Modify: `ABridge/Models/CapabilityCatalog.swift`
 - Modify: `README.md`
-- Modify: `AppleBridgeTests/AppSettingsVisionTests.swift`
+- Modify: `ABridgeTests/AppSettingsVisionTests.swift`
 
 - [ ] **Step 1: Flip capability shipped**
 
@@ -430,8 +430,8 @@ Expected: PASS (before merge)
 - [ ] **Step 6: Commit**
 
 ```bash
-git add AppleBridge/Models/CapabilityCatalog.swift README.md \
-  AppleBridgeTests/AppSettingsVisionTests.swift project.yml
+git add ABridge/Models/CapabilityCatalog.swift README.md \
+  ABridgeTests/AppSettingsVisionTests.swift project.yml
 git commit -m "feat(vision): ship vision.document capability for scan_document"
 ```
 

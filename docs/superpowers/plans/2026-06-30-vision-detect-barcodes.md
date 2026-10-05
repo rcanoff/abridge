@@ -6,7 +6,7 @@
 
 **Architecture:** Extend `VisionStore` from #114/#115; `DetectBarcodesRequest` via async `ImageRequestHandler` bridged synchronously; reuse `VisionDocumentObservationSerialization` barcode projection; Rust tool registration with `vision.barcodes` capability; flip `vision-barcodes` to shipped; no Apple TCC gate per #151.
 
-**Tech Stack:** Rust (`apple_bridge_core`), Swift 6 + Vision + CoreGraphics, Swift Testing, UniFFI `ProviderBridge`
+**Tech Stack:** Rust (`abridge_core`), Swift 6 + Vision + CoreGraphics, Swift Testing, UniFFI `ProviderBridge`
 
 **Spec:** `docs/superpowers/specs/2026-06-30-vision-detect-barcodes-design.md`
 
@@ -18,18 +18,18 @@
 
 | File | Responsibility |
 |------|----------------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `VISION_BARCODES` constant |
-| `rust/apple_bridge_core/src/tools/mod.rs` | Tool registration + input schema |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | MCP integration tests |
-| `AppleBridge/Providers/Vision/VisionBarcodeSerialization.swift` | `detect_barcodes` response wrapper |
-| `AppleBridge/Providers/Vision/VisionStore.swift` | Detect-barcodes protocol seam |
-| `AppleBridge/Providers/Vision/LiveVisionStore.swift` | `DetectBarcodesRequest` via `ImageRequestHandler` |
-| `AppleBridge/Providers/Vision/VisionProviderDetectBarcodes.swift` | `detect_barcodes` handler |
-| `AppleBridge/Providers/Vision/VisionProviderRouting.swift` | Operation dispatch |
-| `AppleBridgeTests/MockVisionStore.swift` | Deterministic barcode results |
-| `AppleBridgeTests/VisionBarcodeSerializationTests.swift` | Fidelity assertions |
-| `AppleBridgeTests/VisionProviderDetectBarcodesTests.swift` | Provider tests |
-| `AppleBridge/Models/CapabilityCatalog.swift` | Ship `vision-barcodes` |
+| `rust/abridge_core/src/capabilities.rs` | `VISION_BARCODES` constant |
+| `rust/abridge_core/src/tools/mod.rs` | Tool registration + input schema |
+| `rust/abridge_core/tests/mcp_protocol.rs` | MCP integration tests |
+| `ABridge/Providers/Vision/VisionBarcodeSerialization.swift` | `detect_barcodes` response wrapper |
+| `ABridge/Providers/Vision/VisionStore.swift` | Detect-barcodes protocol seam |
+| `ABridge/Providers/Vision/LiveVisionStore.swift` | `DetectBarcodesRequest` via `ImageRequestHandler` |
+| `ABridge/Providers/Vision/VisionProviderDetectBarcodes.swift` | `detect_barcodes` handler |
+| `ABridge/Providers/Vision/VisionProviderRouting.swift` | Operation dispatch |
+| `ABridgeTests/MockVisionStore.swift` | Deterministic barcode results |
+| `ABridgeTests/VisionBarcodeSerializationTests.swift` | Fidelity assertions |
+| `ABridgeTests/VisionProviderDetectBarcodesTests.swift` | Provider tests |
+| `ABridge/Models/CapabilityCatalog.swift` | Ship `vision-barcodes` |
 | `README.md` | Check off tool |
 
 ---
@@ -37,9 +37,9 @@
 ### Task 1: Rust capability + tool registration
 
 **Files:**
-- Modify: `rust/apple_bridge_core/src/capabilities.rs`
-- Modify: `rust/apple_bridge_core/src/tools/mod.rs`
-- Test: `rust/apple_bridge_core/tests/mcp_protocol.rs` (Task 2)
+- Modify: `rust/abridge_core/src/capabilities.rs`
+- Modify: `rust/abridge_core/src/tools/mod.rs`
+- Test: `rust/abridge_core/tests/mcp_protocol.rs` (Task 2)
 
 - [ ] **Step 1: Add `VISION_BARCODES` to capabilities.rs**
 
@@ -151,7 +151,7 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add rust/apple_bridge_core/src/capabilities.rs rust/apple_bridge_core/src/tools/mod.rs
+git add rust/abridge_core/src/capabilities.rs rust/abridge_core/src/tools/mod.rs
 git commit -m "feat(vision): register vision.detect_barcodes MCP tool in Rust"
 ```
 
@@ -160,7 +160,7 @@ git commit -m "feat(vision): register vision.detect_barcodes MCP tool in Rust"
 ### Task 2: Rust MCP integration tests
 
 **Files:**
-- Modify: `rust/apple_bridge_core/tests/mcp_protocol.rs`
+- Modify: `rust/abridge_core/tests/mcp_protocol.rs`
 
 - [ ] **Step 1: Write integration tests** (reuse `vision_config_on_port` from #114)
 
@@ -216,7 +216,7 @@ Expected: PASS
 - [ ] **Step 3: Commit**
 
 ```bash
-git add rust/apple_bridge_core/tests/mcp_protocol.rs
+git add rust/abridge_core/tests/mcp_protocol.rs
 git commit -m "test(vision): add MCP integration tests for detect_barcodes"
 ```
 
@@ -225,8 +225,8 @@ git commit -m "test(vision): add MCP integration tests for detect_barcodes"
 ### Task 3: VisionBarcodeSerialization (exhaustive BarcodeObservation)
 
 **Files:**
-- Create: `AppleBridge/Providers/Vision/VisionBarcodeSerialization.swift`
-- Create: `AppleBridgeTests/VisionBarcodeSerializationTests.swift`
+- Create: `ABridge/Providers/Vision/VisionBarcodeSerialization.swift`
+- Create: `ABridgeTests/VisionBarcodeSerializationTests.swift`
 
 - [ ] **Step 1: Write failing serialization test**
 
@@ -267,8 +267,8 @@ Expected: PASS for VisionBarcodeSerializationTests
 - [ ] **Step 5: Commit**
 
 ```bash
-git add AppleBridge/Providers/Vision/VisionBarcodeSerialization.swift \
-  AppleBridgeTests/VisionBarcodeSerializationTests.swift
+git add ABridge/Providers/Vision/VisionBarcodeSerialization.swift \
+  ABridgeTests/VisionBarcodeSerializationTests.swift
 git commit -m "feat(vision): add exhaustive barcode serialization for detect_barcodes"
 ```
 
@@ -277,9 +277,9 @@ git commit -m "feat(vision): add exhaustive barcode serialization for detect_bar
 ### Task 4: VisionStore + LiveVisionStore
 
 **Files:**
-- Modify: `AppleBridge/Providers/Vision/VisionStore.swift`
-- Modify: `AppleBridge/Providers/Vision/LiveVisionStore.swift`
-- Modify: `AppleBridgeTests/MockVisionStore.swift`
+- Modify: `ABridge/Providers/Vision/VisionStore.swift`
+- Modify: `ABridge/Providers/Vision/LiveVisionStore.swift`
+- Modify: `ABridgeTests/MockVisionStore.swift`
 
 - [ ] **Step 1: Define request type and extend protocol**
 
@@ -311,9 +311,9 @@ Hold canned `[BarcodeObservation]`; record `lastDetectBarcodesRequest`.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add AppleBridge/Providers/Vision/VisionStore.swift \
-  AppleBridge/Providers/Vision/LiveVisionStore.swift \
-  AppleBridgeTests/MockVisionStore.swift
+git add ABridge/Providers/Vision/VisionStore.swift \
+  ABridge/Providers/Vision/LiveVisionStore.swift \
+  ABridgeTests/MockVisionStore.swift
 git commit -m "feat(vision): add VisionStore detect_barcodes seam"
 ```
 
@@ -322,10 +322,10 @@ git commit -m "feat(vision): add VisionStore detect_barcodes seam"
 ### Task 5: VisionProvider detect_barcodes operation
 
 **Files:**
-- Create: `AppleBridge/Providers/Vision/VisionProviderDetectBarcodes.swift`
-- Modify: `AppleBridge/Providers/Vision/VisionProviderRouting.swift`
-- Create: `AppleBridgeTests/VisionProviderDetectBarcodesTests.swift`
-- Modify: `AppleBridgeTests/AppleProviderBridgeVisionTests.swift`
+- Create: `ABridge/Providers/Vision/VisionProviderDetectBarcodes.swift`
+- Modify: `ABridge/Providers/Vision/VisionProviderRouting.swift`
+- Create: `ABridgeTests/VisionProviderDetectBarcodesTests.swift`
+- Modify: `ABridgeTests/AppleProviderBridgeVisionTests.swift`
 
 - [ ] **Step 1: Write failing provider tests**
 
@@ -372,10 +372,10 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add AppleBridge/Providers/Vision/VisionProviderDetectBarcodes.swift \
-  AppleBridge/Providers/Vision/VisionProviderRouting.swift \
-  AppleBridgeTests/VisionProviderDetectBarcodesTests.swift \
-  AppleBridgeTests/AppleProviderBridgeVisionTests.swift
+git add ABridge/Providers/Vision/VisionProviderDetectBarcodes.swift \
+  ABridge/Providers/Vision/VisionProviderRouting.swift \
+  ABridgeTests/VisionProviderDetectBarcodesTests.swift \
+  ABridgeTests/AppleProviderBridgeVisionTests.swift
 git commit -m "feat(vision): implement detect_barcodes provider operation"
 ```
 
@@ -384,9 +384,9 @@ git commit -m "feat(vision): implement detect_barcodes provider operation"
 ### Task 6: Ship capability + README
 
 **Files:**
-- Modify: `AppleBridge/Models/CapabilityCatalog.swift`
+- Modify: `ABridge/Models/CapabilityCatalog.swift`
 - Modify: `README.md`
-- Modify: `AppleBridgeTests/AppSettingsVisionTests.swift`
+- Modify: `ABridgeTests/AppSettingsVisionTests.swift`
 
 - [ ] **Step 1: Flip capability shipped**
 
@@ -419,8 +419,8 @@ Expected: PASS (before merge)
 - [ ] **Step 6: Commit**
 
 ```bash
-git add AppleBridge/Models/CapabilityCatalog.swift README.md \
-  AppleBridgeTests/AppSettingsVisionTests.swift project.yml
+git add ABridge/Models/CapabilityCatalog.swift README.md \
+  ABridgeTests/AppSettingsVisionTests.swift project.yml
 git commit -m "feat(vision): ship vision.barcodes capability for detect_barcodes"
 ```
 

@@ -1,12 +1,12 @@
-# Apple Bridge — Product Requirements Document
+# ABridge — Product Requirements Document
 
 ## Overview
 
-Apple Bridge is a native macOS application that exposes Apple platform capabilities through a local, authenticated MCP server.
+ABridge is a native macOS application that exposes Apple platform capabilities through a local, authenticated MCP server.
 
 Its purpose is to act as a generic bridge between Apple frameworks and external applications.
 
-Apple Bridge contains no application-specific logic. It does not know who is consuming it, why requests are made, or what higher-level workflows exist. It simply exposes native Apple functionality in a secure, modular, and predictable way.
+ABridge contains no application-specific logic. It does not know who is consuming it, why requests are made, or what higher-level workflows exist. It simply exposes native Apple functionality in a secure, modular, and predictable way.
 
 The application is intended to become a reusable platform for Apple framework integrations.
 
@@ -26,7 +26,7 @@ The application is intended to become a reusable platform for Apple framework in
 
 # Non-goals
 
-Apple Bridge is not:
+ABridge is not:
 
 - a productivity application
 - a reminders application
@@ -39,7 +39,7 @@ Apple Bridge is not:
 - a cloud service
 - a separate background daemon or launchd service (the MCP server runs inside the menu bar app process)
 
-Business logic belongs to the MCP client, not to Apple Bridge.
+Business logic belongs to the MCP client, not to ABridge.
 
 ---
 
@@ -49,7 +49,7 @@ The project follows several core principles.
 
 ## Generic
 
-Apple Bridge should never make assumptions about the software consuming it.
+ABridge should never make assumptions about the software consuming it.
 
 It should be equally usable by:
 
@@ -61,13 +61,13 @@ It should be equally usable by:
 
 ## Thin wrapper
 
-Whenever practical, Apple Bridge should expose Apple APIs with minimal abstraction.
+Whenever practical, ABridge should expose Apple APIs with minimal abstraction.
 
 The bridge should not invent alternative domain models unless required by the MCP protocol.
 
 ## Apple is the source of truth
 
-Apple Bridge owns no user data.
+ABridge owns no user data.
 
 Apple frameworks remain the system of record.
 
@@ -202,7 +202,7 @@ Each provider should be self-contained and follow the architecture defined in `a
 
 # Runtime Model
 
-Apple Bridge is a **menu bar agent** — a single macOS application process that embeds the MCP HTTP server in Rust. There is no separate background service or daemon.
+ABridge is a **menu bar agent** — a single macOS application process that embeds the MCP HTTP server in Rust. There is no separate background service or daemon.
 
 The user has full control over availability:
 
@@ -243,7 +243,7 @@ The application is not intended to browse, edit, or manage Apple data directly.
 
 # Networking
 
-Apple Bridge exposes a local authenticated MCP endpoint.
+ABridge exposes a local authenticated MCP endpoint.
 
 Characteristics:
 
@@ -292,7 +292,7 @@ These are not in Version 1 scope. The PRD will be updated when a specific altern
 
 # Diagnostics and Usage Logging
 
-Apple Bridge records **local, operational usage metadata** to help users and MCP clients understand bridge activity. This is not Apple framework data and does not include request or response payloads.
+ABridge records **local, operational usage metadata** to help users and MCP clients understand bridge activity. This is not Apple framework data and does not include request or response payloads.
 
 ### Recorded events (when logging is enabled)
 
@@ -316,7 +316,7 @@ Lifecycle events are also captured: server start/stop, port bind, MCP client `in
 ### Storage
 
 - In-memory ring buffer (bounded, e.g. last 1,000 events).
-- Optional persistence to a local log file under `~/Library/Logs/AppleBridge/`.
+- Optional persistence to a local log file under `~/Library/Logs/ABridge/`.
 - Rust owns collection and retention; Swift surfaces logs in the Diagnostics UI.
 
 ### MCP diagnostics tool
@@ -327,7 +327,7 @@ A read-only MCP tool (e.g. `diagnostics.get_usage_log`) returns the accumulated 
 
 # Data Ownership
 
-Apple Bridge stores only:
+ABridge stores only:
 
 - application configuration
 - authentication credentials
@@ -342,7 +342,7 @@ The project should not introduce an application database unless a future provide
 
 # Success Criteria
 
-Apple Bridge is successful when:
+ABridge is successful when:
 
 - it exposes Apple frameworks through a stable local MCP endpoint
 - Swift remains limited to UI and Apple platform integration

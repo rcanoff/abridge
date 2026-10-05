@@ -353,32 +353,32 @@ Rust tools/call → ProviderBridge → VisionProvider.scan_document
 
 | File | Role |
 |------|------|
-| `AppleBridge/Providers/Vision/VisionProviderScanDocument.swift` | Operation handler + argument parsing |
-| `AppleBridge/Providers/Vision/VisionAsyncBridge.swift` | Async `ImageRequestHandler` → sync bridge (extract MapKit pattern) |
-| `AppleBridgeTests/VisionProviderScanDocumentTests.swift` | Provider end-to-end tests |
-| `AppleBridgeTests/VisionDocumentSerializationTests.swift` | `DocumentObservation` projection completeness |
+| `ABridge/Providers/Vision/VisionProviderScanDocument.swift` | Operation handler + argument parsing |
+| `ABridge/Providers/Vision/VisionAsyncBridge.swift` | Async `ImageRequestHandler` → sync bridge (extract MapKit pattern) |
+| `ABridgeTests/VisionProviderScanDocumentTests.swift` | Provider end-to-end tests |
+| `ABridgeTests/VisionDocumentSerializationTests.swift` | `DocumentObservation` projection completeness |
 
 ### Swift files (modify)
 
 | File | Change |
 |------|--------|
-| `AppleBridge/Providers/Vision/VisionSerialization.swift` | Add document / barcode / contour / Swift text projections |
-| `AppleBridge/Providers/Vision/VisionStore.swift` | `scanDocument` protocol method + request type |
-| `AppleBridge/Providers/Vision/LiveVisionStore.swift` | `ImageRequestHandler` async wrapper |
-| `AppleBridge/Providers/Vision/VisionProviderRouting.swift` | `scan_document` dispatch |
-| `AppleBridge/Models/CapabilityCatalog.swift` | `vision-document` → `shipped: true` |
-| `AppleBridgeTests/MockVisionStore.swift` | Fake document results for CI |
-| `AppleBridgeTests/AppleProviderBridgeVisionTests.swift` | Success path for `scan_document` (replace `unknown_operation` expectation) |
-| `AppleBridgeTests/AppSettingsVisionTests.swift` | Shipped capability server gating |
+| `ABridge/Providers/Vision/VisionSerialization.swift` | Add document / barcode / contour / Swift text projections |
+| `ABridge/Providers/Vision/VisionStore.swift` | `scanDocument` protocol method + request type |
+| `ABridge/Providers/Vision/LiveVisionStore.swift` | `ImageRequestHandler` async wrapper |
+| `ABridge/Providers/Vision/VisionProviderRouting.swift` | `scan_document` dispatch |
+| `ABridge/Models/CapabilityCatalog.swift` | `vision-document` → `shipped: true` |
+| `ABridgeTests/MockVisionStore.swift` | Fake document results for CI |
+| `ABridgeTests/AppleProviderBridgeVisionTests.swift` | Success path for `scan_document` (replace `unknown_operation` expectation) |
+| `ABridgeTests/AppSettingsVisionTests.swift` | Shipped capability server gating |
 | `README.md` | Check off `vision.scan_document` |
 
 ### Rust files (modify)
 
 | File | Change |
 |------|--------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `VISION_DOCUMENT` constant + `is_allowed_in_v1` |
-| `rust/apple_bridge_core/src/tools/mod.rs` | `TOOL_SCAN_DOCUMENT`, registration, input schema, unit tests |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
+| `rust/abridge_core/src/capabilities.rs` | `VISION_DOCUMENT` constant + `is_allowed_in_v1` |
+| `rust/abridge_core/src/tools/mod.rs` | `TOOL_SCAN_DOCUMENT`, registration, input schema, unit tests |
+| `rust/abridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
 
 ---
 

@@ -7,11 +7,11 @@ on:
   # push:
   #   branches: [main]
   #   paths:
-  #     - "AppleBridge/**"
-  #     - "AppleBridgeCore/**"
-  #     - "AppleBridgeTests/**"
+  #     - "ABridge/**"
+  #     - "ABridgeCore/**"
+  #     - "ABridgeTests/**"
   #     - "project.yml"
-  #     - "AppleBridge.xcodeproj/**"
+  #     - "ABridge.xcodeproj/**"
   #     - "rust/**"
   #     - "justfile"
   #     - ".swiftformat"
@@ -20,11 +20,11 @@ on:
   #     - ".github/workflows/ci-macos.yml"
   # pull_request:
   #   paths:
-  #     - "AppleBridge/**"
-  #     - "AppleBridgeCore/**"
-  #     - "AppleBridgeTests/**"
+  #     - "ABridge/**"
+  #     - "ABridgeCore/**"
+  #     - "ABridgeTests/**"
   #     - "project.yml"
-  #     - "AppleBridge.xcodeproj/**"
+  #     - "ABridge.xcodeproj/**"
   #     - "rust/**"
   #     - "justfile"
   #     - ".swiftformat"

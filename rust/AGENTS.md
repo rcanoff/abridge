@@ -1,6 +1,6 @@
 # AGENTS.md — rust/
 
-Scoped rules for `apple_bridge_core`. Root `AGENTS.md` still applies.
+Scoped rules for `abridge_core`. Root `AGENTS.md` still applies.
 
 **Applies once `rust/Cargo.toml` exists (PR 2+).** Until then, this file is preparatory — do not run rust `just` recipes on branches without a Rust workspace.
 
@@ -34,7 +34,7 @@ These supersede **rust-best-practices** and generic Rust advice. `docs/conventio
 - Use only crates listed in `docs/conventions.md`.
 - Do not add `anyhow`, `cargo-insta`, or alternative HTTP/MCP crates without an architecture change.
 - Prefer narrow dependencies and stable crate boundaries over convenience crates that increase API or runtime surface area.
-- Do not introduce abstractions that assume `apple_bridge_core` is a standalone backend service; embedded HTTP remains host-app controlled.
+- Do not introduce abstractions that assume `abridge_core` is a standalone backend service; embedded HTTP remains host-app controlled.
 
 ### Testing
 

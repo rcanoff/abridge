@@ -1,4 +1,4 @@
-name: AppleBridge
+name: ABridge
 options:
   bundleIdPrefix: io.github.rcanoff
   deploymentTarget:
@@ -19,46 +19,46 @@ packages:
     url: https://github.com/sparkle-project/Sparkle
     exactVersion: 2.10.0
 targets:
-  AppleBridge:
+  ABridge:
     type: application
     platform: macOS
     sources:
-      - path: AppleBridge
+      - path: ABridge
         excludes:
           - AGENTS.md
     dependencies:
-      - framework: AppleBridgeCore/apple_bridge_core.xcframework
+      - framework: ABridgeCore/abridge_core.xcframework
         embed: false
       - sdk: ServiceManagement.framework
       - package: Sparkle
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: io.github.rcanoff.AppleBridge
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.rcanoff.ABridge
         MARKETING_VERSION: "0.0.0"
         CURRENT_PROJECT_VERSION: "0"
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_FILE: AppleBridge/Info.plist
-        CODE_SIGN_ENTITLEMENTS: AppleBridge/AppleBridge.entitlements
+        INFOPLIST_FILE: ABridge/Info.plist
+        CODE_SIGN_ENTITLEMENTS: ABridge/ABridge.entitlements
         ENABLE_HARDENED_RUNTIME: YES
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
-        INFOPLIST_KEY_NSRemindersUsageDescription: "Apple Bridge needs access to your reminders to expose them through the local MCP bridge."
-        INFOPLIST_KEY_NSContactsUsageDescription: "Apple Bridge needs access to your contacts to expose them through the local MCP bridge."
-        INFOPLIST_KEY_NSCalendarsUsageDescription: "Apple Bridge needs access to your calendars and events to expose them through the local MCP bridge."
-        INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription: "Apple Bridge needs full access to your calendars and events to expose them through the local MCP bridge."
-        INFOPLIST_KEY_NSLocationUsageDescription: "Apple Bridge needs access to your location to expose MapKit capabilities such as nearby search, routing, and current location through the local MCP bridge."
-        INFOPLIST_KEY_CFBundleDisplayName: Apple Bridge
+        INFOPLIST_KEY_NSRemindersUsageDescription: "ABridge needs access to your reminders to expose them through the local MCP bridge."
+        INFOPLIST_KEY_NSContactsUsageDescription: "ABridge needs access to your contacts to expose them through the local MCP bridge."
+        INFOPLIST_KEY_NSCalendarsUsageDescription: "ABridge needs access to your calendars and events to expose them through the local MCP bridge."
+        INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription: "ABridge needs full access to your calendars and events to expose them through the local MCP bridge."
+        INFOPLIST_KEY_NSLocationUsageDescription: "ABridge needs access to your location to expose MapKit capabilities such as nearby search, routing, and current location through the local MCP bridge."
+        INFOPLIST_KEY_CFBundleDisplayName: ABridge
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        SWIFT_OBJC_BRIDGING_HEADER: AppleBridge/AppleBridge-Bridging-Header.h
-  AppleBridgeTests:
+        SWIFT_OBJC_BRIDGING_HEADER: ABridge/ABridge-Bridging-Header.h
+  ABridgeTests:
     type: bundle.unit-test
     platform: macOS
     sources:
-      - path: AppleBridgeTests
+      - path: ABridgeTests
         excludes:
           - AGENTS.md
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
     dependencies:
-      - target: AppleBridge
+      - target: ABridge

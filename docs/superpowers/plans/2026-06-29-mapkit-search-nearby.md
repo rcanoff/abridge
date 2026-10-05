@@ -6,7 +6,7 @@
 
 **Architecture:** Extend `MapKitStore` with `searchNearby`; reuse `MapKitSerialization` and `MapKitSearchFetch`; Rust tool registration with existing `mapkit.search` capability; shared argument parsing extracted from `search_places`.
 
-**Tech Stack:** Rust (`apple_bridge_core`), Swift 6 + MapKit + CoreLocation, Swift Testing, UniFFI `ProviderBridge`
+**Tech Stack:** Rust (`abridge_core`), Swift 6 + MapKit + CoreLocation, Swift Testing, UniFFI `ProviderBridge`
 
 **Spec:** `docs/superpowers/specs/2026-06-29-mapkit-search-nearby-design.md`
 
@@ -16,17 +16,17 @@
 
 | File | Responsibility |
 |------|----------------|
-| `rust/apple_bridge_core/src/tools/mod.rs` | `TOOL_SEARCH_NEARBY` registration + input schema |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | MCP integration tests |
-| `AppleBridge/Providers/MapKit/MapKitProviderSearchArguments.swift` | Shared region/coordinate/category parsing |
-| `AppleBridge/Providers/MapKit/MapKitStore.swift` | `MapKitSearchNearbyRequest` + protocol method |
-| `AppleBridge/Providers/MapKit/LiveMapKitStore.swift` | `MKLocalSearch` POI-nearby blocking wrapper |
-| `AppleBridge/Providers/MapKit/MapKitProviderSearchNearby.swift` | `search_nearby` handler |
-| `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift` | Operation dispatch |
-| `AppleBridge/Providers/MapKit/MapKitProviderSearchPlaces.swift` | Refactor to shared argument helpers |
-| `AppleBridgeTests/MockMapKitStore.swift` | Nearby mock seam |
-| `AppleBridgeTests/MapKitProviderSearchNearbyTests.swift` | Provider tests |
-| `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift` | Bridge routing test |
+| `rust/abridge_core/src/tools/mod.rs` | `TOOL_SEARCH_NEARBY` registration + input schema |
+| `rust/abridge_core/tests/mcp_protocol.rs` | MCP integration tests |
+| `ABridge/Providers/MapKit/MapKitProviderSearchArguments.swift` | Shared region/coordinate/category parsing |
+| `ABridge/Providers/MapKit/MapKitStore.swift` | `MapKitSearchNearbyRequest` + protocol method |
+| `ABridge/Providers/MapKit/LiveMapKitStore.swift` | `MKLocalSearch` POI-nearby blocking wrapper |
+| `ABridge/Providers/MapKit/MapKitProviderSearchNearby.swift` | `search_nearby` handler |
+| `ABridge/Providers/MapKit/MapKitProviderRouting.swift` | Operation dispatch |
+| `ABridge/Providers/MapKit/MapKitProviderSearchPlaces.swift` | Refactor to shared argument helpers |
+| `ABridgeTests/MockMapKitStore.swift` | Nearby mock seam |
+| `ABridgeTests/MapKitProviderSearchNearbyTests.swift` | Provider tests |
+| `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Bridge routing test |
 | `README.md` | Check off tool |
 
 ---
@@ -34,8 +34,8 @@
 ### Task 1: Rust tool registration
 
 **Files:**
-- Modify: `rust/apple_bridge_core/src/tools/mod.rs`
-- Test: `rust/apple_bridge_core/tests/mcp_protocol.rs` (no changes yet)
+- Modify: `rust/abridge_core/src/tools/mod.rs`
+- Test: `rust/abridge_core/tests/mcp_protocol.rs` (no changes yet)
 
 - [ ] **Step 1: Add constant and tool definition**
 
@@ -148,7 +148,7 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add rust/apple_bridge_core/src/tools/mod.rs
+git add rust/abridge_core/src/tools/mod.rs
 git commit -m "feat(mapkit): register mapkit.search_nearby MCP tool in Rust"
 ```
 
@@ -157,7 +157,7 @@ git commit -m "feat(mapkit): register mapkit.search_nearby MCP tool in Rust"
 ### Task 2: Rust MCP integration tests
 
 **Files:**
-- Modify: `rust/apple_bridge_core/tests/mcp_protocol.rs`
+- Modify: `rust/abridge_core/tests/mcp_protocol.rs`
 
 - [ ] **Step 1: Write failing integration tests** (reuse existing `mapkit_config_on_port`)
 
@@ -213,7 +213,7 @@ Expected: PASS
 - [ ] **Step 3: Commit**
 
 ```bash
-git add rust/apple_bridge_core/tests/mcp_protocol.rs
+git add rust/abridge_core/tests/mcp_protocol.rs
 git commit -m "test(mapkit): add MCP integration tests for search_nearby"
 ```
 
@@ -222,12 +222,12 @@ git commit -m "test(mapkit): add MCP integration tests for search_nearby"
 ### Task 3: Shared argument parsing + MapKitStore seam
 
 **Files:**
-- Create: `AppleBridge/Providers/MapKit/MapKitProviderSearchArguments.swift`
-- Modify: `AppleBridge/Providers/MapKit/MapKitStore.swift`
-- Modify: `AppleBridge/Providers/MapKit/LiveMapKitStore.swift`
-- Modify: `AppleBridge/Providers/MapKit/MapKitProviderSearchPlaces.swift`
-- Modify: `AppleBridgeTests/MockMapKitStore.swift`
-- Modify: `AppleBridge.xcodeproj/project.pbxproj` (add new Swift file)
+- Create: `ABridge/Providers/MapKit/MapKitProviderSearchArguments.swift`
+- Modify: `ABridge/Providers/MapKit/MapKitStore.swift`
+- Modify: `ABridge/Providers/MapKit/LiveMapKitStore.swift`
+- Modify: `ABridge/Providers/MapKit/MapKitProviderSearchPlaces.swift`
+- Modify: `ABridgeTests/MockMapKitStore.swift`
+- Modify: `ABridge.xcodeproj/project.pbxproj` (add new Swift file)
 
 - [ ] **Step 1: Extend MapKitStore types**
 
@@ -311,7 +311,7 @@ Expected: PASS (search_places unchanged)
 - [ ] **Step 7: Commit**
 
 ```bash
-git add AppleBridge/Providers/MapKit/ AppleBridgeTests/MockMapKitStore.swift AppleBridge.xcodeproj/project.pbxproj
+git add ABridge/Providers/MapKit/ ABridgeTests/MockMapKitStore.swift ABridge.xcodeproj/project.pbxproj
 git commit -m "feat(mapkit): add MapKitStore search_nearby seam and shared parsers"
 ```
 
@@ -320,11 +320,11 @@ git commit -m "feat(mapkit): add MapKitStore search_nearby seam and shared parse
 ### Task 4: MapKitProvider search_nearby operation
 
 **Files:**
-- Create: `AppleBridge/Providers/MapKit/MapKitProviderSearchNearby.swift`
-- Modify: `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift`
-- Create: `AppleBridgeTests/MapKitProviderSearchNearbyTests.swift`
-- Modify: `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift`
-- Modify: `AppleBridge.xcodeproj/project.pbxproj`
+- Create: `ABridge/Providers/MapKit/MapKitProviderSearchNearby.swift`
+- Modify: `ABridge/Providers/MapKit/MapKitProviderRouting.swift`
+- Create: `ABridgeTests/MapKitProviderSearchNearbyTests.swift`
+- Modify: `ABridgeTests/AppleProviderBridgeMapKitTests.swift`
+- Modify: `ABridge.xcodeproj/project.pbxproj`
 
 - [ ] **Step 1: Write failing provider tests**
 
@@ -429,8 +429,8 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add AppleBridge/Providers/MapKit/ AppleBridgeTests/MapKitProviderSearchNearbyTests.swift \
-  AppleBridgeTests/AppleProviderBridgeMapKitTests.swift AppleBridge.xcodeproj/project.pbxproj
+git add ABridge/Providers/MapKit/ ABridgeTests/MapKitProviderSearchNearbyTests.swift \
+  ABridgeTests/AppleProviderBridgeMapKitTests.swift ABridge.xcodeproj/project.pbxproj
 git commit -m "feat(mapkit): implement search_nearby provider operation"
 ```
 

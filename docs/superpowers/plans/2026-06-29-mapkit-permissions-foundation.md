@@ -16,25 +16,25 @@
 
 **Files:**
 - Modify: `project.yml`
-- Regenerate: `AppleBridge.xcodeproj` via xcodegen
+- Regenerate: `ABridge.xcodeproj` via xcodegen
 
 - [ ] **Step 1: Add usage description**
 
-In `project.yml` under `AppleBridge` target `settings.base`, after `INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription`:
+In `project.yml` under `ABridge` target `settings.base`, after `INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription`:
 
 ```yaml
-        INFOPLIST_KEY_NSLocationUsageDescription: "Apple Bridge needs access to your location to expose MapKit capabilities such as nearby search, routing, and current location through the local MCP bridge."
+        INFOPLIST_KEY_NSLocationUsageDescription: "ABridge needs access to your location to expose MapKit capabilities such as nearby search, routing, and current location through the local MCP bridge."
 ```
 
 - [ ] **Step 2: Regenerate Xcode project**
 
 Run: `xcodegen generate`
-Expected: `AppleBridge.xcodeproj` updated with `INFOPLIST_KEY_NSLocationUsageDescription`
+Expected: `ABridge.xcodeproj` updated with `INFOPLIST_KEY_NSLocationUsageDescription`
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add project.yml AppleBridge.xcodeproj
+git add project.yml ABridge.xcodeproj
 git commit -m "feat(mapkit): add NSLocationUsageDescription to project.yml"
 ```
 
@@ -43,13 +43,13 @@ git commit -m "feat(mapkit): add NSLocationUsageDescription to project.yml"
 ### Task 2: LocationPermissionStatus + mapper
 
 **Files:**
-- Create: `AppleBridge/Models/LocationPermissionStatus.swift`
-- Create: `AppleBridgeTests/LocationPermissionStatusTests.swift`
+- Create: `ABridge/Models/LocationPermissionStatus.swift`
+- Create: `ABridgeTests/LocationPermissionStatusTests.swift`
 
 - [ ] **Step 1: Write failing mapper tests**
 
 ```swift
-@testable import AppleBridge
+@testable import ABridge
 import CoreLocation
 import Testing
 
@@ -144,7 +144,7 @@ Expected: PASS LocationPermissionStatus suite
 - [ ] **Step 5: Commit**
 
 ```bash
-git add AppleBridge/Models/LocationPermissionStatus.swift AppleBridgeTests/LocationPermissionStatusTests.swift
+git add ABridge/Models/LocationPermissionStatus.swift ABridgeTests/LocationPermissionStatusTests.swift
 git commit -m "feat(mapkit): add LocationPermissionStatus and mapper"
 ```
 
@@ -153,15 +153,15 @@ git commit -m "feat(mapkit): add LocationPermissionStatus and mapper"
 ### Task 3: LocationPermissionService
 
 **Files:**
-- Create: `AppleBridge/Services/LocationPermissionChecking.swift`
-- Create: `AppleBridge/Services/LocationPermissionService.swift`
-- Create: `AppleBridgeTests/LocationPermissionServiceTests.swift`
-- Create: `AppleBridgeTests/MockLocationPermissionService.swift`
+- Create: `ABridge/Services/LocationPermissionChecking.swift`
+- Create: `ABridge/Services/LocationPermissionService.swift`
+- Create: `ABridgeTests/LocationPermissionServiceTests.swift`
+- Create: `ABridgeTests/MockLocationPermissionService.swift`
 
 - [ ] **Step 1: Write failing service tests**
 
 ```swift
-@testable import AppleBridge
+@testable import ABridge
 import CoreLocation
 import Testing
 
@@ -335,7 +335,7 @@ private final class AuthorizationRequestLocationManager: NSObject, CLLocationMan
 `MockLocationPermissionService.swift`:
 
 ```swift
-@testable import AppleBridge
+@testable import ABridge
 import Foundation
 
 @MainActor
@@ -365,10 +365,10 @@ Expected: PASS LocationPermissionService suite
 - [ ] **Step 5: Commit**
 
 ```bash
-git add AppleBridge/Services/LocationPermissionChecking.swift \
-        AppleBridge/Services/LocationPermissionService.swift \
-        AppleBridgeTests/LocationPermissionServiceTests.swift \
-        AppleBridgeTests/MockLocationPermissionService.swift
+git add ABridge/Services/LocationPermissionChecking.swift \
+        ABridge/Services/LocationPermissionService.swift \
+        ABridgeTests/LocationPermissionServiceTests.swift \
+        ABridgeTests/MockLocationPermissionService.swift
 git commit -m "feat(mapkit): add LocationPermissionService with tests"
 ```
 
@@ -377,7 +377,7 @@ git commit -m "feat(mapkit): add LocationPermissionService with tests"
 ### Task 4: CapabilityCatalog.mapkitCapabilities
 
 **Files:**
-- Modify: `AppleBridge/Models/CapabilityCatalog.swift`
+- Modify: `ABridge/Models/CapabilityCatalog.swift`
 
 - [ ] **Step 1: Add mapkit capabilities (all shipped: false)**
 
@@ -402,7 +402,7 @@ Append after `contactsCapabilities`:
 - [ ] **Step 2: Commit**
 
 ```bash
-git add AppleBridge/Models/CapabilityCatalog.swift
+git add ABridge/Models/CapabilityCatalog.swift
 git commit -m "feat(mapkit): add mapkitCapabilities to CapabilityCatalog"
 ```
 
@@ -411,22 +411,22 @@ git commit -m "feat(mapkit): add mapkitCapabilities to CapabilityCatalog"
 ### Task 5: AppSettings + PermissionsStore server gating
 
 **Files:**
-- Modify: `AppleBridge/Models/AppSettings.swift`
-- Modify: `AppleBridge/Models/PermissionsStore.swift`
-- Create: `AppleBridgeTests/AppSettingsMapKitTests.swift`
-- Create: `AppleBridgeTests/PermissionsStoreMapKitTests.swift`
-- Modify: `AppleBridgeTests/AppSettingsTests.swift`
-- Modify: `AppleBridgeTests/PermissionsStoreTests.swift`
-- Modify: `AppleBridgeTests/PermissionsStoreContactsTests.swift`
-- Modify: `AppleBridgeTests/AppSettingsContactsTests.swift`
-- Modify: `AppleBridgeTests/SettingsStoreTests.swift`
+- Modify: `ABridge/Models/AppSettings.swift`
+- Modify: `ABridge/Models/PermissionsStore.swift`
+- Create: `ABridgeTests/AppSettingsMapKitTests.swift`
+- Create: `ABridgeTests/PermissionsStoreMapKitTests.swift`
+- Modify: `ABridgeTests/AppSettingsTests.swift`
+- Modify: `ABridgeTests/PermissionsStoreTests.swift`
+- Modify: `ABridgeTests/PermissionsStoreContactsTests.swift`
+- Modify: `ABridgeTests/AppSettingsContactsTests.swift`
+- Modify: `ABridgeTests/SettingsStoreTests.swift`
 
 - [ ] **Step 1: Write failing gating tests**
 
-`AppleBridgeTests/AppSettingsMapKitTests.swift`:
+`ABridgeTests/AppSettingsMapKitTests.swift`:
 
 ```swift
-@testable import AppleBridge
+@testable import ABridge
 import Foundation
 import Testing
 
@@ -463,10 +463,10 @@ struct AppSettingsMapKitTests {
 }
 ```
 
-`AppleBridgeTests/PermissionsStoreMapKitTests.swift`:
+`ABridgeTests/PermissionsStoreMapKitTests.swift`:
 
 ```swift
-@testable import AppleBridge
+@testable import ABridge
 import Foundation
 import Testing
 
@@ -594,17 +594,17 @@ Extend `shouldApplySavedCapabilitiesAfterToggle`:
 
 - [ ] **Step 4: Update all call sites**
 
-Run: `rg 'serverEnabledMCPCapabilityIDs|shouldApplySavedCapabilitiesAfterToggle|applySavedCapabilities' AppleBridge AppleBridgeTests`
+Run: `rg 'serverEnabledMCPCapabilityIDs|shouldApplySavedCapabilitiesAfterToggle|applySavedCapabilities' ABridge ABridgeTests`
 
 Add `locationAuthorized: false` (or appropriate value) to every existing call site. Files include at minimum:
 
-- `AppleBridge/Models/SettingsStore.swift`
-- `AppleBridge/Views/Settings/PermissionsSettingsView.swift`
-- `AppleBridgeTests/AppSettingsTests.swift`
-- `AppleBridgeTests/AppSettingsContactsTests.swift`
-- `AppleBridgeTests/PermissionsStoreTests.swift`
-- `AppleBridgeTests/PermissionsStoreContactsTests.swift`
-- `AppleBridgeTests/SettingsStoreTests.swift`
+- `ABridge/Models/SettingsStore.swift`
+- `ABridge/Views/Settings/PermissionsSettingsView.swift`
+- `ABridgeTests/AppSettingsTests.swift`
+- `ABridgeTests/AppSettingsContactsTests.swift`
+- `ABridgeTests/PermissionsStoreTests.swift`
+- `ABridgeTests/PermissionsStoreContactsTests.swift`
+- `ABridgeTests/SettingsStoreTests.swift`
 
 - [ ] **Step 5: Run tests**
 
@@ -614,11 +614,11 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add AppleBridge/Models/AppSettings.swift AppleBridge/Models/PermissionsStore.swift \
-        AppleBridgeTests/AppSettingsMapKitTests.swift AppleBridgeTests/PermissionsStoreMapKitTests.swift \
-        AppleBridgeTests/AppSettingsTests.swift AppleBridgeTests/AppSettingsContactsTests.swift \
-        AppleBridgeTests/PermissionsStoreTests.swift AppleBridgeTests/PermissionsStoreContactsTests.swift \
-        AppleBridgeTests/SettingsStoreTests.swift
+git add ABridge/Models/AppSettings.swift ABridge/Models/PermissionsStore.swift \
+        ABridgeTests/AppSettingsMapKitTests.swift ABridgeTests/PermissionsStoreMapKitTests.swift \
+        ABridgeTests/AppSettingsTests.swift ABridgeTests/AppSettingsContactsTests.swift \
+        ABridgeTests/PermissionsStoreTests.swift ABridgeTests/PermissionsStoreContactsTests.swift \
+        ABridgeTests/SettingsStoreTests.swift
 git commit -m "feat(mapkit): gate mapkit capabilities on location authorization"
 ```
 
@@ -627,16 +627,16 @@ git commit -m "feat(mapkit): gate mapkit capabilities on location authorization"
 ### Task 6: SettingsStore + AppStore location wiring
 
 **Files:**
-- Modify: `AppleBridge/Models/SettingsStore.swift`
-- Modify: `AppleBridge/Models/AppStore.swift`
-- Modify: `AppleBridge/Services/AppleBridgeAppStoreMaking.swift`
-- Modify: `AppleBridgeTests/SettingsStoreTests.swift`
-- Modify: `AppleBridgeTests/MockAppleBridgeAppStoreMaker.swift`
-- Create or extend: `AppleBridgeTests/AppStoreLocationTests.swift`
+- Modify: `ABridge/Models/SettingsStore.swift`
+- Modify: `ABridge/Models/AppStore.swift`
+- Modify: `ABridge/Services/ABridgeAppStoreMaking.swift`
+- Modify: `ABridgeTests/SettingsStoreTests.swift`
+- Modify: `ABridgeTests/MockABridgeAppStoreMaker.swift`
+- Create or extend: `ABridgeTests/AppStoreLocationTests.swift`
 
 - [ ] **Step 1: Write failing SettingsStore test**
 
-Add to `AppleBridgeTests/SettingsStoreTests.swift`:
+Add to `ABridgeTests/SettingsStoreTests.swift`:
 
 ```swift
     @Test
@@ -781,10 +781,10 @@ Add:
 
 - [ ] **Step 4: Write AppStore location tests**
 
-`AppleBridgeTests/AppStoreLocationTests.swift`:
+`ABridgeTests/AppStoreLocationTests.swift`:
 
 ```swift
-@testable import AppleBridge
+@testable import ABridge
 import Testing
 
 @Suite("AppStoreLocation")
@@ -816,21 +816,21 @@ struct AppStoreLocationTests {
 }
 ```
 
-- [ ] **Step 5: Wire ProductionAppleBridgeAppStoreMaker + MockAppleBridgeAppStoreMaker**
+- [ ] **Step 5: Wire ProductionABridgeAppStoreMaker + MockABridgeAppStoreMaker**
 
-`AppleBridgeAppStoreMaking.swift` — create shared `LocationPermissionService()` and pass to `AppStore` and `SettingsStore`.
+`ABridgeAppStoreMaking.swift` — create shared `LocationPermissionService()` and pass to `AppStore` and `SettingsStore`.
 
-`MockAppleBridgeAppStoreMaker.swift` — same wiring with `LocationPermissionService()`.
+`MockABridgeAppStoreMaker.swift` — same wiring with `LocationPermissionService()`.
 
 - [ ] **Step 6: Run tests + commit**
 
 Run: `just test-swift`
 
 ```bash
-git add AppleBridge/Models/SettingsStore.swift AppleBridge/Models/AppStore.swift \
-        AppleBridge/Services/AppleBridgeAppStoreMaking.swift \
-        AppleBridgeTests/SettingsStoreTests.swift AppleBridgeTests/MockAppleBridgeAppStoreMaker.swift \
-        AppleBridgeTests/AppStoreLocationTests.swift
+git add ABridge/Models/SettingsStore.swift ABridge/Models/AppStore.swift \
+        ABridge/Services/ABridgeAppStoreMaking.swift \
+        ABridgeTests/SettingsStoreTests.swift ABridgeTests/MockABridgeAppStoreMaker.swift \
+        ABridgeTests/AppStoreLocationTests.swift
 git commit -m "feat(mapkit): wire location permission into SettingsStore and AppStore"
 ```
 
@@ -839,7 +839,7 @@ git commit -m "feat(mapkit): wire location permission into SettingsStore and App
 ### Task 7: PermissionsSettingsView UI
 
 **Files:**
-- Modify: `AppleBridge/Views/Settings/PermissionsSettingsView.swift`
+- Modify: `ABridge/Views/Settings/PermissionsSettingsView.swift`
 
 - [ ] **Step 1: Add Apple Location permission row**
 
@@ -953,7 +953,7 @@ Update existing `applySavedCapabilities` / `shouldApplySavedCapabilitiesAfterTog
 Run: `just test-swift`
 
 ```bash
-git add AppleBridge/Views/Settings/PermissionsSettingsView.swift
+git add ABridge/Views/Settings/PermissionsSettingsView.swift
 git commit -m "feat(mapkit): add Location and MapKit rows to PermissionsSettingsView"
 ```
 
@@ -962,14 +962,14 @@ git commit -m "feat(mapkit): add Location and MapKit rows to PermissionsSettings
 ### Task 8: MapKitProvider stub + AppleProviderBridge routing
 
 **Files:**
-- Create: `AppleBridge/Providers/MapKit/MapKitProvider.swift`
-- Modify: `AppleBridge/Providers/AppleProviderBridge.swift`
-- Create: `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift`
+- Create: `ABridge/Providers/MapKit/MapKitProvider.swift`
+- Modify: `ABridge/Providers/AppleProviderBridge.swift`
+- Create: `ABridgeTests/AppleProviderBridgeMapKitTests.swift`
 
 - [ ] **Step 1: Write failing bridge test**
 
 ```swift
-@testable import AppleBridge
+@testable import ABridge
 import Foundation
 import Testing
 
@@ -1049,9 +1049,9 @@ Add routing case before `default`:
 Run: `just test-swift`
 
 ```bash
-git add AppleBridge/Providers/MapKit/MapKitProvider.swift \
-        AppleBridge/Providers/AppleProviderBridge.swift \
-        AppleBridgeTests/AppleProviderBridgeMapKitTests.swift
+git add ABridge/Providers/MapKit/MapKitProvider.swift \
+        ABridge/Providers/AppleProviderBridge.swift \
+        ABridgeTests/AppleProviderBridgeMapKitTests.swift
 git commit -m "feat(mapkit): add MapKitProvider stub and bridge routing"
 ```
 

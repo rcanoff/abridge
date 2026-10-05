@@ -6,7 +6,7 @@
 
 **Architecture:** Extend `MapKitStore` with `forwardGeocode`; use `MKGeocodingRequest` in `LiveMapKitStore`; reuse `MapKitSerialization` and region/address parsing from existing MapKit provider helpers; Rust tool registration on existing `mapkit.geocode` capability; CoreLocation when-in-use gate per #150.
 
-**Tech Stack:** Rust (`apple_bridge_core`), Swift 6 + MapKit + CoreLocation, Swift Testing, UniFFI `ProviderBridge`
+**Tech Stack:** Rust (`abridge_core`), Swift 6 + MapKit + CoreLocation, Swift Testing, UniFFI `ProviderBridge`
 
 **Spec:** `docs/superpowers/specs/2026-06-30-mapkit-forward-geocode-design.md`
 
@@ -16,15 +16,15 @@
 
 | File | Responsibility |
 |------|----------------|
-| `rust/apple_bridge_core/src/tools/mod.rs` | `TOOL_FORWARD_GEOCODE` registration + input schema |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | MCP integration tests |
-| `AppleBridge/Providers/MapKit/MapKitStore.swift` | `MapKitForwardGeocodeRequest` + protocol method |
-| `AppleBridge/Providers/MapKit/LiveMapKitStore.swift` | `MKGeocodingRequest` blocking wrapper |
-| `AppleBridge/Providers/MapKit/MapKitProviderForwardGeocode.swift` | `forward_geocode` handler |
-| `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift` | Operation dispatch |
-| `AppleBridgeTests/MockMapKitStore.swift` | Forward-geocode mock seam |
-| `AppleBridgeTests/MapKitProviderForwardGeocodeTests.swift` | Provider tests |
-| `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift` | Bridge routing test |
+| `rust/abridge_core/src/tools/mod.rs` | `TOOL_FORWARD_GEOCODE` registration + input schema |
+| `rust/abridge_core/tests/mcp_protocol.rs` | MCP integration tests |
+| `ABridge/Providers/MapKit/MapKitStore.swift` | `MapKitForwardGeocodeRequest` + protocol method |
+| `ABridge/Providers/MapKit/LiveMapKitStore.swift` | `MKGeocodingRequest` blocking wrapper |
+| `ABridge/Providers/MapKit/MapKitProviderForwardGeocode.swift` | `forward_geocode` handler |
+| `ABridge/Providers/MapKit/MapKitProviderRouting.swift` | Operation dispatch |
+| `ABridgeTests/MockMapKitStore.swift` | Forward-geocode mock seam |
+| `ABridgeTests/MapKitProviderForwardGeocodeTests.swift` | Provider tests |
+| `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Bridge routing test |
 | `README.md` | Check off tool |
 
 ---
@@ -32,7 +32,7 @@
 ### Task 1: Rust tool registration
 
 **Files:**
-- Modify: `rust/apple_bridge_core/src/tools/mod.rs`
+- Modify: `rust/abridge_core/src/tools/mod.rs`
 
 - [ ] **Step 1: Register tool in tools/mod.rs**
 
@@ -130,7 +130,7 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add rust/apple_bridge_core/src/tools/mod.rs
+git add rust/abridge_core/src/tools/mod.rs
 git commit -m "feat(mapkit): register mapkit.forward_geocode MCP tool in Rust"
 ```
 
@@ -139,7 +139,7 @@ git commit -m "feat(mapkit): register mapkit.forward_geocode MCP tool in Rust"
 ### Task 2: Rust MCP integration tests
 
 **Files:**
-- Modify: `rust/apple_bridge_core/tests/mcp_protocol.rs`
+- Modify: `rust/abridge_core/tests/mcp_protocol.rs`
 
 - [ ] **Step 1: Write integration tests** (reuse existing `mapkit_config_on_port`)
 
@@ -195,7 +195,7 @@ Expected: PASS
 - [ ] **Step 3: Commit**
 
 ```bash
-git add rust/apple_bridge_core/tests/mcp_protocol.rs
+git add rust/abridge_core/tests/mcp_protocol.rs
 git commit -m "test(mapkit): add MCP integration tests for forward_geocode"
 ```
 
@@ -204,9 +204,9 @@ git commit -m "test(mapkit): add MCP integration tests for forward_geocode"
 ### Task 3: MapKitStore seam
 
 **Files:**
-- Modify: `AppleBridge/Providers/MapKit/MapKitStore.swift`
-- Modify: `AppleBridge/Providers/MapKit/LiveMapKitStore.swift`
-- Modify: `AppleBridgeTests/MockMapKitStore.swift`
+- Modify: `ABridge/Providers/MapKit/MapKitStore.swift`
+- Modify: `ABridge/Providers/MapKit/LiveMapKitStore.swift`
+- Modify: `ABridgeTests/MockMapKitStore.swift`
 
 - [ ] **Step 1: Extend MapKitStore types**
 
@@ -287,9 +287,9 @@ Expected: PASS (existing tests unchanged)
 - [ ] **Step 5: Commit**
 
 ```bash
-git add AppleBridge/Providers/MapKit/MapKitStore.swift \
-  AppleBridge/Providers/MapKit/LiveMapKitStore.swift \
-  AppleBridgeTests/MockMapKitStore.swift
+git add ABridge/Providers/MapKit/MapKitStore.swift \
+  ABridge/Providers/MapKit/LiveMapKitStore.swift \
+  ABridgeTests/MockMapKitStore.swift
 git commit -m "feat(mapkit): add MapKitStore forward_geocode seam"
 ```
 
@@ -298,11 +298,11 @@ git commit -m "feat(mapkit): add MapKitStore forward_geocode seam"
 ### Task 4: MapKitProvider forward_geocode operation
 
 **Files:**
-- Create: `AppleBridge/Providers/MapKit/MapKitProviderForwardGeocode.swift`
-- Modify: `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift`
-- Create: `AppleBridgeTests/MapKitProviderForwardGeocodeTests.swift`
-- Modify: `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift`
-- Modify: `AppleBridge.xcodeproj/project.pbxproj` (add new Swift files)
+- Create: `ABridge/Providers/MapKit/MapKitProviderForwardGeocode.swift`
+- Modify: `ABridge/Providers/MapKit/MapKitProviderRouting.swift`
+- Create: `ABridgeTests/MapKitProviderForwardGeocodeTests.swift`
+- Modify: `ABridgeTests/AppleProviderBridgeMapKitTests.swift`
+- Modify: `ABridge.xcodeproj/project.pbxproj` (add new Swift files)
 
 - [ ] **Step 1: Write failing provider tests**
 
@@ -485,11 +485,11 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add AppleBridge/Providers/MapKit/MapKitProviderForwardGeocode.swift \
-  AppleBridge/Providers/MapKit/MapKitProviderRouting.swift \
-  AppleBridgeTests/MapKitProviderForwardGeocodeTests.swift \
-  AppleBridgeTests/AppleProviderBridgeMapKitTests.swift \
-  AppleBridge.xcodeproj/project.pbxproj
+git add ABridge/Providers/MapKit/MapKitProviderForwardGeocode.swift \
+  ABridge/Providers/MapKit/MapKitProviderRouting.swift \
+  ABridgeTests/MapKitProviderForwardGeocodeTests.swift \
+  ABridgeTests/AppleProviderBridgeMapKitTests.swift \
+  ABridge.xcodeproj/project.pbxproj
 git commit -m "feat(mapkit): implement forward_geocode provider operation"
 ```
 

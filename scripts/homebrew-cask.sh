@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prints the rcanoff/homebrew-tap cask for a released Apple Bridge DMG.
+# Prints the rcanoff/homebrew-tap cask for a released ABridge DMG.
 #
 # Usage: scripts/homebrew-cask.sh <version> <dmg-path>
 set -euo pipefail
@@ -13,17 +13,17 @@ version="$1"
 sha256="$(shasum -a 256 "$2" | awk '{print $1}')"
 
 cat <<EOF
-cask "apple-bridge" do
+cask "abridge" do
   version "$version"
   sha256 "$sha256"
 
-  url "https://github.com/rcanoff/apple-bridge/releases/download/v#{version}/AppleBridge-#{version}.dmg"
-  name "Apple Bridge"
+  url "https://github.com/rcanoff/abridge/releases/download/v#{version}/ABridge-#{version}.dmg"
+  name "ABridge"
   desc "Local MCP server for Apple frameworks"
-  homepage "https://github.com/rcanoff/apple-bridge"
+  homepage "https://github.com/rcanoff/abridge"
 
   livecheck do
-    url "https://github.com/rcanoff/apple-bridge/releases/latest/download/appcast.xml"
+    url "https://github.com/rcanoff/abridge/releases/latest/download/appcast.xml"
     strategy :sparkle, &:short_version
   end
 
@@ -31,16 +31,13 @@ cask "apple-bridge" do
   depends_on arch: :arm64
   depends_on macos: :tahoe
 
-  app "AppleBridge.app"
+  app "ABridge.app"
 
   zap trash: [
-    "~/Library/Application Support/AppleBridge",
-    "~/Library/Caches/com.applebridge.AppleBridge",
-    "~/Library/Caches/io.github.rcanoff.AppleBridge",
-    "~/Library/HTTPStorages/com.applebridge.AppleBridge",
-    "~/Library/HTTPStorages/io.github.rcanoff.AppleBridge",
-    "~/Library/Preferences/com.applebridge.AppleBridge.plist",
-    "~/Library/Preferences/io.github.rcanoff.AppleBridge.plist",
+    "~/Library/Application Support/ABridge",
+    "~/Library/Caches/io.github.rcanoff.ABridge",
+    "~/Library/HTTPStorages/io.github.rcanoff.ABridge",
+    "~/Library/Preferences/io.github.rcanoff.ABridge.plist",
   ]
 end
 EOF

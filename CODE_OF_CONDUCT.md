@@ -2,7 +2,7 @@
 
 ## Our pledge
 
-We want Apple Bridge to be a respectful, productive place for contributors, maintainers, and users. We commit to keeping participation open and harassment-free, regardless of age, body size, disability, ethnicity, gender identity and expression, level of experience, nationality, personal appearance, race, religion, sexual identity, or other protected status.
+We want ABridge to be a respectful, productive place for contributors, maintainers, and users. We commit to keeping participation open and harassment-free, regardless of age, body size, disability, ethnicity, gender identity and expression, level of experience, nationality, personal appearance, race, religion, sexual identity, or other protected status.
 
 ## Our standards
 

@@ -1,5 +1,5 @@
 --swiftversion 6.0
 --indent 4
 --maxwidth 120
---exclude AppleBridge/Services/apple_bridge_core.swift
---exclude AppleBridgeCore
+--exclude ABridge/Services/abridge_core.swift
+--exclude ABridgeCore

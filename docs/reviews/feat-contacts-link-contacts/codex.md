@@ -29,7 +29,7 @@
 
 **Status:** wont-fix
 **Severity:** bug
-**File:** `AppleBridge/Providers/Contacts/ContactsSaveRequestLinking.swift`
+**File:** `ABridge/Providers/Contacts/ContactsSaveRequestLinking.swift`
 **Skills:** swiftui-pro, swift-concurrency-pro, requesting-code-review
 
 ### Review — run 1 · 2026-06-29 · reviewer
@@ -45,7 +45,7 @@
 
 ### Follow-up — run 2 · 2026-06-29 · reviewer
 - **Disposition:** still-open
-- **Evidence:** The current diff still declares and invokes the private selector in `AppleBridge/Providers/Contacts/ContactsSaveRequestLinking.m`: `@interface CNSaveRequest (AppleBridgePrivateLinking) - (BOOL)linkContact:(CNMutableContact *)contact toContact:(CNMutableContact *)unifiedContact; @end`, then `return [self linkContact:contact toContact:unifiedContact];`. The tool is still registered in `rust/apple_bridge_core/src/tools/mod.rs` as `TOOL_LINK_CONTACTS` and README marks `contacts.link_contacts` as `[x]`.
+- **Evidence:** The current diff still declares and invokes the private selector in `ABridge/Providers/Contacts/ContactsSaveRequestLinking.m`: `@interface CNSaveRequest (ABridgePrivateLinking) - (BOOL)linkContact:(CNMutableContact *)contact toContact:(CNMutableContact *)unifiedContact; @end`, then `return [self linkContact:contact toContact:unifiedContact];`. The tool is still registered in `rust/abridge_core/src/tools/mod.rs` as `TOOL_LINK_CONTACTS` and README marks `contacts.link_contacts` as `[x]`.
 - **Note:** The guarded ObjC wrapper improves failure reporting, but it does not resolve the production dependency on undocumented Contacts SPI.
 
 ### Reply · implementer (run 3)
@@ -58,12 +58,12 @@
 
 ### Follow-up — run 6 · 2026-06-29 · reviewer
 - **Disposition:** still-open
-- **Evidence:** The current diff still declares the undocumented selector in `AppleBridge/Providers/Contacts/ContactsSaveRequestLinking.m`: `@interface CNSaveRequest (AppleBridgePrivateLinking) - (BOOL)linkContact:(CNMutableContact *)contact toContact:(CNMutableContact *)unifiedContact; @end`, checks it with `instancesRespondToSelector:@selector(linkContact:toContact:)`, and invokes it via `return [self linkContact:contact toContact:unifiedContact];`. The production tool remains advertised through `rust/apple_bridge_core/src/tools/mod.rs` as `TOOL_LINK_CONTACTS` and `README.md` marks `contacts.link_contacts` as `[x]`.
+- **Evidence:** The current diff still declares the undocumented selector in `ABridge/Providers/Contacts/ContactsSaveRequestLinking.m`: `@interface CNSaveRequest (ABridgePrivateLinking) - (BOOL)linkContact:(CNMutableContact *)contact toContact:(CNMutableContact *)unifiedContact; @end`, checks it with `instancesRespondToSelector:@selector(linkContact:toContact:)`, and invokes it via `return [self linkContact:contact toContact:unifiedContact];`. The production tool remains advertised through `rust/abridge_core/src/tools/mod.rs` as `TOOL_LINK_CONTACTS` and `README.md` marks `contacts.link_contacts` as `[x]`.
 - **Note:** The runtime guard and typed ObjC wrapper reduce crash/failure ambiguity, but the branch still ships production behavior backed by private Contacts SPI rather than a public framework API.
 
 ### Follow-up — run 7 · 2026-06-29 · reviewer
 - **Disposition:** still-open
-- **Evidence:** The current diff still contains the private category declaration and call in `AppleBridge/Providers/Contacts/ContactsSaveRequestLinking.m`: `- (BOOL)linkContact:(CNMutableContact *)contact toContact:(CNMutableContact *)unifiedContact;`, `instancesRespondToSelector:@selector(linkContact:toContact:)`, and `return [self linkContact:contact toContact:unifiedContact];`. `rust/apple_bridge_core/src/tools/mod.rs` still registers `TOOL_LINK_CONTACTS` in `ALL_TOOLS`, and `README.md` still marks `contacts.link_contacts` as `[x]`.
+- **Evidence:** The current diff still contains the private category declaration and call in `ABridge/Providers/Contacts/ContactsSaveRequestLinking.m`: `- (BOOL)linkContact:(CNMutableContact *)contact toContact:(CNMutableContact *)unifiedContact;`, `instancesRespondToSelector:@selector(linkContact:toContact:)`, and `return [self linkContact:contact toContact:unifiedContact];`. `rust/abridge_core/src/tools/mod.rs` still registers `TOOL_LINK_CONTACTS` in `ALL_TOOLS`, and `README.md` still marks `contacts.link_contacts` as `[x]`.
 - **Note:** No current-diff evidence resolves the production dependency on undocumented Contacts SPI.
 
 ### Reply · implementer (run 8)
@@ -72,7 +72,7 @@
 
 ### Follow-up — run 9 · 2026-06-29 · reviewer
 - **Disposition:** still-open
-- **Evidence:** The current diff still ships production linking through the undocumented selector in `AppleBridge/Providers/Contacts/ContactsSaveRequestLinking.swift`: `private static let linkSelector = Selector(("linkContact:toContact:"))`, `CNSaveRequest.instancesRespond(to: linkSelector)`, `saveRequest.responds(to: linkSelector)`, and `saveRequest.perform(linkSelector, with: contact, with: unifiedContact)`. `rust/apple_bridge_core/src/tools/mod.rs` still registers `TOOL_LINK_CONTACTS`, and `README.md` still marks `contacts.link_contacts` as `[x]`.
+- **Evidence:** The current diff still ships production linking through the undocumented selector in `ABridge/Providers/Contacts/ContactsSaveRequestLinking.swift`: `private static let linkSelector = Selector(("linkContact:toContact:"))`, `CNSaveRequest.instancesRespond(to: linkSelector)`, `saveRequest.responds(to: linkSelector)`, and `saveRequest.perform(linkSelector, with: contact, with: unifiedContact)`. `rust/abridge_core/src/tools/mod.rs` still registers `TOOL_LINK_CONTACTS`, and `README.md` still marks `contacts.link_contacts` as `[x]`.
 - **Note:** Removing the ObjC category avoids the typed declaration, but the production feature still depends on private Contacts SPI; the original issue is therefore reopened.
 
 ### Reply · implementer
@@ -81,7 +81,7 @@
 
 ### Follow-up — run 10 · 2026-06-29 · reviewer
 - **Disposition:** still-open
-- **Evidence:** The current diff still constructs the undocumented selector in `AppleBridge/ContactsRuntimeLinking.m`: `return NSSelectorFromString(@"linkContact:toContact:");`, checks it with `[CNSaveRequest instancesRespondToSelector:ABLinkContactSelector()]`, and invokes it through typed `objc_msgSend` in `ABLinkContactToContact`. `AppleBridge/Providers/Contacts/ContactsSaveRequestLinking.swift` calls `ABContactLinkingIsAvailable()` and `ABLinkContactToContact(saveRequest, contact, unifiedContact)`. The tool remains registered as `TOOL_LINK_CONTACTS` in `rust/apple_bridge_core/src/tools/mod.rs`, and `README.md` marks `contacts.link_contacts` as `[x]`.
+- **Evidence:** The current diff still constructs the undocumented selector in `ABridge/ContactsRuntimeLinking.m`: `return NSSelectorFromString(@"linkContact:toContact:");`, checks it with `[CNSaveRequest instancesRespondToSelector:ABLinkContactSelector()]`, and invokes it through typed `objc_msgSend` in `ABLinkContactToContact`. `ABridge/Providers/Contacts/ContactsSaveRequestLinking.swift` calls `ABContactLinkingIsAvailable()` and `ABLinkContactToContact(saveRequest, contact, unifiedContact)`. The tool remains registered as `TOOL_LINK_CONTACTS` in `rust/abridge_core/src/tools/mod.rs`, and `README.md` marks `contacts.link_contacts` as `[x]`.
 - **Note:** The new C bridge fixes the primitive-return hazard, but the production feature still depends on the private Contacts selector rather than a public framework API.
 
 ### Reply · implementer (run 10)
@@ -90,7 +90,7 @@
 
 ### Follow-up — run 11 · 2026-06-29 · reviewer
 - **Disposition:** still-open
-- **Evidence:** The current diff still implements production linking by constructing `NSSelectorFromString(@"linkContact:toContact:")` in `AppleBridge/ContactsRuntimeLinking.m`, checking `[CNSaveRequest instancesRespondToSelector:ABLinkContactSelector()]`, and invoking `((ABLinkContactIMP)objc_msgSend)(saveRequest, selector, contact, unifiedContact)`. `AppleBridge/Providers/Contacts/ContactsSaveRequestLinking.swift` still calls `ABContactLinkingIsAvailable()` and `ABLinkContactToContact(saveRequest, contact, unifiedContact)`. `rust/apple_bridge_core/src/tools/mod.rs` still registers `TOOL_LINK_CONTACTS`, and `README.md` still marks `contacts.link_contacts` as `[x]`.
+- **Evidence:** The current diff still implements production linking by constructing `NSSelectorFromString(@"linkContact:toContact:")` in `ABridge/ContactsRuntimeLinking.m`, checking `[CNSaveRequest instancesRespondToSelector:ABLinkContactSelector()]`, and invoking `((ABLinkContactIMP)objc_msgSend)(saveRequest, selector, contact, unifiedContact)`. `ABridge/Providers/Contacts/ContactsSaveRequestLinking.swift` still calls `ABContactLinkingIsAvailable()` and `ABLinkContactToContact(saveRequest, contact, unifiedContact)`. `rust/abridge_core/src/tools/mod.rs` still registers `TOOL_LINK_CONTACTS`, and `README.md` still marks `contacts.link_contacts` as `[x]`.
 - **Note:** The implementer reply confirms this is intentionally accepted product behavior, but the diff evidence still shows the same production dependency on an undocumented Contacts selector.
 
 ### Reply · implementer (run 11)
@@ -99,7 +99,7 @@
 
 ### Follow-up — run 12 · 2026-06-29 · reviewer
 - **Disposition:** still-open
-- **Evidence:** The current diff still constructs and invokes the undocumented Contacts selector in production: `AppleBridge/ContactsRuntimeLinking.m` returns `NSSelectorFromString(@"linkContact:toContact:")`, checks `[CNSaveRequest instancesRespondToSelector:ABLinkContactSelector()]`, and calls `((ABLinkContactIMP)objc_msgSend)(saveRequest, selector, contact, unifiedContact)`. `AppleBridge/Providers/Contacts/ContactsSaveRequestLinking.swift` still exposes that bridge through `ABContactLinkingIsAvailable()` and `ABLinkContactToContact(saveRequest, contact, unifiedContact)`. The public MCP surface still includes `TOOL_LINK_CONTACTS` in `rust/apple_bridge_core/src/tools/mod.rs`, and `README.md` still marks `contacts.link_contacts` as `[x]`.
+- **Evidence:** The current diff still constructs and invokes the undocumented Contacts selector in production: `ABridge/ContactsRuntimeLinking.m` returns `NSSelectorFromString(@"linkContact:toContact:")`, checks `[CNSaveRequest instancesRespondToSelector:ABLinkContactSelector()]`, and calls `((ABLinkContactIMP)objc_msgSend)(saveRequest, selector, contact, unifiedContact)`. `ABridge/Providers/Contacts/ContactsSaveRequestLinking.swift` still exposes that bridge through `ABContactLinkingIsAvailable()` and `ABLinkContactToContact(saveRequest, contact, unifiedContact)`. The public MCP surface still includes `TOOL_LINK_CONTACTS` in `rust/abridge_core/src/tools/mod.rs`, and `README.md` still marks `contacts.link_contacts` as `[x]`.
 - **Note:** The latest implementer reply documents the tradeoff as intentional, but no current-diff evidence removes or public-API-gates the production dependency on the private selector.
 
 ### Reply · implementer (run 12 · final)
@@ -114,7 +114,7 @@
 
 **Status:** resolved
 **Severity:** bug
-**File:** `rust/apple_bridge_core/src/tools/mod.rs`
+**File:** `rust/abridge_core/src/tools/mod.rs`
 **Skills:** requesting-code-review, rust-best-practices
 
 ### Review — run 4 · 2026-06-29 · reviewer
@@ -132,24 +132,24 @@
 
 **Status:** resolved
 **Severity:** bug
-**File:** `AppleBridge/AppleBridge-Bridging-Header.h`
+**File:** `ABridge/ABridge-Bridging-Header.h`
 **Skills:** swiftui-pro
 
 ### Review — run 7 · 2026-06-29 · reviewer
-- **Evidence:** The new bridging header contains only `#import "ContactsSaveRequestLinking.h"`. The project file adds `ContactsSaveRequestLinking.h` under the Contacts group with `path = ContactsSaveRequestLinking.h`, while the group itself has `path = Contacts`, so the file is at `AppleBridge/Providers/Contacts/ContactsSaveRequestLinking.h`. The build settings added only `SWIFT_OBJC_BRIDGING_HEADER = "AppleBridge/AppleBridge-Bridging-Header.h";`; the shown build settings do not add a matching `HEADER_SEARCH_PATHS`.
-- **Issue:** The bridging header lives in `AppleBridge/`, but it imports a header that lives in `AppleBridge/Providers/Contacts/` as if it were in the same include directory.
-- **Why it matters:** The app target can fail to compile when Swift processes the bridging header because the quoted import will not find `ContactsSaveRequestLinking.h` at `AppleBridge/ContactsSaveRequestLinking.h` unless some header search path outside the visible diff happens to cover the nested provider directory. Not visible in diff — cannot confirm any such search path exists.
+- **Evidence:** The new bridging header contains only `#import "ContactsSaveRequestLinking.h"`. The project file adds `ContactsSaveRequestLinking.h` under the Contacts group with `path = ContactsSaveRequestLinking.h`, while the group itself has `path = Contacts`, so the file is at `ABridge/Providers/Contacts/ContactsSaveRequestLinking.h`. The build settings added only `SWIFT_OBJC_BRIDGING_HEADER = "ABridge/ABridge-Bridging-Header.h";`; the shown build settings do not add a matching `HEADER_SEARCH_PATHS`.
+- **Issue:** The bridging header lives in `ABridge/`, but it imports a header that lives in `ABridge/Providers/Contacts/` as if it were in the same include directory.
+- **Why it matters:** The app target can fail to compile when Swift processes the bridging header because the quoted import will not find `ContactsSaveRequestLinking.h` at `ABridge/ContactsSaveRequestLinking.h` unless some header search path outside the visible diff happens to cover the nested provider directory. Not visible in diff — cannot confirm any such search path exists.
 - **Fix:** Import the header by its relative path from the bridging header, e.g. `#import "Providers/Contacts/ContactsSaveRequestLinking.h"`, or move the ObjC header next to the bridging header and keep the project reference consistent.
 
 ### Reply · implementer (run 8)
 - **Disposition:** fixed
-- **Why:** Deleted `AppleBridge-Bridging-Header.h` and removed `SWIFT_OBJC_BRIDGING_HEADER` from the Xcode project (xcodegen regen). No ObjC bridging layer remains; linking is implemented entirely in Swift.
+- **Why:** Deleted `ABridge-Bridging-Header.h` and removed `SWIFT_OBJC_BRIDGING_HEADER` from the Xcode project (xcodegen regen). No ObjC bridging layer remains; linking is implemented entirely in Swift.
 
 ## Thread 4 — `perform` assumes an object return from an unknown selector
 
 **Status:** resolved
 **Severity:** bug
-**File:** `AppleBridge/Providers/Contacts/ContactsSaveRequestLinking.swift`
+**File:** `ABridge/Providers/Contacts/ContactsSaveRequestLinking.swift`
 **Skills:** swiftui-pro, requesting-code-review
 
 ### Review — run 9 · 2026-06-29 · reviewer
@@ -160,11 +160,11 @@
 
 ### Reply · implementer
 - **Disposition:** fixed
-- **Why:** Replaced Swift `perform`/`NSNumber` bridging with typed BOOL `objc_msgSend` in `AppleBridge/ContactsRuntimeLinking.m` (`ABLinkContactToContact`); `ContactsSaveRequestLinking.swift` calls the C bridge. `LiveContactsStoreLinkTests.liveLinkingPathCompletesWithoutCrashWhenRuntimeSupportsLinking` exercises the path on macOS without crash.
+- **Why:** Replaced Swift `perform`/`NSNumber` bridging with typed BOOL `objc_msgSend` in `ABridge/ContactsRuntimeLinking.m` (`ABLinkContactToContact`); `ContactsSaveRequestLinking.swift` calls the C bridge. `LiveContactsStoreLinkTests.liveLinkingPathCompletesWithoutCrashWhenRuntimeSupportsLinking` exercises the path on macOS without crash.
 
 ### Follow-up — run 10 · 2026-06-29 · reviewer
 - **Disposition:** resolved
-- **Evidence:** The current diff replaces the Swift `perform` path with `AppleBridge/ContactsRuntimeLinking.m`, where `ABLinkContactToContact` defines `typedef BOOL (*ABLinkContactIMP)(id, SEL, CNMutableContact *, CNMutableContact *);` and invokes `((ABLinkContactIMP)objc_msgSend)(saveRequest, selector, contact, unifiedContact)`. `AppleBridge/Providers/Contacts/ContactsSaveRequestLinking.swift` now checks the Boolean result from `ABLinkContactToContact(...)` instead of unwrapping an object return.
+- **Evidence:** The current diff replaces the Swift `perform` path with `ABridge/ContactsRuntimeLinking.m`, where `ABLinkContactToContact` defines `typedef BOOL (*ABLinkContactIMP)(id, SEL, CNMutableContact *, CNMutableContact *);` and invokes `((ABLinkContactIMP)objc_msgSend)(saveRequest, selector, contact, unifiedContact)`. `ABridge/Providers/Contacts/ContactsSaveRequestLinking.swift` now checks the Boolean result from `ABLinkContactToContact(...)` instead of unwrapping an object return.
 - **Note:** The primitive return is now called through a matching C function pointer signature.
 
 ## Summary

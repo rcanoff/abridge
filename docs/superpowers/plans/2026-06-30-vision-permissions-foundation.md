@@ -15,7 +15,7 @@
 ### Task 1: CapabilityCatalog.visionCapabilities
 
 **Files:**
-- Modify: `AppleBridge/Models/CapabilityCatalog.swift`
+- Modify: `ABridge/Models/CapabilityCatalog.swift`
 
 - [ ] **Step 1: Add vision capabilities (all shipped: false)**
 
@@ -43,7 +43,7 @@ Append after `mapkitCapabilities`:
 - [ ] **Step 2: Commit**
 
 ```bash
-git add AppleBridge/Models/CapabilityCatalog.swift
+git add ABridge/Models/CapabilityCatalog.swift
 git commit -m "feat(vision): add visionCapabilities to CapabilityCatalog"
 ```
 
@@ -52,21 +52,21 @@ git commit -m "feat(vision): add visionCapabilities to CapabilityCatalog"
 ### Task 2: AppSettings + PermissionsStore server gating
 
 **Files:**
-- Modify: `AppleBridge/Models/AppSettings.swift`
-- Modify: `AppleBridge/Models/PermissionsStore.swift`
-- Create: `AppleBridgeTests/AppSettingsVisionTests.swift`
-- Create: `AppleBridgeTests/PermissionsStoreVisionTests.swift`
-- Modify: `AppleBridgeTests/AppSettingsTests.swift` (if assertions need vision baseline)
-- Modify: `AppleBridgeTests/PermissionsStoreTests.swift` (if needed)
+- Modify: `ABridge/Models/AppSettings.swift`
+- Modify: `ABridge/Models/PermissionsStore.swift`
+- Create: `ABridgeTests/AppSettingsVisionTests.swift`
+- Create: `ABridgeTests/PermissionsStoreVisionTests.swift`
+- Modify: `ABridgeTests/AppSettingsTests.swift` (if assertions need vision baseline)
+- Modify: `ABridgeTests/PermissionsStoreTests.swift` (if needed)
 
-**Note:** New test files live under `AppleBridgeTests/` — picked up by existing `project.yml` source glob. No `project.yml` or `xcodegen` changes expected.
+**Note:** New test files live under `ABridgeTests/` — picked up by existing `project.yml` source glob. No `project.yml` or `xcodegen` changes expected.
 
 - [ ] **Step 1: Write failing gating tests**
 
-`AppleBridgeTests/AppSettingsVisionTests.swift`:
+`ABridgeTests/AppSettingsVisionTests.swift`:
 
 ```swift
-@testable import AppleBridge
+@testable import ABridge
 import Foundation
 import Testing
 
@@ -95,10 +95,10 @@ struct AppSettingsVisionTests {
 }
 ```
 
-`AppleBridgeTests/PermissionsStoreVisionTests.swift`:
+`ABridgeTests/PermissionsStoreVisionTests.swift`:
 
 ```swift
-@testable import AppleBridge
+@testable import ABridge
 import Foundation
 import Testing
 
@@ -209,8 +209,8 @@ Expected: PASS AppSettingsVision and PermissionsStoreVision suites
 - [ ] **Step 6: Commit**
 
 ```bash
-git add AppleBridge/Models/AppSettings.swift AppleBridge/Models/PermissionsStore.swift \
-        AppleBridgeTests/AppSettingsVisionTests.swift AppleBridgeTests/PermissionsStoreVisionTests.swift
+git add ABridge/Models/AppSettings.swift ABridge/Models/PermissionsStore.swift \
+        ABridgeTests/AppSettingsVisionTests.swift ABridgeTests/PermissionsStoreVisionTests.swift
 git commit -m "feat(vision): wire vision capability gating in AppSettings and PermissionsStore"
 ```
 
@@ -219,8 +219,8 @@ git commit -m "feat(vision): wire vision capability gating in AppSettings and Pe
 ### Task 3: VisionMCPPermissionsGroup + PermissionsSettingsView footer
 
 **Files:**
-- Modify: `AppleBridge/Views/Settings/PermissionsSettingsComponents.swift`
-- Modify: `AppleBridge/Views/Settings/PermissionsSettingsView.swift`
+- Modify: `ABridge/Views/Settings/PermissionsSettingsComponents.swift`
+- Modify: `ABridge/Views/Settings/PermissionsSettingsView.swift`
 
 - [ ] **Step 1: Add VisionMCPPermissionsGroup**
 
@@ -274,8 +274,8 @@ Expected: PASS (UI-only change; no new compile errors)
 - [ ] **Step 5: Commit**
 
 ```bash
-git add AppleBridge/Views/Settings/PermissionsSettingsComponents.swift \
-        AppleBridge/Views/Settings/PermissionsSettingsView.swift
+git add ABridge/Views/Settings/PermissionsSettingsComponents.swift \
+        ABridge/Views/Settings/PermissionsSettingsView.swift
 git commit -m "feat(vision): add Vision MCP group and Apple Permissions footer note"
 ```
 
@@ -284,16 +284,16 @@ git commit -m "feat(vision): add Vision MCP group and Apple Permissions footer n
 ### Task 4: VisionProvider stub + AppleProviderBridge routing
 
 **Files:**
-- Create: `AppleBridge/Providers/Vision/VisionProvider.swift`
-- Modify: `AppleBridge/Providers/AppleProviderBridge.swift`
-- Create: `AppleBridgeTests/AppleProviderBridgeVisionTests.swift`
+- Create: `ABridge/Providers/Vision/VisionProvider.swift`
+- Modify: `ABridge/Providers/AppleProviderBridge.swift`
+- Create: `ABridgeTests/AppleProviderBridgeVisionTests.swift`
 
-**Note:** `AppleBridge/Providers/Vision/` is under the existing `AppleBridge` source path — no `project.yml` edit required. If Xcode does not see new files, run `xcodegen generate` (should not be necessary with directory-based sources).
+**Note:** `ABridge/Providers/Vision/` is under the existing `ABridge` source path — no `project.yml` edit required. If Xcode does not see new files, run `xcodegen generate` (should not be necessary with directory-based sources).
 
 - [ ] **Step 1: Write failing bridge test**
 
 ```swift
-@testable import AppleBridge
+@testable import ABridge
 import Foundation
 import Testing
 
@@ -322,7 +322,7 @@ Expected: FAIL — `unknown_provider` or missing Vision routing
 
 - [ ] **Step 3: Implement VisionProvider stub**
 
-`AppleBridge/Providers/Vision/VisionProvider.swift`:
+`ABridge/Providers/Vision/VisionProvider.swift`:
 
 ```swift
 import Foundation
@@ -385,9 +385,9 @@ Expected: PASS AppleProviderBridgeVision suite
 - [ ] **Step 6: Commit**
 
 ```bash
-git add AppleBridge/Providers/Vision/VisionProvider.swift \
-        AppleBridge/Providers/AppleProviderBridge.swift \
-        AppleBridgeTests/AppleProviderBridgeVisionTests.swift
+git add ABridge/Providers/Vision/VisionProvider.swift \
+        ABridge/Providers/AppleProviderBridge.swift \
+        ABridgeTests/AppleProviderBridgeVisionTests.swift
 git commit -m "feat(vision): add VisionProvider stub and bridge routing"
 ```
 
@@ -413,6 +413,6 @@ Expected: all tests pass
 If `xcodegen generate` was run due to unexpected project drift:
 
 ```bash
-git add project.yml AppleBridge.xcodeproj
+git add project.yml ABridge.xcodeproj
 git commit -m "chore(vision): regenerate Xcode project"
 ```

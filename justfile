@@ -1,4 +1,4 @@
-# Apple Bridge — task runner (see docs/conventions.md)
+# ABridge — task runner (see docs/conventions.md)
 
 review *FLAGS='':
     @local/review/bin/review.sh {{FLAGS}}
@@ -10,20 +10,20 @@ test-swift:
     #!/usr/bin/env bash
     set -euo pipefail
     # arm64-only (see main); build + test-without-building avoids destination ambiguity and pipe hangs.
-    TZ=UTC xcodebuild build-for-testing -project AppleBridge.xcodeproj -scheme AppleBridge \
+    TZ=UTC xcodebuild build-for-testing -project ABridge.xcodeproj -scheme ABridge \
         -destination 'platform=macOS,arch=arm64' -quiet
-    TZ=UTC xcodebuild test-without-building -project AppleBridge.xcodeproj -scheme AppleBridge \
-        -only-testing:AppleBridgeTests -destination 'platform=macOS,arch=arm64' \
+    TZ=UTC xcodebuild test-without-building -project ABridge.xcodeproj -scheme ABridge \
+        -only-testing:ABridgeTests -destination 'platform=macOS,arch=arm64' \
         -parallel-testing-enabled NO -quiet
 
 test-swift-verbose:
     #!/usr/bin/env bash
     set -euo pipefail
     # arm64-only (see main); build + test-without-building avoids destination ambiguity and pipe hangs.
-    TZ=UTC xcodebuild build-for-testing -project AppleBridge.xcodeproj -scheme AppleBridge \
+    TZ=UTC xcodebuild build-for-testing -project ABridge.xcodeproj -scheme ABridge \
         -destination 'platform=macOS,arch=arm64'
-    TZ=UTC xcodebuild test-without-building -project AppleBridge.xcodeproj -scheme AppleBridge \
-        -only-testing:AppleBridgeTests -destination 'platform=macOS,arch=arm64' \
+    TZ=UTC xcodebuild test-without-building -project ABridge.xcodeproj -scheme ABridge \
+        -only-testing:ABridgeTests -destination 'platform=macOS,arch=arm64' \
         -parallel-testing-enabled NO
 
 # Guard: rust recipes require rust/Cargo.toml (lands with PR 2+)
@@ -47,17 +47,17 @@ ci-rust: _rust-workspace
     just lint-rust
     just test-rust
 
-_swift-sources := "AppleBridge AppleBridgeTests"
+_swift-sources := "ABridge ABridgeTests"
 
 # Trace icon/previews/mark.jpg → icon/vectors/mark.svg (needs magick + potrace).
 gen-icon-svg:
     icon/scripts/trace-mark.sh
 
-# Rasterize the mark SVG into AppleBridge/Assets.xcassets/MenuBarMark.imageset.
+# Rasterize the mark SVG into ABridge/Assets.xcassets/MenuBarMark.imageset.
 gen-menubar-icons:
     icon/scripts/gen-menubar-icons.sh
 
-_swift-exclude := "--exclude AppleBridge/Services/apple_bridge_core.swift --exclude AppleBridgeCore"
+_swift-exclude := "--exclude ABridge/Services/abridge_core.swift --exclude ABridgeCore"
 
 fmt-swift:
     swiftformat {{_swift-sources}} {{_swift-exclude}}
@@ -106,7 +106,7 @@ test-all-verbose:
 
 clean-rust: _rust-workspace
     cd rust && cargo clean
-    rm -rf AppleBridgeCore
+    rm -rf ABridgeCore
 
 rebuild: clean-rust build-rust
 

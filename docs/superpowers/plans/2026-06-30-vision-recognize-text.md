@@ -6,7 +6,7 @@
 
 **Architecture:** `VisionStore` protocol seam; `VisionSerialization` for faithful Vision JSON; Rust tool registration with `vision.text` capability; flip `vision-text` to shipped; no Apple TCC gate per #151.
 
-**Tech Stack:** Rust (`apple_bridge_core`), Swift 6 + Vision + CoreGraphics, Swift Testing, UniFFI `ProviderBridge`
+**Tech Stack:** Rust (`abridge_core`), Swift 6 + Vision + CoreGraphics, Swift Testing, UniFFI `ProviderBridge`
 
 **Spec:** `docs/superpowers/specs/2026-06-30-vision-recognize-text-design.md`
 
@@ -16,19 +16,19 @@
 
 | File | Responsibility |
 |------|----------------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `VISION_TEXT` constant |
-| `rust/apple_bridge_core/src/tools/mod.rs` | Tool registration + input schema |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | MCP integration tests |
-| `AppleBridge/Providers/Vision/VisionSerialization.swift` | Observation / geometry / pixel buffer JSON |
-| `AppleBridge/Providers/Vision/VisionStore.swift` | Recognize-text protocol seam |
-| `AppleBridge/Providers/Vision/LiveVisionStore.swift` | `VNImageRequestHandler` sync wrapper |
-| `AppleBridge/Providers/Vision/VisionProvider.swift` | Provider shell + error helpers |
-| `AppleBridge/Providers/Vision/VisionProviderRouting.swift` | Operation dispatch |
-| `AppleBridge/Providers/Vision/VisionProviderRecognizeText.swift` | `recognize_text` handler |
-| `AppleBridgeTests/MockVisionStore.swift` | Deterministic OCR results |
-| `AppleBridgeTests/VisionSerializationTests.swift` | Fidelity assertions |
-| `AppleBridgeTests/VisionProviderRecognizeTextTests.swift` | Provider tests |
-| `AppleBridge/Models/CapabilityCatalog.swift` | Ship `vision-text` |
+| `rust/abridge_core/src/capabilities.rs` | `VISION_TEXT` constant |
+| `rust/abridge_core/src/tools/mod.rs` | Tool registration + input schema |
+| `rust/abridge_core/tests/mcp_protocol.rs` | MCP integration tests |
+| `ABridge/Providers/Vision/VisionSerialization.swift` | Observation / geometry / pixel buffer JSON |
+| `ABridge/Providers/Vision/VisionStore.swift` | Recognize-text protocol seam |
+| `ABridge/Providers/Vision/LiveVisionStore.swift` | `VNImageRequestHandler` sync wrapper |
+| `ABridge/Providers/Vision/VisionProvider.swift` | Provider shell + error helpers |
+| `ABridge/Providers/Vision/VisionProviderRouting.swift` | Operation dispatch |
+| `ABridge/Providers/Vision/VisionProviderRecognizeText.swift` | `recognize_text` handler |
+| `ABridgeTests/MockVisionStore.swift` | Deterministic OCR results |
+| `ABridgeTests/VisionSerializationTests.swift` | Fidelity assertions |
+| `ABridgeTests/VisionProviderRecognizeTextTests.swift` | Provider tests |
+| `ABridge/Models/CapabilityCatalog.swift` | Ship `vision-text` |
 | `README.md` | Check off tool |
 
 ---
@@ -36,9 +36,9 @@
 ### Task 1: Rust capability + tool registration
 
 **Files:**
-- Modify: `rust/apple_bridge_core/src/capabilities.rs`
-- Modify: `rust/apple_bridge_core/src/tools/mod.rs`
-- Test: `rust/apple_bridge_core/tests/mcp_protocol.rs` (Task 2)
+- Modify: `rust/abridge_core/src/capabilities.rs`
+- Modify: `rust/abridge_core/src/tools/mod.rs`
+- Test: `rust/abridge_core/tests/mcp_protocol.rs` (Task 2)
 
 - [ ] **Step 1: Add `VISION_TEXT` to capabilities.rs**
 
@@ -162,7 +162,7 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add rust/apple_bridge_core/src/capabilities.rs rust/apple_bridge_core/src/tools/mod.rs
+git add rust/abridge_core/src/capabilities.rs rust/abridge_core/src/tools/mod.rs
 git commit -m "feat(vision): register vision.recognize_text MCP tool in Rust"
 ```
 
@@ -171,7 +171,7 @@ git commit -m "feat(vision): register vision.recognize_text MCP tool in Rust"
 ### Task 2: Rust MCP integration tests
 
 **Files:**
-- Modify: `rust/apple_bridge_core/tests/mcp_protocol.rs`
+- Modify: `rust/abridge_core/tests/mcp_protocol.rs`
 
 - [ ] **Step 1: Add vision config helper** (mirror `mapkit_config_on_port`)
 
@@ -240,7 +240,7 @@ Expected: PASS
 - [ ] **Step 4: Commit**
 
 ```bash
-git add rust/apple_bridge_core/tests/mcp_protocol.rs
+git add rust/abridge_core/tests/mcp_protocol.rs
 git commit -m "test(vision): add MCP integration tests for recognize_text"
 ```
 
@@ -249,8 +249,8 @@ git commit -m "test(vision): add MCP integration tests for recognize_text"
 ### Task 3: VisionSerialization (exhaustive VNRecognizedTextObservation)
 
 **Files:**
-- Create: `AppleBridge/Providers/Vision/VisionSerialization.swift`
-- Create: `AppleBridgeTests/VisionSerializationTests.swift`
+- Create: `ABridge/Providers/Vision/VisionSerialization.swift`
+- Create: `ABridgeTests/VisionSerializationTests.swift`
 
 - [ ] **Step 1: Write failing serialization test**
 
@@ -280,7 +280,7 @@ Expected: PASS for VisionSerializationTests
 - [ ] **Step 5: Commit**
 
 ```bash
-git add AppleBridge/Providers/Vision/VisionSerialization.swift AppleBridgeTests/VisionSerializationTests.swift
+git add ABridge/Providers/Vision/VisionSerialization.swift ABridgeTests/VisionSerializationTests.swift
 git commit -m "feat(vision): add exhaustive Vision serialization"
 ```
 
@@ -289,9 +289,9 @@ git commit -m "feat(vision): add exhaustive Vision serialization"
 ### Task 4: VisionStore + LiveVisionStore
 
 **Files:**
-- Create: `AppleBridge/Providers/Vision/VisionStore.swift`
-- Create: `AppleBridge/Providers/Vision/LiveVisionStore.swift`
-- Create: `AppleBridgeTests/MockVisionStore.swift`
+- Create: `ABridge/Providers/Vision/VisionStore.swift`
+- Create: `ABridge/Providers/Vision/LiveVisionStore.swift`
+- Create: `ABridgeTests/MockVisionStore.swift`
 
 - [ ] **Step 1: Define protocol and request type**
 
@@ -329,9 +329,9 @@ Hold canned `[VNRecognizedTextObservation]` (synthesized via `VNRecognizedTextOb
 - [ ] **Step 4: Commit**
 
 ```bash
-git add AppleBridge/Providers/Vision/VisionStore.swift \
-  AppleBridge/Providers/Vision/LiveVisionStore.swift \
-  AppleBridgeTests/MockVisionStore.swift
+git add ABridge/Providers/Vision/VisionStore.swift \
+  ABridge/Providers/Vision/LiveVisionStore.swift \
+  ABridgeTests/MockVisionStore.swift
 git commit -m "feat(vision): add VisionStore recognize_text seam"
 ```
 
@@ -340,11 +340,11 @@ git commit -m "feat(vision): add VisionStore recognize_text seam"
 ### Task 5: VisionProvider recognize_text operation
 
 **Files:**
-- Modify: `AppleBridge/Providers/Vision/VisionProvider.swift`
-- Create: `AppleBridge/Providers/Vision/VisionProviderRouting.swift`
-- Create: `AppleBridge/Providers/Vision/VisionProviderRecognizeText.swift`
-- Create: `AppleBridgeTests/VisionProviderRecognizeTextTests.swift`
-- Modify: `AppleBridgeTests/AppleProviderBridgeVisionTests.swift`
+- Modify: `ABridge/Providers/Vision/VisionProvider.swift`
+- Create: `ABridge/Providers/Vision/VisionProviderRouting.swift`
+- Create: `ABridge/Providers/Vision/VisionProviderRecognizeText.swift`
+- Create: `ABridgeTests/VisionProviderRecognizeTextTests.swift`
+- Modify: `ABridgeTests/AppleProviderBridgeVisionTests.swift`
 
 - [ ] **Step 1: Write failing provider tests**
 
@@ -404,8 +404,8 @@ Expected: PASS
 - [ ] **Step 7: Commit**
 
 ```bash
-git add AppleBridge/Providers/Vision/ AppleBridgeTests/VisionProviderRecognizeTextTests.swift \
-  AppleBridgeTests/AppleProviderBridgeVisionTests.swift
+git add ABridge/Providers/Vision/ ABridgeTests/VisionProviderRecognizeTextTests.swift \
+  ABridgeTests/AppleProviderBridgeVisionTests.swift
 git commit -m "feat(vision): implement recognize_text provider operation"
 ```
 
@@ -414,9 +414,9 @@ git commit -m "feat(vision): implement recognize_text provider operation"
 ### Task 6: Ship capability + README
 
 **Files:**
-- Modify: `AppleBridge/Models/CapabilityCatalog.swift`
+- Modify: `ABridge/Models/CapabilityCatalog.swift`
 - Modify: `README.md`
-- Modify: `AppleBridgeTests/AppSettingsVisionTests.swift`
+- Modify: `ABridgeTests/AppSettingsVisionTests.swift`
 
 - [ ] **Step 1: Flip capability shipped**
 
@@ -447,7 +447,7 @@ Expected: PASS (before merge)
 - [ ] **Step 6: Commit**
 
 ```bash
-git add AppleBridge/Models/CapabilityCatalog.swift README.md AppleBridgeTests/AppSettingsVisionTests.swift project.yml
+git add ABridge/Models/CapabilityCatalog.swift README.md ABridgeTests/AppSettingsVisionTests.swift project.yml
 git commit -m "feat(vision): ship vision.text capability for recognize_text"
 ```
 

@@ -1,4 +1,4 @@
-# AGENTS.md — Apple Bridge
+# AGENTS.md — ABridge
 
 Source of truth for agent behavior, skills, verification, and branch naming. Keep the working directory at the repo root.
 
@@ -9,7 +9,7 @@ Source of truth for agent behavior, skills, verification, and branch naming. Kee
 | **Platform** | macOS **26.0+** only, **arm64** only |
 | **Purpose** | Generic Apple framework bridge over local authenticated MCP |
 | **Runtime** | Menu bar agent app; MCP on `127.0.0.1` (default port `3020`) |
-| **Stack** | SwiftUI shell + Rust core (`apple_bridge_core`) via UniFFI |
+| **Stack** | SwiftUI shell + Rust core (`abridge_core`) via UniFFI |
 | **V1 provider** | EventKit (Reminders + Calendar) |
 | **PRD** | `docs/prd.md` |
 | **Architecture** | `docs/architecture-bootstrap-guide.md` |
@@ -39,13 +39,13 @@ Full process model, bootstrap steps, and endpoint design live in the architectur
 - **Bearer auth required** on MCP routes once auth ships; never log tokens.
 - **Apple is source of truth** — no app database; frameworks own user data.
 - **Thin Swift providers** — no business logic, auth, or routing in `Providers/`.
-- **Rust owns server behavior** — validation, MCP routing, and typed errors stay in `apple_bridge_core`.
-- **Never edit generated code** — `AppleBridgeCore/`, `apple_bridge_core.swift`.
+- **Rust owns server behavior** — validation, MCP routing, and typed errors stay in `abridge_core`.
+- **Never edit generated code** — `ABridgeCore/`, `abridge_core.swift`.
 - **Follow `docs/conventions.md`** for naming, libraries, formatting, errors, concurrency, and testing.
 
 ### Framework fidelity (providers / MCP payloads)
 
-Apple Bridge is a **bridge**, not a converter. Swift providers call Apple frameworks; MCP exposes the result as JSON. The only allowed transformation is **mechanical serialization** — not semantic reshaping.
+ABridge is a **bridge**, not a converter. Swift providers call Apple frameworks; MCP exposes the result as JSON. The only allowed transformation is **mechanical serialization** — not semantic reshaping.
 
 **Allowed (serialization only):**
 
@@ -92,10 +92,10 @@ Invoke the **using-superpowers** skill at the start of every conversation before
 
 ### Required skills
 
-Before editing Swift files under `AppleBridge/` or `AppleBridgeTests/`:
+Before editing Swift files under `ABridge/` or `ABridgeTests/`:
 
 1. Read and follow **swiftui-pro**
-2. For tests (`AppleBridgeTests/`): also **swift-testing-pro**
+2. For tests (`ABridgeTests/`): also **swift-testing-pro**
 3. For concurrency changes (`@MainActor`, `@Observable`, async/await, FFI): also **swift-concurrency-pro**
 
 Do not write or review Swift code without loading these skills first.
@@ -126,7 +126,7 @@ Do not write or review Rust code without loading these first.
 | Skill | When |
 |-------|------|
 | **swiftui-pro** | Reading, writing, or reviewing SwiftUI views and app structure |
-| **swift-testing-pro** | Swift Testing suites in `AppleBridgeTests/` |
+| **swift-testing-pro** | Swift Testing suites in `ABridgeTests/` |
 | **swift-concurrency-pro** | `@MainActor`, `@Observable`, `@concurrent`, async/await, FFI isolation |
 | **rust-best-practices** | Rust in `rust/` once `rust/Cargo.toml` exists — apply `rust/AGENTS.md` overrides |
 
@@ -188,7 +188,7 @@ Reviews are written under `docs/reviews/`. Act on feedback with **receiving-code
 
 ### GitHub issues
 
-Use **`gh`** from the repo root (`rcanoff/apple-bridge`). When the user asks to create an issue, follow this workflow.
+Use **`gh`** from the repo root (`rcanoff/abridge`). When the user asks to create an issue, follow this workflow.
 
 **Templates:** `docs/github-issue-templates/`
 
@@ -220,10 +220,10 @@ gh issue create --title "Short title" --label enhancement --body-file docs/githu
 
 1. Create epic: `gh issue create --title "Epic: …" --label enhancement --label epic --body-file <epic-body.md>`
 2. Create each subtask: `gh issue create --title "…" --label enhancement --label subtask --body-file <subtask-body.md>`
-3. Link subtasks to the epic (use integer issue `id` from `gh api repos/rcanoff/apple-bridge/issues/<N> --jq .id`):
+3. Link subtasks to the epic (use integer issue `id` from `gh api repos/rcanoff/abridge/issues/<N> --jq .id`):
 
 ```sh
-gh api -X POST /repos/rcanoff/apple-bridge/issues/<EPIC_NUMBER>/sub_issues -F sub_issue_id=<CHILD_ID>
+gh api -X POST /repos/rcanoff/abridge/issues/<EPIC_NUMBER>/sub_issues -F sub_issue_id=<CHILD_ID>
 ```
 
 Add children in merge order (first subtask first). Sub-issue bodies must **not** include a `## Parent` section — GitHub shows the parent on the issue. Use `## Depends on` for sibling ordering instead.
@@ -291,4 +291,4 @@ Do **not** commit unless the user explicitly says the work is ready to commit.
 | Naming, libs, dev standards | `docs/conventions.md` |
 | PR specs / plans | `docs/superpowers/specs/`, `docs/superpowers/plans/` |
 | GitHub issue templates | `docs/github-issue-templates/` |
-| Xcode project | `project.yml` → `AppleBridge.xcodeproj` |
+| Xcode project | `project.yml` → `ABridge.xcodeproj` |

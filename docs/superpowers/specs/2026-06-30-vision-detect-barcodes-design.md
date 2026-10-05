@@ -185,31 +185,31 @@ Rust tools/call → ProviderBridge → VisionProvider.detect_barcodes
 
 | File | Role |
 |------|------|
-| `AppleBridge/Providers/Vision/VisionBarcodeSerialization.swift` | Top-level `detect_barcodes` response wrapper |
-| `AppleBridge/Providers/Vision/VisionProviderDetectBarcodes.swift` | Operation handler |
-| `AppleBridgeTests/VisionBarcodeSerializationTests.swift` | `BarcodeObservation` projection completeness |
-| `AppleBridgeTests/VisionProviderDetectBarcodesTests.swift` | Provider end-to-end tests |
+| `ABridge/Providers/Vision/VisionBarcodeSerialization.swift` | Top-level `detect_barcodes` response wrapper |
+| `ABridge/Providers/Vision/VisionProviderDetectBarcodes.swift` | Operation handler |
+| `ABridgeTests/VisionBarcodeSerializationTests.swift` | `BarcodeObservation` projection completeness |
+| `ABridgeTests/VisionProviderDetectBarcodesTests.swift` | Provider end-to-end tests |
 
 ### Swift files (modify)
 
 | File | Change |
 |------|--------|
-| `AppleBridge/Providers/Vision/VisionStore.swift` | `VisionDetectBarcodesRequest` + `detectBarcodes` protocol method |
-| `AppleBridge/Providers/Vision/LiveVisionStore.swift` | `DetectBarcodesRequest` via `ImageRequestHandler` |
-| `AppleBridge/Providers/Vision/VisionProviderRouting.swift` | `detect_barcodes` dispatch |
-| `AppleBridge/Models/CapabilityCatalog.swift` | `vision-barcodes` → `shipped: true` |
-| `AppleBridgeTests/MockVisionStore.swift` | Canned `BarcodeObservation` results |
-| `AppleBridgeTests/AppleProviderBridgeVisionTests.swift` | Success path with mock provider |
-| `AppleBridgeTests/AppSettingsVisionTests.swift` | Shipped capability server gating |
+| `ABridge/Providers/Vision/VisionStore.swift` | `VisionDetectBarcodesRequest` + `detectBarcodes` protocol method |
+| `ABridge/Providers/Vision/LiveVisionStore.swift` | `DetectBarcodesRequest` via `ImageRequestHandler` |
+| `ABridge/Providers/Vision/VisionProviderRouting.swift` | `detect_barcodes` dispatch |
+| `ABridge/Models/CapabilityCatalog.swift` | `vision-barcodes` → `shipped: true` |
+| `ABridgeTests/MockVisionStore.swift` | Canned `BarcodeObservation` results |
+| `ABridgeTests/AppleProviderBridgeVisionTests.swift` | Success path with mock provider |
+| `ABridgeTests/AppSettingsVisionTests.swift` | Shipped capability server gating |
 | `README.md` | Check off `vision.detect_barcodes` |
 
 ### Rust files (modify)
 
 | File | Change |
 |------|--------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `VISION_BARCODES` constant + `is_allowed_in_v1` |
-| `rust/apple_bridge_core/src/tools/mod.rs` | `TOOL_DETECT_BARCODES`, registration, input schema, unit tests |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
+| `rust/abridge_core/src/capabilities.rs` | `VISION_BARCODES` constant + `is_allowed_in_v1` |
+| `rust/abridge_core/src/tools/mod.rs` | `TOOL_DETECT_BARCODES`, registration, input schema, unit tests |
+| `rust/abridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
 
 ---
 

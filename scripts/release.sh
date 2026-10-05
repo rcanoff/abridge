@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds a Developer ID signed, notarized Apple Bridge DMG and its Sparkle appcast.
+# Builds a Developer ID signed, notarized ABridge DMG and its Sparkle appcast.
 #
 # Usage: scripts/release.sh <version> [--skip-notarization]
 #
@@ -10,14 +10,14 @@
 #   APPLE_SIGNING_IDENTITY   Certificate name, e.g. "Developer ID Application: Name (TEAMID)" (required)
 #   NOTARY_KEYCHAIN_PROFILE  notarytool keychain profile (required unless --skip-notarization)
 #   NOTARY_KEYCHAIN          Keychain holding that profile (optional; default search list)
-#   SPARKLE_ED_KEY_FILE      Private EdDSA key file (optional; default: keychain account "apple-bridge")
+#   SPARKLE_ED_KEY_FILE      Private EdDSA key file (optional; default: keychain account "abridge")
 #   BUILD_NUMBER             CFBundleVersion (optional; default: commit count of HEAD)
 #
-# Output: build/release/AppleBridge-<version>.dmg and build/release/appcast.xml
+# Output: build/release/ABridge-<version>.dmg and build/release/appcast.xml
 set -euo pipefail
 
-readonly REPO_URL="https://github.com/rcanoff/apple-bridge"
-readonly SPARKLE_KEY_ACCOUNT="apple-bridge"
+readonly REPO_URL="https://github.com/rcanoff/abridge"
+readonly SPARKLE_KEY_ACCOUNT="abridge"
 
 usage() {
     sed -n '2,16p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2
@@ -54,10 +54,10 @@ cd "$root"
 build_number="${BUILD_NUMBER:-$(git rev-list --count HEAD)}"
 build_dir="$root/build/release"
 packages_dir="$root/build/SourcePackages"
-archive="$build_dir/AppleBridge.xcarchive"
+archive="$build_dir/ABridge.xcarchive"
 export_dir="$build_dir/export"
-app="$export_dir/AppleBridge.app"
-dmg="$build_dir/AppleBridge-$version.dmg"
+app="$export_dir/ABridge.app"
+dmg="$build_dir/ABridge-$version.dmg"
 
 identities="$(security find-identity -v -p codesigning | grep -F "\"$APPLE_SIGNING_IDENTITY\"" || true)"
 if [[ "$(grep -c . <<<"$identities")" -ne 1 ]]; then
@@ -91,10 +91,10 @@ mkdir -p "$build_dir"
 echo "==> Building Rust core"
 just build-rust
 
-echo "==> Archiving Apple Bridge $version ($build_number)"
+echo "==> Archiving ABridge $version ($build_number)"
 xcodebuild archive \
-    -project AppleBridge.xcodeproj \
-    -scheme AppleBridge \
+    -project ABridge.xcodeproj \
+    -scheme ABridge \
     -configuration Release \
     -destination 'generic/platform=macOS' \
     -archivePath "$archive" \
@@ -133,16 +133,16 @@ codesign --verify --deep --strict --verbose=2 "$app"
 
 if $notarize; then
     echo "==> Notarizing app"
-    ditto -c -k --keepParent "$app" "$build_dir/AppleBridge-notarization.zip"
-    notarize_and_staple "$build_dir/AppleBridge-notarization.zip" "$app"
+    ditto -c -k --keepParent "$app" "$build_dir/ABridge-notarization.zip"
+    notarize_and_staple "$build_dir/ABridge-notarization.zip" "$app"
 fi
 
 echo "==> Creating DMG"
 staging="$build_dir/dmg"
 mkdir -p "$staging"
-ditto "$app" "$staging/AppleBridge.app"
+ditto "$app" "$staging/ABridge.app"
 ln -s /Applications "$staging/Applications"
-hdiutil create -volname "Apple Bridge" -srcfolder "$staging" -fs APFS -format ULFO -ov "$dmg"
+hdiutil create -volname "ABridge" -srcfolder "$staging" -fs APFS -format ULFO -ov "$dmg"
 codesign --sign "$signing_identity" --timestamp "$dmg"
 
 if $notarize; then

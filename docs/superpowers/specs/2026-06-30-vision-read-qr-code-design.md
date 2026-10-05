@@ -176,31 +176,31 @@ Rust tools/call → ProviderBridge → VisionProvider.read_qr_code
 
 | File | Role |
 |------|------|
-| `AppleBridge/Providers/Vision/VisionProviderReadQrCode.swift` | Operation handler |
-| `AppleBridgeTests/VisionProviderReadQrCodeTests.swift` | Provider end-to-end tests |
+| `ABridge/Providers/Vision/VisionProviderReadQrCode.swift` | Operation handler |
+| `ABridgeTests/VisionProviderReadQrCodeTests.swift` | Provider end-to-end tests |
 
 ### Swift files (modify)
 
 | File | Change |
 |------|--------|
-| `AppleBridge/Providers/Vision/VisionSerialization.swift` | `readQrCodeResponseJSONObject`, `barcodeObservationJSONObject` |
-| `AppleBridge/Providers/Vision/VisionStore.swift` | `VisionReadQrCodeRequest` + `readQrCode` on protocol |
-| `AppleBridge/Providers/Vision/LiveVisionStore.swift` | `VNDetectBarcodesRequest` sync wrapper |
-| `AppleBridge/Providers/Vision/VisionProviderRouting.swift` | `read_qr_code` dispatch |
-| `AppleBridgeTests/MockVisionStore.swift` | Fake QR barcode results for CI |
-| `AppleBridgeTests/VisionSerializationTests.swift` | `VNBarcodeObservation` projection completeness |
-| `AppleBridgeTests/AppleProviderBridgeVisionTests.swift` | Success path with mock provider |
-| `AppleBridgeTests/AppSettingsVisionTests.swift` | Shipped capability server gating |
-| `AppleBridge/Models/CapabilityCatalog.swift` | `vision-barcodes` → `shipped: true` |
+| `ABridge/Providers/Vision/VisionSerialization.swift` | `readQrCodeResponseJSONObject`, `barcodeObservationJSONObject` |
+| `ABridge/Providers/Vision/VisionStore.swift` | `VisionReadQrCodeRequest` + `readQrCode` on protocol |
+| `ABridge/Providers/Vision/LiveVisionStore.swift` | `VNDetectBarcodesRequest` sync wrapper |
+| `ABridge/Providers/Vision/VisionProviderRouting.swift` | `read_qr_code` dispatch |
+| `ABridgeTests/MockVisionStore.swift` | Fake QR barcode results for CI |
+| `ABridgeTests/VisionSerializationTests.swift` | `VNBarcodeObservation` projection completeness |
+| `ABridgeTests/AppleProviderBridgeVisionTests.swift` | Success path with mock provider |
+| `ABridgeTests/AppSettingsVisionTests.swift` | Shipped capability server gating |
+| `ABridge/Models/CapabilityCatalog.swift` | `vision-barcodes` → `shipped: true` |
 | `README.md` | Check off `vision.read_qr_code` |
 
 ### Rust files (modify)
 
 | File | Change |
 |------|--------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `VISION_BARCODES` constant + `is_allowed_in_v1` |
-| `rust/apple_bridge_core/src/tools/mod.rs` | `TOOL_READ_QR_CODE`, registration, input schema, unit tests |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
+| `rust/abridge_core/src/capabilities.rs` | `VISION_BARCODES` constant + `is_allowed_in_v1` |
+| `rust/abridge_core/src/tools/mod.rs` | `TOOL_READ_QR_CODE`, registration, input schema, unit tests |
+| `rust/abridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
 
 ---
 

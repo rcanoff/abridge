@@ -6,7 +6,7 @@
 
 **Architecture:** Extend `MapKitStore` with `reverseGeocode`; use `MKReverseGeocodingRequest` in `LiveMapKitStore`; reuse `MapKitSerialization` and coordinate parsing from `MapKitProviderSearchArguments`; Rust tool registration with new `mapkit.geocode` capability; flip `mapkit-geocode` to shipped; CoreLocation when-in-use gate per #150.
 
-**Tech Stack:** Rust (`apple_bridge_core`), Swift 6 + MapKit + CoreLocation, Swift Testing, UniFFI `ProviderBridge`
+**Tech Stack:** Rust (`abridge_core`), Swift 6 + MapKit + CoreLocation, Swift Testing, UniFFI `ProviderBridge`
 
 **Spec:** `docs/superpowers/specs/2026-06-30-mapkit-reverse-geocode-design.md`
 
@@ -16,20 +16,20 @@
 
 | File | Responsibility |
 |------|----------------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `MAPKIT_GEOCODE` constant |
-| `rust/apple_bridge_core/src/tools/mod.rs` | `TOOL_REVERSE_GEOCODE` registration + input schema |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | MCP integration tests |
-| `AppleBridge/Providers/MapKit/MapKitStore.swift` | `MapKitReverseGeocodeRequest` + protocol method |
-| `AppleBridge/Providers/MapKit/LiveMapKitStore.swift` | `MKReverseGeocodingRequest` blocking wrapper |
-| `AppleBridge/Providers/MapKit/MapKitSerialization.swift` | `reverseGeocodeResponseJSONObject(mapItems:)` |
-| `AppleBridge/Providers/MapKit/MapKitProviderReverseGeocode.swift` | `reverse_geocode` handler |
-| `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift` | Operation dispatch |
-| `AppleBridgeTests/MockMapKitStore.swift` | Reverse-geocode mock seam |
-| `AppleBridgeTests/MapKitProviderReverseGeocodeTests.swift` | Provider tests |
-| `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift` | Bridge routing test |
-| `AppleBridge/Models/CapabilityCatalog.swift` | Ship `mapkit-geocode` |
-| `AppleBridgeTests/PermissionsStoreMapKitTests.swift` | Shipped geocode toggle expectations |
-| `AppleBridgeTests/AppSettingsMapKitTests.swift` | Server gating for `mapkit.geocode` |
+| `rust/abridge_core/src/capabilities.rs` | `MAPKIT_GEOCODE` constant |
+| `rust/abridge_core/src/tools/mod.rs` | `TOOL_REVERSE_GEOCODE` registration + input schema |
+| `rust/abridge_core/tests/mcp_protocol.rs` | MCP integration tests |
+| `ABridge/Providers/MapKit/MapKitStore.swift` | `MapKitReverseGeocodeRequest` + protocol method |
+| `ABridge/Providers/MapKit/LiveMapKitStore.swift` | `MKReverseGeocodingRequest` blocking wrapper |
+| `ABridge/Providers/MapKit/MapKitSerialization.swift` | `reverseGeocodeResponseJSONObject(mapItems:)` |
+| `ABridge/Providers/MapKit/MapKitProviderReverseGeocode.swift` | `reverse_geocode` handler |
+| `ABridge/Providers/MapKit/MapKitProviderRouting.swift` | Operation dispatch |
+| `ABridgeTests/MockMapKitStore.swift` | Reverse-geocode mock seam |
+| `ABridgeTests/MapKitProviderReverseGeocodeTests.swift` | Provider tests |
+| `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Bridge routing test |
+| `ABridge/Models/CapabilityCatalog.swift` | Ship `mapkit-geocode` |
+| `ABridgeTests/PermissionsStoreMapKitTests.swift` | Shipped geocode toggle expectations |
+| `ABridgeTests/AppSettingsMapKitTests.swift` | Server gating for `mapkit.geocode` |
 | `README.md` | Check off tool |
 
 ---
@@ -37,9 +37,9 @@
 ### Task 1: Rust capability + tool registration
 
 **Files:**
-- Modify: `rust/apple_bridge_core/src/capabilities.rs`
-- Modify: `rust/apple_bridge_core/src/tools/mod.rs`
-- Test: `rust/apple_bridge_core/tests/mcp_protocol.rs` (no changes yet)
+- Modify: `rust/abridge_core/src/capabilities.rs`
+- Modify: `rust/abridge_core/src/tools/mod.rs`
+- Test: `rust/abridge_core/tests/mcp_protocol.rs` (no changes yet)
 
 - [ ] **Step 1: Add `MAPKIT_GEOCODE` to capabilities.rs**
 
@@ -145,7 +145,7 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add rust/apple_bridge_core/src/capabilities.rs rust/apple_bridge_core/src/tools/mod.rs
+git add rust/abridge_core/src/capabilities.rs rust/abridge_core/src/tools/mod.rs
 git commit -m "feat(mapkit): register mapkit.reverse_geocode MCP tool in Rust"
 ```
 
@@ -154,7 +154,7 @@ git commit -m "feat(mapkit): register mapkit.reverse_geocode MCP tool in Rust"
 ### Task 2: Rust MCP integration tests
 
 **Files:**
-- Modify: `rust/apple_bridge_core/tests/mcp_protocol.rs`
+- Modify: `rust/abridge_core/tests/mcp_protocol.rs`
 
 - [ ] **Step 1: Write integration tests** (reuse existing `mapkit_config_on_port`)
 
@@ -210,7 +210,7 @@ Expected: PASS
 - [ ] **Step 3: Commit**
 
 ```bash
-git add rust/apple_bridge_core/tests/mcp_protocol.rs
+git add rust/abridge_core/tests/mcp_protocol.rs
 git commit -m "test(mapkit): add MCP integration tests for reverse_geocode"
 ```
 
@@ -219,10 +219,10 @@ git commit -m "test(mapkit): add MCP integration tests for reverse_geocode"
 ### Task 3: MapKitStore seam + serialization helper
 
 **Files:**
-- Modify: `AppleBridge/Providers/MapKit/MapKitStore.swift`
-- Modify: `AppleBridge/Providers/MapKit/LiveMapKitStore.swift`
-- Modify: `AppleBridge/Providers/MapKit/MapKitSerialization.swift`
-- Modify: `AppleBridgeTests/MockMapKitStore.swift`
+- Modify: `ABridge/Providers/MapKit/MapKitStore.swift`
+- Modify: `ABridge/Providers/MapKit/LiveMapKitStore.swift`
+- Modify: `ABridge/Providers/MapKit/MapKitSerialization.swift`
+- Modify: `ABridgeTests/MockMapKitStore.swift`
 
 - [ ] **Step 1: Extend MapKitStore types**
 
@@ -308,10 +308,10 @@ Expected: PASS (existing tests unchanged)
 - [ ] **Step 6: Commit**
 
 ```bash
-git add AppleBridge/Providers/MapKit/MapKitStore.swift \
-  AppleBridge/Providers/MapKit/LiveMapKitStore.swift \
-  AppleBridge/Providers/MapKit/MapKitSerialization.swift \
-  AppleBridgeTests/MockMapKitStore.swift
+git add ABridge/Providers/MapKit/MapKitStore.swift \
+  ABridge/Providers/MapKit/LiveMapKitStore.swift \
+  ABridge/Providers/MapKit/MapKitSerialization.swift \
+  ABridgeTests/MockMapKitStore.swift
 git commit -m "feat(mapkit): add MapKitStore reverse_geocode seam"
 ```
 
@@ -320,11 +320,11 @@ git commit -m "feat(mapkit): add MapKitStore reverse_geocode seam"
 ### Task 4: MapKitProvider reverse_geocode operation
 
 **Files:**
-- Create: `AppleBridge/Providers/MapKit/MapKitProviderReverseGeocode.swift`
-- Modify: `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift`
-- Create: `AppleBridgeTests/MapKitProviderReverseGeocodeTests.swift`
-- Modify: `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift`
-- Modify: `AppleBridge.xcodeproj/project.pbxproj` (add new Swift files)
+- Create: `ABridge/Providers/MapKit/MapKitProviderReverseGeocode.swift`
+- Modify: `ABridge/Providers/MapKit/MapKitProviderRouting.swift`
+- Create: `ABridgeTests/MapKitProviderReverseGeocodeTests.swift`
+- Modify: `ABridgeTests/AppleProviderBridgeMapKitTests.swift`
+- Modify: `ABridge.xcodeproj/project.pbxproj` (add new Swift files)
 
 - [ ] **Step 1: Write failing provider tests**
 
@@ -459,11 +459,11 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add AppleBridge/Providers/MapKit/MapKitProviderReverseGeocode.swift \
-  AppleBridge/Providers/MapKit/MapKitProviderRouting.swift \
-  AppleBridgeTests/MapKitProviderReverseGeocodeTests.swift \
-  AppleBridgeTests/AppleProviderBridgeMapKitTests.swift \
-  AppleBridge.xcodeproj/project.pbxproj
+git add ABridge/Providers/MapKit/MapKitProviderReverseGeocode.swift \
+  ABridge/Providers/MapKit/MapKitProviderRouting.swift \
+  ABridgeTests/MapKitProviderReverseGeocodeTests.swift \
+  ABridgeTests/AppleProviderBridgeMapKitTests.swift \
+  ABridge.xcodeproj/project.pbxproj
 git commit -m "feat(mapkit): implement reverse_geocode provider operation"
 ```
 
@@ -472,10 +472,10 @@ git commit -m "feat(mapkit): implement reverse_geocode provider operation"
 ### Task 5: Ship capability + README + full verification
 
 **Files:**
-- Modify: `AppleBridge/Models/CapabilityCatalog.swift`
+- Modify: `ABridge/Models/CapabilityCatalog.swift`
 - Modify: `README.md`
-- Modify: `AppleBridgeTests/PermissionsStoreMapKitTests.swift`
-- Modify: `AppleBridgeTests/AppSettingsMapKitTests.swift`
+- Modify: `ABridgeTests/PermissionsStoreMapKitTests.swift`
+- Modify: `ABridgeTests/AppSettingsMapKitTests.swift`
 
 - [ ] **Step 1: Flip capability shipped**
 
@@ -534,9 +534,9 @@ Expected: PASS (before merge)
 - [ ] **Step 6: Commit**
 
 ```bash
-git add AppleBridge/Models/CapabilityCatalog.swift README.md \
-  AppleBridgeTests/PermissionsStoreMapKitTests.swift \
-  AppleBridgeTests/AppSettingsMapKitTests.swift
+git add ABridge/Models/CapabilityCatalog.swift README.md \
+  ABridgeTests/PermissionsStoreMapKitTests.swift \
+  ABridgeTests/AppSettingsMapKitTests.swift
 git commit -m "feat(mapkit): ship mapkit.geocode capability for reverse_geocode"
 ```
 

@@ -167,31 +167,31 @@ Rust tools/call → ProviderBridge → MapKitProvider.calculate_route
 
 | File | Role |
 |------|------|
-| `AppleBridge/Providers/MapKit/MapKitProviderCalculateRoute.swift` | `calculate_route` operation handler |
-| `AppleBridgeTests/MapKitProviderCalculateRouteTests.swift` | Provider end-to-end tests |
+| `ABridge/Providers/MapKit/MapKitProviderCalculateRoute.swift` | `calculate_route` operation handler |
+| `ABridgeTests/MapKitProviderCalculateRouteTests.swift` | Provider end-to-end tests |
 
 ### Swift files (modify)
 
 | File | Change |
 |------|--------|
-| `AppleBridge/Providers/MapKit/MapKitStore.swift` | Request/result/route seam types + `calculateRoute(request:)` |
-| `AppleBridge/Providers/MapKit/LiveMapKitStore.swift` | `MKDirections` blocking wrapper + response mapping |
-| `AppleBridge/Providers/MapKit/MapKitSerialization.swift` | Route/step/polyline serializers |
-| `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift` | Dispatch `calculate_route` |
-| `AppleBridge/Models/CapabilityCatalog.swift` | `mapkit-routing` → `shipped: true` |
-| `AppleBridgeTests/MockMapKitStore.swift` | Fake route results + `lastCalculateRouteRequest` |
-| `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path for `calculate_route` |
-| `AppleBridgeTests/AppSettingsMapKitTests.swift` | Server gating for `mapkit.routing` |
-| `AppleBridgeTests/PermissionsStoreMapKitTests.swift` | Location requirement for routing toggle |
+| `ABridge/Providers/MapKit/MapKitStore.swift` | Request/result/route seam types + `calculateRoute(request:)` |
+| `ABridge/Providers/MapKit/LiveMapKitStore.swift` | `MKDirections` blocking wrapper + response mapping |
+| `ABridge/Providers/MapKit/MapKitSerialization.swift` | Route/step/polyline serializers |
+| `ABridge/Providers/MapKit/MapKitProviderRouting.swift` | Dispatch `calculate_route` |
+| `ABridge/Models/CapabilityCatalog.swift` | `mapkit-routing` → `shipped: true` |
+| `ABridgeTests/MockMapKitStore.swift` | Fake route results + `lastCalculateRouteRequest` |
+| `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path for `calculate_route` |
+| `ABridgeTests/AppSettingsMapKitTests.swift` | Server gating for `mapkit.routing` |
+| `ABridgeTests/PermissionsStoreMapKitTests.swift` | Location requirement for routing toggle |
 | `README.md` | Check off `mapkit.calculate_route` |
 
 ### Rust files (modify)
 
 | File | Change |
 |------|--------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `MAPKIT_ROUTING` constant + v1 allowlist |
-| `rust/apple_bridge_core/src/tools/mod.rs` | `TOOL_CALCULATE_ROUTE`, registration, input schema, unit tests |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
+| `rust/abridge_core/src/capabilities.rs` | `MAPKIT_ROUTING` constant + v1 allowlist |
+| `rust/abridge_core/src/tools/mod.rs` | `TOOL_CALCULATE_ROUTE`, registration, input schema, unit tests |
+| `rust/abridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
 
 ---
 

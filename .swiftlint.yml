@@ -1,12 +1,12 @@
 included:
-  - AppleBridge
-  - AppleBridgeTests
+  - ABridge
+  - ABridgeTests
 disabled_rules:
   - opening_brace
   - trailing_comma
 excluded:
-  - AppleBridgeCore
-  - AppleBridge/Services/apple_bridge_core.swift
+  - ABridgeCore
+  - ABridge/Services/abridge_core.swift
 line_length:
   warning: 120
   error: 160

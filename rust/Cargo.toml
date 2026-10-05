@@ -1,5 +1,5 @@
 [workspace]
-members = ["apple_bridge_core"]
+members = ["abridge_core"]
 resolver = "2"
 
 [workspace.package]

@@ -129,31 +129,31 @@ Rust tools/call → ProviderBridge → MapKitProvider.search_places
 
 | File | Role |
 |------|------|
-| `AppleBridge/Providers/MapKit/MapKitSerialization.swift` | Exhaustive MapKit type → JSON |
-| `AppleBridge/Providers/MapKit/MapKitStore.swift` | Protocol + authorization seam |
-| `AppleBridge/Providers/MapKit/LiveMapKitStore.swift` | `MKLocalSearch` wrapper |
-| `AppleBridge/Providers/MapKit/MapKitProviderSearchPlaces.swift` | Operation handler |
-| `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift` | `handle(operation:)` dispatch |
-| `AppleBridgeTests/MockMapKitStore.swift` | Fake search results for CI |
-| `AppleBridgeTests/MapKitSerializationTests.swift` | Projection completeness |
-| `AppleBridgeTests/MapKitProviderSearchPlacesTests.swift` | Provider end-to-end tests |
+| `ABridge/Providers/MapKit/MapKitSerialization.swift` | Exhaustive MapKit type → JSON |
+| `ABridge/Providers/MapKit/MapKitStore.swift` | Protocol + authorization seam |
+| `ABridge/Providers/MapKit/LiveMapKitStore.swift` | `MKLocalSearch` wrapper |
+| `ABridge/Providers/MapKit/MapKitProviderSearchPlaces.swift` | Operation handler |
+| `ABridge/Providers/MapKit/MapKitProviderRouting.swift` | `handle(operation:)` dispatch |
+| `ABridgeTests/MockMapKitStore.swift` | Fake search results for CI |
+| `ABridgeTests/MapKitSerializationTests.swift` | Projection completeness |
+| `ABridgeTests/MapKitProviderSearchPlacesTests.swift` | Provider end-to-end tests |
 
 ### Swift files (modify)
 
 | File | Change |
 |------|--------|
-| `AppleBridge/Providers/MapKit/MapKitProvider.swift` | Store + location permission injection; remove stub-only body |
-| `AppleBridge/Models/CapabilityCatalog.swift` | `mapkit-search` → `shipped: true` |
-| `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path with mock provider |
+| `ABridge/Providers/MapKit/MapKitProvider.swift` | Store + location permission injection; remove stub-only body |
+| `ABridge/Models/CapabilityCatalog.swift` | `mapkit-search` → `shipped: true` |
+| `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path with mock provider |
 | `README.md` | Check off `mapkit.search_places` |
 
 ### Rust files (modify)
 
 | File | Change |
 |------|--------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `MAPKIT_SEARCH` constant + `is_allowed_in_v1` |
-| `rust/apple_bridge_core/src/tools/mod.rs` | `TOOL_SEARCH_PLACES`, registration, input schema, unit tests |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
+| `rust/abridge_core/src/capabilities.rs` | `MAPKIT_SEARCH` constant + `is_allowed_in_v1` |
+| `rust/abridge_core/src/tools/mod.rs` | `TOOL_SEARCH_PLACES`, registration, input schema, unit tests |
+| `rust/abridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
 
 ---
 

@@ -1,0 +1,24 @@
+@testable import ABridge
+import Foundation
+import Testing
+
+@Suite("EventKitProviderMoveValidation")
+struct EventKitProviderMoveValidationTests {
+    @MainActor
+    private func providerWithReminder(reminderID: String = "rem-val") -> EventKitProvider {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [
+            mockStore.makeTestCalendar(calendarIdentifier: "list-val"),
+            mockStore.makeTestCalendar(calendarIdentifier: "list-other"),
+        ]
+        mockStore.reminders = [
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: reminderID,
+                calendarIdentifier: "list-val",
+                title: "Original"
+            ),
+        ]
+        return EventKitProvider(store: mockStore)
+    }
+}

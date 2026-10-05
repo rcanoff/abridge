@@ -122,31 +122,31 @@ Rust tools/call → ProviderBridge → MapKitProvider.open_navigation
 
 | File | Role |
 |------|------|
-| `AppleBridge/Providers/MapKit/MapKitProviderOpenNavigation.swift` | `open_navigation` operation handler |
-| `AppleBridgeTests/MapKitProviderOpenNavigationTests.swift` | Provider end-to-end tests |
+| `ABridge/Providers/MapKit/MapKitProviderOpenNavigation.swift` | `open_navigation` operation handler |
+| `ABridgeTests/MapKitProviderOpenNavigationTests.swift` | Provider end-to-end tests |
 
 ### Swift files (modify)
 
 | File | Change |
 |------|--------|
-| `AppleBridge/Providers/MapKit/MapKitStore.swift` | Request/result seam types + `openNavigation(request:)` |
-| `AppleBridge/Providers/MapKit/LiveMapKitStore.swift` | `MKMapItem.openMaps` wrapper |
-| `AppleBridge/Providers/MapKit/MapKitSerialization.swift` | Open-navigation response serializer |
-| `AppleBridge/Providers/MapKit/MapKitProviderRouting.swift` | Dispatch `open_navigation` |
-| `AppleBridge/Models/CapabilityCatalog.swift` | `mapkit-navigation` → `shipped: true` |
-| `AppleBridgeTests/MockMapKitStore.swift` | Fake open-navigation results + `lastOpenNavigationRequest` |
-| `AppleBridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path for `open_navigation` |
-| `AppleBridgeTests/AppSettingsMapKitTests.swift` | Server gating for `mapkit.navigation` |
-| `AppleBridgeTests/PermissionsStoreMapKitTests.swift` | Location requirement for navigation toggle |
+| `ABridge/Providers/MapKit/MapKitStore.swift` | Request/result seam types + `openNavigation(request:)` |
+| `ABridge/Providers/MapKit/LiveMapKitStore.swift` | `MKMapItem.openMaps` wrapper |
+| `ABridge/Providers/MapKit/MapKitSerialization.swift` | Open-navigation response serializer |
+| `ABridge/Providers/MapKit/MapKitProviderRouting.swift` | Dispatch `open_navigation` |
+| `ABridge/Models/CapabilityCatalog.swift` | `mapkit-navigation` → `shipped: true` |
+| `ABridgeTests/MockMapKitStore.swift` | Fake open-navigation results + `lastOpenNavigationRequest` |
+| `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path for `open_navigation` |
+| `ABridgeTests/AppSettingsMapKitTests.swift` | Server gating for `mapkit.navigation` |
+| `ABridgeTests/PermissionsStoreMapKitTests.swift` | Location requirement for navigation toggle |
 | `README.md` | Check off `mapkit.open_navigation` |
 
 ### Rust files (modify)
 
 | File | Change |
 |------|--------|
-| `rust/apple_bridge_core/src/capabilities.rs` | `MAPKIT_NAVIGATION` constant + v1 allowlist |
-| `rust/apple_bridge_core/src/tools/mod.rs` | `TOOL_OPEN_NAVIGATION`, registration, input schema, unit tests |
-| `rust/apple_bridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
+| `rust/abridge_core/src/capabilities.rs` | `MAPKIT_NAVIGATION` constant + v1 allowlist |
+| `rust/abridge_core/src/tools/mod.rs` | `TOOL_OPEN_NAVIGATION`, registration, input schema, unit tests |
+| `rust/abridge_core/tests/mcp_protocol.rs` | `tools/list` + `tools/call` integration tests |
 
 ---
 
