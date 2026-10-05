@@ -25,7 +25,7 @@
       ],
       "layers" : [
         {
-          "image-name" : "grok-image-9d44dcfa-0c7a-4afb-895f-eddac90cb684.jpg",
+          "image-name" : "mark-light.jpg",
           "name" : "default",
           "position" : {
             "scale" : 0.85,
@@ -54,7 +54,7 @@
       ],
       "layers" : [
         {
-          "image-name" : "grok-image-9d44dcfa-0c7a-4afb-895f-eddac90cb6842.jpg",
+          "image-name" : "mark-dark.jpg",
           "name" : "dark",
           "position" : {
             "scale" : 0.85,
