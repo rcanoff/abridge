@@ -38,7 +38,9 @@ struct ProductionAppleBridgeAppStoreMaker: AppleBridgeAppStoreMaking {
             serverStore: serverStore,
             store: store,
             permissionsStore: permissionsStore,
-            settingsStore: settingsStore
+            settingsStore: settingsStore,
+            // Shared with EventKit MCP tools so the picker and provider see one selection.
+            calendarSharingStore: LiveEventKitEnvironment.calendarSharingStore
         )
     }
 }

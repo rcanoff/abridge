@@ -66,6 +66,15 @@ ci-rust: _rust-workspace
     just test-rust
 
 _swift-sources := "AppleBridge AppleBridgeTests"
+
+# Trace icon/previews/mark.jpg → icon/vectors/mark.svg (needs magick + potrace).
+gen-icon-svg:
+    icon/scripts/trace-mark.sh
+
+# Rasterize the mark SVG into AppleBridge/Assets.xcassets/MenuBarMark.imageset.
+gen-menubar-icons:
+    icon/scripts/gen-menubar-icons.sh
+
 _swift-exclude := "--exclude AppleBridge/Services/apple_bridge_core.swift --exclude AppleBridgeCore"
 
 fmt-swift:

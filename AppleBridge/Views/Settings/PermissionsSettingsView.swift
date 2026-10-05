@@ -4,17 +4,20 @@ struct PermissionsSettingsView: View {
     @Bindable var permissionsStore: PermissionsStore
     @Bindable var settingsStore: SettingsStore
     @Bindable var appStore: AppStore
+    let calendarSharingStore: CalendarSharingStore
     /// Previous OS grant flags for external System Settings reconciliation after refresh.
     @State private var previousOSGrants: OSAccessGrantSnapshot
 
     init(
         permissionsStore: PermissionsStore,
         settingsStore: SettingsStore,
-        appStore: AppStore
+        appStore: AppStore,
+        calendarSharingStore: CalendarSharingStore
     ) {
         self.permissionsStore = permissionsStore
         self.settingsStore = settingsStore
         self.appStore = appStore
+        self.calendarSharingStore = calendarSharingStore
         _previousOSGrants = State(initialValue: OSAccessGrantSnapshot(from: appStore))
     }
 
@@ -103,7 +106,8 @@ struct PermissionsSettingsView: View {
             onEnableAll: { enableAll(for: kind) },
             onDisableAll: { disableAll(for: kind) },
             onRequestAccess: os.onRequest,
-            onOpenSystemSettings: os.onOpenSettings
+            onOpenSystemSettings: os.onOpenSettings,
+            calendarSharingStore: calendarSharingStore
         )
     }
 

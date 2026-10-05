@@ -109,6 +109,7 @@ struct ProviderPermissionsCard: View {
     let onDisableAll: () -> Void
     let onRequestAccess: () -> Void
     let onOpenSystemSettings: () -> Void
+    let calendarSharingStore: CalendarSharingStore
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -130,14 +131,24 @@ struct ProviderPermissionsCard: View {
                     useWithMCPToggle
 
                     if kind.needsOSAccess, let osAccessTitle {
-                        AppleOSAccessActionsRow(
-                            title: osAccessTitle,
-                            granted: osGrantsReadAccess,
-                            isDeniedOrRestricted: osIsDeniedOrRestricted,
-                            isRequesting: isRequesting,
-                            onRequest: onRequestAccess,
-                            onOpenSystemSettings: onOpenSystemSettings
-                        )
+                        HStack(spacing: 8) {
+                            if let sharingKind = kind.calendarSharingKind {
+                                CalendarSharingButton(
+                                    kind: sharingKind,
+                                    osGrantsReadAccess: osGrantsReadAccess,
+                                    calendarSharingStore: calendarSharingStore
+                                )
+                            }
+
+                            AppleOSAccessActionsRow(
+                                title: osAccessTitle,
+                                granted: osGrantsReadAccess,
+                                isDeniedOrRestricted: osIsDeniedOrRestricted,
+                                isRequesting: isRequesting,
+                                onRequest: onRequestAccess,
+                                onOpenSystemSettings: onOpenSystemSettings
+                            )
+                        }
                     }
                 }
             }

@@ -34,6 +34,7 @@ targets:
         INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription: "Apple Bridge needs full access to your calendars and events to expose them through the local MCP bridge."
         INFOPLIST_KEY_NSLocationUsageDescription: "Apple Bridge needs access to your location to expose MapKit capabilities such as nearby search, routing, and current location through the local MCP bridge."
         INFOPLIST_KEY_CFBundleDisplayName: Apple Bridge
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_OBJC_BRIDGING_HEADER: AppleBridge/AppleBridge-Bridging-Header.h
   AppleBridgeTests:
     type: bundle.unit-test

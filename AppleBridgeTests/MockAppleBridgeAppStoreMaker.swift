@@ -41,7 +41,8 @@ final class MockAppleBridgeAppStoreMaker: AppleBridgeAppStoreMaking, @unchecked 
             serverStore: serverStore,
             store: store,
             permissionsStore: permissionsStore,
-            settingsStore: settingsStore
+            settingsStore: settingsStore,
+            calendarSharingStore: CalendarSharingStore(defaults: defaults) { _ in [] }
         )
     }
 }

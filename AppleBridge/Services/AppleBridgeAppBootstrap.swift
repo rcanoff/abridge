@@ -7,6 +7,7 @@ enum AppleBridgeAppBootstrap {
         let store: AppStore
         let permissionsStore: PermissionsStore
         let settingsStore: SettingsStore
+        let calendarSharingStore: CalendarSharingStore
     }
 
     enum EntryResult {

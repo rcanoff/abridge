@@ -24,6 +24,15 @@ enum ProviderPermissionKind: String, CaseIterable, Identifiable {
     var needsOSAccess: Bool {
         self != .vision
     }
+
+    /// Calendar collection whose MCP sharing the user can narrow, if any.
+    var calendarSharingKind: CalendarSharingKind? {
+        switch self {
+        case .reminders: .reminderLists
+        case .calendarsAndEvents: .eventCalendars
+        case .contacts, .mapkit, .vision: nil
+        }
+    }
 }
 
 enum ProviderPermissionStatus: Equatable {
