@@ -6,6 +6,7 @@ struct MenuBarNativeMenuView: View {
 
     @Bindable var serverStore: ServerStore
     @Bindable var settingsStore: SettingsStore
+    let updaterService: SparkleUpdaterService
     let appQuitter: any AppQuitting
 
     var body: some View {
@@ -26,12 +27,25 @@ struct MenuBarNativeMenuView: View {
 
         Divider()
 
+        Button(updateMenuTitle) {
+            updaterService.checkForUpdates()
+        }
+        .disabled(!updaterService.canCheckForUpdates)
+
         Button("Quit Apple Bridge") {
             Task { @MainActor in
                 await MenuBarQuitCoordinator.quit(serverStore: serverStore, appQuitter: appQuitter)
             }
         }
         .disabled(MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore))
+    }
+
+    private var updateMenuTitle: String {
+        if let version = updaterService.pendingUpdateVersion {
+            "Update to \(version)…"
+        } else {
+            "Check for Updates…"
+        }
     }
 
     private var statusLabel: some View {

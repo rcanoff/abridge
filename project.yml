@@ -11,6 +11,10 @@ settings:
     MACOSX_DEPLOYMENT_TARGET: "26.0"
     ARCHS: arm64
     EXCLUDED_ARCHS: x86_64
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    exactVersion: 2.10.0
 targets:
   AppleBridge:
     type: application
@@ -23,10 +27,16 @@ targets:
       - framework: AppleBridgeCore/apple_bridge_core.xcframework
         embed: false
       - sdk: ServiceManagement.framework
+      - package: Sparkle
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.applebridge.AppleBridge
+        MARKETING_VERSION: "0.0.0"
+        CURRENT_PROJECT_VERSION: "0"
         GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: AppleBridge/Info.plist
+        CODE_SIGN_ENTITLEMENTS: AppleBridge/AppleBridge.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_NSRemindersUsageDescription: "Apple Bridge needs access to your reminders to expose them through the local MCP bridge."
         INFOPLIST_KEY_NSContactsUsageDescription: "Apple Bridge needs access to your contacts to expose them through the local MCP bridge."

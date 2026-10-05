@@ -15,6 +15,7 @@ struct AppleBridgeApp: App {
     @State private var permissionsStore: PermissionsStore
     @State private var settingsStore: SettingsStore
     @State private var calendarSharingStore: CalendarSharingStore
+    @State private var updaterService: SparkleUpdaterService
     private let appQuitter: any AppQuitting
 
     init() {
@@ -57,6 +58,7 @@ struct AppleBridgeApp: App {
             _settingsStore = State(initialValue: stores.settingsStore)
             _calendarSharingStore = State(initialValue: stores.calendarSharingStore)
             _store = State(initialValue: stores.store)
+            _updaterService = State(initialValue: SparkleUpdaterService(startsUpdater: !isRunningUnitTests))
 
             guard !isRunningUnitTests else { return }
 
@@ -72,6 +74,7 @@ struct AppleBridgeApp: App {
             MenuBarNativeMenuView(
                 serverStore: serverStore,
                 settingsStore: settingsStore,
+                updaterService: updaterService,
                 appQuitter: appQuitter
             )
             .onAppear {

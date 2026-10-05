@@ -54,8 +54,9 @@ Do not add alternative HTTP or MCP transport crates without an architecture chan
 | Security | Keychain |
 | Foundation | Core types |
 | Apple frameworks | Provider adapters only (EventKit, MapKit, etc.) |
+| Sparkle 2.10.0 (SPM, exact pin) | App updates: `SparkleUpdaterService` owns the updater; feed and EdDSA public key live in `AppleBridge/Info.plist` |
 
-No third-party Swift dependencies unless a PR justifies them.
+No other third-party Swift dependencies unless a PR justifies them.
 
 ---
 
@@ -155,6 +156,7 @@ just test-swift
 |----------|--------|-------------|
 | Rust CI | `ubuntu-latest` | `rust/**` |
 | macOS CI | `macos-26` | `AppleBridge/**`, `AppleBridgeTests/**`, `project.yml`, `rust/**` |
+| Release | `macos-26` | `vX.Y.Z` tags; runs `just release-build` (see README § Releasing) |
 
 Local parity: `just ci`. Pre-push runs a fast subset (skips `build-rust`); install via `git config core.hooksPath .githooks`.
 
