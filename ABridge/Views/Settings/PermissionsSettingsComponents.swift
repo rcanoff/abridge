@@ -1,17 +1,4 @@
-import AppKit
 import SwiftUI
-
-enum SystemSettingsIcon {
-    static let image: NSImage = {
-        let workspace = NSWorkspace.shared
-        if let url = workspace.urlForApplication(withBundleIdentifier: "com.apple.systempreferences") {
-            let icon = workspace.icon(forFile: url.path)
-            icon.size = NSSize(width: 20, height: 20)
-            return icon
-        }
-        return NSImage(systemSymbolName: "gearshape", accessibilityDescription: "System Settings") ?? NSImage()
-    }()
-}
 
 struct AppleOSAccessActionsRow: View {
     let title: String
@@ -26,15 +13,10 @@ struct AppleOSAccessActionsRow: View {
             Button(granted ? "Access granted" : "Request access", action: onRequest)
                 .disabled(granted || isDeniedOrRestricted || isRequesting)
 
-            Button(action: onOpenSystemSettings) {
-                Image(nsImage: SystemSettingsIcon.image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 20, height: 20)
-            }
-            .buttonStyle(.borderless)
-            .help("Open System Settings")
-            .accessibilityLabel("Open \(title) System Settings")
+            Button("Open \(title) System Settings", systemImage: "gearshape.circle", action: onOpenSystemSettings)
+                .labelStyle(.iconOnly)
+                .buttonStyle(.borderless)
+                .help("Open System Settings")
         }
     }
 }
