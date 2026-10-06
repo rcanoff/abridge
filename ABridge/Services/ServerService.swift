@@ -81,6 +81,8 @@ actor ServerService: ServerServing {
                 host: host,
                 port: port,
                 bearerToken: token,
+                // MCP clients see the app's marketing version as serverInfo.version.
+                appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "",
                 // Capability allowlist gates tools; providers must be registered for tools that
                 // declare them (eventkit, contacts, mapkit, vision, diagnostics).
                 enabledProviders: [

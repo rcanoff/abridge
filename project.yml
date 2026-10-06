@@ -31,6 +31,12 @@ targets:
         embed: false
       - sdk: ServiceManagement.framework
       - package: Sparkle
+    postBuildScripts:
+      - name: Stamp Git Version
+        script: '"$SRCROOT/scripts/stamp-build-version.sh"'
+        basedOnDependencyAnalysis: false
+        inputFiles:
+          - $(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.rcanoff.ABridge

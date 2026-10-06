@@ -221,7 +221,8 @@ Push a `vX.Y.Z` tag from `main`. The [Release workflow](.github/workflows/releas
 git tag v1.0.0 && git push origin v1.0.0
 ```
 
-- `CFBundleShortVersionString` comes from the tag; `CFBundleVersion` is the commit count of the tagged commit, so Sparkle sees every release as newer.
+- `CFBundleShortVersionString` comes from the tag; `CFBundleVersion` is the commit count of the tagged commit, so Sparkle sees every release as newer. MCP clients see the same version as `serverInfo.version`.
+- Xcode and other local builds take the version from `git describe --tags` (for example `0.3.0-4-gabc1234-dirty`) via `scripts/stamp-build-version.sh`; with no reachable tag they keep the `0.0.0` placeholder from `project.yml`.
 - The app reads its feed from `releases/latest/download/appcast.xml`, so the repository must be public for updates and Homebrew downloads to work.
 - The Sparkle EdDSA private key signs every update; keep a backup outside CI. Losing it strands installed copies on their current version.
 - Local build: `just release-build 1.0.0` (environment variables are documented at the top of `scripts/release.sh`); add `--skip-notarization` to check signing and packaging without submitting to Apple.

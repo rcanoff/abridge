@@ -14,6 +14,7 @@ fn eventkit_config(port: u16, capabilities: Vec<String>) -> ServerConfig {
     host: "127.0.0.1".into(),
     port,
     bearer_token: TEST_TOKEN.into(),
+    app_version: "test".into(),
     enabled_providers: vec![ProviderConfig {
       name: "eventkit".into(),
       enabled: true,

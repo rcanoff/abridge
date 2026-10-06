@@ -320,6 +320,7 @@ impl ServerHandle {
       let audit_store = inner.audit_store.clone();
       let mcp_state = McpState {
         bearer_token: inner.config.bearer_token.clone(),
+        app_version: inner.config.app_version.clone(),
         enabled_capabilities: inner.config.enabled_capabilities.clone(),
         enabled_providers: inner.config.enabled_providers.clone(),
         provider: inner.provider.clone(),
@@ -563,6 +564,7 @@ mod tests {
       host: "127.0.0.1".into(),
       port: 18_080,
       bearer_token: "test-token".into(),
+      app_version: "test".into(),
       enabled_providers: vec![ProviderConfig {
         name: "eventkit".into(),
         enabled: true,

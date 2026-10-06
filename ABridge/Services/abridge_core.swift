@@ -930,15 +930,23 @@ public struct ServerConfig: Equatable, Hashable {
     public var host: String
     public var port: UInt16
     public var bearerToken: String
+    /**
+     * Host app marketing version (`CFBundleShortVersionString`), reported as MCP `serverInfo.version`.
+     */
+    public var appVersion: String
     public var enabledProviders: [ProviderConfig]
     public var enabledCapabilities: [String]
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(host: String, port: UInt16, bearerToken: String, enabledProviders: [ProviderConfig], enabledCapabilities: [String]) {
+    public init(host: String, port: UInt16, bearerToken: String, 
+        /**
+         * Host app marketing version (`CFBundleShortVersionString`), reported as MCP `serverInfo.version`.
+         */appVersion: String, enabledProviders: [ProviderConfig], enabledCapabilities: [String]) {
         self.host = host
         self.port = port
         self.bearerToken = bearerToken
+        self.appVersion = appVersion
         self.enabledProviders = enabledProviders
         self.enabledCapabilities = enabledCapabilities
     }
@@ -962,6 +970,7 @@ public struct FfiConverterTypeServerConfig: FfiConverterRustBuffer {
                 host: FfiConverterString.read(from: &buf), 
                 port: FfiConverterUInt16.read(from: &buf), 
                 bearerToken: FfiConverterString.read(from: &buf), 
+                appVersion: FfiConverterString.read(from: &buf), 
                 enabledProviders: FfiConverterSequenceTypeProviderConfig.read(from: &buf), 
                 enabledCapabilities: FfiConverterSequenceString.read(from: &buf)
         )
@@ -971,6 +980,7 @@ public struct FfiConverterTypeServerConfig: FfiConverterRustBuffer {
         FfiConverterString.write(value.host, into: &buf)
         FfiConverterUInt16.write(value.port, into: &buf)
         FfiConverterString.write(value.bearerToken, into: &buf)
+        FfiConverterString.write(value.appVersion, into: &buf)
         FfiConverterSequenceTypeProviderConfig.write(value.enabledProviders, into: &buf)
         FfiConverterSequenceString.write(value.enabledCapabilities, into: &buf)
     }

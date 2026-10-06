@@ -24,6 +24,7 @@ use crate::{
 #[derive(Clone)]
 pub struct McpState {
   pub bearer_token: String,
+  pub app_version: String,
   pub enabled_capabilities: Vec<String>,
   pub enabled_providers: Vec<ProviderConfig>,
   pub provider: Arc<dyn ProviderBridge>,
@@ -31,8 +32,7 @@ pub struct McpState {
 }
 
 use protocol::{
-  INVALID_REQUEST, JSONRPC_VERSION, METHOD_NOT_FOUND, PROTOCOL_VERSION, SERVER_NAME, SERVER_VERSION, json_rpc_error,
-  json_rpc_result,
+  INVALID_REQUEST, JSONRPC_VERSION, METHOD_NOT_FOUND, PROTOCOL_VERSION, SERVER_NAME, json_rpc_error, json_rpc_result,
 };
 
 pub async fn handle_mcp(State(state): State<McpState>, body: axum::body::Bytes) -> Response {
@@ -80,7 +80,7 @@ fn handle_initialize(id: Option<Value>, _params: Value, state: &McpState) -> Res
     "capabilities": { "tools": {} },
     "serverInfo": {
       "name": SERVER_NAME,
-      "version": SERVER_VERSION
+      "version": state.app_version
     }
   });
 

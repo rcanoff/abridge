@@ -6,6 +6,7 @@ use support::mock_provider::MockProviderBridge;
 use support::port::{allocate_test_port, http_post_json};
 
 const TEST_TOKEN: &str = "integration-test-token";
+const APP_VERSION: &str = "1.2.3-4-gabc1234";
 const PROTOCOL_VERSION: &str = "2024-11-05";
 
 fn tool_input_property_items_type(response: &str, tool_name: &str, property: &str) -> Option<String> {
@@ -29,6 +30,7 @@ fn config_on_port(port: u16, enabled_capabilities: Vec<String>) -> ServerConfig 
     host: "127.0.0.1".into(),
     port,
     bearer_token: TEST_TOKEN.into(),
+    app_version: APP_VERSION.into(),
     enabled_providers: vec![ProviderConfig {
       name: "eventkit".into(),
       enabled: true,
@@ -42,6 +44,7 @@ fn contacts_config_on_port(port: u16, enabled_capabilities: Vec<String>) -> Serv
     host: "127.0.0.1".into(),
     port,
     bearer_token: TEST_TOKEN.into(),
+    app_version: APP_VERSION.into(),
     enabled_providers: vec![ProviderConfig {
       name: "contacts".into(),
       enabled: true,
@@ -55,6 +58,7 @@ fn mapkit_config_on_port(port: u16, enabled_capabilities: Vec<String>) -> Server
     host: "127.0.0.1".into(),
     port,
     bearer_token: TEST_TOKEN.into(),
+    app_version: APP_VERSION.into(),
     enabled_providers: vec![ProviderConfig {
       name: "mapkit".into(),
       enabled: true,
@@ -68,6 +72,7 @@ fn vision_config_on_port(port: u16, enabled_capabilities: Vec<String>) -> Server
     host: "127.0.0.1".into(),
     port,
     bearer_token: TEST_TOKEN.into(),
+    app_version: APP_VERSION.into(),
     enabled_providers: vec![ProviderConfig {
       name: "vision".into(),
       enabled: true,
@@ -98,6 +103,19 @@ fn mcp_initialize_returns_protocol_version() {
   let (status, resp) = mcp_post(&body, port, &mock);
   assert_eq!(status, 200);
   assert!(resp.contains(&format!(r#""protocolVersion":"{PROTOCOL_VERSION}""#)));
+}
+
+#[test]
+fn mcp_initialize_reports_app_version() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = format!(
+    r#"{{"jsonrpc":"2.0","id":1,"method":"initialize","params":{{"protocolVersion":"{PROTOCOL_VERSION}","capabilities":{{}},"clientInfo":{{"name":"t","version":"0"}}}}}}"#
+  );
+  let (status, resp) = mcp_post(&body, port, &mock);
+  assert_eq!(status, 200);
+  let envelope: Value = serde_json::from_str(&resp).expect("json");
+  assert_eq!(envelope["result"]["serverInfo"]["version"], APP_VERSION);
 }
 
 #[test]
@@ -152,6 +170,7 @@ fn mcp_tools_list_excludes_disabled_provider() {
       host: "127.0.0.1".into(),
       port,
       bearer_token: TEST_TOKEN.into(),
+      app_version: APP_VERSION.into(),
       enabled_providers: vec![ProviderConfig {
         name: "eventkit".into(),
         enabled: false,

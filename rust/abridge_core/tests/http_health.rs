@@ -9,6 +9,7 @@ fn config_on_port(host: &str, port: u16) -> ServerConfig {
     host: host.into(),
     port,
     bearer_token: "test-token".into(),
+    app_version: "test".into(),
     enabled_providers: vec![ProviderConfig {
       name: "eventkit".into(),
       enabled: true,

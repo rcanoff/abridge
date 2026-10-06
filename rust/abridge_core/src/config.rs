@@ -13,6 +13,8 @@ pub struct ServerConfig {
   pub host: String,
   pub port: u16,
   pub bearer_token: String,
+  /// Host app marketing version (`CFBundleShortVersionString`), reported as MCP `serverInfo.version`.
+  pub app_version: String,
   pub enabled_providers: Vec<ProviderConfig>,
   pub enabled_capabilities: Vec<String>,
 }
@@ -54,6 +56,12 @@ pub fn validate_config(config: &ServerConfig) -> Result<(), CoreError> {
   if config.bearer_token.trim().is_empty() {
     return Err(CoreError::InvalidConfig {
       message: "bearer token must not be empty".into(),
+    });
+  }
+
+  if config.app_version.trim().is_empty() {
+    return Err(CoreError::InvalidConfig {
+      message: "app version must not be empty".into(),
     });
   }
 

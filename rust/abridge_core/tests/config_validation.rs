@@ -5,6 +5,7 @@ fn sample_config() -> ServerConfig {
     host: "127.0.0.1".into(),
     port: 3020,
     bearer_token: "test-token".into(),
+    app_version: "test".into(),
     enabled_providers: vec![ProviderConfig {
       name: "eventkit".into(),
       enabled: true,
@@ -219,6 +220,17 @@ fn rejects_whitespace_only_bearer_token() {
   assert!(matches!(err, CoreError::InvalidConfig { .. }));
   if let CoreError::InvalidConfig { message } = err {
     assert_eq!(message, "bearer token must not be empty");
+  }
+}
+
+#[test]
+fn rejects_blank_app_version() {
+  let mut config = sample_config();
+  config.app_version = "  ".into();
+  let err = validate_config(&config).expect_err("blank app version");
+  assert!(matches!(err, CoreError::InvalidConfig { .. }));
+  if let CoreError::InvalidConfig { message } = err {
+    assert_eq!(message, "app version must not be empty");
   }
 }
 

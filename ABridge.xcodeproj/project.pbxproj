@@ -1282,6 +1282,7 @@
 				5ADBE7BBBE5F63521461AD46 /* Sources */,
 				86C7F0873003E111296DE97B /* Resources */,
 				AF7C39DAE15C3B3236796604 /* Frameworks */,
+				0F3C402817D36E6FF9B971A8 /* Stamp Git Version */,
 			);
 			buildRules = (
 			);
@@ -1340,6 +1341,29 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		0F3C402817D36E6FF9B971A8 /* Stamp Git Version */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
+			);
+			name = "Stamp Git Version";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SRCROOT/scripts/stamp-build-version.sh\"";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		5ADBE7BBBE5F63521461AD46 /* Sources */ = {
