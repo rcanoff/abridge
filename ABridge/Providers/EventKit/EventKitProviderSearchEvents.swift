@@ -74,7 +74,9 @@ extension EventKitProvider {
 
     private func optionalISO8601DateArgument(named key: String, in dictionary: [String: Any]) throws -> Date? {
         guard dictionary.keys.contains(key) else { return nil }
-        if dictionary[key] is NSNull { return nil }
+        if dictionary[key] is NSNull {
+            return nil
+        }
 
         guard let value = dictionary[key] as? String else {
             throw EventKitProviderError.invalidArguments("\(key) must be an ISO8601 string or null")
@@ -89,7 +91,9 @@ extension EventKitProvider {
 
     private func optionalStringArgument(named key: String, in dictionary: [String: Any]) throws -> String? {
         guard dictionary.keys.contains(key) else { return nil }
-        if dictionary[key] is NSNull { return nil }
+        if dictionary[key] is NSNull {
+            return nil
+        }
 
         guard let value = dictionary[key] as? String else {
             throw EventKitProviderError.invalidArguments("\(key) must be a string or null")

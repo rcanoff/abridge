@@ -5,7 +5,9 @@ import Foundation
 extension EventKitDeserialization {
     static func recurrenceRules(from value: Any?) throws -> [EKRecurrenceRule]? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let array = value as? [Any] else {
             throw EventKitProviderError.invalidArguments("recurrence_rules must be an array or null")
         }
@@ -45,7 +47,9 @@ extension EventKitDeserialization {
 
     private static func recurrenceEnd(from value: Any?) throws -> EKRecurrenceEnd? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let dictionary = value as? [String: Any] else {
             throw EventKitProviderError.invalidArguments("recurrence_end must be an object or null")
         }
@@ -83,7 +87,9 @@ extension EventKitDeserialization {
 
     private static func recurrenceDaysOfWeek(from value: Any?) throws -> [EKRecurrenceDayOfWeek]? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let array = value as? [Any] else {
             throw EventKitProviderError.invalidArguments("days_of_the_week must be an array or null")
         }
@@ -102,7 +108,9 @@ extension EventKitDeserialization {
 
     private static func numberArray(from value: Any?) throws -> [NSNumber]? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let array = value as? [Any] else {
             throw EventKitProviderError.invalidArguments("Expected number array or null")
         }
@@ -119,7 +127,9 @@ extension EventKitDeserialization {
             if element is Bool {
                 throw EventKitProviderError.invalidArguments("Expected integer in number array")
             }
-            if let int = element as? Int { return NSNumber(value: int) }
+            if let int = element as? Int {
+                return NSNumber(value: int)
+            }
             throw EventKitProviderError.invalidArguments("Expected integer in number array")
         }
     }

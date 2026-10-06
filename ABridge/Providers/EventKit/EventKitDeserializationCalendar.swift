@@ -9,7 +9,9 @@ extension EventKitDeserialization {
 
     static func cgColor(from value: Any?) throws -> CGColor? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let dictionary = value as? [String: Any] else {
             throw EventKitProviderError.invalidArguments("cg_color must be an object or null")
         }
@@ -47,7 +49,9 @@ extension EventKitDeserialization {
 
     private static func cgColorComponents(from value: Any?) throws -> [CGFloat]? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let array = value as? [Any], !array.isEmpty else {
             throw EventKitProviderError.invalidArguments("cg_color components must be a non-empty array")
         }
@@ -103,7 +107,9 @@ extension EventKitDeserialization {
 
     private static func cgColorSpaceModel(from dictionary: [String: Any]) throws -> String? {
         guard let modelValue = dictionary["color_space_model"] else { return nil }
-        if modelValue is NSNull { return nil }
+        if modelValue is NSNull {
+            return nil
+        }
         guard let model = modelValue as? String else {
             throw EventKitProviderError.invalidArguments("cg_color color_space_model must be a string or null")
         }

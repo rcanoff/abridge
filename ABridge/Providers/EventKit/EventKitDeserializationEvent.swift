@@ -4,7 +4,9 @@ import Foundation
 extension EventKitDeserialization {
     static func eventAvailability(from value: Any?) throws -> EKEventAvailability? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let string = value as? String else {
             throw EventKitProviderError.invalidArguments("availability must be a string or null")
         }
@@ -22,7 +24,9 @@ extension EventKitDeserialization {
 
     static func structuredLocation(from value: Any?) throws -> EKStructuredLocation? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let dictionary = value as? [String: Any] else {
             throw EventKitProviderError.invalidArguments("structured_location must be an object or null")
         }

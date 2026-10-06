@@ -151,19 +151,27 @@ final class AppStore {
 
         if Self.isStillRequestable(permissionStatus) {
             await requestAccess()
-            if lastError != nil { return }
+            if lastError != nil {
+                return
+            }
         }
         if Self.isStillRequestable(calendarPermissionStatus) {
             await requestCalendarAccess()
-            if lastError != nil { return }
+            if lastError != nil {
+                return
+            }
         }
         if Self.isStillRequestable(contactsPermissionStatus) {
             await requestContactsAccess()
-            if lastError != nil { return }
+            if lastError != nil {
+                return
+            }
         }
         if Self.isStillRequestable(locationPermissionStatus) {
             await requestLocationAccess()
-            if lastError != nil { return }
+            if lastError != nil {
+                return
+            }
         }
     }
 

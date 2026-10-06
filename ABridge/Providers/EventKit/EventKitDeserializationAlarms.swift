@@ -5,7 +5,9 @@ import Foundation
 extension EventKitDeserialization {
     static func alarms(from value: Any?) throws -> [EKAlarm]? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let array = value as? [Any] else {
             throw EventKitProviderError.invalidArguments("alarms must be an array or null")
         }

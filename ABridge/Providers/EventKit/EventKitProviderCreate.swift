@@ -64,10 +64,18 @@ extension EventKitProvider {
         from arguments: CreateReminderArguments,
         to reminder: EKReminder
     ) {
-        if let notes = arguments.notes { reminder.notes = notes }
-        if let location = arguments.location { reminder.location = location }
-        if let url = arguments.url { reminder.url = url }
-        if let timeZone = arguments.timeZone { reminder.timeZone = timeZone }
+        if let notes = arguments.notes {
+            reminder.notes = notes
+        }
+        if let location = arguments.location {
+            reminder.location = location
+        }
+        if let url = arguments.url {
+            reminder.url = url
+        }
+        if let timeZone = arguments.timeZone {
+            reminder.timeZone = timeZone
+        }
     }
 
     private func applyOptionalPriority(
@@ -90,16 +98,24 @@ extension EventKitProvider {
         if let startDateComponents = arguments.startDateComponents {
             reminder.startDateComponents = startDateComponents
         }
-        if let isCompleted = arguments.isCompleted { reminder.isCompleted = isCompleted }
-        if let completionDate = arguments.completionDate { reminder.completionDate = completionDate }
+        if let isCompleted = arguments.isCompleted {
+            reminder.isCompleted = isCompleted
+        }
+        if let completionDate = arguments.completionDate {
+            reminder.completionDate = completionDate
+        }
     }
 
     private func applyOptionalCollectionFields(
         from arguments: CreateReminderArguments,
         to reminder: EKReminder
     ) {
-        if let alarms = arguments.alarms { reminder.alarms = alarms }
-        if let recurrenceRules = arguments.recurrenceRules { reminder.recurrenceRules = recurrenceRules }
+        if let alarms = arguments.alarms {
+            reminder.alarms = alarms
+        }
+        if let recurrenceRules = arguments.recurrenceRules {
+            reminder.recurrenceRules = recurrenceRules
+        }
     }
 
     private func parseCreateReminderArguments(_ payloadJson: String) throws -> CreateReminderArguments {

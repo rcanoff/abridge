@@ -57,17 +57,33 @@ extension EventKitProvider {
         event.startDate = arguments.startDate
         event.endDate = arguments.endDate
 
-        if let notes = arguments.notes { event.notes = notes }
-        if let location = arguments.location { event.location = location }
-        if let url = arguments.url { event.url = url }
-        if let timeZone = arguments.timeZone { event.timeZone = timeZone }
-        if let isAllDay = arguments.isAllDay { event.isAllDay = isAllDay }
-        if let availability = arguments.availability { event.availability = availability }
+        if let notes = arguments.notes {
+            event.notes = notes
+        }
+        if let location = arguments.location {
+            event.location = location
+        }
+        if let url = arguments.url {
+            event.url = url
+        }
+        if let timeZone = arguments.timeZone {
+            event.timeZone = timeZone
+        }
+        if let isAllDay = arguments.isAllDay {
+            event.isAllDay = isAllDay
+        }
+        if let availability = arguments.availability {
+            event.availability = availability
+        }
         if let structuredLocation = arguments.structuredLocation {
             event.structuredLocation = structuredLocation
         }
-        if let alarms = arguments.alarms { event.alarms = alarms }
-        if let recurrenceRules = arguments.recurrenceRules { event.recurrenceRules = recurrenceRules }
+        if let alarms = arguments.alarms {
+            event.alarms = alarms
+        }
+        if let recurrenceRules = arguments.recurrenceRules {
+            event.recurrenceRules = recurrenceRules
+        }
     }
 
     private func parseCreateEventArguments(_ payloadJson: String) throws -> CreateEventArguments {

@@ -15,7 +15,9 @@ enum ContactsDeserialization {
 
     static func optionalString(_ value: Any?) throws -> String? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let string = value as? String else {
             throw ContactsProviderError.invalidArguments("Expected string or null")
         }
@@ -24,7 +26,9 @@ enum ContactsDeserialization {
 
     static func optionalInt(_ value: Any?) throws -> Int? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         if let number = value as? NSNumber {
             if CFGetTypeID(number) == CFBooleanGetTypeID() {
                 throw ContactsProviderError.invalidArguments("Expected integer or null")
@@ -34,14 +38,20 @@ enum ContactsDeserialization {
             }
             return number.intValue
         }
-        if value is Bool { throw ContactsProviderError.invalidArguments("Expected integer or null") }
-        if let int = value as? Int { return int }
+        if value is Bool {
+            throw ContactsProviderError.invalidArguments("Expected integer or null")
+        }
+        if let int = value as? Int {
+            return int
+        }
         throw ContactsProviderError.invalidArguments("Expected integer or null")
     }
 
     static func optionalBool(_ value: Any?) throws -> Bool? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let bool = value as? Bool else {
             throw ContactsProviderError.invalidArguments("Expected boolean or null")
         }

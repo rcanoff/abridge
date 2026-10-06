@@ -49,8 +49,12 @@ enum ProviderPermissionStatus: Equatable {
     ) -> ProviderPermissionStatus {
         guard checkedShippedCount > 0 else { return .notInUse }
         guard needsOSAccess else { return .ready }
-        if osGrantsReadAccess { return .ready }
-        if osIsDeniedOrRestricted { return .blocked }
+        if osGrantsReadAccess {
+            return .ready
+        }
+        if osIsDeniedOrRestricted {
+            return .blocked
+        }
         return .needsAccess
     }
 
@@ -71,8 +75,12 @@ enum ProviderEnableState: Equatable {
 
     static func compute(checked: Int, totalShipped: Int) -> ProviderEnableState {
         guard totalShipped > 0 else { return .off }
-        if checked <= 0 { return .off }
-        if checked >= totalShipped { return .on }
+        if checked <= 0 {
+            return .off
+        }
+        if checked >= totalShipped {
+            return .on
+        }
         return .mixed
     }
 }

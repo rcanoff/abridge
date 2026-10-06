@@ -4,7 +4,9 @@ import Foundation
 extension ContactsDeserialization {
     static func dateComponents(from value: Any?) throws -> DateComponents? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let dictionary = value as? [String: Any] else {
             throw ContactsProviderError.invalidArguments("date components must be an object or null")
         }
@@ -46,7 +48,9 @@ extension ContactsDeserialization {
 
     static func optionalCalendar(_ value: Any?) throws -> Calendar? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let dictionary = value as? [String: Any] else {
             throw ContactsProviderError.invalidArguments("calendar must be an object or null")
         }

@@ -55,7 +55,9 @@ extension VisionProvider {
 
     private func optionalOrientationArgument(in dictionary: [String: Any]) throws -> CGImagePropertyOrientation? {
         guard dictionary.keys.contains("orientation") else { return nil }
-        if dictionary["orientation"] is NSNull { return nil }
+        if dictionary["orientation"] is NSNull {
+            return nil
+        }
 
         let value: UInt32
         switch dictionary["orientation"] {
@@ -83,7 +85,9 @@ extension VisionProvider {
         in dictionary: [String: Any]
     ) throws -> DetectBarcodesRequest.Revision? {
         guard dictionary.keys.contains("revision") else { return nil }
-        if dictionary["revision"] is NSNull { return nil }
+        if dictionary["revision"] is NSNull {
+            return nil
+        }
 
         guard let value = dictionary["revision"] as? String else {
             throw VisionProviderError.invalidArguments("revision must be a string or null")
@@ -103,7 +107,9 @@ extension VisionProvider {
         in dictionary: [String: Any]
     ) throws -> NormalizedRect? {
         guard dictionary.keys.contains("region_of_interest") else { return nil }
-        if dictionary["region_of_interest"] is NSNull { return nil }
+        if dictionary["region_of_interest"] is NSNull {
+            return nil
+        }
 
         guard let region = dictionary["region_of_interest"] as? [String: Any] else {
             throw VisionProviderError.invalidArguments("region_of_interest must be an object or null")
@@ -125,7 +131,9 @@ extension VisionProvider {
 
     private func optionalSymbologiesArgument(in dictionary: [String: Any]) throws -> [BarcodeSymbology]? {
         guard dictionary.keys.contains("symbologies") else { return nil }
-        if dictionary["symbologies"] is NSNull { return nil }
+        if dictionary["symbologies"] is NSNull {
+            return nil
+        }
 
         guard let values = dictionary["symbologies"] as? [Any] else {
             throw VisionProviderError.invalidArguments("symbologies must be an array or null")
@@ -156,7 +164,9 @@ extension VisionProvider {
 
     private func optionalBoolArgument(in dictionary: [String: Any], key: String) throws -> Bool? {
         guard dictionary.keys.contains(key) else { return nil }
-        if dictionary[key] is NSNull { return nil }
+        if dictionary[key] is NSNull {
+            return nil
+        }
 
         guard let value = dictionary[key] as? Bool else {
             throw VisionProviderError.invalidArguments("\(key) must be a boolean or null")

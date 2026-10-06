@@ -49,7 +49,9 @@ extension VisionProvider {
 
     private func optionalOrientationArgument(in dictionary: [String: Any]) throws -> CGImagePropertyOrientation? {
         guard dictionary.keys.contains("orientation") else { return nil }
-        if dictionary["orientation"] is NSNull { return nil }
+        if dictionary["orientation"] is NSNull {
+            return nil
+        }
 
         let value: UInt32
         switch dictionary["orientation"] {
@@ -75,7 +77,9 @@ extension VisionProvider {
 
     private func optionalIntArgument(in dictionary: [String: Any], key: String) throws -> Int? {
         guard dictionary.keys.contains(key) else { return nil }
-        if dictionary[key] is NSNull { return nil }
+        if dictionary[key] is NSNull {
+            return nil
+        }
 
         switch dictionary[key] {
         case let value as Int:
@@ -110,7 +114,9 @@ extension VisionProvider {
 
     private func optionalNormalizedRegionOfInterestArgument(in dictionary: [String: Any]) throws -> CGRect? {
         guard dictionary.keys.contains("region_of_interest") else { return nil }
-        if dictionary["region_of_interest"] is NSNull { return nil }
+        if dictionary["region_of_interest"] is NSNull {
+            return nil
+        }
 
         guard let region = dictionary["region_of_interest"] as? [String: Any] else {
             throw VisionProviderError.invalidArguments("region_of_interest must be an object or null")
@@ -165,7 +171,9 @@ extension VisionProvider {
         in dictionary: [String: Any]
     ) throws -> VNRequestFaceLandmarksConstellation {
         guard dictionary.keys.contains("constellation") else { return .constellationNotDefined }
-        if dictionary["constellation"] is NSNull { return .constellationNotDefined }
+        if dictionary["constellation"] is NSNull {
+            return .constellationNotDefined
+        }
 
         guard let value = dictionary["constellation"] as? String else {
             throw VisionProviderError.invalidArguments("constellation must be a string or null")

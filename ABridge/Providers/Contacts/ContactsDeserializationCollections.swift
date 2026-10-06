@@ -63,7 +63,9 @@ extension ContactsDeserialization {
 
     static func labeledStrings(from value: Any?, field: String) throws -> [CNLabeledValue<NSString>] {
         guard let value else { return [] }
-        if value is NSNull { return [] }
+        if value is NSNull {
+            return []
+        }
         guard let array = value as? [[String: Any]] else {
             throw ContactsProviderError.invalidArguments("\(field) must be an array")
         }
@@ -133,7 +135,9 @@ extension ContactsDeserialization {
         mapValue: ([String: Any]) throws -> Value
     ) throws -> [CNLabeledValue<Value>] {
         guard let value else { return [] }
-        if value is NSNull { return [] }
+        if value is NSNull {
+            return []
+        }
         guard let array = value as? [[String: Any]] else {
             throw ContactsProviderError.invalidArguments("\(field) must be an array")
         }

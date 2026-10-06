@@ -56,7 +56,9 @@ enum EventKitDeserialization {
 
     static func optionalString(_ value: Any?) throws -> String? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let string = value as? String else {
             throw EventKitProviderError.invalidArguments("Expected string or null")
         }
@@ -65,7 +67,9 @@ enum EventKitDeserialization {
 
     static func optionalInt(_ value: Any?) throws -> Int? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         if let number = value as? NSNumber {
             if CFGetTypeID(number) == CFBooleanGetTypeID() {
                 throw EventKitProviderError.invalidArguments("Expected integer or null")
@@ -75,14 +79,20 @@ enum EventKitDeserialization {
             }
             return number.intValue
         }
-        if value is Bool { throw EventKitProviderError.invalidArguments("Expected integer or null") }
-        if let int = value as? Int { return int }
+        if value is Bool {
+            throw EventKitProviderError.invalidArguments("Expected integer or null")
+        }
+        if let int = value as? Int {
+            return int
+        }
         throw EventKitProviderError.invalidArguments("Expected integer or null")
     }
 
     static func optionalBool(_ value: Any?) throws -> Bool? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let bool = value as? Bool else {
             throw EventKitProviderError.invalidArguments("Expected boolean or null")
         }
@@ -107,7 +117,9 @@ enum EventKitDeserialization {
 
     static func dateComponents(from value: Any?) throws -> DateComponents? {
         guard let value else { return nil }
-        if value is NSNull { return nil }
+        if value is NSNull {
+            return nil
+        }
         guard let dictionary = value as? [String: Any] else {
             throw EventKitProviderError.invalidArguments("date components must be an object or null")
         }

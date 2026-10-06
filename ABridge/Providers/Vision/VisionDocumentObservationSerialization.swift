@@ -193,8 +193,12 @@ enum VisionDocumentObservationSerialization {
         default:
             let fourCC = VisionSerialization.fourCCString(from: pixelFormat)
             if fourCC.hasPrefix("L") || fourCC.hasPrefix("l") {
-                if fourCC.contains("8") { return 1 }
-                if fourCC.contains("16") { return 2 }
+                if fourCC.contains("8") {
+                    return 1
+                }
+                if fourCC.contains("16") {
+                    return 2
+                }
             }
             return 0
         }

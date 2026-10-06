@@ -72,7 +72,9 @@ extension VisionProvider {
 
     private func optionalOrientationArgument(in dictionary: [String: Any]) throws -> CGImagePropertyOrientation? {
         guard dictionary.keys.contains("orientation") else { return nil }
-        if dictionary["orientation"] is NSNull { return nil }
+        if dictionary["orientation"] is NSNull {
+            return nil
+        }
 
         let value: UInt32
         switch dictionary["orientation"] {
@@ -101,7 +103,9 @@ extension VisionProvider {
         key: String
     ) throws -> [String]? {
         guard dictionary.keys.contains(key) else { return nil }
-        if dictionary[key] is NSNull { return nil }
+        if dictionary[key] is NSNull {
+            return nil
+        }
 
         guard let values = dictionary[key] as? [Any] else {
             throw VisionProviderError.invalidArguments("\(key) must be an array or null")
@@ -122,7 +126,9 @@ extension VisionProvider {
         in dictionary: [String: Any]
     ) throws -> VNRequestTextRecognitionLevel {
         guard dictionary.keys.contains("recognition_level") else { return .accurate }
-        if dictionary["recognition_level"] is NSNull { return .accurate }
+        if dictionary["recognition_level"] is NSNull {
+            return .accurate
+        }
 
         guard let value = dictionary["recognition_level"] as? String else {
             throw VisionProviderError.invalidArguments("recognition_level must be a string or null")
@@ -140,7 +146,9 @@ extension VisionProvider {
 
     private func optionalBoolArgument(in dictionary: [String: Any], key: String) throws -> Bool? {
         guard dictionary.keys.contains(key) else { return nil }
-        if dictionary[key] is NSNull { return nil }
+        if dictionary[key] is NSNull {
+            return nil
+        }
 
         guard let value = dictionary[key] as? Bool else {
             throw VisionProviderError.invalidArguments("\(key) must be a boolean or null")
@@ -150,7 +158,9 @@ extension VisionProvider {
 
     private func optionalFloatArgument(in dictionary: [String: Any], key: String) throws -> Float? {
         guard dictionary.keys.contains(key) else { return nil }
-        if dictionary[key] is NSNull { return nil }
+        if dictionary[key] is NSNull {
+            return nil
+        }
 
         switch dictionary[key] {
         case let value as Double:
@@ -170,7 +180,9 @@ extension VisionProvider {
 
     private func optionalIntArgument(in dictionary: [String: Any], key: String) throws -> Int? {
         guard dictionary.keys.contains(key) else { return nil }
-        if dictionary[key] is NSNull { return nil }
+        if dictionary[key] is NSNull {
+            return nil
+        }
 
         switch dictionary[key] {
         case let value as Int:
@@ -190,7 +202,9 @@ extension VisionProvider {
 
     private func optionalRegionOfInterestArgument(in dictionary: [String: Any]) throws -> CGRect? {
         guard dictionary.keys.contains("region_of_interest") else { return nil }
-        if dictionary["region_of_interest"] is NSNull { return nil }
+        if dictionary["region_of_interest"] is NSNull {
+            return nil
+        }
 
         guard let region = dictionary["region_of_interest"] as? [String: Any] else {
             throw VisionProviderError.invalidArguments("region_of_interest must be an object or null")
@@ -212,7 +226,9 @@ extension VisionProvider {
 
     private func optionalMaxCandidateCountArgument(in dictionary: [String: Any]) throws -> Int {
         guard dictionary.keys.contains("max_candidate_count") else { return 1 }
-        if dictionary["max_candidate_count"] is NSNull { return 1 }
+        if dictionary["max_candidate_count"] is NSNull {
+            return 1
+        }
 
         let value: Int
         switch dictionary["max_candidate_count"] {

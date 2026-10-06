@@ -46,7 +46,9 @@ final class MockMapKitStore: MapKitStoreing, @unchecked Sendable {
 
     func calculateRoute(request: MapKitCalculateRouteRequest) throws -> MapKitCalculateRouteResult {
         lastCalculateRouteRequest = request
-        if let first = calculateRouteResults.first { return first }
+        if let first = calculateRouteResults.first {
+            return first
+        }
         return MapKitCalculateRouteResult(
             source: MapKitTestFixtures.mapItem(coordinate: request.source.coordinate),
             destination: MapKitTestFixtures.mapItem(coordinate: request.destination.coordinate),
@@ -56,8 +58,12 @@ final class MockMapKitStore: MapKitStoreing, @unchecked Sendable {
 
     func getCurrentLocation() throws -> CLLocation {
         getCurrentLocationCallCount += 1
-        if let getCurrentLocationError { throw getCurrentLocationError }
-        if let getCurrentLocationResult { return getCurrentLocationResult }
+        if let getCurrentLocationError {
+            throw getCurrentLocationError
+        }
+        if let getCurrentLocationResult {
+            return getCurrentLocationResult
+        }
         return CLLocation(latitude: 0, longitude: 0)
     }
 

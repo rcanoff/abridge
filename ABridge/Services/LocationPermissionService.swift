@@ -29,7 +29,9 @@ enum LocationAuthorizationWait {
                 throw CancellationError()
             }
             onCheck()
-            if isDetermined() { return }
+            if isDetermined() {
+                return
+            }
             try await Task.sleep(for: pollInterval)
         }
 
