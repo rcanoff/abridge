@@ -24,7 +24,7 @@ while IFS= read -r file; do
       PATHS_RUST_CHANGED=1
       PATHS_SWIFT_CHANGED=1
       ;;
-    ABridge/*|ABridgeTests/*|project.yml|ABridge.xcodeproj/*)
+    ABridge/*|ABridgeTests/*|project.yml|ABridge.xcodeproj/*|scripts/stamp-build-version.sh)
       PATHS_SWIFT_CHANGED=1
       ;;
     justfile|scripts/ci/*)

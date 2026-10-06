@@ -1,22 +1,20 @@
 name: Rust CI
 
-# Temporarily disabled on GitHub — run `just ci-rust` locally instead.
-# Uncomment push/pull_request when ready to use Actions again.
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [main]
-  #   paths:
-  #     - "rust/**"
-  #     - "justfile"
-  #     - "scripts/ci/**"
-  #     - ".github/workflows/ci-rust.yml"
-  # pull_request:
-  #   paths:
-  #     - "rust/**"
-  #     - "justfile"
-  #     - "scripts/ci/**"
-  #     - ".github/workflows/ci-rust.yml"
+  push:
+    branches: [main]
+    paths:
+      - "rust/**"
+      - "justfile"
+      - "scripts/ci/**"
+      - ".github/workflows/ci-rust.yml"
+  pull_request:
+    paths:
+      - "rust/**"
+      - "justfile"
+      - "scripts/ci/**"
+      - ".github/workflows/ci-rust.yml"
 
 concurrency:
   group: rust-ci-${{ github.ref }}
