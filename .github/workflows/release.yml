@@ -30,7 +30,8 @@ jobs:
   release:
     runs-on: macos-26
     environment: release
-    timeout-minutes: 60
+    # Apple notarization usually takes under a minute but can queue for most of an hour per submission.
+    timeout-minutes: 180
     env:
       TZ: UTC
     steps:
