@@ -68,7 +68,7 @@ struct EventKitProviderCreateEventTests {
 
     @Test
     @MainActor
-    func createEventAppliesOptionalFields() {
+    func createEventAppliesOptionalFields() throws {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         mockStore.eventCalendarsList = [
@@ -90,7 +90,11 @@ struct EventKitProviderCreateEventTests {
         #expect(response.payloadJson.contains("Bring badge"))
         #expect(response.payloadJson.contains("HQ"))
         #expect(response.payloadJson.contains("\"is_all_day\":true"))
-        #expect(response.payloadJson.contains("\"availability\":\"not_supported\""))
+        // Whether EKEvent keeps an availability the calendar doesn't support varies by macOS release;
+        // the payload must report what EventKit holds after the save.
+        let saved = try #require(mockStore.events.first)
+        let availability = EventKitSerialization.eventAvailabilityString(saved.availability)
+        #expect(response.payloadJson.contains("\"availability\":\"\(availability)\""))
     }
 
     @Test
