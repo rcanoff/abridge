@@ -4,6 +4,7 @@ import SwiftUI
 struct MCPSettingsView: View {
     @Bindable var settingsStore: SettingsStore
     @Bindable var serverStore: ServerStore
+    let presentationStore: AppPresentationStore
 
     @State private var portText = ""
     @State private var showResetConfirmation = false
@@ -11,6 +12,7 @@ struct MCPSettingsView: View {
     var body: some View {
         Form {
             startupSection
+            appIconSection
             serverSection
             connectionSection
             authenticationSection
@@ -62,6 +64,26 @@ struct MCPSettingsView: View {
                         .foregroundStyle(.red)
                         .textSelection(.enabled)
                 }
+            }
+        }
+    }
+
+    private var appIconSection: some View {
+        Section {
+            Picker("Show ABridge in", selection: appIconModeBinding) {
+                ForEach(AppIconMode.allCases) { mode in
+                    Text(mode.title)
+                        .tag(mode)
+                }
+            }
+        } header: {
+            Text("App icon")
+        } footer: {
+            if presentationStore.appSettings.appIconMode == .hidden {
+                Text(
+                    "ABridge keeps running in the background and the MCP server stays available. "
+                        + "Open ABridge again from Finder or Spotlight to show settings."
+                )
             }
         }
     }
@@ -146,6 +168,13 @@ struct MCPSettingsView: View {
             set: { newValue in
                 Task { await settingsStore.applyLaunchAtLoginChange(newValue) }
             }
+        )
+    }
+
+    private var appIconModeBinding: Binding<AppIconMode> {
+        Binding(
+            get: { presentationStore.appSettings.appIconMode },
+            set: { presentationStore.setAppIconMode($0) }
         )
     }
 
