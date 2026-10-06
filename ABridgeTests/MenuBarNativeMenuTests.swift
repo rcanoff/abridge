@@ -49,7 +49,7 @@ struct MenuBarNativeMenuTests {
 
         await serverStore.refreshStatus()
 
-        #expect(MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore))
+        #expect(AppQuitCoordinator.isQuitDisabled(serverStore: serverStore))
     }
 
     @Test
@@ -62,13 +62,13 @@ struct MenuBarNativeMenuTests {
         let startTask = Task { await serverStore.startServer(port: 3020, enabledCapabilities: []) }
 
         for await _ in startEntered {
-            #expect(MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore))
+            #expect(AppQuitCoordinator.isQuitDisabled(serverStore: serverStore))
             break
         }
 
         await mock.releaseHeldStart()
         await startTask.value
-        #expect(MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore) == false)
+        #expect(AppQuitCoordinator.isQuitDisabled(serverStore: serverStore) == false)
     }
 
     @Test(arguments: [ServerRunState.stopped, ServerRunState.running])
@@ -80,6 +80,6 @@ struct MenuBarNativeMenuTests {
 
         await serverStore.refreshStatus()
 
-        #expect(MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore) == false)
+        #expect(AppQuitCoordinator.isQuitDisabled(serverStore: serverStore) == false)
     }
 }

@@ -16,6 +16,9 @@ struct ABridgeApp: App {
     @State private var settingsStore: SettingsStore
     @State private var calendarSharingStore: CalendarSharingStore
     @State private var updaterService: SparkleUpdaterService
+    @State private var presentationStore: AppPresentationStore
+    @NSApplicationDelegateAdaptor(ABridgeAppDelegate.self) private var appDelegate
+    @Environment(\.openWindow) private var openWindow
     private let appQuitter: any AppQuitting
 
     init() {
@@ -59,8 +62,12 @@ struct ABridgeApp: App {
             _calendarSharingStore = State(initialValue: stores.calendarSharingStore)
             _store = State(initialValue: stores.store)
             _updaterService = State(initialValue: SparkleUpdaterService(startsUpdater: !isRunningUnitTests))
+            let presentationStore = AppPresentationStore(appSettings: stores.appSettings)
+            _presentationStore = State(initialValue: presentationStore)
 
             guard !isRunningUnitTests else { return }
+
+            appDelegate.configure(presentationStore: presentationStore, serverStore: stores.serverStore)
 
             ABridgeAppLaunchSupport.scheduleLaunchRestore(
                 settingsStore: stores.settingsStore,
@@ -70,10 +77,11 @@ struct ABridgeApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra {
+        MenuBarExtra(isInserted: menuBarIconInserted) {
             MenuBarNativeMenuView(
                 serverStore: serverStore,
                 settingsStore: settingsStore,
+                presentationStore: presentationStore,
                 updaterService: updaterService,
                 appQuitter: appQuitter
             )
@@ -98,10 +106,27 @@ struct ABridgeApp: App {
                 permissionsStore: permissionsStore,
                 serverStore: serverStore,
                 appStore: store,
-                calendarSharingStore: calendarSharingStore
+                calendarSharingStore: calendarSharingStore,
+                presentationStore: presentationStore
             )
         }
-        .defaultSize(width: 600, height: 460)
+        .defaultSize(width: 720, height: 540)
+        .onChange(of: presentationStore.settingsWindowRequest) {
+            Task { @MainActor in
+                // An activation policy change deactivates the app shortly after; activate once it settles.
+                try? await Task.sleep(for: .milliseconds(200))
+                NSApp.activate(ignoringOtherApps: true)
+                openWindow(id: "settings")
+            }
+        }
+    }
+
+    /// Read-only: the mode picker owns visibility, not menu bar drag-removal.
+    private var menuBarIconInserted: Binding<Bool> {
+        Binding(
+            get: { presentationStore.showsMenuBarIcon },
+            set: { _ in }
+        )
     }
 
     @MainActor

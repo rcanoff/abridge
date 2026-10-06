@@ -11,6 +11,7 @@ final class AppSettings {
         static let launchAtLogin = "launchAtLogin"
         static let savedCapabilityIDs = "savedCapabilityIDs"
         static let useKeychainForAPIKey = "useKeychainForAPIKey"
+        static let appIconMode = "appIconMode"
     }
 
     private let defaults: UserDefaults
@@ -50,6 +51,13 @@ final class AppSettings {
         }
     }
 
+    var appIconMode: AppIconMode {
+        didSet {
+            guard appIconMode != oldValue else { return }
+            defaults.set(appIconMode.rawValue, forKey: Keys.appIconMode)
+        }
+    }
+
     private(set) var savedCapabilityIDs: Set<String> {
         didSet {
             defaults.set(Array(savedCapabilityIDs), forKey: Keys.savedCapabilityIDs)
@@ -77,6 +85,7 @@ final class AppSettings {
         } else {
             useKeychainForAPIKey = true
         }
+        appIconMode = defaults.string(forKey: Keys.appIconMode).flatMap(AppIconMode.init(rawValue:)) ?? .menuBar
 
         if let stored = defaults.stringArray(forKey: Keys.savedCapabilityIDs) {
             savedCapabilityIDs = Set(stored)

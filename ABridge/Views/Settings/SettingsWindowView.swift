@@ -7,6 +7,7 @@ struct SettingsWindowView: View {
     @Bindable var serverStore: ServerStore
     @Bindable var appStore: AppStore
     let calendarSharingStore: CalendarSharingStore
+    let presentationStore: AppPresentationStore
 
     var body: some View {
         NavigationSplitView {
@@ -21,7 +22,8 @@ struct SettingsWindowView: View {
                 case .mcp:
                     MCPSettingsView(
                         settingsStore: settingsStore,
-                        serverStore: serverStore
+                        serverStore: serverStore,
+                        presentationStore: presentationStore
                     )
                 case .permissions:
                     PermissionsSettingsView(
@@ -40,6 +42,12 @@ struct SettingsWindowView: View {
         }
         .frame(minWidth: 560, minHeight: 420)
         .background(SettingsWindowKeyFocus())
+        .onAppear {
+            presentationStore.settingsWindowDidOpen()
+        }
+        .onDisappear {
+            presentationStore.settingsWindowDidClose()
+        }
     }
 }
 

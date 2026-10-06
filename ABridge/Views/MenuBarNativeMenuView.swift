@@ -2,16 +2,15 @@ import AppKit
 import SwiftUI
 
 struct MenuBarNativeMenuView: View {
-    @Environment(\.openWindow) private var openWindow
-
     @Bindable var serverStore: ServerStore
     @Bindable var settingsStore: SettingsStore
+    let presentationStore: AppPresentationStore
     let updaterService: SparkleUpdaterService
     let appQuitter: any AppQuitting
 
     var body: some View {
         Button("Open ABridge") {
-            openSettings()
+            presentationStore.requestSettingsWindow()
         }
 
         Divider()
@@ -33,11 +32,9 @@ struct MenuBarNativeMenuView: View {
         .disabled(!updaterService.canCheckForUpdates)
 
         Button("Quit ABridge") {
-            Task { @MainActor in
-                await MenuBarQuitCoordinator.quit(serverStore: serverStore, appQuitter: appQuitter)
-            }
+            appQuitter.terminate()
         }
-        .disabled(MenuBarQuitCoordinator.isQuitDisabled(serverStore: serverStore))
+        .disabled(AppQuitCoordinator.isQuitDisabled(serverStore: serverStore))
     }
 
     private var updateMenuTitle: String {
@@ -62,11 +59,6 @@ struct MenuBarNativeMenuView: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(label)
-    }
-
-    private func openSettings() {
-        NSApp.activate(ignoringOtherApps: true)
-        openWindow(id: "settings")
     }
 
     private func copyEndpoint() {
