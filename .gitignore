@@ -1,6 +1,7 @@
 docs/*
 !docs/conventions.md
 !docs/prd.md
+!docs/screenshots/
 !docs/architecture-bootstrap-guide.md
 !docs/github-issue-templates/
 !docs/github-issue-templates/**

@@ -16,6 +16,12 @@ Providers: EventKit (Reminders, Calendars, Events), Contacts, MapKit, and Vision
 
 Access is two layers: macOS privacy permission, then per-capability MCP toggles in Settings. Only enabled capabilities appear in `tools/list`. Reminders lists and event calendars default to sharing all of them; Permissions can restrict MCP to a subset.
 
+<p align="center">
+  <img src="docs/screenshots/settings-mcp.png" width="32%" alt="MCP settings: server status, endpoint, and bearer token">
+  <img src="docs/screenshots/settings-permissions.png" width="32%" alt="Permissions settings: per-provider macOS access and MCP toggles">
+  <img src="docs/screenshots/settings-diagnostics.png" width="32%" alt="Diagnostics settings: recent tool usage events">
+</p>
+
 ### Connect your MCP client
 
 | | |
