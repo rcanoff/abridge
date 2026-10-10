@@ -64,7 +64,18 @@ pub async fn handle_mcp(State(state): State<McpState>, body: axum::body::Bytes) 
   match method {
     "initialize" => handle_initialize(id, params, &state),
     "tools/list" => handle_tools_list(id, &state),
-    "tools/call" => handle_tools_call(id, params, &state),
+    // Provider calls block for as long as Apple frameworks take; run them on the blocking pool so
+    // they never hold a runtime worker that other requests (`/health`, `initialize`) need.
+    "tools/call" => {
+      let state = state.clone();
+      let call_id = id.clone();
+      tokio::task::spawn_blocking(move || handle_tools_call(call_id, params, &state))
+        .await
+        .unwrap_or_else(|_| match id {
+          Some(id) => tool_error_response(id, "provider_error", "provider call failed"),
+          None => StatusCode::NO_CONTENT.into_response(),
+        })
+    }
     "notifications/initialized" => handle_notification_initialized(id),
     _ => json_response(StatusCode::OK, json_rpc_error(id, METHOD_NOT_FOUND, "method not found")),
   }
