@@ -30,14 +30,18 @@ enum VisionDocumentSerialization {
             ),
             "document": documentContainerJSONObject(
                 from: observation.document,
-                maximumCandidateCount: maximumCandidateCount
+                maximumCandidateCount: maximumCandidateCount,
+                openNodes: []
             ),
         ]
     }
 
+    /// `openNodes` holds the lists and tables being written above this container; one that Vision
+    /// reports again inside itself is written once (see `VisionDocumentNodeKey`).
     private static func documentContainerJSONObject(
         from container: DocumentObservation.Container,
-        maximumCandidateCount: Int
+        maximumCandidateCount: Int,
+        openNodes: [VisionDocumentNodeKey]
     ) throws -> [String: Any] {
         try [
             "title": container.title.map {
@@ -47,11 +51,23 @@ enum VisionDocumentSerialization {
             "paragraphs": container.paragraphs.map {
                 try documentTextJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
             },
-            "tables": container.tables.map {
-                try documentTableJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
+            "tables": container.tables.compactMap { table -> [String: Any]? in
+                let key = VisionDocumentNodeKey(table)
+                guard !openNodes.contains(key) else { return nil }
+                return try documentTableJSONObject(
+                    from: table,
+                    maximumCandidateCount: maximumCandidateCount,
+                    openNodes: openNodes + [key]
+                )
             },
-            "lists": container.lists.map {
-                try documentListJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
+            "lists": container.lists.compactMap { list -> [String: Any]? in
+                let key = VisionDocumentNodeKey(list)
+                guard !openNodes.contains(key) else { return nil }
+                return try documentListJSONObject(
+                    from: list,
+                    maximumCandidateCount: maximumCandidateCount,
+                    openNodes: openNodes + [key]
+                )
             },
             "barcodes": container.barcodes.map { observation in
                 try VisionDocumentObservationSerialization.barcodeObservationJSONObject(
@@ -110,16 +126,19 @@ enum VisionDocumentSerialization {
 
     private static func documentTableJSONObject(
         from table: DocumentObservation.Container.Table,
-        maximumCandidateCount: Int
+        maximumCandidateCount: Int,
+        openNodes: [VisionDocumentNodeKey]
     ) throws -> [String: Any] {
-        try [
-            "rows": table.rows.map { row in
-                try row.map { try documentTableCellJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount) }
-            },
-            "columns": table.columns.map { column in
-                try column
-                    .map { try documentTableCellJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount) }
-            },
+        let cellJSONObject = { (cell: DocumentObservation.Container.Table.Cell) in
+            try documentTableCellJSONObject(
+                from: cell,
+                maximumCandidateCount: maximumCandidateCount,
+                openNodes: openNodes
+            )
+        }
+        return try [
+            "rows": table.rows.map { row in try row.map(cellJSONObject) },
+            "columns": table.columns.map { column in try column.map(cellJSONObject) },
             "bounding_region": VisionDocumentObservationSerialization.normalizedRegionJSONObject(
                 from: table.boundingRegion
             ),
@@ -128,10 +147,15 @@ enum VisionDocumentSerialization {
 
     private static func documentTableCellJSONObject(
         from cell: DocumentObservation.Container.Table.Cell,
-        maximumCandidateCount: Int
+        maximumCandidateCount: Int,
+        openNodes: [VisionDocumentNodeKey]
     ) throws -> [String: Any] {
         try [
-            "content": documentContainerJSONObject(from: cell.content, maximumCandidateCount: maximumCandidateCount),
+            "content": documentContainerJSONObject(
+                from: cell.content,
+                maximumCandidateCount: maximumCandidateCount,
+                openNodes: openNodes
+            ),
             "row_range": closedRangeJSONObject(from: cell.rowRange),
             "column_range": closedRangeJSONObject(from: cell.columnRange),
         ]
@@ -139,11 +163,16 @@ enum VisionDocumentSerialization {
 
     private static func documentListJSONObject(
         from list: DocumentObservation.Container.List,
-        maximumCandidateCount: Int
+        maximumCandidateCount: Int,
+        openNodes: [VisionDocumentNodeKey]
     ) throws -> [String: Any] {
         try [
             "items": list.items.map {
-                try documentListItemJSONObject(from: $0, maximumCandidateCount: maximumCandidateCount)
+                try documentListItemJSONObject(
+                    from: $0,
+                    maximumCandidateCount: maximumCandidateCount,
+                    openNodes: openNodes
+                )
             },
             "bounding_region": VisionDocumentObservationSerialization.normalizedRegionJSONObject(
                 from: list.boundingRegion
@@ -153,10 +182,15 @@ enum VisionDocumentSerialization {
 
     private static func documentListItemJSONObject(
         from item: DocumentObservation.Container.List.Item,
-        maximumCandidateCount: Int
+        maximumCandidateCount: Int,
+        openNodes: [VisionDocumentNodeKey]
     ) throws -> [String: Any] {
         try [
-            "content": documentContainerJSONObject(from: item.content, maximumCandidateCount: maximumCandidateCount),
+            "content": documentContainerJSONObject(
+                from: item.content,
+                maximumCandidateCount: maximumCandidateCount,
+                openNodes: openNodes
+            ),
             "marker_type": listMarkerString(from: item.markerType) ?? NSNull(),
             "marker_string": item.markerString,
             "item_string": item.itemString,

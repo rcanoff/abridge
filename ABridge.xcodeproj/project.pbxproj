@@ -44,6 +44,7 @@
 		15D7A87E3BE4B38AD1041E43 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E082FC06BE8A4C48686E437 /* AppSettings.swift */; };
 		1656A428D08AC601BE9F754E /* PermissionsStoreContactsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC904096FD8855E4CE359EB6 /* PermissionsStoreContactsTests.swift */; };
 		1726E05B5C8AF7FC2980ED59 /* EventKitDeserializationCalendar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD97E0DFA79DF2CECA6B7CD /* EventKitDeserializationCalendar.swift */; };
+		18DC4AA91B8AE5E575BF3B0A /* VisionRecognizeDocumentsSelfNestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9172AE6C1387EFB9EC97517 /* VisionRecognizeDocumentsSelfNestingTests.swift */; };
 		19BDF48391F54C9EE3380AAA /* VisionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F0B77EE9449F291B8FDDA3 /* VisionProvider.swift */; };
 		1A2D3EDF5BB85071375BF650 /* ContactsProviderUpdateContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBD339BF5DE0CA8623C61F0 /* ContactsProviderUpdateContact.swift */; };
 		1A56D833C3BE2769A67D5B9B /* MockContactsStoreCreateGroupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00453268AB9A87A063FEBC8 /* MockContactsStoreCreateGroupTests.swift */; };
@@ -59,6 +60,7 @@
 		21B621E90CFA98E60ACAD4B6 /* AppleProviderBridgeDeleteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9961C4DB5F9724773F4E2AE8 /* AppleProviderBridgeDeleteTests.swift */; };
 		21D52CABC95DFAFB9A5822D8 /* CoreLocationSerialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9825920391619E380C4C3819 /* CoreLocationSerialization.swift */; };
 		2208AB5DE3BB0E0E51AC4690 /* MapKitTestFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E59C3FF20614D6E41190A21 /* MapKitTestFixtures.swift */; };
+		2208D66443856F14683FA2A0 /* vision-self-nesting-lists.png in Resources */ = {isa = PBXBuildFile; fileRef = 29F2D6FA16FEA20BC2EAF67C /* vision-self-nesting-lists.png */; };
 		22594CAFC0B6426A4262AF88 /* EventKitProviderSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A638D067EC7609BF8068DAD /* EventKitProviderSearch.swift */; };
 		225D4F3458F7AB1E20AD1C97 /* EventKitProviderUpdateCalendar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965F461135F9FE9B63C09C8A /* EventKitProviderUpdateCalendar.swift */; };
 		229575EC05433E60293E65C5 /* EventKitProviderUpdateEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 179115ADDFD9E9E5E1AE7912 /* EventKitProviderUpdateEvent.swift */; };
@@ -270,6 +272,7 @@
 		B94AC6759CB31525B8D6A48D /* EventKitProviderDeleteValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0984B9FEE00E16FCA78E9A25 /* EventKitProviderDeleteValidationTests.swift */; };
 		BBD31075871DCB38B37A859A /* SMAppLaunchAtLoginService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6E9CF54BC39E0990E66BEA /* SMAppLaunchAtLoginService.swift */; };
 		BD819F2CF472B27FD1729BA7 /* abridge_core.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B1D2CEBE787743D4FE0D2A /* abridge_core.swift */; };
+		BD83027719D9E6905842A848 /* VisionDocumentNodeKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A53DAD3EA53CF16BEA5369D /* VisionDocumentNodeKey.swift */; };
 		BDBE934A7D8B81D1838A37AA /* ContactsProviderListContacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C6FBBA11A1D4A23814610FE /* ContactsProviderListContacts.swift */; };
 		BDF1518FDB6E2E56923F7505 /* EventKitProviderMoveEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A38D47C104EF124CCC40CEA0 /* EventKitProviderMoveEvent.swift */; };
 		BF371A91EC4FC73185D4AADE /* PermissionsStoreProviderEnableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 690DEC9EFED82E91FC8F2444 /* PermissionsStoreProviderEnableTests.swift */; };
@@ -448,7 +451,9 @@
 		2873040193E197C3C069D590 /* ContactsProviderUnlinkContactsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsProviderUnlinkContactsTests.swift; sourceTree = "<group>"; };
 		287D6787C97D184B35A0F2CE /* MapKitProviderSearchNearbyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapKitProviderSearchNearbyTests.swift; sourceTree = "<group>"; };
 		297C80023BFE99B168199070 /* ABridgeLaunchDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ABridgeLaunchDependencies.swift; sourceTree = "<group>"; };
+		29F2D6FA16FEA20BC2EAF67C /* vision-self-nesting-lists.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vision-self-nesting-lists.png"; sourceTree = "<group>"; };
 		2A084506F570811E7E2AC1C8 /* VisionProviderRecognizeDocumentsArgumentValues.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProviderRecognizeDocumentsArgumentValues.swift; sourceTree = "<group>"; };
+		2A53DAD3EA53CF16BEA5369D /* VisionDocumentNodeKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionDocumentNodeKey.swift; sourceTree = "<group>"; };
 		2A5D91C97E8E94666A7096A0 /* MockContactsStoreUpdateGroupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockContactsStoreUpdateGroupTests.swift; sourceTree = "<group>"; };
 		2A60017FAB1BBB8BFF5DE328 /* VisionDocumentDataDetectorSerialization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionDocumentDataDetectorSerialization.swift; sourceTree = "<group>"; };
 		2AD97E0DFA79DF2CECA6B7CD /* EventKitDeserializationCalendar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitDeserializationCalendar.swift; sourceTree = "<group>"; };
@@ -683,6 +688,7 @@
 		C660FE4E50ECFEB51E034404 /* EventKitProviderListCalendarsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderListCalendarsTests.swift; sourceTree = "<group>"; };
 		C6D9DE72F5A5D7CC236819ED /* VisionProviderRecognizeTextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProviderRecognizeTextTests.swift; sourceTree = "<group>"; };
 		C88C5641CC1B0999596C556C /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		C9172AE6C1387EFB9EC97517 /* VisionRecognizeDocumentsSelfNestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionRecognizeDocumentsSelfNestingTests.swift; sourceTree = "<group>"; };
 		CA24577CBD0D9F4773172F20 /* ABridgeAppLaunchSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ABridgeAppLaunchSupport.swift; sourceTree = "<group>"; };
 		CB1D8338CE0FADA74AC0275B /* AppleProviderBridgeVisionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleProviderBridgeVisionTests.swift; sourceTree = "<group>"; };
 		CB8B74F2E6D99F3BA0B5D232 /* EventKitProviderDeleteListTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitProviderDeleteListTests.swift; sourceTree = "<group>"; };
@@ -999,8 +1005,10 @@
 				62461E0367B7FA60661B5B21 /* VisionProviderDetectFaceLandmarksTests.swift */,
 				ADABE9B7FF6CCF65F2F90E52 /* VisionProviderRecognizeDocumentsTests.swift */,
 				C6D9DE72F5A5D7CC236819ED /* VisionProviderRecognizeTextTests.swift */,
+				C9172AE6C1387EFB9EC97517 /* VisionRecognizeDocumentsSelfNestingTests.swift */,
 				FEE4789D7AF1C91114F82C5E /* VisionSerializationTests.swift */,
 				B010FC3E52A963B78BB5C7BD /* VisionTestFixtures.swift */,
+				3FB3938C24F6E561BCD44B02 /* Fixtures */,
 			);
 			path = ABridgeTests;
 			sourceTree = "<group>";
@@ -1088,6 +1096,14 @@
 			path = ABridge;
 			sourceTree = "<group>";
 		};
+		3FB3938C24F6E561BCD44B02 /* Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				29F2D6FA16FEA20BC2EAF67C /* vision-self-nesting-lists.png */,
+			);
+			path = Fixtures;
+			sourceTree = "<group>";
+		};
 		4AF1D9371A5E23CB74DF4AAE /* Vision */ = {
 			isa = PBXGroup;
 			children = (
@@ -1095,6 +1111,7 @@
 				F4197B65C1C7B9CA657A5856 /* VisionAsyncBridge.swift */,
 				192B67A02F3AE309BCA52B97 /* VisionBarcodeSerialization.swift */,
 				2A60017FAB1BBB8BFF5DE328 /* VisionDocumentDataDetectorSerialization.swift */,
+				2A53DAD3EA53CF16BEA5369D /* VisionDocumentNodeKey.swift */,
 				4CA81860CD7E6FC78DB2977D /* VisionDocumentObservationSerialization.swift */,
 				8ED99E23484DBCDDA34A6BBB /* VisionDocumentSerialization.swift */,
 				6348BEBD9DDFB95786913472 /* VisionFaceSerialization.swift */,
@@ -1294,6 +1311,7 @@
 			buildConfigurationList = D870139F2EC4DA043DE27452 /* Build configuration list for PBXNativeTarget "ABridgeTests" */;
 			buildPhases = (
 				6F3C06C491F5E3AAD75F8D05 /* Sources */,
+				3999C6A6ECE6B8403769CD3A /* Resources */,
 			);
 			buildRules = (
 			);
@@ -1363,6 +1381,14 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		3999C6A6ECE6B8403769CD3A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2208D66443856F14683FA2A0 /* vision-self-nesting-lists.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		86C7F0873003E111296DE97B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1569,6 +1595,7 @@
 				E769F31A2504F6B425E11D09 /* VisionAsyncBridge.swift in Sources */,
 				A5A3D55FE4DD987F6641ED9F /* VisionBarcodeSerialization.swift in Sources */,
 				E38492C0509F6AF2C8DB675B /* VisionDocumentDataDetectorSerialization.swift in Sources */,
+				BD83027719D9E6905842A848 /* VisionDocumentNodeKey.swift in Sources */,
 				8FA7CD124611992514CA8FAF /* VisionDocumentObservationSerialization.swift in Sources */,
 				C8F151DCA63A36F351949624 /* VisionDocumentSerialization.swift in Sources */,
 				287AF5E4F7A5610A8046AC7C /* VisionFaceSerialization.swift in Sources */,
@@ -1768,6 +1795,7 @@
 				09A35F720E2509895B560862 /* VisionProviderDetectFaceLandmarksTests.swift in Sources */,
 				E43C25C812B0DA50AEEECB4E /* VisionProviderRecognizeDocumentsTests.swift in Sources */,
 				772E571C77D5826D3FEEF330 /* VisionProviderRecognizeTextTests.swift in Sources */,
+				18DC4AA91B8AE5E575BF3B0A /* VisionRecognizeDocumentsSelfNestingTests.swift in Sources */,
 				B8A17CE19C6FE68B851CA021 /* VisionSerializationTests.swift in Sources */,
 				EEB3F71D3CFB7A5D1E6C724E /* VisionTestFixtures.swift in Sources */,
 			);

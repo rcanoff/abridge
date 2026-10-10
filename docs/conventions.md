@@ -314,6 +314,8 @@ Bridge, do not convert. Read responses must be **complete serializations** of th
 
 Write paths (create/update) accept arguments that map to Apple API inputs; they still must not invent parallel domain models. See root `AGENTS.md` § Framework fidelity.
 
+Cyclic framework graphs are the one exception: Vision can report a document list or table inside its own item or cell content, regenerated on every read. Serialization writes such a node once per path and stops when it repeats one still open above it (same region and text). See `VisionDocumentNodeKey`.
+
 Partial-payload specs are **invalid** unless the user explicitly approves a temporary migration exception in writing.
 
 ---
