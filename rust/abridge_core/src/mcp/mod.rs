@@ -131,6 +131,8 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
     record_tool_call(name, false);
     return tool_error_response(id, "unknown_tool", &format!("unknown tool: {name}"));
   };
+  // Audit under the registry name so wire and dotted calls log identically.
+  let name = tool.name;
 
   if !capability_enabled(state, tool.capability) {
     record_tool_call(name, false);
@@ -243,7 +245,7 @@ fn handle_notification_initialized(id: Option<Value>) -> Response {
 
 fn tool_descriptor(tool: &ToolDefinition) -> Value {
   serde_json::json!({
-    "name": tool.name,
+    "name": tools::wire_name(tool.name),
     "description": tool.description,
     "inputSchema": tools::input_schema(tool)
   })

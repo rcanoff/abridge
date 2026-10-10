@@ -150,5 +150,5 @@ fn tools_list_includes_get_usage_log_when_diagnostics_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains(TOOL_NAME));
+  assert!(resp.contains(r#""name":"diagnostics_get_usage_log""#));
 }
