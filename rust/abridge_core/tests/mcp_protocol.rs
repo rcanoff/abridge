@@ -67,6 +67,20 @@ fn mapkit_config_on_port(port: u16, enabled_capabilities: Vec<String>) -> Server
   }
 }
 
+fn corelocation_config_on_port(port: u16, enabled_capabilities: Vec<String>) -> ServerConfig {
+  ServerConfig {
+    host: "127.0.0.1".into(),
+    port,
+    bearer_token: TEST_TOKEN.into(),
+    app_version: APP_VERSION.into(),
+    enabled_providers: vec![ProviderConfig {
+      name: "corelocation".into(),
+      enabled: true,
+    }],
+    enabled_capabilities,
+  }
+}
+
 fn vision_config_on_port(port: u16, enabled_capabilities: Vec<String>) -> ServerConfig {
   ServerConfig {
     host: "127.0.0.1".into(),
@@ -274,7 +288,7 @@ fn mcp_tools_list_includes_search_events_when_events_search_enabled() {
 fn tools_call_dispatches_search_events() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"eventkit.events.search_events","arguments":{"query":"standup"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"eventkit_events_search_events","arguments":{"query":"standup"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.events.search".into()]),
@@ -318,7 +332,7 @@ fn mcp_tools_list_includes_list_events_when_events_read_enabled() {
 fn tools_call_dispatches_list_events() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":15,"method":"tools/call","params":{"name":"eventkit.events.list_events","arguments":{"start_date":"2023-11-14T22:13:20Z","end_date":"2023-11-15T22:13:20Z"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":15,"method":"tools/call","params":{"name":"eventkit_events_list_events","arguments":{"start_date":"2023-11-14T22:13:20Z","end_date":"2023-11-15T22:13:20Z"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.events.read".into()]),
@@ -341,7 +355,7 @@ fn tools_call_dispatches_list_events() {
 fn tools_call_dispatches_get_event() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":17,"method":"tools/call","params":{"name":"eventkit.events.get_event","arguments":{"event_identifier":"evt-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":17,"method":"tools/call","params":{"name":"eventkit_events_get_event","arguments":{"event_identifier":"evt-42"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.events.read".into()]),
@@ -384,7 +398,7 @@ fn mcp_tools_list_includes_create_event_when_events_create_enabled() {
 fn tools_call_dispatches_create_event() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":18,"method":"tools/call","params":{"name":"eventkit.events.create_event","arguments":{"calendar_identifier":"cal-work","title":"Standup","start_date":"2023-11-14T22:13:20Z","end_date":"2023-11-14T22:43:20Z"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":18,"method":"tools/call","params":{"name":"eventkit_events_create_event","arguments":{"calendar_identifier":"cal-work","title":"Standup","start_date":"2023-11-14T22:13:20Z","end_date":"2023-11-14T22:43:20Z"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.events.create".into()]),
@@ -429,7 +443,7 @@ fn mcp_tools_list_includes_update_event_when_events_edit_enabled() {
 fn tools_call_dispatches_update_event() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":19,"method":"tools/call","params":{"name":"eventkit.events.update_event","arguments":{"event_identifier":"evt-42","title":"Updated title","notes":"2%"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":19,"method":"tools/call","params":{"name":"eventkit_events_update_event","arguments":{"event_identifier":"evt-42","title":"Updated title","notes":"2%"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.events.edit".into()]),
@@ -453,7 +467,7 @@ fn tools_call_dispatches_update_event() {
 fn tools_call_dispatches_move_event() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":21,"method":"tools/call","params":{"name":"eventkit.events.move_event","arguments":{"event_identifier":"evt-42","calendar_identifier":"cal-2"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":21,"method":"tools/call","params":{"name":"eventkit_events_move_event","arguments":{"event_identifier":"evt-42","calendar_identifier":"cal-2"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.events.edit".into()]),
@@ -497,7 +511,7 @@ fn mcp_tools_list_includes_delete_event_when_events_delete_enabled() {
 fn tools_call_dispatches_delete_event() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":20,"method":"tools/call","params":{"name":"eventkit.events.delete_event","arguments":{"event_identifier":"evt-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":20,"method":"tools/call","params":{"name":"eventkit_events_delete_event","arguments":{"event_identifier":"evt-42"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.events.delete".into()]),
@@ -540,7 +554,7 @@ fn mcp_tools_list_includes_delete_calendar_when_calendars_delete_enabled() {
 fn tools_call_dispatches_delete_calendar() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"eventkit.calendars.delete_calendar","arguments":{"calendar_identifier":"cal-work"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"eventkit_calendars_delete_calendar","arguments":{"calendar_identifier":"cal-work"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.calendars.delete".into()]),
@@ -563,7 +577,7 @@ fn tools_call_dispatches_delete_calendar() {
 fn tools_call_dispatches_update_calendar() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"eventkit.calendars.update_calendar","arguments":{"calendar_identifier":"cal-work","title":"Updated"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"eventkit_calendars_update_calendar","arguments":{"calendar_identifier":"cal-work","title":"Updated"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.calendars.edit".into()]),
@@ -587,7 +601,7 @@ fn tools_call_dispatches_update_calendar() {
 fn tools_call_dispatches_create_calendar() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"eventkit.calendars.create_calendar","arguments":{"title":"Work"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"eventkit_calendars_create_calendar","arguments":{"title":"Work"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.calendars.create".into()]),
@@ -610,7 +624,7 @@ fn tools_call_dispatches_create_calendar() {
 fn tools_call_dispatches_list_calendars() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"eventkit.calendars.list_calendars","arguments":{}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"eventkit_calendars_list_calendars","arguments":{}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.calendars.read".into()]),
@@ -633,7 +647,7 @@ fn tools_call_dispatches_list_calendars() {
 fn tools_call_dispatches_to_provider() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"eventkit.reminders.list_lists","arguments":{}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"eventkit_reminders_list_lists","arguments":{}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.read".into()]),
@@ -656,7 +670,7 @@ fn tools_call_dispatches_to_provider() {
 fn tools_call_capability_disabled_without_provider_call() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"eventkit.reminders.list_lists","arguments":{}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"eventkit_reminders_list_lists","arguments":{}}}"#;
 
   let handle = create_server(config_on_port(port, vec![]), Box::new(mock.clone_for_server())).expect("create_server");
   start_server(handle.clone()).expect("start");
@@ -673,7 +687,7 @@ fn tools_call_capability_disabled_without_provider_call() {
 fn tools_call_dispatches_list_reminders() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"eventkit.reminders.list_reminders","arguments":{"calendar_identifier":"list-1"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"eventkit_reminders_list_reminders","arguments":{"calendar_identifier":"list-1"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.read".into()]),
@@ -696,7 +710,7 @@ fn tools_call_dispatches_list_reminders() {
 fn tools_call_dispatches_get_reminder() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"eventkit.reminders.get_reminder","arguments":{"calendar_item_identifier":"rem-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"eventkit_reminders_get_reminder","arguments":{"calendar_item_identifier":"rem-42"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.read".into()]),
@@ -739,7 +753,7 @@ fn mcp_tools_list_includes_search_reminders_when_search_capability_enabled() {
 fn tools_call_dispatches_search_reminders() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"eventkit.reminders.search_reminders","arguments":{"completion_status":"incomplete","calendar_identifier":"list-1"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"eventkit_reminders_search_reminders","arguments":{"completion_status":"incomplete","calendar_identifier":"list-1"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.search".into()]),
@@ -804,7 +818,7 @@ fn mcp_tools_list_includes_create_reminder_when_create_capability_enabled() {
 fn tools_call_dispatches_create_reminder() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"eventkit.reminders.create_reminder","arguments":{"calendar_identifier":"list-1","title":"Buy milk","notes":"2%","priority":5}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"eventkit_reminders_create_reminder","arguments":{"calendar_identifier":"list-1","title":"Buy milk","notes":"2%","priority":5}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.create".into()]),
@@ -850,7 +864,7 @@ fn mcp_tools_list_includes_update_reminder_when_edit_capability_enabled() {
 fn tools_call_dispatches_move_reminder() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":20,"method":"tools/call","params":{"name":"eventkit.reminders.move_reminder","arguments":{"calendar_item_identifier":"rem-42","calendar_identifier":"list-2"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":20,"method":"tools/call","params":{"name":"eventkit_reminders_move_reminder","arguments":{"calendar_item_identifier":"rem-42","calendar_identifier":"list-2"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.edit".into()]),
@@ -874,7 +888,7 @@ fn tools_call_dispatches_move_reminder() {
 fn tools_call_dispatches_update_reminder() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":19,"method":"tools/call","params":{"name":"eventkit.reminders.update_reminder","arguments":{"calendar_item_identifier":"rem-42","title":"Updated title","notes":"2%","priority":4}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":19,"method":"tools/call","params":{"name":"eventkit_reminders_update_reminder","arguments":{"calendar_item_identifier":"rem-42","title":"Updated title","notes":"2%","priority":4}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.edit".into()]),
@@ -920,7 +934,7 @@ fn mcp_tools_list_includes_complete_tools_when_complete_capability_enabled() {
 fn tools_call_dispatches_complete_reminder() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":22,"method":"tools/call","params":{"name":"eventkit.reminders.complete_reminder","arguments":{"calendar_item_identifier":"rem-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":22,"method":"tools/call","params":{"name":"eventkit_reminders_complete_reminder","arguments":{"calendar_item_identifier":"rem-42"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.complete".into()]),
@@ -943,7 +957,7 @@ fn tools_call_dispatches_complete_reminder() {
 fn tools_call_dispatches_uncomplete_reminder() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":23,"method":"tools/call","params":{"name":"eventkit.reminders.uncomplete_reminder","arguments":{"calendar_item_identifier":"rem-99"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":23,"method":"tools/call","params":{"name":"eventkit_reminders_uncomplete_reminder","arguments":{"calendar_item_identifier":"rem-99"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.complete".into()]),
@@ -990,7 +1004,7 @@ fn mcp_tools_list_includes_set_reminder_alarms_when_alarms_capability_enabled() 
 fn tools_call_dispatches_set_reminder_alarms() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":25,"method":"tools/call","params":{"name":"eventkit.reminders.set_reminder_alarms","arguments":{"calendar_item_identifier":"rem-42","alarms":[{"relative_offset":-300}]}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":25,"method":"tools/call","params":{"name":"eventkit_reminders_set_reminder_alarms","arguments":{"calendar_item_identifier":"rem-42","alarms":[{"relative_offset":-300}]}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.alarms".into()]),
@@ -1038,7 +1052,7 @@ fn mcp_tools_list_includes_set_event_alarms_when_events_alarms_capability_enable
 fn tools_call_dispatches_set_event_alarms() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":28,"method":"tools/call","params":{"name":"eventkit.events.set_event_alarms","arguments":{"event_identifier":"evt-42","alarms":[{"relative_offset":-300}]}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":28,"method":"tools/call","params":{"name":"eventkit_events_set_event_alarms","arguments":{"event_identifier":"evt-42","alarms":[{"relative_offset":-300}]}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.events.alarms".into()]),
@@ -1086,7 +1100,7 @@ fn mcp_tools_list_includes_set_reminder_recurrence_when_recurrence_capability_en
 fn tools_call_dispatches_set_reminder_recurrence() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":27,"method":"tools/call","params":{"name":"eventkit.reminders.set_reminder_recurrence","arguments":{"calendar_item_identifier":"rem-42","recurrence_rules":[{"frequency":"daily","interval":1}]}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":27,"method":"tools/call","params":{"name":"eventkit_reminders_set_reminder_recurrence","arguments":{"calendar_item_identifier":"rem-42","recurrence_rules":[{"frequency":"daily","interval":1}]}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.recurrence".into()]),
@@ -1134,7 +1148,7 @@ fn mcp_tools_list_includes_set_event_recurrence_when_events_recurrence_capabilit
 fn tools_call_dispatches_set_event_recurrence() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":30,"method":"tools/call","params":{"name":"eventkit.events.set_event_recurrence","arguments":{"event_identifier":"evt-42","recurrence_rules":[{"frequency":"daily","interval":1}]}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":30,"method":"tools/call","params":{"name":"eventkit_events_set_event_recurrence","arguments":{"event_identifier":"evt-42","recurrence_rules":[{"frequency":"daily","interval":1}]}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.events.recurrence".into()]),
@@ -1180,7 +1194,7 @@ fn mcp_tools_list_includes_invitation_tools_when_events_invitations_enabled() {
 fn tools_call_dispatches_accept_invitation() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":32,"method":"tools/call","params":{"name":"eventkit.events.accept_invitation","arguments":{"event_identifier":"evt-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":32,"method":"tools/call","params":{"name":"eventkit_events_accept_invitation","arguments":{"event_identifier":"evt-42"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.events.invitations".into()]),
@@ -1203,7 +1217,7 @@ fn tools_call_dispatches_accept_invitation() {
 fn tools_call_dispatches_decline_invitation() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":33,"method":"tools/call","params":{"name":"eventkit.events.decline_invitation","arguments":{"event_identifier":"evt-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":33,"method":"tools/call","params":{"name":"eventkit_events_decline_invitation","arguments":{"event_identifier":"evt-42"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.events.invitations".into()]),
@@ -1226,7 +1240,7 @@ fn tools_call_dispatches_decline_invitation() {
 fn tools_call_dispatches_tentative_invitation() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":34,"method":"tools/call","params":{"name":"eventkit.events.tentative_invitation","arguments":{"event_identifier":"evt-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":34,"method":"tools/call","params":{"name":"eventkit_events_tentative_invitation","arguments":{"event_identifier":"evt-42"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.events.invitations".into()]),
@@ -1270,7 +1284,7 @@ fn mcp_tools_list_includes_delete_reminder_when_delete_capability_enabled() {
 fn tools_call_dispatches_delete_reminder() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":29,"method":"tools/call","params":{"name":"eventkit.reminders.delete_reminder","arguments":{"calendar_item_identifier":"rem-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":29,"method":"tools/call","params":{"name":"eventkit_reminders_delete_reminder","arguments":{"calendar_item_identifier":"rem-42"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.delete".into()]),
@@ -1293,7 +1307,7 @@ fn tools_call_dispatches_delete_reminder() {
 fn tools_call_dispatches_delete_list() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":30,"method":"tools/call","params":{"name":"eventkit.reminders.delete_list","arguments":{"calendar_identifier":"list-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":30,"method":"tools/call","params":{"name":"eventkit_reminders_delete_list","arguments":{"calendar_identifier":"list-42"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.delete".into()]),
@@ -1316,7 +1330,7 @@ fn tools_call_dispatches_delete_list() {
 fn tools_call_dispatches_create_list() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":17,"method":"tools/call","params":{"name":"eventkit.reminders.create_list","arguments":{"title":"Shopping","source_identifier":"src-local"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":17,"method":"tools/call","params":{"name":"eventkit_reminders_create_list","arguments":{"title":"Shopping","source_identifier":"src-local"}}}"#;
 
   let handle = create_server(
     config_on_port(port, vec!["eventkit.reminders.create".into()]),
@@ -1362,7 +1376,7 @@ fn mcp_tools_list_includes_list_contacts_when_contacts_read_enabled() {
 fn tools_call_dispatches_list_groups() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"contacts.list_groups","arguments":{"container_identifier":"container-1"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"contacts_list_groups","arguments":{"container_identifier":"container-1"}}}"#;
 
   let handle = create_server(
     contacts_config_on_port(port, vec!["contacts.read".into()]),
@@ -1385,7 +1399,7 @@ fn tools_call_dispatches_list_groups() {
 fn tools_call_dispatches_update_group() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"contacts.update_group","arguments":{"group_identifier":"group-1","name":"Friends"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"contacts_update_group","arguments":{"group_identifier":"group-1","name":"Friends"}}}"#;
 
   let handle = create_server(
     contacts_config_on_port(port, vec!["contacts.edit".into()]),
@@ -1409,7 +1423,7 @@ fn tools_call_dispatches_update_group() {
 fn tools_call_dispatches_create_group() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"contacts.create_group","arguments":{"container_identifier":"container-1","name":"Family"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"contacts_create_group","arguments":{"container_identifier":"container-1","name":"Family"}}}"#;
 
   let handle = create_server(
     contacts_config_on_port(port, vec!["contacts.create".into()]),
@@ -1433,7 +1447,7 @@ fn tools_call_dispatches_create_group() {
 fn tools_call_dispatches_get_contact() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"contacts.get_contact","arguments":{"contact_identifier":"contact-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"contacts_get_contact","arguments":{"contact_identifier":"contact-42"}}}"#;
 
   let handle = create_server(
     contacts_config_on_port(port, vec!["contacts.read".into()]),
@@ -1456,7 +1470,7 @@ fn tools_call_dispatches_get_contact() {
 fn tools_call_dispatches_list_contacts() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"contacts.list_contacts","arguments":{"container_identifier":"container-1"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"contacts_list_contacts","arguments":{"container_identifier":"container-1"}}}"#;
 
   let handle = create_server(
     contacts_config_on_port(port, vec!["contacts.read".into()]),
@@ -1548,7 +1562,7 @@ fn mcp_tools_list_includes_edit_contacts_when_contacts_edit_enabled() {
 fn tools_call_dispatches_link_contacts() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":15,"method":"tools/call","params":{"name":"contacts.link_contacts","arguments":{"from_contact_identifier":"contact-from","to_contact_identifier":"contact-to"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":15,"method":"tools/call","params":{"name":"contacts_link_contacts","arguments":{"from_contact_identifier":"contact-from","to_contact_identifier":"contact-to"}}}"#;
 
   let handle = create_server(
     contacts_config_on_port(port, vec!["contacts.edit".into()]),
@@ -1572,7 +1586,7 @@ fn tools_call_dispatches_link_contacts() {
 fn tools_call_dispatches_unlink_contacts() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"contacts.unlink_contacts","arguments":{"contact_identifier":"contact-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"contacts_unlink_contacts","arguments":{"contact_identifier":"contact-42"}}}"#;
 
   let handle = create_server(
     contacts_config_on_port(port, vec!["contacts.edit".into()]),
@@ -1595,7 +1609,7 @@ fn tools_call_dispatches_unlink_contacts() {
 fn tools_call_dispatches_delete_contact() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"contacts.delete_contact","arguments":{"contact_identifier":"contact-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"contacts_delete_contact","arguments":{"contact_identifier":"contact-42"}}}"#;
 
   let handle = create_server(
     contacts_config_on_port(port, vec!["contacts.delete".into()]),
@@ -1618,7 +1632,7 @@ fn tools_call_dispatches_delete_contact() {
 fn tools_call_dispatches_delete_group() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"contacts.delete_group","arguments":{"group_identifier":"group-42"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"contacts_delete_group","arguments":{"group_identifier":"group-42"}}}"#;
 
   let handle = create_server(
     contacts_config_on_port(port, vec!["contacts.delete".into()]),
@@ -1641,7 +1655,7 @@ fn tools_call_dispatches_delete_group() {
 fn tools_call_dispatches_search_contacts() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"contacts.search_contacts","arguments":{"name":"Jane","email_address":"jane@example.com","container_identifier":"container-1"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"contacts_search_contacts","arguments":{"name":"Jane","email_address":"jane@example.com","container_identifier":"container-1"}}}"#;
 
   let handle = create_server(
     contacts_config_on_port(port, vec!["contacts.search".into()]),
@@ -1704,7 +1718,7 @@ fn mcp_tools_list_includes_search_nearby_when_mapkit_search_enabled() {
 fn tools_call_dispatches_search_places() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"mapkit.search_places","arguments":{"query":"coffee"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"mapkit_search_places","arguments":{"query":"coffee"}}}"#;
 
   let handle = create_server(
     mapkit_config_on_port(port, vec!["mapkit.search".into()]),
@@ -1727,7 +1741,7 @@ fn tools_call_dispatches_search_places() {
 fn tools_call_dispatches_search_nearby() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"mapkit.search_nearby","arguments":{"coordinate":{"latitude":37.3346,"longitude":-122.0090},"radius_meters":500}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"mapkit_search_nearby","arguments":{"coordinate":{"latitude":37.3346,"longitude":-122.0090},"radius_meters":500}}}"#;
 
   let handle = create_server(
     mapkit_config_on_port(port, vec!["mapkit.search".into()]),
@@ -1769,7 +1783,7 @@ fn mcp_tools_list_includes_reverse_geocode_when_mapkit_geocode_enabled() {
 fn tools_call_dispatches_reverse_geocode() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"mapkit.reverse_geocode","arguments":{"coordinate":{"latitude":37.3346,"longitude":-122.0090}}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"mapkit_reverse_geocode","arguments":{"coordinate":{"latitude":37.3346,"longitude":-122.0090}}}}"#;
 
   let handle = create_server(
     mapkit_config_on_port(port, vec!["mapkit.geocode".into()]),
@@ -1811,7 +1825,7 @@ fn mcp_tools_list_includes_forward_geocode_when_mapkit_geocode_enabled() {
 fn tools_call_dispatches_forward_geocode() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"mapkit.forward_geocode","arguments":{"address":"1 Apple Park Way, Cupertino, CA"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"mapkit_forward_geocode","arguments":{"address":"1 Apple Park Way, Cupertino, CA"}}}"#;
 
   let handle = create_server(
     mapkit_config_on_port(port, vec!["mapkit.geocode".into()]),
@@ -1853,7 +1867,7 @@ fn mcp_tools_list_includes_calculate_route_when_mapkit_routing_enabled() {
 fn tools_call_dispatches_calculate_route() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":18,"method":"tools/call","params":{"name":"mapkit.calculate_route","arguments":{"source":{"coordinate":{"latitude":37.3346,"longitude":-122.0090}},"destination":{"coordinate":{"latitude":37.7749,"longitude":-122.4194}}}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":18,"method":"tools/call","params":{"name":"mapkit_calculate_route","arguments":{"source":{"coordinate":{"latitude":37.3346,"longitude":-122.0090}},"destination":{"coordinate":{"latitude":37.7749,"longitude":-122.4194}}}}}"#;
 
   let handle = create_server(
     mapkit_config_on_port(port, vec!["mapkit.routing".into()]),
@@ -1896,7 +1910,7 @@ fn mcp_tools_list_includes_estimate_travel_time_when_mapkit_routing_enabled() {
 fn tools_call_dispatches_estimate_travel_time() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":20,"method":"tools/call","params":{"name":"mapkit.estimate_travel_time","arguments":{"source":{"coordinate":{"latitude":37.3346,"longitude":-122.0090}},"destination":{"coordinate":{"latitude":37.7749,"longitude":-122.4194}}}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":20,"method":"tools/call","params":{"name":"mapkit_estimate_travel_time","arguments":{"source":{"coordinate":{"latitude":37.3346,"longitude":-122.0090}},"destination":{"coordinate":{"latitude":37.7749,"longitude":-122.4194}}}}}"#;
 
   let handle = create_server(
     mapkit_config_on_port(port, vec!["mapkit.routing".into()]),
@@ -1917,12 +1931,12 @@ fn tools_call_dispatches_estimate_travel_time() {
 }
 
 #[test]
-fn mcp_tools_list_includes_get_current_location_when_mapkit_location_enabled() {
+fn mcp_tools_list_includes_get_current_location_when_corelocation_read_enabled() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
   let body = r#"{"jsonrpc":"2.0","id":21,"method":"tools/list","params":{}}"#;
   let handle = create_server(
-    mapkit_config_on_port(port, vec!["mapkit.location".into()]),
+    corelocation_config_on_port(port, vec!["corelocation.read".into()]),
     Box::new(mock.clone_for_server()),
   )
   .expect("create_server");
@@ -1930,17 +1944,16 @@ fn mcp_tools_list_includes_get_current_location_when_mapkit_location_enabled() {
   let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
   stop_server(handle).expect("stop");
   assert_eq!(status, 200);
-  assert!(resp.contains("mapkit_get_current_location"));
+  assert!(resp.contains("corelocation_get_current_location"));
 }
 
 #[test]
 fn tools_call_dispatches_get_current_location() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body =
-    r#"{"jsonrpc":"2.0","id":22,"method":"tools/call","params":{"name":"mapkit.get_current_location","arguments":{}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":22,"method":"tools/call","params":{"name":"corelocation_get_current_location","arguments":{}}}"#;
   let handle = create_server(
-    mapkit_config_on_port(port, vec!["mapkit.location".into()]),
+    corelocation_config_on_port(port, vec!["corelocation.read".into()]),
     Box::new(mock.clone_for_server()),
   )
   .expect("create_server");
@@ -1950,13 +1963,13 @@ fn tools_call_dispatches_get_current_location() {
   assert_eq!(status, 200);
   assert!(resp.contains(r#""isError":false"#));
   let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
-  assert_eq!(recorded.provider, "mapkit");
+  assert_eq!(recorded.provider, "corelocation");
   assert_eq!(recorded.operation, "get_current_location");
   assert_eq!(recorded.payload_json, "{}");
 }
 
 #[test]
-fn mcp_tools_list_includes_lookup_place_when_mapkit_read_enabled() {
+fn mcp_tools_list_includes_get_place_when_mapkit_read_enabled() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
   let body = r#"{"jsonrpc":"2.0","id":21,"method":"tools/list","params":{}}"#;
@@ -1971,14 +1984,14 @@ fn mcp_tools_list_includes_lookup_place_when_mapkit_read_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("mapkit_lookup_place"));
+  assert!(resp.contains("mapkit_get_place"));
 }
 
 #[test]
-fn tools_call_dispatches_lookup_place() {
+fn tools_call_dispatches_get_place() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":22,"method":"tools/call","params":{"name":"mapkit.lookup_place","arguments":{"identifier":"I1234567890"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":22,"method":"tools/call","params":{"name":"mapkit_get_place","arguments":{"identifier":"I1234567890"}}}"#;
 
   let handle = create_server(
     mapkit_config_on_port(port, vec!["mapkit.read".into()]),
@@ -1993,7 +2006,7 @@ fn tools_call_dispatches_lookup_place() {
   assert!(resp.contains(r#""isError":false"#));
   let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
   assert_eq!(recorded.provider, "mapkit");
-  assert_eq!(recorded.operation, "lookup_place");
+  assert_eq!(recorded.operation, "get_place");
   assert!(recorded.payload_json.contains("I1234567890"));
 }
 
@@ -2020,7 +2033,7 @@ fn mcp_tools_list_includes_open_navigation_when_mapkit_navigation_enabled() {
 fn tools_call_dispatches_open_navigation() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":22,"method":"tools/call","params":{"name":"mapkit.open_navigation","arguments":{"source":{"coordinate":{"latitude":37.3346,"longitude":-122.0090}},"destination":{"coordinate":{"latitude":37.7749,"longitude":-122.4194}}}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":22,"method":"tools/call","params":{"name":"mapkit_open_navigation","arguments":{"source":{"coordinate":{"latitude":37.3346,"longitude":-122.0090}},"destination":{"coordinate":{"latitude":37.7749,"longitude":-122.4194}}}}}"#;
 
   let handle = create_server(
     mapkit_config_on_port(port, vec!["mapkit.navigation".into()]),
@@ -2063,7 +2076,7 @@ fn mcp_tools_list_includes_recognize_text_when_vision_text_enabled() {
 fn tools_call_dispatches_recognize_text() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision.recognize_text","arguments":{"image_data":"aGVsbG8="}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision_recognize_text","arguments":{"image_data":"aGVsbG8="}}}"#;
 
   let handle = create_server(
     vision_config_on_port(port, vec!["vision.text".into()]),
@@ -2083,7 +2096,7 @@ fn tools_call_dispatches_recognize_text() {
 }
 
 #[test]
-fn mcp_tools_list_includes_scan_document_when_vision_document_enabled() {
+fn mcp_tools_list_includes_recognize_documents_when_vision_document_enabled() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
   let body = r#"{"jsonrpc":"2.0","id":3,"method":"tools/list","params":{}}"#;
@@ -2098,14 +2111,14 @@ fn mcp_tools_list_includes_scan_document_when_vision_document_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("vision_scan_document"));
+  assert!(resp.contains("vision_recognize_documents"));
 }
 
 #[test]
-fn tools_call_dispatches_scan_document() {
+fn tools_call_dispatches_recognize_documents() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision.scan_document","arguments":{"image_data":"aGVsbG8="}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision_recognize_documents","arguments":{"image_data":"aGVsbG8="}}}"#;
 
   let handle = create_server(
     vision_config_on_port(port, vec!["vision.document".into()]),
@@ -2120,49 +2133,7 @@ fn tools_call_dispatches_scan_document() {
   assert!(resp.contains(r#""isError":false"#));
   let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
   assert_eq!(recorded.provider, "vision");
-  assert_eq!(recorded.operation, "scan_document");
-  assert!(recorded.payload_json.contains("image_data"));
-}
-
-#[test]
-fn mcp_tools_list_includes_read_qr_code_when_vision_barcodes_enabled() {
-  let port = allocate_test_port();
-  let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":3,"method":"tools/list","params":{}}"#;
-
-  let handle = create_server(
-    vision_config_on_port(port, vec!["vision.barcodes".into()]),
-    Box::new(mock.clone_for_server()),
-  )
-  .expect("create_server");
-  start_server(handle.clone()).expect("start");
-  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
-  stop_server(handle).expect("stop");
-
-  assert_eq!(status, 200);
-  assert!(resp.contains("vision_read_qr_code"));
-}
-
-#[test]
-fn tools_call_dispatches_read_qr_code() {
-  let port = allocate_test_port();
-  let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision.read_qr_code","arguments":{"image_data":"aGVsbG8="}}}"#;
-
-  let handle = create_server(
-    vision_config_on_port(port, vec!["vision.barcodes".into()]),
-    Box::new(mock.clone_for_server()),
-  )
-  .expect("create_server");
-  start_server(handle.clone()).expect("start");
-  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
-  stop_server(handle).expect("stop");
-
-  assert_eq!(status, 200);
-  assert!(resp.contains(r#""isError":false"#));
-  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
-  assert_eq!(recorded.provider, "vision");
-  assert_eq!(recorded.operation, "read_qr_code");
+  assert_eq!(recorded.operation, "recognize_documents");
   assert!(recorded.payload_json.contains("image_data"));
 }
 
@@ -2189,7 +2160,7 @@ fn mcp_tools_list_includes_detect_barcodes_when_vision_barcodes_enabled() {
 fn tools_call_dispatches_detect_barcodes() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision.detect_barcodes","arguments":{"image_data":"aGVsbG8="}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision_detect_barcodes","arguments":{"image_data":"aGVsbG8="}}}"#;
 
   let handle = create_server(
     vision_config_on_port(port, vec!["vision.barcodes".into()]),
@@ -2209,7 +2180,7 @@ fn tools_call_dispatches_detect_barcodes() {
 }
 
 #[test]
-fn mcp_tools_list_includes_detect_faces_when_vision_faces_enabled() {
+fn mcp_tools_list_includes_detect_face_landmarks_when_vision_faces_enabled() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
   let body = r#"{"jsonrpc":"2.0","id":3,"method":"tools/list","params":{}}"#;
@@ -2224,14 +2195,14 @@ fn mcp_tools_list_includes_detect_faces_when_vision_faces_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("vision_detect_faces"));
+  assert!(resp.contains("vision_detect_face_landmarks"));
 }
 
 #[test]
-fn tools_call_dispatches_detect_faces() {
+fn tools_call_dispatches_detect_face_landmarks() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision.detect_faces","arguments":{"image_data":"aGVsbG8="}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision_detect_face_landmarks","arguments":{"image_data":"aGVsbG8="}}}"#;
 
   let handle = create_server(
     vision_config_on_port(port, vec!["vision.faces".into()]),
@@ -2246,7 +2217,7 @@ fn tools_call_dispatches_detect_faces() {
   assert!(resp.contains(r#""isError":false"#));
   let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
   assert_eq!(recorded.provider, "vision");
-  assert_eq!(recorded.operation, "detect_faces");
+  assert_eq!(recorded.operation, "detect_face_landmarks");
   assert!(recorded.payload_json.contains("image_data"));
 }
 

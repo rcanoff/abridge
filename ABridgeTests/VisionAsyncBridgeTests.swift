@@ -39,12 +39,16 @@ struct VisionAsyncBridgeTests {
 
     @Test
     @MainActor
-    func performReturnsResultRepeatedlyUnderRunLoopLoad() throws {
+    func performRunsWorkOffTheMainThreadWithTheWorkerStack() throws {
         for iteration in 0 ..< 50 {
-            let value = try VisionAsyncBridge.perform(operation: "Vision stress \(iteration)", timeout: 1) {
-                iteration
+            let (ranOnMainThread, stackSize) = try VisionAsyncBridge.perform(
+                operation: "Vision stress \(iteration)",
+                timeout: 1
+            ) {
+                (pthread_main_np() != 0, pthread_get_stacksize_np(pthread_self()))
             }
-            #expect(value == iteration)
+            #expect(ranOnMainThread == false)
+            #expect(stackSize >= VisionAsyncBridge.workerStackSize)
         }
     }
 }

@@ -1,4 +1,4 @@
-# vision.detect_barcodes MCP Tool — Design Spec
+# vision_detect_barcodes MCP Tool — Design Spec
 
 **Date:** 2026-06-30  
 **Status:** Approved  
@@ -7,13 +7,13 @@
 **PRD:** `docs/prd.md` § Future Providers  
 **Conventions:** `docs/conventions.md` § JSON and payloads (framework fidelity)  
 **Foundation:** `docs/superpowers/specs/2026-06-30-vision-permissions-foundation-design.md`  
-**Sibling:** `docs/superpowers/specs/2026-06-30-vision-recognize-text-design.md`, `docs/superpowers/specs/2026-06-30-vision-scan-document-design.md`
+**Sibling:** `docs/superpowers/specs/2026-06-30-vision-recognize-text-design.md`, `docs/superpowers/specs/2026-06-30-vision-recognize-documents-design.md`
 
 ---
 
 ## Summary
 
-Implement `vision.detect_barcodes` MCP tool: barcode and QR detection via **`DetectBarcodesRequest`** / **`ImageRequestHandler`** (macOS 26 Swift Vision API). Client supplies image bytes as **base64** (no camera or Photos TCC). Returns **exhaustive `BarcodeObservation` JSON projection** (mechanical snake_case serialization, reuse `VisionDocumentObservationSerialization` from #115). Register in Rust tool catalog gated by **`vision.barcodes`**. Flip `vision-barcodes` capability to **`shipped: true`**. No Apple permission gate per #151 (payload-only V1). Depends on #114 for Vision provider scaffolding and #115 for barcode observation serialization helpers.
+Implement `vision_detect_barcodes` MCP tool: barcode and QR detection via **`DetectBarcodesRequest`** / **`ImageRequestHandler`** (macOS 26 Swift Vision API). Client supplies image bytes as **base64** (no camera or Photos TCC). Returns **exhaustive `BarcodeObservation` JSON projection** (mechanical snake_case serialization, reuse `VisionDocumentObservationSerialization` from #115). Register in Rust tool catalog gated by **`vision.barcodes`**. Flip `vision-barcodes` capability to **`shipped: true`**. No Apple permission gate per #151 (payload-only V1). Depends on #114 for Vision provider scaffolding and #115 for barcode observation serialization helpers.
 
 ---
 
@@ -21,7 +21,7 @@ Implement `vision.detect_barcodes` MCP tool: barcode and QR detection via **`Det
 
 | Field | Value |
 |-------|-------|
-| MCP name | `vision.detect_barcodes` |
+| MCP name | `vision_detect_barcodes` |
 | Capability | `vision.barcodes` |
 | Provider | `vision` |
 | Operation | `detect_barcodes` |
@@ -105,7 +105,7 @@ Every `results[]` element is a **complete `BarcodeObservation` projection** — 
 
 ### `BarcodeObservation` keys (macOS 26 SDK)
 
-Same projection as #115 `scan_document` nested barcodes (see `docs/superpowers/specs/2026-06-30-vision-scan-document-design.md` § `BarcodeObservation`):
+Same projection as #115 `recognize_documents` nested barcodes (see `docs/superpowers/specs/2026-06-30-vision-recognize-documents-design.md` § `BarcodeObservation`):
 
 | Key | Source | Encoding |
 |-----|--------|----------|
@@ -201,7 +201,7 @@ Rust tools/call → ProviderBridge → VisionProvider.detect_barcodes
 | `ABridgeTests/MockVisionStore.swift` | Canned `BarcodeObservation` results |
 | `ABridgeTests/AppleProviderBridgeVisionTests.swift` | Success path with mock provider |
 | `ABridgeTests/AppSettingsVisionTests.swift` | Shipped capability server gating |
-| `README.md` | Check off `vision.detect_barcodes` |
+| `README.md` | Check off `vision_detect_barcodes` |
 
 ### Rust files (modify)
 
@@ -233,15 +233,15 @@ Rust: tool absent from `tools/list` when `vision.barcodes` not enabled; `tools/c
 
 ---
 
-## Relationship to `vision.read_qr_code`
+## QR codes
 
-`vision.detect_barcodes` is the **general** barcode tool (all symbologies, optional `symbologies` filter). `vision.read_qr_code` (#118, future) is a convenience wrapper scoped to QR — out of scope for #117. Both share `vision.barcodes` capability per foundation spec.
+`vision_detect_barcodes` covers every symbology, QR included: pass `symbologies: ["qr"]` to scope detection to QR codes. There is no separate QR tool.
 
 ---
 
 ## Acceptance criteria (#117)
 
-1. `vision.detect_barcodes` in `tools/list` when `vision.barcodes` enabled.
+1. `vision_detect_barcodes` in `tools/list` when `vision.barcodes` enabled.
 2. Valid `tools/call` succeeds against mock/live Vision per tests.
 3. Disabled capability → typed MCP error (not silent success).
 4. Responses use exhaustive `BarcodeObservation` projection (snake_case keys).

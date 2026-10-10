@@ -1,8 +1,8 @@
-# vision.detect_barcodes Implementation Plan
+# vision_detect_barcodes Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship `vision.detect_barcodes` MCP tool (#117) with exhaustive `BarcodeObservation` JSON projection.
+**Goal:** Ship `vision_detect_barcodes` MCP tool (#117) with exhaustive `BarcodeObservation` JSON projection.
 
 **Architecture:** Extend `VisionStore` from #114/#115; `DetectBarcodesRequest` via async `ImageRequestHandler` bridged synchronously; reuse `VisionDocumentObservationSerialization` barcode projection; Rust tool registration with `vision.barcodes` capability; flip `vision-barcodes` to shipped; no Apple TCC gate per #151.
 
@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-06-30-vision-detect-barcodes-design.md`
 
-**Prerequisite:** #114 (`vision.recognize_text`) and #115 (`vision.scan_document`) merged on `main`.
+**Prerequisite:** #114 (`vision_recognize_text`) and #115 (`vision_recognize_documents`) merged on `main`.
 
 ---
 
@@ -60,7 +60,7 @@ fn accepts_vision_barcodes_capability_shape() {
 - [ ] **Step 2: Register tool in tools/mod.rs**
 
 ```rust
-pub const TOOL_DETECT_BARCODES: &str = "vision.detect_barcodes";
+pub const TOOL_DETECT_BARCODES: &str = "vision_detect_barcodes";
 ```
 
 Add to `ALL_TOOLS` (bump array length 54 → 55):
@@ -152,7 +152,7 @@ Expected: PASS
 
 ```bash
 git add rust/abridge_core/src/capabilities.rs rust/abridge_core/src/tools/mod.rs
-git commit -m "feat(vision): register vision.detect_barcodes MCP tool in Rust"
+git commit -m "feat(vision): register vision_detect_barcodes MCP tool in Rust"
 ```
 
 ---
@@ -181,14 +181,14 @@ fn mcp_tools_list_includes_detect_barcodes_when_vision_barcodes_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("vision.detect_barcodes"));
+  assert!(resp.contains("vision_detect_barcodes"));
 }
 
 #[test]
 fn tools_call_dispatches_detect_barcodes() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision.detect_barcodes","arguments":{"image_data":"aGVsbG8="}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision_detect_barcodes","arguments":{"image_data":"aGVsbG8="}}}"#;
 
   let handle = create_server(
     vision_config_on_port(port, vec!["vision.barcodes".into()]),
@@ -302,7 +302,7 @@ protocol VisionStoreing {
 
 - [ ] **Step 2: Implement LiveVisionStore.detectBarcodes**
 
-Decode image via existing `imageSource` helper. Build `ImageRequestHandler(request.imageData, orientation:)`. Construct `DetectBarcodesRequest(request.revision)`, apply optional `regionOfInterest`, `symbologies`, `coalesceCompositeSymbologies`. Call `performVisionAsync` + `handler.perform(request)` (same bridge as `scanDocument`).
+Decode image via existing `imageSource` helper. Build `ImageRequestHandler(request.imageData, orientation:)`. Construct `DetectBarcodesRequest(request.revision)`, apply optional `regionOfInterest`, `symbologies`, `coalesceCompositeSymbologies`. Call `performVisionAsync` + `handler.perform(request)` (same bridge as `recognizeDocuments`).
 
 - [ ] **Step 3: Extend MockVisionStore**
 
@@ -337,7 +337,7 @@ Cases:
 
 - [ ] **Step 2: Implement detect_barcodes handler**
 
-Mirror `VisionProviderRecognizeText` / `VisionProviderScanDocument` argument parsing:
+Mirror `VisionProviderRecognizeText` / `VisionProviderRecognizeDocuments` argument parsing:
 - Parse base64 `image_data`
 - Map optional `orientation`, `revision`, `region_of_interest`, `symbologies`, `coalesce_composite_symbologies`
 - Decode `symbologies` strings to `[BarcodeSymbology]` via `BarcodeSymbology(rawValue:)` or SDK-appropriate initializer
@@ -351,8 +351,8 @@ extension VisionProvider {
         switch operation {
         case "recognize_text":
             recognizeText(payloadJson: payloadJson)
-        case "scan_document":
-            scanDocument(payloadJson: payloadJson)
+        case "recognize_documents":
+            recognizeDocuments(payloadJson: payloadJson)
         case "detect_barcodes":
             detectBarcodes(payloadJson: payloadJson)
         default:
@@ -401,7 +401,7 @@ When `vision-barcodes` toggled on, `serverEnabledMCPCapabilityIDs` includes `vis
 - [ ] **Step 3: README checkoff**
 
 ```markdown
-- [x] `vision.detect_barcodes`
+- [x] `vision_detect_barcodes`
 ```
 
 - [ ] **Step 4: Regenerate Xcode project if new Swift files added**

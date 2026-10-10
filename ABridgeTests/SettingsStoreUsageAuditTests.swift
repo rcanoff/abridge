@@ -23,7 +23,7 @@ struct SettingsStoreUsageAuditTests {
             UsageAuditEntry(
                 timestampUtc: "2025-06-28T08:00:01.000Z",
                 eventType: "tool_call",
-                toolName: "eventkit.reminders.list_lists",
+                toolName: "eventkit_reminders_list_lists",
                 success: true,
                 durationMs: 42
             ),
@@ -59,7 +59,7 @@ struct SettingsStoreUsageAuditTests {
             UsageAuditEntry(
                 timestampUtc: "2025-06-28T08:00:01.000Z",
                 eventType: "tool_call",
-                toolName: "eventkit.reminders.list_lists",
+                toolName: "eventkit_reminders_list_lists",
                 success: true,
                 durationMs: 42
             ),

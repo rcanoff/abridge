@@ -3,10 +3,6 @@ import MapKit
 
 extension MapKitProvider {
     func forwardGeocode(payloadJson: String) -> ProviderResponse {
-        guard isLocationAuthorized else {
-            return errorResponse(code: "permission_denied", message: "Location access not granted")
-        }
-
         do {
             let arguments = try parseForwardGeocodeArguments(payloadJson)
             let mapItems = try store.forwardGeocode(request: arguments)

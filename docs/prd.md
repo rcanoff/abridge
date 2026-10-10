@@ -321,7 +321,7 @@ Lifecycle events are also captured: server start/stop, port bind, MCP client `in
 
 ### MCP diagnostics tool
 
-A read-only MCP tool (`diagnostics_get_usage_log`; registry name `diagnostics.get_usage_log`, also accepted by `tools/call`) returns the accumulated audit log as JSON. It requires normal Bearer authentication. When logging is disabled, the tool still responds but indicates that recording is off and returns only previously captured entries (if any).
+A read-only MCP tool (`diagnostics_get_usage_log`) returns the accumulated audit log as JSON. It requires normal Bearer authentication. When logging is disabled, the tool still responds but indicates that recording is off and returns only previously captured entries (if any).
 
 ---
 

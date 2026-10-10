@@ -1,7 +1,7 @@
 # MapKit Location Permission & MCP Capability Foundation — Design Spec
 
 **Date:** 2026-06-29  
-**Status:** Approved  
+**Status:** Superseded. Location Access now gates only the Core Location provider (`corelocation_get_current_location`); MapKit tools need no macOS permission.  
 **Issue:** #150 (Epic #103, first in MapKit merge order)  
 **Branch:** `feat/mapkit-permissions-foundation`  
 **PRD:** `docs/prd.md` § Future Providers, § User Interface — Permissions  
@@ -63,12 +63,12 @@ Session reconciliation mirrors Contacts: after `requestAccess()`, retain a sessi
 
 | Toggle ID | Capability ID | Label | Shipped | Future MCP tools (README) |
 |-----------|---------------|-------|---------|---------------------------|
-| `mapkit-search` | `mapkit.search` | Search | `false` | `mapkit.search_places`, `mapkit.search_nearby` |
-| `mapkit-geocode` | `mapkit.geocode` | Geocode | `false` | `mapkit.reverse_geocode`, `mapkit.forward_geocode` |
-| `mapkit-routing` | `mapkit.routing` | Routing | `false` | `mapkit.calculate_route`, `mapkit.estimate_travel_time` |
-| `mapkit-navigation` | `mapkit.navigation` | Navigation | `false` | `mapkit.open_navigation` |
-| `mapkit-location` | `mapkit.location` | Location | `false` | `mapkit.get_current_location` |
-| `mapkit-read` | `mapkit.read` | Read | `false` | `mapkit.lookup_place` |
+| `mapkit-search` | `mapkit.search` | Search | `false` | `mapkit_search_places`, `mapkit_search_nearby` |
+| `mapkit-geocode` | `mapkit.geocode` | Geocode | `false` | `mapkit_reverse_geocode`, `mapkit_forward_geocode` |
+| `mapkit-routing` | `mapkit.routing` | Routing | `false` | `mapkit_calculate_route`, `mapkit_estimate_travel_time` |
+| `mapkit-navigation` | `mapkit.navigation` | Navigation | `false` | `mapkit_open_navigation` |
+| `corelocation-read` | `corelocation.read` | Location | `false` | `corelocation_get_current_location` |
+| `mapkit-read` | `mapkit.read` | Read | `false` | `mapkit_get_place` |
 
 `shipped: false` until sibling MCP tool subtasks land. Toggles persist in `AppSettings.savedCapabilityIDs` but do not reach the server until shipped **and** Apple location permission granted.
 

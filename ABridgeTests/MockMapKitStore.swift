@@ -3,17 +3,13 @@ import CoreLocation
 import MapKit
 
 final class MockMapKitStore: MapKitStoreing, @unchecked Sendable {
-    var authorizationStatus: CLAuthorizationStatus = .authorized
     var results: [MapKitSearchResult] = []
     var nearbyResults: [MapKitSearchResult] = []
     var reverseGeocodeResults: [[MKMapItem]] = []
     var forwardGeocodeResults: [[MKMapItem]] = []
     var calculateRouteResults: [MapKitCalculateRouteResult] = []
     var estimateTravelTimeResults: [MapKitEstimateTravelTimeResult] = []
-    var getCurrentLocationResult: CLLocation?
-    var getCurrentLocationError: Error?
-    private(set) var getCurrentLocationCallCount = 0
-    var lookupPlaceResults: [MKMapItem] = []
+    var getPlaceResults: [MKMapItem] = []
     var openNavigationResults: [MapKitOpenNavigationResult] = []
     private(set) var lastRequest: MapKitSearchRequest?
     private(set) var lastNearbyRequest: MapKitSearchNearbyRequest?
@@ -21,12 +17,8 @@ final class MockMapKitStore: MapKitStoreing, @unchecked Sendable {
     private(set) var lastForwardGeocodeRequest: MapKitForwardGeocodeRequest?
     private(set) var lastCalculateRouteRequest: MapKitCalculateRouteRequest?
     private(set) var lastEstimateTravelTimeRequest: MapKitEstimateTravelTimeRequest?
-    private(set) var lastLookupPlaceRequest: MapKitLookupPlaceRequest?
+    private(set) var lastGetPlaceRequest: MapKitGetPlaceRequest?
     private(set) var lastOpenNavigationRequest: MapKitOpenNavigationRequest?
-
-    func locationAuthorizationStatus() -> CLAuthorizationStatus {
-        authorizationStatus
-    }
 
     func searchPlaces(request: MapKitSearchRequest) throws -> MapKitSearchResult {
         lastRequest = request; return results.first ?? MapKitSearchResult(mapItems: [], boundingRegion: nil)
@@ -56,17 +48,6 @@ final class MockMapKitStore: MapKitStoreing, @unchecked Sendable {
         )
     }
 
-    func getCurrentLocation() throws -> CLLocation {
-        getCurrentLocationCallCount += 1
-        if let getCurrentLocationError {
-            throw getCurrentLocationError
-        }
-        if let getCurrentLocationResult {
-            return getCurrentLocationResult
-        }
-        return CLLocation(latitude: 0, longitude: 0)
-    }
-
     func estimateTravelTime(request: MapKitEstimateTravelTimeRequest) throws -> MapKitEstimateTravelTimeResult {
         lastEstimateTravelTimeRequest = request
         if let first = estimateTravelTimeResults.first {
@@ -85,9 +66,9 @@ final class MockMapKitStore: MapKitStoreing, @unchecked Sendable {
         )
     }
 
-    func lookupPlace(request: MapKitLookupPlaceRequest) throws -> MKMapItem {
-        lastLookupPlaceRequest = request
-        if let first = lookupPlaceResults.first {
+    func getPlace(request: MapKitGetPlaceRequest) throws -> MKMapItem {
+        lastGetPlaceRequest = request
+        if let first = getPlaceResults.first {
             return first
         }
 

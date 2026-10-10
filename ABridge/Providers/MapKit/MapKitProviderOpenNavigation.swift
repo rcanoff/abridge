@@ -4,10 +4,6 @@ import MapKit
 
 extension MapKitProvider {
     func openNavigation(payloadJson: String) -> ProviderResponse {
-        guard isLocationAuthorized else {
-            return errorResponse(code: "permission_denied", message: "Location access not granted")
-        }
-
         do {
             let arguments = try parseOpenNavigationArguments(payloadJson)
             let result = try store.openNavigation(request: arguments)

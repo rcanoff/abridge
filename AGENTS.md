@@ -71,6 +71,20 @@ ABridge is a **bridge**, not a converter. Swift providers call Apple frameworks;
 
 Details: `docs/conventions.md` § JSON and payloads.
 
+### MCP tool names
+
+A tool's name is its whole external identity: `tools/list` advertises it, `tools/call` resolves only that exact string, and the usage audit records it. Names live in the `TOOL_*` constants in `rust/abridge_core/src/tools/mod.rs`.
+
+- **Shape:** `<provider>_<domain>_<operation>`, or `<provider>_<operation>` when the provider has no domain (`eventkit_reminders_list_lists`, `mapkit_search_places`). The name is built from the `ToolDefinition`'s `provider` and `operation`, the pair Swift dispatches on, so tool, route, and Swift handler share one vocabulary.
+- **Characters:** lowercase ASCII letters and digits joined by single underscores, at most 50 characters. Clients prefix the server name (`mcp__abridge__<tool>` in Claude Code, `abridge__<tool>` in Grok), and Claude Code rejects prefixed names over 64 characters.
+- **Provider:** the Apple framework whose API serves the call (`CLLocationManager` → `corelocation`, `MKLocalSearch` → `mapkit`). The tool's capability ID uses the same provider prefix (`corelocation.read`).
+- **Verbs:** `get_<noun>` returns one item, and every fetch-by-identifier tool uses it (`get_event`, `get_place`); `list_<nouns>` enumerates; `search_<nouns>` filters; `create_`, `update_`, `delete_`, `move_` mutate; `set_<noun>_<field>` replaces a collection field.
+- **Vision:** tools take the Apple request's name (`RecognizeDocumentsRequest` → `recognize_documents`, `DetectFaceLandmarksRequest` → `detect_face_landmarks`).
+- **One tool per Apple operation:** variants of one API are arguments (`symbologies` on `vision_detect_barcodes`), never sibling tools.
+- **Renames are clean cutovers:** the constant, operation, Swift handler, tests, and docs change together, and the old name stops resolving. No aliases, no legacy name resolution.
+
+Unit tests in `rust/abridge_core/src/tools/mod.rs` enforce shape, characters, length, the provider-scoped capability, and uniqueness.
+
 ## Branch naming
 
 Match existing repo conventions:

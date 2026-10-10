@@ -60,10 +60,10 @@ Vision V1 uses a **single-layer model**: MCP capability toggles only. There is n
 
 | Toggle ID | Capability ID | Label | Shipped | Future MCP tools (README) |
 |-----------|---------------|-------|---------|---------------------------|
-| `vision-text` | `vision.text` | Text | `false` | `vision.recognize_text` |
-| `vision-document` | `vision.document` | Document | `false` | `vision.scan_document` |
-| `vision-barcodes` | `vision.barcodes` | Barcodes | `false` | `vision.detect_barcodes`, `vision.read_qr_code` |
-| `vision-faces` | `vision.faces` | Faces | `false` | `vision.detect_faces` |
+| `vision-text` | `vision.text` | Text | `false` | `vision_recognize_text` |
+| `vision-document` | `vision.document` | Document | `false` | `vision_recognize_documents` |
+| `vision-barcodes` | `vision.barcodes` | Barcodes | `false` | `vision_detect_barcodes` |
+| `vision-faces` | `vision.faces` | Faces | `false` | `vision_detect_face_landmarks` |
 
 `shipped: false` until sibling MCP tool subtasks land. Toggles persist in `AppSettings.savedCapabilityIDs` but do not reach the server until **shipped** and checked.
 

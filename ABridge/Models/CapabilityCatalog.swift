@@ -50,6 +50,10 @@ enum CapabilityCatalog {
         definitions(in: "mapkit")
     }
 
+    static var corelocationCapabilities: [CapabilityDefinition] {
+        definitions(in: "corelocation")
+    }
+
     static var visionCapabilities: [CapabilityDefinition] {
         definitions(in: "vision")
     }

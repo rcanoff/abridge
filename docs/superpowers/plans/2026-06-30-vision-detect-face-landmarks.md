@@ -1,16 +1,16 @@
-# vision.detect_faces Implementation Plan
+# vision_detect_face_landmarks Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship `vision.detect_faces` MCP tool (#118) with exhaustive `VNFaceObservation` JSON projection (bounding boxes + facial landmarks).
+**Goal:** Ship `vision_detect_face_landmarks` MCP tool (#118) with exhaustive `VNFaceObservation` JSON projection (bounding boxes + facial landmarks).
 
 **Architecture:** Extend `VisionStore` + `VisionSerialization` from #114; `VNDetectFaceLandmarksRequest` via sync `VNImageRequestHandler` (same pattern as `recognize_text`); Rust tool registration with `vision.faces` capability; flip `vision-faces` to shipped; no Apple TCC gate per #151.
 
 **Tech Stack:** Rust (`abridge_core`), Swift 6 + Vision + CoreGraphics, Swift Testing, UniFFI `ProviderBridge`
 
-**Spec:** `docs/superpowers/specs/2026-06-30-vision-detect-faces-design.md`
+**Spec:** `docs/superpowers/specs/2026-06-30-vision-detect-face-landmarks-design.md`
 
-**Prerequisite:** #114 (`vision.recognize_text`) merged on `main`.
+**Prerequisite:** #114 (`vision_recognize_text`) merged on `main`.
 
 ---
 
@@ -22,14 +22,14 @@
 | `rust/abridge_core/src/tools/mod.rs` | Tool registration + input schema |
 | `rust/abridge_core/tests/mcp_protocol.rs` | MCP integration tests |
 | `ABridge/Providers/Vision/VisionFaceSerialization.swift` | `VNFaceObservation` / landmark JSON |
-| `ABridge/Providers/Vision/VisionSerialization.swift` | `detectFacesResponseJSONObject` wrapper |
+| `ABridge/Providers/Vision/VisionSerialization.swift` | `detectFaceLandmarksResponseJSONObject` wrapper |
 | `ABridge/Providers/Vision/VisionStore.swift` | Detect-faces protocol seam |
 | `ABridge/Providers/Vision/LiveVisionStore.swift` | `VNDetectFaceLandmarksRequest` sync wrapper |
-| `ABridge/Providers/Vision/VisionProviderDetectFaces.swift` | `detect_faces` handler |
+| `ABridge/Providers/Vision/VisionProviderDetectFaceLandmarks.swift` | `detect_face_landmarks` handler |
 | `ABridge/Providers/Vision/VisionProviderRouting.swift` | Operation dispatch |
 | `ABridgeTests/MockVisionStore.swift` | Deterministic face results |
 | `ABridgeTests/VisionFaceSerializationTests.swift` | Fidelity assertions |
-| `ABridgeTests/VisionProviderDetectFacesTests.swift` | Provider tests |
+| `ABridgeTests/VisionProviderDetectFaceLandmarksTests.swift` | Provider tests |
 | `ABridge/Models/CapabilityCatalog.swift` | Ship `vision-faces` |
 | `README.md` | Check off tool |
 
@@ -61,7 +61,7 @@ fn accepts_vision_faces_capability_shape() {
 - [ ] **Step 2: Register tool in tools/mod.rs**
 
 ```rust
-pub const TOOL_DETECT_FACES: &str = "vision.detect_faces";
+pub const TOOL_DETECT_FACES: &str = "vision_detect_face_landmarks";
 ```
 
 Add to `ALL_TOOLS` (bump array length 54 → 55):
@@ -71,7 +71,7 @@ ToolDefinition {
   name: TOOL_DETECT_FACES,
   capability: capabilities::VISION_FACES,
   provider: "vision",
-  operation: "detect_faces",
+  operation: "detect_face_landmarks",
   description: "Detect faces and facial landmarks in a client-provided image using Vision framework",
 },
 ```
@@ -120,18 +120,18 @@ TOOL_DETECT_FACES => serde_json::json!({
 
 ```rust
 #[test]
-fn lists_detect_faces_tool_when_vision_faces_capability_enabled() {
+fn lists_detect_face_landmarks_tool_when_vision_faces_capability_enabled() {
   let tools = tools_for_capabilities(&["vision.faces".into()]);
   let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
   assert_eq!(names, vec![TOOL_DETECT_FACES]);
 }
 
 #[test]
-fn detect_faces_schema_requires_image_data() {
+fn detect_face_landmarks_schema_requires_image_data() {
   let tool = all_tools()
     .iter()
     .find(|tool| tool.name == TOOL_DETECT_FACES)
-    .expect("detect_faces tool");
+    .expect("detect_face_landmarks tool");
   let schema = input_schema(tool);
   assert_eq!(string_property_min_length(&schema, "image_data"), Some(1));
   assert_eq!(
@@ -152,7 +152,7 @@ Expected: PASS
 
 ```bash
 git add rust/abridge_core/src/capabilities.rs rust/abridge_core/src/tools/mod.rs
-git commit -m "feat(vision): register detect_faces tool and vision.faces capability"
+git commit -m "feat(vision): register detect_face_landmarks tool and vision.faces capability"
 ```
 
 ---
@@ -166,15 +166,15 @@ git commit -m "feat(vision): register detect_faces tool and vision.faces capabil
 
 ```rust
 #[test]
-fn mcp_tools_list_includes_detect_faces_when_vision_faces_enabled() {
-  // mirror scan_document / recognize_text pattern
-  assert!(resp.contains("vision.detect_faces"));
+fn mcp_tools_list_includes_detect_face_landmarks_when_vision_faces_enabled() {
+  // mirror recognize_documents / recognize_text pattern
+  assert!(resp.contains("vision_detect_face_landmarks"));
 }
 
 #[test]
-fn tools_call_dispatches_detect_faces() {
-  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision.detect_faces","arguments":{"image_data":"aGVsbG8="}}}"#;
-  // assert recorded.operation == "detect_faces"
+fn tools_call_dispatches_detect_face_landmarks() {
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision_detect_face_landmarks","arguments":{"image_data":"aGVsbG8="}}}"#;
+  // assert recorded.operation == "detect_face_landmarks"
 }
 ```
 
@@ -187,7 +187,7 @@ Expected: PASS
 
 ```bash
 git add rust/abridge_core/tests/mcp_protocol.rs
-git commit -m "test(vision): add MCP integration tests for detect_faces"
+git commit -m "test(vision): add MCP integration tests for detect_face_landmarks"
 ```
 
 ---
@@ -207,7 +207,7 @@ Assert every `VNFaceObservation` key from spec is present on serialized object. 
 
 ```swift
 enum VisionFaceSerialization {
-    static func detectFacesResponseJSONObject(observations: [VNFaceObservation]) -> [String: Any] {
+    static func detectFaceLandmarksResponseJSONObject(observations: [VNFaceObservation]) -> [String: Any] {
         ["results": observations.map(faceObservationJSONObject(from:))]
     }
 
@@ -236,8 +236,8 @@ Implement `faceLandmarksJSONObject` and `faceLandmarkRegionJSONObject` projectin
 - [ ] **Step 3: Add wrapper to VisionSerialization**
 
 ```swift
-static func detectFacesResponseJSONObject(observations: [VNFaceObservation]) -> [String: Any] {
-    VisionFaceSerialization.detectFacesResponseJSONObject(observations: observations)
+static func detectFaceLandmarksResponseJSONObject(observations: [VNFaceObservation]) -> [String: Any] {
+    VisionFaceSerialization.detectFaceLandmarksResponseJSONObject(observations: observations)
 }
 ```
 
@@ -268,7 +268,7 @@ git commit -m "feat(vision): add exhaustive VNFaceObservation serialization"
 - [ ] **Step 1: Define protocol request type**
 
 ```swift
-struct VisionDetectFacesRequest: Equatable {
+struct VisionDetectFaceLandmarksRequest: Equatable {
     let imageData: Data
     let orientation: CGImagePropertyOrientation?
     let revision: Int?
@@ -278,11 +278,11 @@ struct VisionDetectFacesRequest: Equatable {
 
 protocol VisionStoreing {
     // existing methods …
-    func detectFaces(request: VisionDetectFacesRequest) throws -> [VNFaceObservation]
+    func detectFaceLandmarks(request: VisionDetectFaceLandmarksRequest) throws -> [VNFaceObservation]
 }
 ```
 
-- [ ] **Step 2: Implement LiveVisionStore.detectFaces**
+- [ ] **Step 2: Implement LiveVisionStore.detectFaceLandmarks**
 
 Mirror `recognizeText` image decode path. Build `VNDetectFaceLandmarksRequest`:
 
@@ -299,7 +299,7 @@ detectRequest.constellation = request.constellation
 
 - [ ] **Step 3: Implement MockVisionStore + fixtures**
 
-Hold canned `[VNFaceObservation]` (synthesized via `VNFaceObservation.faceObservationWithRequestRevision(_:boundingBox:roll:yaw:pitch:)` where needed). Record `lastDetectFacesRequest`.
+Hold canned `[VNFaceObservation]` (synthesized via `VNFaceObservation.faceObservationWithRequestRevision(_:boundingBox:roll:yaw:pitch:)` where needed). Record `lastDetectFaceLandmarksRequest`.
 
 - [ ] **Step 4: Commit**
 
@@ -308,17 +308,17 @@ git add ABridge/Providers/Vision/VisionStore.swift \
   ABridge/Providers/Vision/LiveVisionStore.swift \
   ABridgeTests/MockVisionStore.swift \
   ABridgeTests/VisionTestFixtures.swift
-git commit -m "feat(vision): add VisionStore detect_faces seam"
+git commit -m "feat(vision): add VisionStore detect_face_landmarks seam"
 ```
 
 ---
 
-### Task 5: VisionProvider detect_faces operation
+### Task 5: VisionProvider detect_face_landmarks operation
 
 **Files:**
-- Create: `ABridge/Providers/Vision/VisionProviderDetectFaces.swift`
+- Create: `ABridge/Providers/Vision/VisionProviderDetectFaceLandmarks.swift`
 - Modify: `ABridge/Providers/Vision/VisionProviderRouting.swift`
-- Create: `ABridgeTests/VisionProviderDetectFacesTests.swift`
+- Create: `ABridgeTests/VisionProviderDetectFaceLandmarksTests.swift`
 - Modify: `ABridgeTests/AppleProviderBridgeVisionTests.swift`
 
 - [ ] **Step 1: Write failing provider tests**
@@ -330,18 +330,18 @@ Cases (mirror `VisionProviderRecognizeTextTests`):
 - Mock store returns observations → success JSON with `results` array containing `bounding_box` and `landmarks`
 - `region_of_interest` and `constellation` forwarded to store
 
-- [ ] **Step 2: Implement detect_faces handler**
+- [ ] **Step 2: Implement detect_face_landmarks handler**
 
-Copy argument-parsing helpers from `VisionProviderRecognizeText.swift`. Add `optionalConstellationArgument` mapping MCP strings to `VNRequestFaceLandmarksConstellation`. Parse into `VisionDetectFacesRequest`; call store; serialize via `VisionSerialization.detectFacesResponseJSONObject`.
+Copy argument-parsing helpers from `VisionProviderRecognizeText.swift`. Add `optionalConstellationArgument` mapping MCP strings to `VNRequestFaceLandmarksConstellation`. Parse into `VisionDetectFaceLandmarksRequest`; call store; serialize via `VisionSerialization.detectFaceLandmarksResponseJSONObject`.
 
 - [ ] **Step 3: Add routing**
 
 ```swift
-case "detect_faces":
-    detectFaces(payloadJson: payloadJson)
+case "detect_face_landmarks":
+    detectFaceLandmarks(payloadJson: payloadJson)
 ```
 
-- [ ] **Step 4: Update AppleProviderBridgeVisionTests** — inject mock provider returning success for `detect_faces`.
+- [ ] **Step 4: Update AppleProviderBridgeVisionTests** — inject mock provider returning success for `detect_face_landmarks`.
 
 - [ ] **Step 5: Run Swift tests**
 
@@ -351,11 +351,11 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add ABridge/Providers/Vision/VisionProviderDetectFaces.swift \
+git add ABridge/Providers/Vision/VisionProviderDetectFaceLandmarks.swift \
   ABridge/Providers/Vision/VisionProviderRouting.swift \
-  ABridgeTests/VisionProviderDetectFacesTests.swift \
+  ABridgeTests/VisionProviderDetectFaceLandmarksTests.swift \
   ABridgeTests/AppleProviderBridgeVisionTests.swift
-git commit -m "feat(vision): implement detect_faces provider operation"
+git commit -m "feat(vision): implement detect_face_landmarks provider operation"
 ```
 
 ---
@@ -383,7 +383,7 @@ CapabilityDefinition(
 - [ ] **Step 3: README checkoff**
 
 ```markdown
-- [x] `vision.detect_faces`
+- [x] `vision_detect_face_landmarks`
 ```
 
 - [ ] **Step 4: Regenerate Xcode project if new Swift files added**
@@ -402,7 +402,7 @@ Expected: PASS (before merge)
 
 ```bash
 git add ABridge/Models/CapabilityCatalog.swift README.md ABridgeTests/AppSettingsVisionTests.swift project.yml
-git commit -m "feat(vision): ship vision.faces capability for detect_faces"
+git commit -m "feat(vision): ship vision.faces capability for detect_face_landmarks"
 ```
 
 ---

@@ -3,10 +3,6 @@ import MapKit
 
 extension MapKitProvider {
     func searchNearby(payloadJson: String) -> ProviderResponse {
-        guard isLocationAuthorized else {
-            return errorResponse(code: "permission_denied", message: "Location access not granted")
-        }
-
         do {
             let arguments = try parseSearchNearbyArguments(payloadJson)
             let result = try store.searchNearby(request: arguments)

@@ -3,10 +3,6 @@ import MapKit
 
 extension MapKitProvider {
     func reverseGeocode(payloadJson: String) -> ProviderResponse {
-        guard isLocationAuthorized else {
-            return errorResponse(code: "permission_denied", message: "Location access not granted")
-        }
-
         do {
             let arguments = try parseReverseGeocodeArguments(payloadJson)
             let mapItems = try store.reverseGeocode(request: arguments)

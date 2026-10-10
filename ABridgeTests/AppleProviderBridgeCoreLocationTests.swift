@@ -3,9 +3,9 @@ import CoreLocation
 import Foundation
 import Testing
 
-@Suite("AppleProviderBridgeMapKitLocation")
-struct AppleProviderBridgeMapKitLocationTests {
-    @Test @MainActor func callProviderMapKitGetCurrentLocationSucceedsWithMockStore() throws {
+@Suite("AppleProviderBridgeCoreLocation")
+struct AppleProviderBridgeCoreLocationTests {
+    @Test @MainActor func callProviderCoreLocationGetCurrentLocationSucceedsWithMockStore() throws {
         let location = CLLocation(
             coordinate: CLLocationCoordinate2D(latitude: 37.3346, longitude: -122.0090),
             altitude: 12.3,
@@ -15,11 +15,12 @@ struct AppleProviderBridgeMapKitLocationTests {
             speed: -1.0,
             timestamp: Date(timeIntervalSince1970: 1_751_280_000)
         )
-        let store = MockMapKitStore(); store.authorizationStatus = .authorized; store
-            .getCurrentLocationResult = location
-        let response = AppleProviderBridge(mapKitProvider: MapKitProvider(store: store))
+        let store = MockCoreLocationStore()
+        store.authorizationStatus = .authorized
+        store.getCurrentLocationResult = location
+        let response = AppleProviderBridge(coreLocationProvider: CoreLocationProvider(store: store))
             .callProvider(request: ProviderRequest(
-                provider: "mapkit",
+                provider: "corelocation",
                 operation: "get_current_location",
                 payloadJson: "{}"
             ))

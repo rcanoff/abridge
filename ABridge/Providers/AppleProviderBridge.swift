@@ -8,7 +8,10 @@ final class AppleProviderBridge: ProviderBridge, Sendable {
     private let makeContactsProvider: @MainActor @Sendable () -> ContactsProvider
     /// Not MainActor: MapKit handle waits off-main; a full `main.sync` hop deadlocks MapKit network APIs.
     private let makeMapKitProvider: @Sendable () -> MapKitProvider
-    private let makeVisionProvider: @MainActor @Sendable () -> VisionProvider
+    /// Not MainActor: Core Location handle waits off-main; a full `main.sync` hop deadlocks delegate callbacks.
+    private let makeCoreLocationProvider: @Sendable () -> CoreLocationProvider
+    /// Not MainActor: Vision runs on its own worker thread so long requests never block the UI.
+    private let makeVisionProvider: @Sendable () -> VisionProvider
 
     init(
         makeEventKitProvider: @escaping @MainActor @Sendable () -> EventKitProvider = {
@@ -20,13 +23,17 @@ final class AppleProviderBridge: ProviderBridge, Sendable {
         makeMapKitProvider: @escaping @Sendable () -> MapKitProvider = {
             LiveMapKitEnvironment.sharedProvider
         },
-        makeVisionProvider: @escaping @MainActor @Sendable () -> VisionProvider = {
+        makeCoreLocationProvider: @escaping @Sendable () -> CoreLocationProvider = {
+            LiveCoreLocationEnvironment.sharedProvider
+        },
+        makeVisionProvider: @escaping @Sendable () -> VisionProvider = {
             LiveVisionEnvironment.sharedProvider
         }
     ) {
         self.makeEventKitProvider = makeEventKitProvider
         self.makeContactsProvider = makeContactsProvider
         self.makeMapKitProvider = makeMapKitProvider
+        self.makeCoreLocationProvider = makeCoreLocationProvider
         self.makeVisionProvider = makeVisionProvider
     }
 
@@ -49,10 +56,15 @@ final class AppleProviderBridge: ProviderBridge, Sendable {
         self.init(makeMapKitProvider: { provider })
     }
 
-    /// Test seam: capture the injected Vision provider on the main actor.
-    @MainActor
+    /// Test seam: capture the injected Core Location provider.
+    convenience init(coreLocationProvider: CoreLocationProvider) {
+        nonisolated(unsafe) let provider = coreLocationProvider
+        self.init(makeCoreLocationProvider: { provider })
+    }
+
+    /// Test seam: capture the injected Vision provider.
     convenience init(visionProvider: VisionProvider) {
-        self.init(makeVisionProvider: { [visionProvider] in visionProvider })
+        self.init(makeVisionProvider: { visionProvider })
     }
 
     func callProvider(request: ProviderRequest) -> ProviderResponse {
@@ -72,11 +84,14 @@ final class AppleProviderBridge: ProviderBridge, Sendable {
             // APIs never complete while the main queue is blocked; the store waits off-main.
             let provider = makeMapKitProvider()
             return provider.handle(operation: request.operation, payloadJson: request.payloadJson)
+        case "corelocation":
+            // Do not use `performOnMainActor` / `main.sync` for the whole call. Core Location
+            // delegate callbacks never fire while the main queue is blocked; the store waits off-main.
+            let provider = makeCoreLocationProvider()
+            return provider.handle(operation: request.operation, payloadJson: request.payloadJson)
         case "vision":
-            return Self.performOnMainActor { [makeVisionProvider] in
-                let provider = makeVisionProvider()
-                return provider.handle(operation: request.operation, payloadJson: request.payloadJson)
-            }
+            let provider = makeVisionProvider()
+            return provider.handle(operation: request.operation, payloadJson: request.payloadJson)
         default:
             let payload: [String: String] = [
                 "code": "unknown_provider",

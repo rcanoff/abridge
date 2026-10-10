@@ -1,8 +1,8 @@
-# mapkit.calculate_route Implementation Plan
+# mapkit_calculate_route Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship `mapkit.calculate_route` MCP tool (#108) with exhaustive `MKDirectionsResponse` JSON projection under new `mapkit.routing` capability.
+**Goal:** Ship `mapkit_calculate_route` MCP tool (#108) with exhaustive `MKDirectionsResponse` JSON projection under new `mapkit.routing` capability.
 
 **Architecture:** Extend `MapKitStore` with `calculateRoute`; use `MKDirections` in `LiveMapKitStore`; map `MKDirectionsResponse` to seam types for mockability; add route serializers to `MapKitSerialization`; Rust tool registration on `mapkit.routing`; ship `mapkit-routing` toggle; CoreLocation when-in-use gate per #150.
 
@@ -45,7 +45,7 @@
 - [ ] **Step 3:** Add input schema for source/destination coordinates + optional routing options
 - [ ] **Step 4:** Add unit tests (`lists_calculate_route_tool_when_mapkit_routing_capability_enabled`, schema tests)
 - [ ] **Step 5:** Run `TZ=UTC just test-rust`
-- [ ] **Step 6:** Commit `feat(mapkit): register mapkit.calculate_route MCP tool in Rust`
+- [ ] **Step 6:** Commit `feat(mapkit): register mapkit_calculate_route MCP tool in Rust`
 
 ---
 
@@ -107,7 +107,7 @@
 - [ ] **Step 2:** Add AppSettings + PermissionsStore tests for routing toggle
 - [ ] **Step 3:** README checkoff
 - [ ] **Step 4:** Run `TZ=UTC just test-all`
-- [ ] **Step 5:** Commit `feat(mapkit): ship mapkit.calculate_route tool`
+- [ ] **Step 5:** Commit `feat(mapkit): ship mapkit_calculate_route tool`
 
 ---
 

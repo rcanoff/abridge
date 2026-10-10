@@ -52,9 +52,9 @@ struct VisionDocumentSerializationTests {
 
     @Test
     @MainActor
-    func scanDocumentResponseIncludesTopLevelKeys() throws {
+    func recognizeDocumentsResponseIncludesTopLevelKeys() throws {
         let observations = try VisionTestFixtures.sampleDocumentObservations()
-        let object = try VisionSerialization.scanDocumentResponseJSONObject(
+        let object = try VisionSerialization.recognizeDocumentsResponseJSONObject(
             observations: observations,
             segmentation: nil,
             maximumCandidateCount: 1

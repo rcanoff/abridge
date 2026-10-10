@@ -1,30 +1,21 @@
-import CoreLocation
 import Foundation
 
 enum MapKitProviderError: Error, Equatable {
-    case permissionDenied
     case serializationFailed
     case mapkitError(String)
     case invalidArguments(String)
 }
 
+extension MapKitProviderError: MainQueueCallbackWaitFailure {
+    static func callbackWaitFailed(_ message: String) -> Self {
+        .mapkitError(message)
+    }
+}
+
 enum LiveMapKitEnvironment {
-    /// Uses the same sticky `LocationPermissionService` as Permissions UI / SettingsStore.
     /// Immutable after lazy init; process-wide singleton for the menu-bar agent.
     nonisolated(unsafe) static let sharedProvider = MapKitProvider(
-        store: LiveMapKitStore(),
-        locationGrantsReadAccess: {
-            if Thread.isMainThread {
-                return MainActor.assumeIsolated {
-                    LiveLocationPermission.service.currentStatus().grantsReadAccess
-                }
-            }
-            return DispatchQueue.main.sync {
-                MainActor.assumeIsolated {
-                    LiveLocationPermission.service.currentStatus().grantsReadAccess
-                }
-            }
-        }
+        store: LiveMapKitStore()
     )
 }
 
@@ -34,25 +25,9 @@ enum LiveMapKitEnvironment {
 /// Adapter layer; pure schema validation is Rust (`arg_validation`).
 struct MapKitProvider {
     let store: any MapKitStoreing
-    /// Production uses sticky `LiveLocationPermission`; tests fall back to store CL status.
-    private let locationGrantsReadAccess: () -> Bool
 
-    init(
-        store: any MapKitStoreing = LiveMapKitStore(),
-        locationGrantsReadAccess: (() -> Bool)? = nil
-    ) {
+    init(store: any MapKitStoreing = LiveMapKitStore()) {
         self.store = store
-        if let locationGrantsReadAccess {
-            self.locationGrantsReadAccess = locationGrantsReadAccess
-        } else {
-            self.locationGrantsReadAccess = {
-                LocationPermissionStatusMapper.map(store.locationAuthorizationStatus()).grantsReadAccess
-            }
-        }
-    }
-
-    var isLocationAuthorized: Bool {
-        locationGrantsReadAccess()
     }
 
     func parseJSONObject(from data: Data) throws -> [String: Any] {
@@ -72,8 +47,6 @@ struct MapKitProvider {
 
     func providerErrorResponse(from error: MapKitProviderError) -> ProviderResponse {
         switch error {
-        case .permissionDenied:
-            errorResponse(code: "permission_denied", message: "Location access not granted")
         case let .invalidArguments(message):
             errorResponse(code: "invalid_arguments", message: message)
         case .serializationFailed:

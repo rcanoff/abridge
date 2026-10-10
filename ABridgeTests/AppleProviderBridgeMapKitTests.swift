@@ -12,7 +12,6 @@ struct AppleProviderBridgeMapKitTests {
         let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
         item.name = "Mock Cafe"
         let store = MockMapKitStore()
-        store.authorizationStatus = .authorized
         store.results = [MapKitSearchResult(mapItems: [item], boundingRegion: nil)]
         let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: store))
 
@@ -36,7 +35,6 @@ struct AppleProviderBridgeMapKitTests {
         let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
         item.name = "Nearby Mock Cafe"
         let store = MockMapKitStore()
-        store.authorizationStatus = .authorized
         store.nearbyResults = [MapKitSearchResult(mapItems: [item], boundingRegion: nil)]
         let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: store))
 
@@ -60,7 +58,6 @@ struct AppleProviderBridgeMapKitTests {
         let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
         item.name = "Reverse Mock Address"
         let store = MockMapKitStore()
-        store.authorizationStatus = .authorized
         store.reverseGeocodeResults = [[item]]
         let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: store))
 
@@ -87,7 +84,6 @@ struct AppleProviderBridgeMapKitTests {
         ))
         item.name = "Forward Mock Address"
         let store = MockMapKitStore()
-        store.authorizationStatus = .authorized
         store.forwardGeocodeResults = [[item]]
         let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: store))
 
@@ -128,7 +124,6 @@ struct AppleProviderBridgeMapKitTests {
             hasHighways: false
         )
         let store = MockMapKitStore()
-        store.authorizationStatus = .authorized
         store.calculateRouteResults = [
             MapKitCalculateRouteResult(
                 source: sourceItem,
@@ -172,7 +167,6 @@ struct AppleProviderBridgeMapKitTests {
         destinationItem.name = "ETA Destination"
         let departureDate = Date(timeIntervalSince1970: 1_718_000_000)
         let store = MockMapKitStore()
-        store.authorizationStatus = .authorized
         store.estimateTravelTimeResults = [
             MapKitEstimateTravelTimeResult(
                 source: sourceItem,
@@ -209,20 +203,19 @@ struct AppleProviderBridgeMapKitTests {
 
     @Test
     @MainActor
-    func callProviderMapKitLookupPlaceSucceedsWithMockStore() throws {
+    func callProviderMapKitGetPlaceSucceedsWithMockStore() throws {
         let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
             latitude: 37.3346,
             longitude: -122.0090
         ))
-        item.name = "Bridge Lookup Place"
+        item.name = "Bridge Get Place"
         let store = MockMapKitStore()
-        store.authorizationStatus = .authorized
-        store.lookupPlaceResults = [item]
+        store.getPlaceResults = [item]
         let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: store))
 
         let request = ProviderRequest(
             provider: "mapkit",
-            operation: "lookup_place",
+            operation: "get_place",
             payloadJson: #"{"identifier":"I1234567890"}"#
         )
         let response = bridge.callProvider(request: request)
@@ -230,7 +223,7 @@ struct AppleProviderBridgeMapKitTests {
         #expect(response.ok == true)
         let data = try #require(response.payloadJson.data(using: .utf8))
         let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-        #expect(decoded?["name"] as? String == "Bridge Lookup Place")
+        #expect(decoded?["name"] as? String == "Bridge Get Place")
     }
 
     @Test
@@ -247,7 +240,6 @@ struct AppleProviderBridgeMapKitTests {
         ))
         destinationItem.name = "Navigation Destination"
         let store = MockMapKitStore()
-        store.authorizationStatus = .authorized
         store.openNavigationResults = [
             MapKitOpenNavigationResult(
                 source: sourceItem,

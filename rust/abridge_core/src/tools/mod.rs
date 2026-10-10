@@ -2,63 +2,62 @@
 
 use crate::capabilities;
 
-pub const TOOL_LIST_CALENDARS: &str = "eventkit.calendars.list_calendars";
-pub const TOOL_CREATE_CALENDAR: &str = "eventkit.calendars.create_calendar";
-pub const TOOL_UPDATE_CALENDAR: &str = "eventkit.calendars.update_calendar";
-pub const TOOL_DELETE_CALENDAR: &str = "eventkit.calendars.delete_calendar";
-pub const TOOL_LIST_EVENTS: &str = "eventkit.events.list_events";
-pub const TOOL_GET_EVENT: &str = "eventkit.events.get_event";
-pub const TOOL_SEARCH_EVENTS: &str = "eventkit.events.search_events";
-pub const TOOL_CREATE_EVENT: &str = "eventkit.events.create_event";
-pub const TOOL_UPDATE_EVENT: &str = "eventkit.events.update_event";
-pub const TOOL_MOVE_EVENT: &str = "eventkit.events.move_event";
-pub const TOOL_DELETE_EVENT: &str = "eventkit.events.delete_event";
-pub const TOOL_LIST_LISTS: &str = "eventkit.reminders.list_lists";
-pub const TOOL_LIST_REMINDERS: &str = "eventkit.reminders.list_reminders";
-pub const TOOL_GET_REMINDER: &str = "eventkit.reminders.get_reminder";
-pub const TOOL_SEARCH_REMINDERS: &str = "eventkit.reminders.search_reminders";
-pub const TOOL_CREATE_REMINDER: &str = "eventkit.reminders.create_reminder";
-pub const TOOL_CREATE_LIST: &str = "eventkit.reminders.create_list";
-pub const TOOL_UPDATE_REMINDER: &str = "eventkit.reminders.update_reminder";
-pub const TOOL_MOVE_REMINDER: &str = "eventkit.reminders.move_reminder";
-pub const TOOL_DELETE_REMINDER: &str = "eventkit.reminders.delete_reminder";
-pub const TOOL_DELETE_LIST: &str = "eventkit.reminders.delete_list";
-pub const TOOL_COMPLETE_REMINDER: &str = "eventkit.reminders.complete_reminder";
-pub const TOOL_UNCOMPLETE_REMINDER: &str = "eventkit.reminders.uncomplete_reminder";
-pub const TOOL_SET_REMINDER_ALARMS: &str = "eventkit.reminders.set_reminder_alarms";
-pub const TOOL_SET_EVENT_ALARMS: &str = "eventkit.events.set_event_alarms";
-pub const TOOL_SET_REMINDER_RECURRENCE: &str = "eventkit.reminders.set_reminder_recurrence";
-pub const TOOL_SET_EVENT_RECURRENCE: &str = "eventkit.events.set_event_recurrence";
-pub const TOOL_ACCEPT_INVITATION: &str = "eventkit.events.accept_invitation";
-pub const TOOL_DECLINE_INVITATION: &str = "eventkit.events.decline_invitation";
-pub const TOOL_TENTATIVE_INVITATION: &str = "eventkit.events.tentative_invitation";
-pub const TOOL_LIST_CONTACTS: &str = "contacts.list_contacts";
-pub const TOOL_LIST_GROUPS: &str = "contacts.list_groups";
-pub const TOOL_GET_CONTACT: &str = "contacts.get_contact";
-pub const TOOL_SEARCH_CONTACTS: &str = "contacts.search_contacts";
-pub const TOOL_CREATE_CONTACT: &str = "contacts.create_contact";
-pub const TOOL_CREATE_GROUP: &str = "contacts.create_group";
-pub const TOOL_UPDATE_CONTACT: &str = "contacts.update_contact";
-pub const TOOL_LINK_CONTACTS: &str = "contacts.link_contacts";
-pub const TOOL_UNLINK_CONTACTS: &str = "contacts.unlink_contacts";
-pub const TOOL_UPDATE_GROUP: &str = "contacts.update_group";
-pub const TOOL_DELETE_CONTACT: &str = "contacts.delete_contact";
-pub const TOOL_DELETE_GROUP: &str = "contacts.delete_group";
-pub const TOOL_SEARCH_PLACES: &str = "mapkit.search_places";
-pub const TOOL_SEARCH_NEARBY: &str = "mapkit.search_nearby";
-pub const TOOL_REVERSE_GEOCODE: &str = "mapkit.reverse_geocode";
-pub const TOOL_FORWARD_GEOCODE: &str = "mapkit.forward_geocode";
-pub const TOOL_CALCULATE_ROUTE: &str = "mapkit.calculate_route";
-pub const TOOL_ESTIMATE_TRAVEL_TIME: &str = "mapkit.estimate_travel_time";
-pub const TOOL_GET_CURRENT_LOCATION: &str = "mapkit.get_current_location";
-pub const TOOL_LOOKUP_PLACE: &str = "mapkit.lookup_place";
-pub const TOOL_OPEN_NAVIGATION: &str = "mapkit.open_navigation";
-pub const TOOL_GET_USAGE_LOG: &str = "diagnostics.get_usage_log";
-pub const TOOL_RECOGNIZE_TEXT: &str = "vision.recognize_text";
-pub const TOOL_SCAN_DOCUMENT: &str = "vision.scan_document";
-pub const TOOL_READ_QR_CODE: &str = "vision.read_qr_code";
-pub const TOOL_DETECT_BARCODES: &str = "vision.detect_barcodes";
-pub const TOOL_DETECT_FACES: &str = "vision.detect_faces";
+pub const TOOL_LIST_CALENDARS: &str = "eventkit_calendars_list_calendars";
+pub const TOOL_CREATE_CALENDAR: &str = "eventkit_calendars_create_calendar";
+pub const TOOL_UPDATE_CALENDAR: &str = "eventkit_calendars_update_calendar";
+pub const TOOL_DELETE_CALENDAR: &str = "eventkit_calendars_delete_calendar";
+pub const TOOL_LIST_EVENTS: &str = "eventkit_events_list_events";
+pub const TOOL_GET_EVENT: &str = "eventkit_events_get_event";
+pub const TOOL_SEARCH_EVENTS: &str = "eventkit_events_search_events";
+pub const TOOL_CREATE_EVENT: &str = "eventkit_events_create_event";
+pub const TOOL_UPDATE_EVENT: &str = "eventkit_events_update_event";
+pub const TOOL_MOVE_EVENT: &str = "eventkit_events_move_event";
+pub const TOOL_DELETE_EVENT: &str = "eventkit_events_delete_event";
+pub const TOOL_LIST_LISTS: &str = "eventkit_reminders_list_lists";
+pub const TOOL_LIST_REMINDERS: &str = "eventkit_reminders_list_reminders";
+pub const TOOL_GET_REMINDER: &str = "eventkit_reminders_get_reminder";
+pub const TOOL_SEARCH_REMINDERS: &str = "eventkit_reminders_search_reminders";
+pub const TOOL_CREATE_REMINDER: &str = "eventkit_reminders_create_reminder";
+pub const TOOL_CREATE_LIST: &str = "eventkit_reminders_create_list";
+pub const TOOL_UPDATE_REMINDER: &str = "eventkit_reminders_update_reminder";
+pub const TOOL_MOVE_REMINDER: &str = "eventkit_reminders_move_reminder";
+pub const TOOL_DELETE_REMINDER: &str = "eventkit_reminders_delete_reminder";
+pub const TOOL_DELETE_LIST: &str = "eventkit_reminders_delete_list";
+pub const TOOL_COMPLETE_REMINDER: &str = "eventkit_reminders_complete_reminder";
+pub const TOOL_UNCOMPLETE_REMINDER: &str = "eventkit_reminders_uncomplete_reminder";
+pub const TOOL_SET_REMINDER_ALARMS: &str = "eventkit_reminders_set_reminder_alarms";
+pub const TOOL_SET_EVENT_ALARMS: &str = "eventkit_events_set_event_alarms";
+pub const TOOL_SET_REMINDER_RECURRENCE: &str = "eventkit_reminders_set_reminder_recurrence";
+pub const TOOL_SET_EVENT_RECURRENCE: &str = "eventkit_events_set_event_recurrence";
+pub const TOOL_ACCEPT_INVITATION: &str = "eventkit_events_accept_invitation";
+pub const TOOL_DECLINE_INVITATION: &str = "eventkit_events_decline_invitation";
+pub const TOOL_TENTATIVE_INVITATION: &str = "eventkit_events_tentative_invitation";
+pub const TOOL_LIST_CONTACTS: &str = "contacts_list_contacts";
+pub const TOOL_LIST_GROUPS: &str = "contacts_list_groups";
+pub const TOOL_GET_CONTACT: &str = "contacts_get_contact";
+pub const TOOL_SEARCH_CONTACTS: &str = "contacts_search_contacts";
+pub const TOOL_CREATE_CONTACT: &str = "contacts_create_contact";
+pub const TOOL_CREATE_GROUP: &str = "contacts_create_group";
+pub const TOOL_UPDATE_CONTACT: &str = "contacts_update_contact";
+pub const TOOL_LINK_CONTACTS: &str = "contacts_link_contacts";
+pub const TOOL_UNLINK_CONTACTS: &str = "contacts_unlink_contacts";
+pub const TOOL_UPDATE_GROUP: &str = "contacts_update_group";
+pub const TOOL_DELETE_CONTACT: &str = "contacts_delete_contact";
+pub const TOOL_DELETE_GROUP: &str = "contacts_delete_group";
+pub const TOOL_SEARCH_PLACES: &str = "mapkit_search_places";
+pub const TOOL_SEARCH_NEARBY: &str = "mapkit_search_nearby";
+pub const TOOL_REVERSE_GEOCODE: &str = "mapkit_reverse_geocode";
+pub const TOOL_FORWARD_GEOCODE: &str = "mapkit_forward_geocode";
+pub const TOOL_CALCULATE_ROUTE: &str = "mapkit_calculate_route";
+pub const TOOL_ESTIMATE_TRAVEL_TIME: &str = "mapkit_estimate_travel_time";
+pub const TOOL_GET_CURRENT_LOCATION: &str = "corelocation_get_current_location";
+pub const TOOL_GET_PLACE: &str = "mapkit_get_place";
+pub const TOOL_OPEN_NAVIGATION: &str = "mapkit_open_navigation";
+pub const TOOL_GET_USAGE_LOG: &str = "diagnostics_get_usage_log";
+pub const TOOL_RECOGNIZE_TEXT: &str = "vision_recognize_text";
+pub const TOOL_RECOGNIZE_DOCUMENTS: &str = "vision_recognize_documents";
+pub const TOOL_DETECT_BARCODES: &str = "vision_detect_barcodes";
+pub const TOOL_DETECT_FACE_LANDMARKS: &str = "vision_detect_face_landmarks";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ToolDefinition {
@@ -69,7 +68,7 @@ pub struct ToolDefinition {
   pub description: &'static str,
 }
 
-const ALL_TOOLS: [ToolDefinition; 57] = [
+const ALL_TOOLS: [ToolDefinition; 56] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -408,16 +407,16 @@ const ALL_TOOLS: [ToolDefinition; 57] = [
   },
   ToolDefinition {
     name: TOOL_GET_CURRENT_LOCATION,
-    capability: capabilities::MAPKIT_LOCATION,
-    provider: "mapkit",
+    capability: capabilities::CORELOCATION_READ,
+    provider: "corelocation",
     operation: "get_current_location",
     description: "Fetch the device's current GPS fix via CoreLocation",
   },
   ToolDefinition {
-    name: TOOL_LOOKUP_PLACE,
+    name: TOOL_GET_PLACE,
     capability: capabilities::MAPKIT_READ,
     provider: "mapkit",
-    operation: "lookup_place",
+    operation: "get_place",
     description: "Look up a place by MapKit identifier with full place metadata",
   },
   ToolDefinition {
@@ -442,18 +441,11 @@ const ALL_TOOLS: [ToolDefinition; 57] = [
     description: "Recognize text in a client-provided image using Vision framework OCR",
   },
   ToolDefinition {
-    name: TOOL_SCAN_DOCUMENT,
+    name: TOOL_RECOGNIZE_DOCUMENTS,
     capability: capabilities::VISION_DOCUMENT,
     provider: "vision",
-    operation: "scan_document",
+    operation: "recognize_documents",
     description: "Scan and recognize structured document content in a client-provided image using Vision framework",
-  },
-  ToolDefinition {
-    name: TOOL_READ_QR_CODE,
-    capability: capabilities::VISION_BARCODES,
-    provider: "vision",
-    operation: "read_qr_code",
-    description: "Read QR codes in a client-provided image using Vision framework barcode detection",
   },
   ToolDefinition {
     name: TOOL_DETECT_BARCODES,
@@ -463,10 +455,10 @@ const ALL_TOOLS: [ToolDefinition; 57] = [
     description: "Detect barcodes and QR codes in a client-provided image using Vision framework",
   },
   ToolDefinition {
-    name: TOOL_DETECT_FACES,
+    name: TOOL_DETECT_FACE_LANDMARKS,
     capability: capabilities::VISION_FACES,
     provider: "vision",
-    operation: "detect_faces",
+    operation: "detect_face_landmarks",
     description: "Detect faces and facial landmarks in a client-provided image using Vision framework",
   },
 ];
@@ -482,19 +474,9 @@ pub fn tools_for_capabilities(enabled: &[String]) -> Vec<&'static ToolDefinition
     .collect()
 }
 
-/// Name advertised in `tools/list`. Dots become underscores so the name matches
-/// `^[a-zA-Z0-9_-]{1,64}$`, which many MCP clients and LLM tool-calling APIs
-/// enforce (Grok CLI drops every dotted tool).
-pub fn wire_name(name: &str) -> String {
-  name.replace('.', "_")
-}
-
-/// Resolves a `tools/call` name. Accepts the advertised wire name and the
-/// dotted registry name, so callers that hardcoded dotted names keep working.
+/// Resolves a `tools/call` name against the registry.
 pub fn resolve_tool(name: &str) -> Option<&'static ToolDefinition> {
-  all_tools()
-    .iter()
-    .find(|tool| tool.name == name || wire_name(tool.name) == name)
+  all_tools().iter().find(|tool| tool.name == name)
 }
 
 fn coordinate_schema() -> serde_json::Value {
@@ -1406,7 +1388,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "required": ["source", "destination"],
       "oneOf": route_eta_date_constraints().get("oneOf").cloned().expect("route_eta_date_constraints oneOf")
     }),
-    TOOL_LOOKUP_PLACE => serde_json::json!({
+    TOOL_GET_PLACE => serde_json::json!({
       "type": "object",
       "properties": {
         "identifier": { "type": "string", "minLength": 1 }
@@ -1428,7 +1410,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "limit": { "type": "integer", "minimum": 0 }
       }
     }),
-    TOOL_SCAN_DOCUMENT => serde_json::json!({
+    TOOL_RECOGNIZE_DOCUMENTS => serde_json::json!({
       "type": "object",
       "properties": {
         "image_data": { "type": "string", "minLength": 1 },
@@ -1489,38 +1471,6 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["image_data"]
     }),
-    TOOL_READ_QR_CODE => serde_json::json!({
-      "type": "object",
-      "properties": {
-        "image_data": { "type": "string", "minLength": 1 },
-        "orientation": { "type": "integer", "minimum": 1, "maximum": 8 },
-        "revision": { "type": "integer", "minimum": 0 },
-        "region_of_interest": {
-          "type": "object",
-          "properties": {
-            "origin": {
-              "type": "object",
-              "properties": {
-                "x": { "type": "number" },
-                "y": { "type": "number" }
-              },
-              "required": ["x", "y"]
-            },
-            "size": {
-              "type": "object",
-              "properties": {
-                "width": { "type": "number" },
-                "height": { "type": "number" }
-              },
-              "required": ["width", "height"]
-            }
-          },
-          "required": ["origin", "size"]
-        },
-        "coalesce_composite_symbologies": { "type": "boolean" }
-      },
-      "required": ["image_data"]
-    }),
     TOOL_DETECT_BARCODES => serde_json::json!({
       "type": "object",
       "properties": {
@@ -1557,7 +1507,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["image_data"]
     }),
-    TOOL_DETECT_FACES => serde_json::json!({
+    TOOL_DETECT_FACE_LANDMARKS => serde_json::json!({
       "type": "object",
       "properties": {
         "image_data": { "type": "string", "minLength": 1 },
@@ -1683,16 +1633,19 @@ mod tests {
     TOOL_ACCEPT_INVITATION, TOOL_CALCULATE_ROUTE, TOOL_COMPLETE_REMINDER, TOOL_CREATE_CALENDAR, TOOL_CREATE_CONTACT,
     TOOL_CREATE_EVENT, TOOL_CREATE_GROUP, TOOL_CREATE_LIST, TOOL_CREATE_REMINDER, TOOL_DECLINE_INVITATION,
     TOOL_DELETE_CALENDAR, TOOL_DELETE_CONTACT, TOOL_DELETE_EVENT, TOOL_DELETE_GROUP, TOOL_DELETE_LIST,
-    TOOL_DELETE_REMINDER, TOOL_DETECT_BARCODES, TOOL_DETECT_FACES, TOOL_ESTIMATE_TRAVEL_TIME, TOOL_FORWARD_GEOCODE,
-    TOOL_GET_CONTACT, TOOL_GET_CURRENT_LOCATION, TOOL_GET_EVENT, TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG,
-    TOOL_LINK_CONTACTS, TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS,
-    TOOL_LIST_REMINDERS, TOOL_LOOKUP_PLACE, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER, TOOL_OPEN_NAVIGATION,
-    TOOL_READ_QR_CODE, TOOL_RECOGNIZE_TEXT, TOOL_REVERSE_GEOCODE, TOOL_SCAN_DOCUMENT, TOOL_SEARCH_CONTACTS,
+    TOOL_DELETE_REMINDER, TOOL_DETECT_BARCODES, TOOL_DETECT_FACE_LANDMARKS, TOOL_ESTIMATE_TRAVEL_TIME,
+    TOOL_FORWARD_GEOCODE, TOOL_GET_CONTACT, TOOL_GET_CURRENT_LOCATION, TOOL_GET_EVENT, TOOL_GET_PLACE,
+    TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS, TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS,
+    TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER,
+    TOOL_OPEN_NAVIGATION, TOOL_RECOGNIZE_DOCUMENTS, TOOL_RECOGNIZE_TEXT, TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS,
     TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS,
     TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION,
     TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT,
-    TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools, input_schema, resolve_tool, tools_for_capabilities, wire_name,
+    TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools, input_schema, resolve_tool, tools_for_capabilities,
   };
+
+  /// Claude Code exposes `mcp__<server>__<tool>` and rejects names over 64; 50 leaves room for `mcp__abridge__`.
+  const MAX_TOOL_NAME_LEN: usize = 50;
 
   fn array_items_type(schema: &serde_json::Value, property: &str) -> Option<String> {
     schema
@@ -1717,30 +1670,80 @@ mod tests {
       .cloned()
   }
 
-  #[test]
-  fn wire_names_are_unique_and_client_safe() {
-    let mut seen = std::collections::HashSet::new();
-    for tool in all_tools() {
-      let wire = wire_name(tool.name);
-      assert!((1..=64).contains(&wire.len()), "{wire} must be 1-64 chars");
-      assert!(
-        wire
-          .bytes()
-          .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-'),
-        "{wire} has characters outside [a-zA-Z0-9_-]"
-      );
-      assert!(seen.insert(wire.clone()), "{wire} collides with another tool");
+  /// `^[a-z0-9]+(_[a-z0-9]+)*$` without a regex crate.
+  fn is_snake_tool_name(name: &str) -> bool {
+    let bytes = name.as_bytes();
+    if bytes.is_empty() || bytes.len() > MAX_TOOL_NAME_LEN {
+      return false;
     }
+    let mut started = false;
+    let mut prev_underscore = false;
+    for &b in bytes {
+      match b {
+        b'a'..=b'z' | b'0'..=b'9' => {
+          started = true;
+          prev_underscore = false;
+        }
+        b'_' if started && !prev_underscore => prev_underscore = true,
+        _ => return false,
+      }
+    }
+    started && !prev_underscore
+  }
+
+  fn name_matches_provider_operation(tool: &super::ToolDefinition) -> bool {
+    let mut direct = String::with_capacity(tool.provider.len() + 1 + tool.operation.len());
+    direct.push_str(tool.provider);
+    direct.push('_');
+    direct.push_str(tool.operation);
+    if tool.name == direct {
+      return true;
+    }
+    let Some(rest) = tool.name.strip_prefix(tool.provider).and_then(|s| s.strip_prefix('_')) else {
+      return false;
+    };
+    let Some((domain, operation)) = rest.split_once('_') else {
+      return false;
+    };
+    !domain.is_empty() && domain.bytes().all(|b| matches!(b, b'a'..=b'z')) && operation == tool.operation
   }
 
   #[test]
-  fn resolve_tool_accepts_wire_and_dotted_names() {
+  fn tool_names_follow_client_safe_naming_rules() {
+    let mut names = std::collections::HashSet::new();
+    let mut pairs = std::collections::HashSet::new();
     for tool in all_tools() {
-      assert_eq!(resolve_tool(tool.name).map(|t| t.name), Some(tool.name));
-      assert_eq!(resolve_tool(&wire_name(tool.name)).map(|t| t.name), Some(tool.name));
+      assert!(
+        is_snake_tool_name(tool.name),
+        "{} is not ^[a-z0-9]+(_[a-z0-9]+)*$ or exceeds {MAX_TOOL_NAME_LEN} chars",
+        tool.name
+      );
+      assert!(
+        name_matches_provider_operation(tool),
+        "{} is not {{provider}}_{{operation}} or {{provider}}_{{domain}}_{{operation}}",
+        tool.name
+      );
+      let capability = tool.capability.as_bytes();
+      let provider = tool.provider.as_bytes();
+      assert!(
+        capability.starts_with(provider) && capability.get(provider.len()) == Some(&b'.'),
+        "{} capability {} is not namespaced by {}",
+        tool.name,
+        tool.capability,
+        tool.provider
+      );
+      assert!(names.insert(tool.name), "duplicate tool name {}", tool.name);
+      assert!(
+        pairs.insert((tool.provider, tool.operation)),
+        "duplicate (provider, operation) ({}, {})",
+        tool.provider,
+        tool.operation
+      );
+      assert_eq!(resolve_tool(tool.name).map(|resolved| resolved.name), Some(tool.name));
+      if tool.name.contains('_') {
+        assert!(resolve_tool(&tool.name.replace('_', ".")).is_none());
+      }
     }
-    assert_eq!(wire_name(TOOL_LIST_LISTS), "eventkit_reminders_list_lists");
-    assert!(resolve_tool("eventkit_reminders.list_lists").is_none());
   }
 
   #[test]
@@ -2410,14 +2413,6 @@ mod tests {
       .and_then(|value| value.as_u64())
   }
 
-  fn integer_property_minimum(schema: &serde_json::Value, property: &str) -> Option<i64> {
-    schema
-      .get("properties")
-      .and_then(|properties| properties.get(property))
-      .and_then(|property_schema| property_schema.get("minimum"))
-      .and_then(|value| value.as_i64())
-  }
-
   fn string_property_pattern(schema: &serde_json::Value, property: &str) -> Option<String> {
     schema
       .get("properties")
@@ -2543,8 +2538,8 @@ mod tests {
   }
 
   #[test]
-  fn lists_get_current_location_tool_when_mapkit_location_capability_enabled() {
-    let tools = tools_for_capabilities(&["mapkit.location".into()]);
+  fn lists_get_current_location_tool_when_corelocation_read_capability_enabled() {
+    let tools = tools_for_capabilities(&["corelocation.read".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
     assert_eq!(names, vec![TOOL_GET_CURRENT_LOCATION]);
   }
@@ -2573,18 +2568,18 @@ mod tests {
   }
 
   #[test]
-  fn lists_lookup_place_tool_when_mapkit_read_capability_enabled() {
+  fn lists_get_place_tool_when_mapkit_read_capability_enabled() {
     let tools = tools_for_capabilities(&["mapkit.read".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_LOOKUP_PLACE]);
+    assert_eq!(names, vec![TOOL_GET_PLACE]);
   }
 
   #[test]
-  fn lookup_place_schema_requires_identifier() {
+  fn get_place_schema_requires_identifier() {
     let tool = all_tools()
       .iter()
-      .find(|tool| tool.name == TOOL_LOOKUP_PLACE)
-      .expect("lookup_place tool");
+      .find(|tool| tool.name == TOOL_GET_PLACE)
+      .expect("get_place tool");
     let schema = input_schema(tool);
     assert_eq!(string_property_min_length(&schema, "identifier"), Some(1));
     assert_eq!(
@@ -2813,28 +2808,28 @@ mod tests {
   }
 
   #[test]
-  fn lists_scan_document_tool_when_vision_document_capability_enabled() {
+  fn lists_recognize_documents_tool_when_vision_document_capability_enabled() {
     let tools = tools_for_capabilities(&["vision.document".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_SCAN_DOCUMENT]);
+    assert_eq!(names, vec![TOOL_RECOGNIZE_DOCUMENTS]);
   }
 
   #[test]
-  fn scan_document_schema_requires_image_data() {
+  fn recognize_documents_schema_requires_image_data() {
     let tool = all_tools()
       .iter()
-      .find(|tool| tool.name == TOOL_SCAN_DOCUMENT)
-      .expect("scan_document tool");
+      .find(|tool| tool.name == TOOL_RECOGNIZE_DOCUMENTS)
+      .expect("recognize_documents tool");
     let schema = input_schema(tool);
     assert_eq!(string_property_min_length(&schema, "image_data"), Some(1));
   }
 
   #[test]
-  fn scan_document_schema_requires_non_empty_recognition_languages() {
+  fn recognize_documents_schema_requires_non_empty_recognition_languages() {
     let tool = all_tools()
       .iter()
-      .find(|tool| tool.name == TOOL_SCAN_DOCUMENT)
-      .expect("scan_document tool");
+      .find(|tool| tool.name == TOOL_RECOGNIZE_DOCUMENTS)
+      .expect("recognize_documents tool");
     let schema = input_schema(tool);
     let min_length = schema
       .get("properties")
@@ -2848,11 +2843,11 @@ mod tests {
   }
 
   #[test]
-  fn scan_document_schema_constrains_normalized_region_of_interest() {
+  fn recognize_documents_schema_constrains_normalized_region_of_interest() {
     let tool = all_tools()
       .iter()
-      .find(|tool| tool.name == TOOL_SCAN_DOCUMENT)
-      .expect("scan_document tool");
+      .find(|tool| tool.name == TOOL_RECOGNIZE_DOCUMENTS)
+      .expect("recognize_documents tool");
     let schema = input_schema(tool);
     let region = schema
       .get("properties")
@@ -2878,11 +2873,11 @@ mod tests {
   }
 
   #[test]
-  fn scan_document_schema_documents_region_of_interest_fit_constraint() {
+  fn recognize_documents_schema_documents_region_of_interest_fit_constraint() {
     let tool = all_tools()
       .iter()
-      .find(|tool| tool.name == TOOL_SCAN_DOCUMENT)
-      .expect("scan_document tool");
+      .find(|tool| tool.name == TOOL_RECOGNIZE_DOCUMENTS)
+      .expect("recognize_documents tool");
     let schema = input_schema(tool);
     let description = schema
       .get("properties")
@@ -2892,15 +2887,15 @@ mod tests {
       .unwrap_or("");
     assert!(description.contains("origin.x + size.width <= 1"));
     assert!(description.contains("origin.y + size.height <= 1"));
-    assert!(!scan_document_region_of_interest_fits_normalized_space(
+    assert!(!recognize_documents_region_of_interest_fits_normalized_space(
       0.6, 0.2, 0.5, 0.5
     ));
-    assert!(scan_document_region_of_interest_fits_normalized_space(
+    assert!(recognize_documents_region_of_interest_fits_normalized_space(
       0.1, 0.2, 0.5, 0.6
     ));
   }
 
-  fn scan_document_region_of_interest_fits_normalized_space(
+  fn recognize_documents_region_of_interest_fits_normalized_space(
     origin_x: f64,
     origin_y: f64,
     width: f64,
@@ -2920,27 +2915,7 @@ mod tests {
   fn lists_vision_barcode_tools_when_vision_barcodes_capability_enabled() {
     let tools = tools_for_capabilities(&["vision.barcodes".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_READ_QR_CODE, TOOL_DETECT_BARCODES]);
-  }
-
-  #[test]
-  fn read_qr_code_schema_requires_image_data() {
-    let tool = all_tools()
-      .iter()
-      .find(|tool| tool.name == TOOL_READ_QR_CODE)
-      .expect("read_qr_code tool");
-    let schema = input_schema(tool);
-    assert_eq!(string_property_min_length(&schema, "image_data"), Some(1));
-    assert_eq!(integer_property_minimum(&schema, "revision"), Some(0));
-    assert_eq!(
-      schema.get("required").and_then(|v| v.as_array()).map(|fields| {
-        fields
-          .iter()
-          .filter_map(|f| f.as_str().map(str::to_owned))
-          .collect::<Vec<_>>()
-      }),
-      Some(vec!["image_data".to_owned()])
-    );
+    assert_eq!(names, vec![TOOL_DETECT_BARCODES]);
   }
 
   #[test]
@@ -2963,18 +2938,18 @@ mod tests {
   }
 
   #[test]
-  fn lists_detect_faces_tool_when_vision_faces_capability_enabled() {
+  fn lists_detect_face_landmarks_tool_when_vision_faces_capability_enabled() {
     let tools = tools_for_capabilities(&["vision.faces".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_DETECT_FACES]);
+    assert_eq!(names, vec![TOOL_DETECT_FACE_LANDMARKS]);
   }
 
   #[test]
-  fn detect_faces_schema_requires_image_data() {
+  fn detect_face_landmarks_schema_requires_image_data() {
     let tool = all_tools()
       .iter()
-      .find(|tool| tool.name == TOOL_DETECT_FACES)
-      .expect("detect_faces tool");
+      .find(|tool| tool.name == TOOL_DETECT_FACE_LANDMARKS)
+      .expect("detect_face_landmarks tool");
     let schema = input_schema(tool);
     assert_eq!(string_property_min_length(&schema, "image_data"), Some(1));
     assert_eq!(
@@ -2989,11 +2964,11 @@ mod tests {
   }
 
   #[test]
-  fn detect_faces_schema_constrains_revision_and_region_of_interest() {
+  fn detect_face_landmarks_schema_constrains_revision_and_region_of_interest() {
     let tool = all_tools()
       .iter()
-      .find(|tool| tool.name == TOOL_DETECT_FACES)
-      .expect("detect_faces tool");
+      .find(|tool| tool.name == TOOL_DETECT_FACE_LANDMARKS)
+      .expect("detect_face_landmarks tool");
     let schema = input_schema(tool);
     let revision_enum = schema
       .pointer("/properties/revision/enum")

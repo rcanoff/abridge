@@ -3,7 +3,7 @@ import Foundation
 import Vision
 
 extension VisionProvider {
-    func parseScanDocumentArguments(_ payloadJson: String) throws -> VisionScanDocumentRequest {
+    func parseRecognizeDocumentsArguments(_ payloadJson: String) throws -> VisionRecognizeDocumentsRequest {
         guard let data = payloadJson.data(using: .utf8) else {
             throw VisionProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
@@ -18,7 +18,7 @@ extension VisionProvider {
         let includeSegmentation = try optionalBoolArgument(in: dictionary, key: "include_segmentation") ?? false
         let maximumCandidateCount = try optionalMaximumCandidateCountArgument(in: dictionary)
 
-        return VisionScanDocumentRequest(
+        return VisionRecognizeDocumentsRequest(
             imageData: imageData,
             orientation: orientation,
             revision: revision,

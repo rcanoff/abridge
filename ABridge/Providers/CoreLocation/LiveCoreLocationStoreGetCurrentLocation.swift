@@ -1,23 +1,23 @@
 import CoreLocation
 import Foundation
 
-protocol MapKitLocationFetching: AnyObject {
+protocol CoreLocationFetching: AnyObject {
     func requestLocation(completion: @escaping (Result<CLLocation, Error>) -> Void)
 }
 
-protocol MapKitLocationManaging: AnyObject {
+protocol CoreLocationManaging: AnyObject {
     var delegate: CLLocationManagerDelegate? { get set }
     func requestLocation()
 }
 
-extension CLLocationManager: MapKitLocationManaging {}
+extension CLLocationManager: CoreLocationManaging {}
 
-extension LiveMapKitStore {
+extension LiveCoreLocationStore {
     func getCurrentLocation() throws -> CLLocation {
-        let result = MapKitSearchFetch.AsyncBridgeResult<CLLocation>()
+        let result = CoreLocationFetch.AsyncBridgeResult<CLLocation>()
         let retention = LocationFetcherRetentionBox()
 
-        try MapKitSearchFetch.waitForCompletion(
+        try CoreLocationFetch.waitForCompletion(
             operation: "CoreLocation request",
             timeout: locationFetchTimeout
         ) { complete in
@@ -54,11 +54,11 @@ final class LocationFetcherRetentionBox: @unchecked Sendable {
     }
 }
 
-final class OneShotLocationFetcher: NSObject, MapKitLocationFetching, CLLocationManagerDelegate {
-    private let manager: any MapKitLocationManaging
+final class OneShotLocationFetcher: NSObject, CoreLocationFetching, CLLocationManagerDelegate {
+    private let manager: any CoreLocationManaging
     private var completion: ((Result<CLLocation, Error>) -> Void)?
 
-    init(locationManager: any MapKitLocationManaging = CLLocationManager()) {
+    init(locationManager: any CoreLocationManaging = CLLocationManager()) {
         manager = locationManager
         super.init()
         manager.delegate = self
@@ -77,7 +77,7 @@ final class OneShotLocationFetcher: NSObject, MapKitLocationFetching, CLLocation
         if let location = locations.last {
             completion(.success(location))
         } else {
-            completion(.failure(MapKitProviderError.mapkitError("CoreLocation returned no location")))
+            completion(.failure(CoreLocationProviderError.corelocationError("CoreLocation returned no location")))
         }
     }
 

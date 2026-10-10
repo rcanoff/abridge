@@ -126,6 +126,8 @@ struct PermissionsSettingsView: View {
             [(header: nil, items: CapabilityCatalog.contactsCapabilities.filter(\.shipped))]
         case .mapkit:
             [(header: nil, items: CapabilityCatalog.mapkitCapabilities.filter(\.shipped))]
+        case .corelocation:
+            [(header: nil, items: CapabilityCatalog.corelocationCapabilities.filter(\.shipped))]
         case .vision:
             [(header: nil, items: CapabilityCatalog.visionCapabilities.filter(\.shipped))]
         }
@@ -137,6 +139,7 @@ struct PermissionsSettingsView: View {
         case .calendarsAndEvents: calendarsOSWiring
         case .contacts: contactsOSWiring
         case .mapkit: mapkitOSWiring
+        case .corelocation: corelocationOSWiring
         case .vision: visionOSWiring
         }
     }
@@ -181,6 +184,18 @@ struct PermissionsSettingsView: View {
     }
 
     private var mapkitOSWiring: ProviderOSWiring {
+        ProviderOSWiring(
+            title: nil,
+            statusLabel: "Looks up places, routes, and Maps — no macOS privacy permission required.",
+            grantsReadAccess: true,
+            isDeniedOrRestricted: false,
+            isRequesting: false,
+            onRequest: {},
+            onOpenSettings: {}
+        )
+    }
+
+    private var corelocationOSWiring: ProviderOSWiring {
         let granted = appStore.locationPermissionStatus.grantsReadAccess
         return ProviderOSWiring(
             title: "Location Access",

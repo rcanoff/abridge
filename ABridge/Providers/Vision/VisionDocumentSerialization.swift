@@ -2,7 +2,7 @@ import Foundation
 import Vision
 
 enum VisionDocumentSerialization {
-    static func scanDocumentResponseJSONObject(
+    static func recognizeDocumentsResponseJSONObject(
         observations: [DocumentObservation],
         segmentation: DetectedDocumentObservation?,
         maximumCandidateCount: Int

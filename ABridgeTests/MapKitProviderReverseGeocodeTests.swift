@@ -7,20 +7,6 @@ import Testing
 struct MapKitProviderReverseGeocodeTests {
     @Test
     @MainActor
-    func reverseGeocodeReturnsPermissionDeniedWhenUnauthorized() {
-        let store = MockMapKitStore()
-        store.authorizationStatus = .denied
-        let provider = MapKitProvider(store: store)
-        let response = provider.handle(
-            operation: "reverse_geocode",
-            payloadJson: #"{"coordinate":{"latitude":37.0,"longitude":-122.0}}"#
-        )
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("permission_denied") == true)
-    }
-
-    @Test
-    @MainActor
     func reverseGeocodeReturnsSerializedResponse() throws {
         let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0))
         item.name = "1 Apple Park Way"

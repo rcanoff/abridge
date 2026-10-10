@@ -3,10 +3,10 @@ import Foundation
 import Vision
 
 extension VisionProvider {
-    func detectBarcodes(payloadJson: String) -> ProviderResponse {
+    func detectBarcodes(payloadJson: String) async -> ProviderResponse {
         do {
             let arguments = try parseDetectBarcodesArguments(payloadJson)
-            let observations = try store.detectBarcodes(request: arguments)
+            let observations = try await store.detectBarcodes(request: arguments)
             let payloadObject = try VisionBarcodeSerialization
                 .detectBarcodesResponseJSONObject(observations: observations)
             let payload = try VisionSerialization.jsonString(from: payloadObject)

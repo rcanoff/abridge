@@ -2,7 +2,7 @@ import Foundation
 import Vision
 
 enum VisionFaceSerialization {
-    static func detectFacesResponseJSONObject(observations: [VNFaceObservation]) -> [String: Any] {
+    static func detectFaceLandmarksResponseJSONObject(observations: [VNFaceObservation]) -> [String: Any] {
         ["results": observations.map(faceObservationJSONObject(from:))]
     }
 

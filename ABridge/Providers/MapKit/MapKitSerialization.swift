@@ -47,10 +47,6 @@ enum MapKitSerialization {
         ]
     }
 
-    static func getCurrentLocationResponseJSONObject(location: CLLocation) -> [String: Any] {
-        ["location": locationJSONObject(from: location)]
-    }
-
     static func reverseGeocodeResponseJSONObject(mapItems: [MKMapItem]) -> [String: Any] {
         [
             "map_items": mapItems.map(mapItemJSONObject(from:)),

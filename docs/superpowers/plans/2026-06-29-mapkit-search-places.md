@@ -1,8 +1,8 @@
-# mapkit.search_places Implementation Plan
+# mapkit_search_places Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship `mapkit.search_places` MCP tool (#104) with exhaustive `MKMapItem` JSON projection.
+**Goal:** Ship `mapkit_search_places` MCP tool (#104) with exhaustive `MKMapItem` JSON projection.
 
 **Architecture:** `MapKitStore` protocol seam; `MapKitSerialization` for faithful MapKit JSON; Rust tool registration with `mapkit.search` capability; flip `mapkit-search` to shipped; CoreLocation when-in-use gate per #150.
 
@@ -59,7 +59,7 @@ fn accepts_mapkit_search_capability_shape() {
 - [ ] **Step 2: Register tool in tools/mod.rs**
 
 ```rust
-pub const TOOL_SEARCH_PLACES: &str = "mapkit.search_places";
+pub const TOOL_SEARCH_PLACES: &str = "mapkit_search_places";
 ```
 
 Add to `ALL_TOOLS` (bump array length 43 → 44):
@@ -161,7 +161,7 @@ Expected: PASS
 
 ```bash
 git add rust/abridge_core/src/capabilities.rs rust/abridge_core/src/tools/mod.rs
-git commit -m "feat(mapkit): register mapkit.search_places MCP tool in Rust"
+git commit -m "feat(mapkit): register mapkit_search_places MCP tool in Rust"
 ```
 
 ---
@@ -203,14 +203,14 @@ fn mcp_tools_list_includes_search_places_when_mapkit_search_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("mapkit.search_places"));
+  assert!(resp.contains("mapkit_search_places"));
 }
 
 #[test]
 fn tools_call_dispatches_search_places() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"mapkit.search_places","arguments":{"query":"coffee"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"mapkit_search_places","arguments":{"query":"coffee"}}}"#;
 
   let handle = create_server(
     mapkit_config_on_port(port, vec!["mapkit.search".into()]),
@@ -636,7 +636,7 @@ CapabilityDefinition(id: "mapkit-search", capabilityID: "mapkit.search", label: 
 - [ ] **Step 3: README checkoff**
 
 ```markdown
-- [x] `mapkit.search_places`
+- [x] `mapkit_search_places`
 ```
 
 - [ ] **Step 4: Run full verification**

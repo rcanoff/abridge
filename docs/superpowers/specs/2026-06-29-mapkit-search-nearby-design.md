@@ -1,8 +1,8 @@
-# mapkit.search_nearby MCP Tool — Design Spec
+# mapkit_search_nearby MCP Tool — Design Spec
 
 **Date:** 2026-06-29  
 **Status:** Approved  
-**Issue:** #105 (Epic #103; depends on sibling #104 `mapkit.search_places`)  
+**Issue:** #105 (Epic #103; depends on sibling #104 `mapkit_search_places`)  
 **Branch:** `feat/mapkit-search-nearby`  
 **PRD:** `docs/prd.md` § Future Providers  
 **Conventions:** `docs/conventions.md` § JSON and payloads (framework fidelity)  
@@ -13,7 +13,7 @@
 
 ## Summary
 
-Implement `mapkit.search_nearby` MCP tool: search for **points of interest near a coordinate or region** via **`MKLocalSearch`** with `pointOfInterestFilter` and `resultTypes = .pointOfInterest` (no natural-language query). Returns the **same exhaustive `MKLocalSearch.Response` JSON projection** as `search_places` (reuse `MapKitSerialization`). Register in Rust tool catalog gated by existing **`mapkit.search`** capability (already shipped with #104). Enforce **CoreLocation when-in-use** authorization per MapKit foundation (#150).
+Implement `mapkit_search_nearby` MCP tool: search for **points of interest near a coordinate or region** via **`MKLocalSearch`** with `pointOfInterestFilter` and `resultTypes = .pointOfInterest` (no natural-language query). Returns the **same exhaustive `MKLocalSearch.Response` JSON projection** as `search_places` (reuse `MapKitSerialization`). Register in Rust tool catalog gated by existing **`mapkit.search`** capability (already shipped with #104). Enforce **CoreLocation when-in-use** authorization per MapKit foundation (#150).
 
 ---
 
@@ -21,7 +21,7 @@ Implement `mapkit.search_nearby` MCP tool: search for **points of interest near 
 
 | Field | Value |
 |-------|-------|
-| MCP name | `mapkit.search_nearby` |
+| MCP name | `mapkit_search_nearby` |
 | Capability | `mapkit.search` |
 | Provider | `mapkit` |
 | Operation | `search_nearby` |
@@ -133,7 +133,7 @@ Rust tools/call → ProviderBridge → MapKitProvider.search_nearby
 | `ABridge/Providers/MapKit/MapKitProviderSearchPlaces.swift` | Use shared argument helpers |
 | `ABridgeTests/MockMapKitStore.swift` | Fake nearby results + `lastNearbyRequest` |
 | `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path for `search_nearby` |
-| `README.md` | Check off `mapkit.search_nearby` |
+| `README.md` | Check off `mapkit_search_nearby` |
 
 ### Rust files (modify)
 
@@ -165,7 +165,7 @@ Rust tools/call → ProviderBridge → MapKitProvider.search_nearby
 
 ## Acceptance criteria (#105)
 
-1. `mapkit.search_nearby` in `tools/list` when `mapkit.search` enabled (alongside `mapkit.search_places`).
+1. `mapkit_search_nearby` in `tools/list` when `mapkit.search` enabled (alongside `mapkit_search_places`).
 2. Valid `tools/call` succeeds against mock/live MapKit per tests.
 3. Disabled capability or missing location permission → typed error (not silent success).
 4. Responses use exhaustive Apple field projection (snake_case keys).

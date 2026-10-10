@@ -3,10 +3,10 @@ import Foundation
 import Vision
 
 extension VisionProvider {
-    func recognizeText(payloadJson: String) -> ProviderResponse {
+    func recognizeText(payloadJson: String) async -> ProviderResponse {
         do {
             let arguments = try parseRecognizeTextArguments(payloadJson)
-            let observations = try store.recognizeText(request: arguments)
+            let observations = try await store.recognizeText(request: arguments)
             let payloadObject = VisionSerialization.recognizeTextResponseJSONObject(
                 observations: observations,
                 maxCandidateCount: arguments.maxCandidateCount

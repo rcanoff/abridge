@@ -6,7 +6,7 @@ import Testing
 struct AppSettingsMapKitTests {
     @Test
     @MainActor
-    func serverEnabledMCPCapabilityIDsIncludesMapKitSearchWhenLocationAuthorized() throws {
+    func serverEnabledMCPCapabilityIDsIncludesMapKitWithoutLocationAccess() throws {
         let suiteName = "AppSettingsMapKitTests.mapkitServerGating"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
@@ -16,7 +16,8 @@ struct AppSettingsMapKitTests {
 
         #expect(appSettings.enabledMapKitCapabilityIDs == ["mapkit.search"])
         #expect(
-            serverEnabledCapabilities(for: appSettings, locationAuthorized: false) == ["diagnostics.read"]
+            serverEnabledCapabilities(for: appSettings, locationAuthorized: false)
+                == ["diagnostics.read", "mapkit.search"]
         )
         #expect(
             serverEnabledCapabilities(for: appSettings, locationAuthorized: true)
@@ -26,25 +27,19 @@ struct AppSettingsMapKitTests {
         appSettings.saveCapabilityIDs(["mapkit-geocode"])
         #expect(appSettings.enabledMapKitCapabilityIDs == ["mapkit.geocode"])
         #expect(
-            serverEnabledCapabilities(for: appSettings, locationAuthorized: true).contains("mapkit.geocode")
+            serverEnabledCapabilities(for: appSettings, locationAuthorized: false).contains("mapkit.geocode")
         )
 
         appSettings.saveCapabilityIDs(["mapkit-routing"])
         #expect(appSettings.enabledMapKitCapabilityIDs == ["mapkit.routing"])
         #expect(
-            serverEnabledCapabilities(for: appSettings, locationAuthorized: true).contains("mapkit.routing")
+            serverEnabledCapabilities(for: appSettings, locationAuthorized: false).contains("mapkit.routing")
         )
 
         appSettings.saveCapabilityIDs(["mapkit-navigation"])
         #expect(appSettings.enabledMapKitCapabilityIDs == ["mapkit.navigation"])
         #expect(
-            serverEnabledCapabilities(for: appSettings, locationAuthorized: true).contains("mapkit.navigation")
-        )
-
-        appSettings.saveCapabilityIDs(["mapkit-location"])
-        #expect(appSettings.enabledMapKitCapabilityIDs == ["mapkit.location"])
-        #expect(
-            serverEnabledCapabilities(for: appSettings, locationAuthorized: true).contains("mapkit.location")
+            serverEnabledCapabilities(for: appSettings, locationAuthorized: false).contains("mapkit.navigation")
         )
     }
 

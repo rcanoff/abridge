@@ -394,7 +394,7 @@ Append after `contactsCapabilities`:
             label: "Navigation",
             shipped: false
         ),
-        CapabilityDefinition(id: "mapkit-location", capabilityID: "mapkit.location", label: "Location", shipped: false),
+        CapabilityDefinition(id: "corelocation-read", capabilityID: "corelocation.read", label: "Location", shipped: false),
         CapabilityDefinition(id: "mapkit-read", capabilityID: "mapkit.read", label: "Read", shipped: false),
     ]
 ```

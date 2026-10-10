@@ -30,41 +30,17 @@ struct AppleProviderBridgeVisionTests {
 
     @Test
     @MainActor
-    func callProviderVisionScanDocumentSucceedsWithMockStore() throws {
+    func callProviderVisionRecognizeDocumentsSucceedsWithMockStore() throws {
         let observations = try VisionTestFixtures.sampleDocumentObservations()
         let store = MockVisionStore()
-        store.scanDocumentResult = VisionScanDocumentResult(observations: observations, segmentation: nil)
+        store.recognizeDocumentsResult = VisionRecognizeDocumentsResult(observations: observations, segmentation: nil)
         let bridge = AppleProviderBridge(visionProvider: VisionProvider(store: store))
         let imageData = try VisionTestFixtures.sampleTextImageData()
         let encoded = imageData.base64EncodedString()
 
         let request = ProviderRequest(
             provider: "vision",
-            operation: "scan_document",
-            payloadJson: #"{"image_data":"\#(encoded)"}"#
-        )
-        let response = bridge.callProvider(request: request)
-
-        #expect(response.ok == true)
-        let data = try #require(response.payloadJson.data(using: .utf8))
-        let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-        let results = decoded?["results"] as? [[String: Any]]
-        #expect(results?.isEmpty == false)
-    }
-
-    @Test
-    @MainActor
-    func callProviderVisionReadQrCodeSucceedsWithMockStore() throws {
-        let observations = try VisionTestFixtures.sampleVNBarcodeObservations()
-        let store = MockVisionStore()
-        store.readQrCodeObservations = observations
-        let bridge = AppleProviderBridge(visionProvider: VisionProvider(store: store))
-        let imageData = try VisionTestFixtures.sampleTextImageData()
-        let encoded = imageData.base64EncodedString()
-
-        let request = ProviderRequest(
-            provider: "vision",
-            operation: "read_qr_code",
+            operation: "recognize_documents",
             payloadJson: #"{"image_data":"\#(encoded)"}"#
         )
         let response = bridge.callProvider(request: request)
@@ -102,7 +78,7 @@ struct AppleProviderBridgeVisionTests {
 
     @Test
     @MainActor
-    func callProviderVisionDetectFacesSucceedsWithMockStore() throws {
+    func callProviderVisionDetectFaceLandmarksSucceedsWithMockStore() throws {
         let observations = try VisionTestFixtures.sampleFaceObservations()
         let store = MockVisionStore()
         store.faceObservations = observations
@@ -112,7 +88,7 @@ struct AppleProviderBridgeVisionTests {
 
         let request = ProviderRequest(
             provider: "vision",
-            operation: "detect_faces",
+            operation: "detect_face_landmarks",
             payloadJson: #"{"image_data":"\#(encoded)"}"#
         )
         let response = bridge.callProvider(request: request)

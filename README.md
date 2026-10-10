@@ -12,7 +12,7 @@
 
 A native macOS menu bar app with a Rust MCP/HTTP core. Swift owns the UI, system permission prompts, and thin Apple adapters. Rust owns the server, auth, routing, and tool registry (UniFFI). Clients talk to `127.0.0.1` only.
 
-Providers: EventKit (Reminders, Calendars, Events), Contacts, MapKit, and Vision. MCP payloads are mechanical JSON of Apple objects: no reshaped domain models, no hidden fields.
+Providers: EventKit (Reminders, Calendars, Events), Contacts, MapKit, Core Location, and Vision. MCP payloads are mechanical JSON of Apple objects: no reshaped domain models, no hidden fields.
 
 Access is two layers: macOS privacy permission, then per-capability MCP toggles in Settings. Only enabled capabilities appear in `tools/list`. Reminders lists and event calendars default to sharing all of them; Permissions can restrict MCP to a subset.
 
@@ -74,7 +74,7 @@ Icon tracing (`just gen-icon-svg`) also needs ImageMagick and potrace.
 
 ## MCP tools
 
-Tool names use `<provider>_<domain>_<operation>`, so they match `^[a-zA-Z0-9_-]{1,64}$` (some clients, e.g. Grok CLI, reject dots). `tools/call` also accepts the dotted form `<provider>.<domain>.<operation>`, which the Diagnostics log uses. Discover the live set with `tools/list`; call with `tools/call`.
+Tool names are `<provider>_<domain>_<operation>`, or `<provider>_<operation>` when the provider has no domain, using only lowercase letters, digits, and underscores. Discover the live set with `tools/list`; call with `tools/call`.
 
 ### EventKit: Reminders
 
@@ -135,16 +135,18 @@ Invitation RSVP (`accept_invitation`, `decline_invitation`, `tentative_invitatio
 - `mapkit_calculate_route`
 - `mapkit_estimate_travel_time`
 - `mapkit_open_navigation`
-- `mapkit_lookup_place`
-- `mapkit_get_current_location`
+- `mapkit_get_place`
+
+### Core Location
+
+- `corelocation_get_current_location`
 
 ### Vision
 
 - `vision_recognize_text`
-- `vision_scan_document`
-- `vision_read_qr_code`
+- `vision_recognize_documents`
 - `vision_detect_barcodes`
-- `vision_detect_faces`
+- `vision_detect_face_landmarks`
 
 ### Diagnostics
 

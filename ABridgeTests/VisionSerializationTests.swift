@@ -25,22 +25,6 @@ struct VisionSerializationTests {
         "request_revision",
     ]
 
-    private let barcodeObservationKeys: [String] = [
-        "uuid",
-        "confidence",
-        "time_range",
-        "request_revision",
-        "bounding_box",
-        "global_segmentation_mask",
-        "top_left",
-        "top_right",
-        "bottom_left",
-        "bottom_right",
-        "symbology",
-        "payload_string_value",
-        "payload_data",
-    ]
-
     @Test
     @MainActor
     func recognizedTextObservationProjectionIncludesAllKeys() throws {
@@ -81,44 +65,6 @@ struct VisionSerializationTests {
     func optionalTimeRangeSerializesAsNull() {
         let value = VisionSerialization.cmTimeRangeJSONObject(from: nil as CMTimeRange?)
         #expect(value is NSNull)
-    }
-
-    @Test
-    @MainActor
-    func barcodeObservationProjectionIncludesAllKeys() throws {
-        let observations = try VisionTestFixtures.sampleVNBarcodeObservations()
-        let observation = try #require(observations.first)
-
-        let object = VisionSerialization.barcodeObservationJSONObject(from: observation)
-
-        for key in barcodeObservationKeys {
-            #expect(object.keys.contains(key), "Missing observation key: \(key)")
-        }
-    }
-
-    @Test
-    @MainActor
-    func barcodeObservationSymbologyUsesRawValue() throws {
-        let observations = try VisionTestFixtures.sampleVNBarcodeObservations()
-        let observation = try #require(observations.first)
-
-        let object = VisionSerialization.barcodeObservationJSONObject(from: observation)
-        let symbology = try #require(object["symbology"] as? String)
-
-        #expect(symbology == observation.symbology.rawValue)
-        #expect(symbology == "VNBarcodeSymbologyQR")
-        #expect(!symbology.contains("(_rawValue:"))
-    }
-
-    @Test
-    @MainActor
-    func readQrCodeResponseWrapsResultsArray() throws {
-        let observations = try VisionTestFixtures.sampleVNBarcodeObservations()
-        let object = VisionSerialization.readQrCodeResponseJSONObject(observations: observations)
-
-        #expect(object.keys.contains("results"))
-        let results = object["results"] as? [[String: Any]]
-        #expect(results?.isEmpty == false)
     }
 
     @Test

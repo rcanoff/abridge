@@ -3,13 +3,13 @@ import CoreLocation
 import Foundation
 import Testing
 
-@Suite("LiveMapKitStoreGetCurrentLocation")
-struct LiveMapKitStoreGetCurrentLocationTests {
+@Suite("LiveCoreLocationStoreGetCurrentLocation")
+struct LiveCoreLocationStoreLocationTests {
     @Test
     @MainActor
     func getCurrentLocationPumpsRunLoopForDeferredFetcherCallback() throws {
         let fetcher = DeferredLocationFetcher()
-        var store = LiveMapKitStore()
+        var store = LiveCoreLocationStore()
         store.makeLocationFetcher = { fetcher }
 
         let expected = CLLocation(
@@ -31,10 +31,10 @@ struct LiveMapKitStoreGetCurrentLocationTests {
     @MainActor
     func getCurrentLocationPropagatesFetcherFailure() {
         let fetcher = DeferredLocationFetcher()
-        var store = LiveMapKitStore()
+        var store = LiveCoreLocationStore()
         store.makeLocationFetcher = { fetcher }
 
-        let expectedError = MapKitProviderError.mapkitError("simulated location failure")
+        let expectedError = CoreLocationProviderError.corelocationError("simulated location failure")
         fetcher.deferredOutcome = .failure(expectedError)
 
         #expect(throws: expectedError) {
@@ -46,7 +46,7 @@ struct LiveMapKitStoreGetCurrentLocationTests {
     @Test
     @MainActor
     func getCurrentLocationUsesDefaultOneShotLocationFetcherFactory() {
-        let store = LiveMapKitStore()
+        let store = LiveCoreLocationStore()
         #expect(store.makeLocationFetcher() is OneShotLocationFetcher)
     }
 
@@ -64,7 +64,7 @@ struct LiveMapKitStoreGetCurrentLocationTests {
         manager.deferredOutcome = .success(expected)
 
         weak var weakFetcher: OneShotLocationFetcher?
-        var store = LiveMapKitStore()
+        var store = LiveCoreLocationStore()
         store.makeLocationFetcher = {
             let fetcher = OneShotLocationFetcher(locationManager: manager)
             weakFetcher = fetcher
@@ -84,10 +84,10 @@ struct LiveMapKitStoreGetCurrentLocationTests {
     @MainActor
     func getCurrentLocationPropagatesProductionOneShotFetcherDelegateFailure() {
         let manager = SimulatedLocationManager()
-        let expectedError = MapKitProviderError.mapkitError("simulated one-shot location failure")
+        let expectedError = CoreLocationProviderError.corelocationError("simulated one-shot location failure")
         manager.deferredOutcome = .failure(expectedError)
 
-        var store = LiveMapKitStore()
+        var store = LiveCoreLocationStore()
         store.makeLocationFetcher = {
             OneShotLocationFetcher(locationManager: manager)
         }
@@ -102,13 +102,13 @@ struct LiveMapKitStoreGetCurrentLocationTests {
     @MainActor
     func getCurrentLocationTimesOutWhenFetcherNeverCompletes() {
         let fetcher = DeferredLocationFetcher()
-        var store = LiveMapKitStore()
+        var store = LiveCoreLocationStore()
         store.makeLocationFetcher = { fetcher }
         store.locationFetchTimeout = 0.1
 
         let started = ContinuousClock.now
 
-        #expect(throws: MapKitProviderError.mapkitError("CoreLocation request timed out")) {
+        #expect(throws: CoreLocationProviderError.corelocationError("CoreLocation request timed out")) {
             try store.getCurrentLocation()
         }
 
@@ -118,7 +118,7 @@ struct LiveMapKitStoreGetCurrentLocationTests {
     }
 }
 
-private final class SimulatedLocationManager: MapKitLocationManaging, @unchecked Sendable {
+private final class SimulatedLocationManager: CoreLocationManaging, @unchecked Sendable {
     weak var delegate: CLLocationManagerDelegate?
     var deferredOutcome: Result<CLLocation, Error>?
     var fetcherAliveAtRequest: (() -> Bool)?
@@ -153,7 +153,7 @@ private final class SimulatedLocationManager: MapKitLocationManaging, @unchecked
     }
 }
 
-private final class DeferredLocationFetcher: MapKitLocationFetching, @unchecked Sendable {
+private final class DeferredLocationFetcher: CoreLocationFetching, @unchecked Sendable {
     var deferredOutcome: Result<CLLocation, Error>?
     private(set) var requestCount = 0
 

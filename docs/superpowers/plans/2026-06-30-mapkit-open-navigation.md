@@ -1,8 +1,8 @@
-# mapkit.open_navigation Implementation Plan
+# mapkit_open_navigation Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship `mapkit.open_navigation` MCP tool (#110) opening Apple Maps navigation under new `mapkit.navigation` capability.
+**Goal:** Ship `mapkit_open_navigation` MCP tool (#110) opening Apple Maps navigation under new `mapkit.navigation` capability.
 
 **Architecture:** Extend `MapKitStore` with `openNavigation`; use `MKMapItem.openMaps` in `LiveMapKitStore`; map launch options to seam types for mockability; add response serializers to `MapKitSerialization`; Rust tool registration on `mapkit.navigation`; ship `mapkit-navigation` toggle; CoreLocation when-in-use gate per #150.
 
@@ -45,7 +45,7 @@
 - [ ] **Step 3:** Add input schema for source/destination coordinates + optional `transport_type`
 - [ ] **Step 4:** Add unit tests (`lists_open_navigation_tool_when_mapkit_navigation_capability_enabled`, schema tests)
 - [ ] **Step 5:** Run `TZ=UTC just test-rust`
-- [ ] **Step 6:** Commit `feat(mapkit): register mapkit.open_navigation MCP tool in Rust`
+- [ ] **Step 6:** Commit `feat(mapkit): register mapkit_open_navigation MCP tool in Rust`
 
 ---
 
@@ -107,7 +107,7 @@
 - [ ] **Step 2:** Add AppSettings + PermissionsStore tests for navigation toggle
 - [ ] **Step 3:** README checkoff
 - [ ] **Step 4:** Run `TZ=UTC just test-all`
-- [ ] **Step 5:** Commit `feat(mapkit): ship mapkit.open_navigation tool`
+- [ ] **Step 5:** Commit `feat(mapkit): ship mapkit_open_navigation tool`
 
 ---
 

@@ -49,9 +49,9 @@ struct VisionFaceSerializationTests {
 
     @Test
     @MainActor
-    func detectFacesResponseIncludesTopLevelKeys() throws {
+    func detectFaceLandmarksResponseIncludesTopLevelKeys() throws {
         let observations = try VisionTestFixtures.sampleFaceObservations()
-        let object = VisionFaceSerialization.detectFacesResponseJSONObject(observations: observations)
+        let object = VisionFaceSerialization.detectFaceLandmarksResponseJSONObject(observations: observations)
 
         for key in responseKeys {
             #expect(object.keys.contains(key), "Missing response key: \(key)")

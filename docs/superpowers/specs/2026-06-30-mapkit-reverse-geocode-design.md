@@ -1,4 +1,4 @@
-# mapkit.reverse_geocode MCP Tool — Design Spec
+# mapkit_reverse_geocode MCP Tool — Design Spec
 
 **Date:** 2026-06-30  
 **Status:** Approved  
@@ -13,7 +13,7 @@
 
 ## Summary
 
-Implement `mapkit.reverse_geocode` MCP tool: resolve a **coordinate to nearby address representations** via **`MKReverseGeocodingRequest`**. Returns **exhaustive `MKMapItem` JSON projection** (reuse `MapKitSerialization`). Register in Rust tool catalog gated by new **`mapkit.geocode`** capability. Flip `mapkit-geocode` capability to **`shipped: true`**. Enforce **CoreLocation when-in-use** authorization per MapKit foundation (#150).
+Implement `mapkit_reverse_geocode` MCP tool: resolve a **coordinate to nearby address representations** via **`MKReverseGeocodingRequest`**. Returns **exhaustive `MKMapItem` JSON projection** (reuse `MapKitSerialization`). Register in Rust tool catalog gated by new **`mapkit.geocode`** capability. Flip `mapkit-geocode` capability to **`shipped: true`**. Enforce **CoreLocation when-in-use** authorization per MapKit foundation (#150).
 
 ---
 
@@ -21,7 +21,7 @@ Implement `mapkit.reverse_geocode` MCP tool: resolve a **coordinate to nearby ad
 
 | Field | Value |
 |-------|-------|
-| MCP name | `mapkit.reverse_geocode` |
+| MCP name | `mapkit_reverse_geocode` |
 | Capability | `mapkit.geocode` |
 | Provider | `mapkit` |
 | Operation | `reverse_geocode` |
@@ -113,7 +113,7 @@ Rust tools/call → ProviderBridge → MapKitProvider.reverse_geocode
 | `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path for `reverse_geocode` |
 | `ABridgeTests/PermissionsStoreMapKitTests.swift` | Expect `mapkit-geocode` shipped |
 | `ABridgeTests/AppSettingsMapKitTests.swift` | Server gating includes `mapkit.geocode` when location authorized |
-| `README.md` | Check off `mapkit.reverse_geocode` |
+| `README.md` | Check off `mapkit_reverse_geocode` |
 
 ### Rust files (modify)
 
@@ -146,7 +146,7 @@ Rust: tool absent from `tools/list` when `mapkit.geocode` not enabled; `tools/ca
 
 ## Acceptance criteria (#106)
 
-1. `mapkit.reverse_geocode` in `tools/list` when `mapkit.geocode` enabled.
+1. `mapkit_reverse_geocode` in `tools/list` when `mapkit.geocode` enabled.
 2. Valid `tools/call` succeeds against mock/live MapKit per tests.
 3. Disabled capability or missing location permission → typed error (not silent success).
 4. Responses use exhaustive Apple field projection (snake_case keys).

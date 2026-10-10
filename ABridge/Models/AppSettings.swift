@@ -135,6 +135,12 @@ final class AppSettings {
             .map(\.capabilityID)
     }
 
+    var enabledCoreLocationCapabilityIDs: [String] {
+        CapabilityCatalog.corelocationCapabilities
+            .filter { $0.shipped && savedCapabilityIDs.contains($0.id) }
+            .map(\.capabilityID)
+    }
+
     var enabledVisionCapabilityIDs: [String] {
         CapabilityCatalog.visionCapabilities
             .filter { $0.shipped && savedCapabilityIDs.contains($0.id) }
@@ -158,8 +164,9 @@ final class AppSettings {
         if contactsAuthorized {
             capabilities.append(contentsOf: enabledContactsCapabilityIDs)
         }
+        capabilities.append(contentsOf: enabledMapKitCapabilityIDs)
         if locationAuthorized {
-            capabilities.append(contentsOf: enabledMapKitCapabilityIDs)
+            capabilities.append(contentsOf: enabledCoreLocationCapabilityIDs)
         }
         capabilities.append(contentsOf: enabledVisionCapabilityIDs)
         return capabilities

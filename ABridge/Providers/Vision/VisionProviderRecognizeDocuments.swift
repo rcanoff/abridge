@@ -2,11 +2,11 @@ import Foundation
 import Vision
 
 extension VisionProvider {
-    func scanDocument(payloadJson: String) -> ProviderResponse {
+    func recognizeDocuments(payloadJson: String) async -> ProviderResponse {
         do {
-            let arguments = try parseScanDocumentArguments(payloadJson)
-            let result = try store.scanDocument(request: arguments)
-            let payloadObject = try VisionSerialization.scanDocumentResponseJSONObject(
+            let arguments = try parseRecognizeDocumentsArguments(payloadJson)
+            let result = try await store.recognizeDocuments(request: arguments)
+            let payloadObject = try VisionSerialization.recognizeDocumentsResponseJSONObject(
                 observations: result.observations,
                 segmentation: result.segmentation,
                 maximumCandidateCount: arguments.maximumCandidateCount

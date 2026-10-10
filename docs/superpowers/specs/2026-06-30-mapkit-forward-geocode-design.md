@@ -1,4 +1,4 @@
-# mapkit.forward_geocode MCP Tool — Design Spec
+# mapkit_forward_geocode MCP Tool — Design Spec
 
 **Date:** 2026-06-30  
 **Status:** Draft  
@@ -13,7 +13,7 @@
 
 ## Summary
 
-Implement `mapkit.forward_geocode` MCP tool: resolve an **address string to nearby place representations** via **`MKGeocodingRequest`**. Returns **exhaustive `MKMapItem` JSON projection** (reuse `MapKitSerialization`). Register in Rust tool catalog gated by existing **`mapkit.geocode`** capability (already shipped in #106). Enforce **CoreLocation when-in-use** authorization per MapKit foundation (#150).
+Implement `mapkit_forward_geocode` MCP tool: resolve an **address string to nearby place representations** via **`MKGeocodingRequest`**. Returns **exhaustive `MKMapItem` JSON projection** (reuse `MapKitSerialization`). Register in Rust tool catalog gated by existing **`mapkit.geocode`** capability (already shipped in #106). Enforce **CoreLocation when-in-use** authorization per MapKit foundation (#150).
 
 ---
 
@@ -21,7 +21,7 @@ Implement `mapkit.forward_geocode` MCP tool: resolve an **address string to near
 
 | Field | Value |
 |-------|-------|
-| MCP name | `mapkit.forward_geocode` |
+| MCP name | `mapkit_forward_geocode` |
 | Capability | `mapkit.geocode` |
 | Provider | `mapkit` |
 | Operation | `forward_geocode` |
@@ -117,7 +117,7 @@ Rust tools/call → ProviderBridge → MapKitProvider.forward_geocode
 | `ABridge/Providers/MapKit/MapKitProviderRouting.swift` | Dispatch `forward_geocode` |
 | `ABridgeTests/MockMapKitStore.swift` | Fake forward-geocode results + `lastForwardGeocodeRequest` |
 | `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path for `forward_geocode` |
-| `README.md` | Check off `mapkit.forward_geocode` |
+| `README.md` | Check off `mapkit_forward_geocode` |
 
 ### Rust files (modify)
 
@@ -154,13 +154,13 @@ Rust tools/call → ProviderBridge → MapKitProvider.forward_geocode
 
 Rust: tool absent from `tools/list` when `mapkit.geocode` not enabled; `tools/call` with disabled capability returns typed MCP error without provider dispatch (existing pattern).
 
-When `mapkit.geocode` is enabled, `tools/list` includes **both** `mapkit.reverse_geocode` and `mapkit.forward_geocode`.
+When `mapkit.geocode` is enabled, `tools/list` includes **both** `mapkit_reverse_geocode` and `mapkit_forward_geocode`.
 
 ---
 
 ## Acceptance criteria (#107)
 
-1. `mapkit.forward_geocode` in `tools/list` when `mapkit.geocode` enabled.
+1. `mapkit_forward_geocode` in `tools/list` when `mapkit.geocode` enabled.
 2. Valid `tools/call` succeeds against mock/live MapKit per tests.
 3. Disabled capability or missing location permission → typed error (not silent success).
 4. Responses use exhaustive Apple field projection (snake_case keys).

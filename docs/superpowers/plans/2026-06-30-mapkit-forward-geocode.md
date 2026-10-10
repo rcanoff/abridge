@@ -1,8 +1,8 @@
-# mapkit.forward_geocode Implementation Plan
+# mapkit_forward_geocode Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship `mapkit.forward_geocode` MCP tool (#107) with exhaustive `MKMapItem` JSON projection under the existing `mapkit.geocode` capability.
+**Goal:** Ship `mapkit_forward_geocode` MCP tool (#107) with exhaustive `MKMapItem` JSON projection under the existing `mapkit.geocode` capability.
 
 **Architecture:** Extend `MapKitStore` with `forwardGeocode`; use `MKGeocodingRequest` in `LiveMapKitStore`; reuse `MapKitSerialization` and region/address parsing from existing MapKit provider helpers; Rust tool registration on existing `mapkit.geocode` capability; CoreLocation when-in-use gate per #150.
 
@@ -37,7 +37,7 @@
 - [ ] **Step 1: Register tool in tools/mod.rs**
 
 ```rust
-pub const TOOL_FORWARD_GEOCODE: &str = "mapkit.forward_geocode";
+pub const TOOL_FORWARD_GEOCODE: &str = "mapkit_forward_geocode";
 ```
 
 Add to `ALL_TOOLS` (bump array length 46 → 47), after `TOOL_REVERSE_GEOCODE`:
@@ -131,7 +131,7 @@ Expected: PASS
 
 ```bash
 git add rust/abridge_core/src/tools/mod.rs
-git commit -m "feat(mapkit): register mapkit.forward_geocode MCP tool in Rust"
+git commit -m "feat(mapkit): register mapkit_forward_geocode MCP tool in Rust"
 ```
 
 ---
@@ -160,14 +160,14 @@ fn mcp_tools_list_includes_forward_geocode_when_mapkit_geocode_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("mapkit.forward_geocode"));
+  assert!(resp.contains("mapkit_forward_geocode"));
 }
 
 #[test]
 fn tools_call_dispatches_forward_geocode() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"mapkit.forward_geocode","arguments":{"address":"1 Apple Park Way, Cupertino, CA"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"mapkit_forward_geocode","arguments":{"address":"1 Apple Park Way, Cupertino, CA"}}}"#;
 
   let handle = create_server(
     mapkit_config_on_port(port, vec!["mapkit.geocode".into()]),
@@ -503,7 +503,7 @@ git commit -m "feat(mapkit): implement forward_geocode provider operation"
 - [ ] **Step 1: README checkoff**
 
 ```markdown
-- [x] `mapkit.forward_geocode`
+- [x] `mapkit_forward_geocode`
 ```
 
 - [ ] **Step 2: Run full verification**
@@ -518,7 +518,7 @@ Expected: PASS (before merge)
 
 ```bash
 git add README.md
-git commit -m "feat(mapkit): ship mapkit.forward_geocode tool"
+git commit -m "feat(mapkit): ship mapkit_forward_geocode tool"
 ```
 
 ---

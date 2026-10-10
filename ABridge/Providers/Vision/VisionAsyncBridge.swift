@@ -1,9 +1,18 @@
 import Foundation
 
+/// Sync bridge for Vision under the UniFFI sync FFI.
+///
+/// **Critical:** Vision work never runs on the main thread. A request can take seconds, and on the
+/// main thread it froze the menu bar for that long. Work runs on one dedicated worker thread, which
+/// keeps long synchronous Vision calls off the cooperative pool too; the caller waits until it
+/// finishes or times out.
 enum VisionAsyncBridge {
     static let defaultTimeout: TimeInterval = 30
-    static let runLoopModes: [RunLoop.Mode] = [.default, .eventTracking]
-    static let runLoopInterval: TimeInterval = 0.01
+
+    /// Same as the main thread's stack, where Vision work used to run.
+    static let workerStackSize = 8 * 1024 * 1024
+
+    private static let worker = VisionWorkerExecutor(stackSize: workerStackSize)
 
     final class AsyncBridgeResult<T>: @unchecked Sendable {
         private let lock = NSLock()
@@ -35,118 +44,37 @@ enum VisionAsyncBridge {
         }
     }
 
-    private final class CompletionBox: @unchecked Sendable {
-        private let lock = NSLock()
-        private var done = false
-        private var started = false
-        private var cancelled = false
-        private var task: Task<Void, Never>?
-
-        func setTask(_ task: Task<Void, Never>) {
-            lock.lock()
-            defer { lock.unlock() }
-            self.task = task
-            started = true
-            if cancelled {
-                task.cancel()
-            }
-        }
-
-        func markDone() {
-            lock.lock()
-            defer { lock.unlock() }
-            done = true
-        }
-
-        func isStarted() -> Bool {
-            lock.lock()
-            defer { lock.unlock() }
-            return started
-        }
-
-        func isDone() -> Bool {
-            lock.lock()
-            defer { lock.unlock() }
-            return done
-        }
-
-        func cancelTask() {
-            lock.lock()
-            defer { lock.unlock() }
-            cancelled = true
-            task?.cancel()
-        }
-    }
-
+    /// Runs `work` on the Vision worker thread and blocks the calling thread until it finishes.
+    /// On timeout the work is cancelled and `vision_error` reports which operation timed out.
+    /// Call it once per operation, never from Vision work itself: the single worker would wait on itself.
     static func perform<T>(
         operation: String,
         timeout: TimeInterval = defaultTimeout,
         work: @Sendable @escaping () async throws -> T
     ) throws -> T {
         let result = AsyncBridgeResult<T>()
-        let completion = CompletionBox()
+        let finished = DispatchSemaphore(value: 0)
 
-        installTask(completion: completion, result: result, work: work)
-
-        let deadline = Date().addingTimeInterval(timeout)
-        while !completion.isStarted(), Date() < deadline {
-            pumpRunLoop(for: runLoopInterval)
+        let task = Task(executorPreference: worker) {
+            defer { finished.signal() }
+            do {
+                try Task.checkCancellation()
+                let value = try await work()
+                try Task.checkCancellation()
+                result.setValue(value)
+            } catch is CancellationError {
+                return
+            } catch {
+                guard !Task.isCancelled else { return }
+                result.setError(error)
+            }
         }
 
-        if !completion.isStarted() {
-            completion.cancelTask()
-            throw VisionProviderError.visionError("\(operation) timed out")
-        }
-
-        while !completion.isDone(), Date() < deadline {
-            pumpRunLoop(for: runLoopInterval)
-        }
-
-        if !completion.isDone() {
-            completion.cancelTask()
+        guard finished.wait(timeout: .now() + timeout) == .success else {
+            task.cancel()
             throw VisionProviderError.visionError("\(operation) timed out")
         }
 
         return try result.get()
-    }
-
-    private static func installTask<T>(
-        completion: CompletionBox,
-        result: AsyncBridgeResult<T>,
-        work: @Sendable @escaping () async throws -> T
-    ) {
-        let body = {
-            let asyncTask = Task {
-                defer { completion.markDone() }
-                do {
-                    try Task.checkCancellation()
-                    let value = try await work()
-                    try Task.checkCancellation()
-                    result.setValue(value)
-                } catch is CancellationError {
-                    return
-                } catch {
-                    guard !Task.isCancelled else { return }
-                    result.setError(error)
-                }
-            }
-            completion.setTask(asyncTask)
-        }
-
-        if Thread.isMainThread {
-            body()
-        } else {
-            CFRunLoopPerformBlock(CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue) {
-                body()
-            }
-            CFRunLoopWakeUp(CFRunLoopGetMain())
-        }
-    }
-
-    static func pumpRunLoop(for interval: TimeInterval) {
-        let perModeInterval = interval / Double(runLoopModes.count)
-        for mode in runLoopModes {
-            RunLoop.main.run(mode: mode, before: Date(timeIntervalSinceNow: perModeInterval))
-        }
     }
 }

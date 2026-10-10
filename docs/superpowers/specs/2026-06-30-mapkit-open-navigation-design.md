@@ -1,4 +1,4 @@
-# mapkit.open_navigation MCP Tool — Design Spec
+# mapkit_open_navigation MCP Tool — Design Spec
 
 **Date:** 2026-06-30  
 **Status:** Draft  
@@ -7,13 +7,13 @@
 **PRD:** `docs/prd.md` § Future Providers  
 **Conventions:** `docs/conventions.md` § JSON and payloads (framework fidelity)  
 **Foundation:** `docs/superpowers/specs/2026-06-29-mapkit-permissions-foundation-design.md`  
-**Sibling:** `mapkit.calculate_route` (#108; routing sibling under separate capability)
+**Sibling:** `mapkit_calculate_route` (#108; routing sibling under separate capability)
 
 ---
 
 ## Summary
 
-Implement `mapkit.open_navigation` MCP tool: open **Apple Maps** turn-by-turn navigation between source and destination coordinates via **`MKMapItem.openMaps(with:launchOptions:)`** (user-visible system action). Returns confirmation JSON with exhaustive `MKMapItem` projection for source/destination and the launch options applied. Register in Rust tool catalog gated by new **`mapkit.navigation`** capability. Flip `mapkit-navigation` capability to **`shipped: true`**. Enforce **CoreLocation when-in-use** authorization per MapKit foundation (#150).
+Implement `mapkit_open_navigation` MCP tool: open **Apple Maps** turn-by-turn navigation between source and destination coordinates via **`MKMapItem.openMaps(with:launchOptions:)`** (user-visible system action). Returns confirmation JSON with exhaustive `MKMapItem` projection for source/destination and the launch options applied. Register in Rust tool catalog gated by new **`mapkit.navigation`** capability. Flip `mapkit-navigation` capability to **`shipped: true`**. Enforce **CoreLocation when-in-use** authorization per MapKit foundation (#150).
 
 ---
 
@@ -21,7 +21,7 @@ Implement `mapkit.open_navigation` MCP tool: open **Apple Maps** turn-by-turn na
 
 | Field | Value |
 |-------|-------|
-| MCP name | `mapkit.open_navigation` |
+| MCP name | `mapkit_open_navigation` |
 | Capability | `mapkit.navigation` |
 | Provider | `mapkit` |
 | Operation | `open_navigation` |
@@ -138,7 +138,7 @@ Rust tools/call → ProviderBridge → MapKitProvider.open_navigation
 | `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path for `open_navigation` |
 | `ABridgeTests/AppSettingsMapKitTests.swift` | Server gating for `mapkit.navigation` |
 | `ABridgeTests/PermissionsStoreMapKitTests.swift` | Location requirement for navigation toggle |
-| `README.md` | Check off `mapkit.open_navigation` |
+| `README.md` | Check off `mapkit_open_navigation` |
 
 ### Rust files (modify)
 
@@ -169,7 +169,7 @@ Rust tools/call → ProviderBridge → MapKitProvider.open_navigation
 
 ## Acceptance criteria (#110)
 
-1. `mapkit.open_navigation` in `tools/list` when `mapkit.navigation` enabled.
+1. `mapkit_open_navigation` in `tools/list` when `mapkit.navigation` enabled.
 2. Valid `tools/call` succeeds against mock/live MapKit per tests.
 3. Disabled capability or missing location permission → typed error (not silent success).
 4. Responses use exhaustive Apple field projection (snake_case keys).

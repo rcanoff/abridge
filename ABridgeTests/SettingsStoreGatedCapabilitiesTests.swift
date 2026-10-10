@@ -146,14 +146,42 @@ struct SettingsStoreGatedCapabilitiesTests {
 
     @Test
     @MainActor
-    func applySavedCapabilitiesPassesLocationAuthorizedToServer() async throws {
-        let suiteName = "SettingsStoreTests.locationAuthorized"
+    func applySavedCapabilitiesIncludesMapKitWithoutLocationAccess() async throws {
+        let suiteName = "SettingsStoreTests.mapkitWithoutLocation"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
 
         let appSettings = AppSettings(defaults: defaults)
         appSettings.mcpEnabled = true
         appSettings.saveCapabilityIDs(["mapkit-search"])
+
+        let mock = MockServerService()
+        await mock.setRefreshResult(.running)
+        let serverStore = ServerStore(serverService: mock)
+        await serverStore.startServer(port: 3020, enabledCapabilities: [])
+        let settingsStore = SettingsStore(appSettings: appSettings, serverStore: serverStore)
+
+        await settingsStore.applySavedCapabilities(
+            remindersAuthorized: false,
+            eventsAuthorized: false,
+            contactsAuthorized: false,
+            locationAuthorized: false
+        )
+
+        #expect(await mock.startCallCount == 2)
+        #expect(await mock.lastEnabledCapabilities == ["diagnostics.read", "mapkit.search"])
+    }
+
+    @Test
+    @MainActor
+    func applySavedCapabilitiesGatesCoreLocationOnLocationAccess() async throws {
+        let suiteName = "SettingsStoreTests.corelocationLocationAuthorized"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let appSettings = AppSettings(defaults: defaults)
+        appSettings.mcpEnabled = true
+        appSettings.saveCapabilityIDs(["corelocation-read"])
 
         let mock = MockServerService()
         await mock.setRefreshResult(.running)
@@ -172,10 +200,16 @@ struct SettingsStoreGatedCapabilitiesTests {
             remindersAuthorized: false,
             eventsAuthorized: false,
             contactsAuthorized: false,
+            locationAuthorized: false
+        )
+        #expect(await mock.lastEnabledCapabilities == ["diagnostics.read"])
+
+        await settingsStore.applySavedCapabilities(
+            remindersAuthorized: false,
+            eventsAuthorized: false,
+            contactsAuthorized: false,
             locationAuthorized: true
         )
-
-        #expect(await mock.startCallCount == 2)
-        #expect(await mock.lastEnabledCapabilities == ["diagnostics.read", "mapkit.search"])
+        #expect(await mock.lastEnabledCapabilities == ["diagnostics.read", "corelocation.read"])
     }
 }

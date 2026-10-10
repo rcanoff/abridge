@@ -47,7 +47,7 @@ fn invalid_get_event_args_do_not_call_provider_bridge() {
   let mock = MockProviderBridge::new();
   // inputSchema requires event_identifier — omit it.
   let body =
-    r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"eventkit.events.get_event","arguments":{}}}"#;
+    r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"eventkit_events_get_event","arguments":{}}}"#;
 
   let (status, resp) = tools_call(port, &mock, vec!["eventkit.events.read".into()], body);
 
@@ -66,7 +66,7 @@ fn invalid_create_event_args_do_not_call_provider_bridge() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
   // Missing required title, start_date, end_date (only calendar_identifier).
-  let body = r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"eventkit.events.create_event","arguments":{"calendar_identifier":"cal-1"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"eventkit_events_create_event","arguments":{"calendar_identifier":"cal-1"}}}"#;
 
   let (status, resp) = tools_call(port, &mock, vec!["eventkit.events.create".into()], body);
 
@@ -79,7 +79,7 @@ fn invalid_create_event_args_do_not_call_provider_bridge() {
 fn valid_list_lists_args_call_provider_bridge() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"eventkit.reminders.list_lists","arguments":{}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"eventkit_reminders_list_lists","arguments":{}}}"#;
 
   let (status, resp) = tools_call(port, &mock, vec!["eventkit.reminders.read".into()], body);
 
@@ -96,7 +96,7 @@ fn valid_list_lists_args_call_provider_bridge() {
 fn valid_get_event_args_call_provider_bridge() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"eventkit.events.get_event","arguments":{"event_identifier":"evt-1"}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"eventkit_events_get_event","arguments":{"event_identifier":"evt-1"}}}"#;
 
   let (status, resp) = tools_call(port, &mock, vec!["eventkit.events.read".into()], body);
 

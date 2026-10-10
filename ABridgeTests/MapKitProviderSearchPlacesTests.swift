@@ -7,17 +7,6 @@ import Testing
 struct MapKitProviderSearchPlacesTests {
     @Test
     @MainActor
-    func searchPlacesReturnsPermissionDeniedWhenUnauthorized() {
-        let store = MockMapKitStore()
-        store.authorizationStatus = .denied
-        let provider = MapKitProvider(store: store)
-        let response = provider.handle(operation: "search_places", payloadJson: #"{"query":"coffee"}"#)
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("permission_denied") == true)
-    }
-
-    @Test
-    @MainActor
     func searchPlacesRejectsUnsupportedResultTypes() {
         let provider = MapKitProvider(store: MockMapKitStore())
         let response = provider.handle(

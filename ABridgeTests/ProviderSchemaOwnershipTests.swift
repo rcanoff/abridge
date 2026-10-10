@@ -110,7 +110,7 @@ struct ProviderSchemaOwnershipTests {
     @MainActor
     func openNavigationMissingSourceDoesNotPureSchemaDualValidateTopLevel() {
         let store = MockMapKitStore()
-        let provider = MapKitProvider(store: store, locationGrantsReadAccess: { true })
+        let provider = MapKitProvider(store: store)
         let response = provider.handle(operation: "open_navigation", payloadJson: "{}")
         assertNoTopLevelPureSchemaDualValidation(response, keys: ["source", "destination"])
         // Nested coordinate mapping may still fail — that is not top-level pure schema.
@@ -123,7 +123,7 @@ struct ProviderSchemaOwnershipTests {
     @MainActor
     func calculateRouteMissingEndpointsDoesNotPureSchemaDualValidateTopLevel() {
         let store = MockMapKitStore()
-        let provider = MapKitProvider(store: store, locationGrantsReadAccess: { true })
+        let provider = MapKitProvider(store: store)
         let response = provider.handle(operation: "calculate_route", payloadJson: "{}")
         assertNoTopLevelPureSchemaDualValidation(response, keys: ["source", "destination"])
         #expect(response.errorJson?.contains("source must be an object") != true)
@@ -133,7 +133,7 @@ struct ProviderSchemaOwnershipTests {
     @MainActor
     func estimateTravelTimeMissingEndpointsDoesNotPureSchemaDualValidateTopLevel() {
         let store = MockMapKitStore()
-        let provider = MapKitProvider(store: store, locationGrantsReadAccess: { true })
+        let provider = MapKitProvider(store: store)
         let response = provider.handle(operation: "estimate_travel_time", payloadJson: "{}")
         assertNoTopLevelPureSchemaDualValidation(response, keys: ["source", "destination"])
         #expect(response.errorJson?.contains("source must be an object") != true)

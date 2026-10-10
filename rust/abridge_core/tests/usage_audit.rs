@@ -24,29 +24,6 @@ fn config_on_port(port: u16) -> ServerConfig {
 fn tools_call_produces_audit_entry() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"eventkit.reminders.list_lists","arguments":{}}}"#;
-
-  let handle = create_server(config_on_port(port), Box::new(mock.clone_for_server())).expect("create_server");
-  start_server(handle.clone()).expect("start");
-  let (status, _resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
-  stop_server(handle.clone()).expect("stop");
-
-  assert_eq!(status, 200);
-
-  let entries = handle.usage_audit_entries();
-  let tool_call = entries
-    .iter()
-    .find(|entry| entry.event_type == "tool_call")
-    .expect("tool_call audit entry");
-  assert_eq!(tool_call.tool_name.as_deref(), Some("eventkit.reminders.list_lists"));
-  assert!(tool_call.success);
-  assert!(tool_call.duration_ms.is_some());
-}
-
-#[test]
-fn tools_call_by_wire_name_succeeds_and_audits_registry_name() {
-  let port = allocate_test_port();
-  let mock = MockProviderBridge::new();
   let body = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"eventkit_reminders_list_lists","arguments":{}}}"#;
 
   let handle = create_server(config_on_port(port), Box::new(mock.clone_for_server())).expect("create_server");
@@ -67,8 +44,9 @@ fn tools_call_by_wire_name_succeeds_and_audits_registry_name() {
     .iter()
     .find(|entry| entry.event_type == "tool_call")
     .expect("tool_call audit entry");
-  assert_eq!(tool_call.tool_name.as_deref(), Some("eventkit.reminders.list_lists"));
+  assert_eq!(tool_call.tool_name.as_deref(), Some("eventkit_reminders_list_lists"));
   assert!(tool_call.success);
+  assert!(tool_call.duration_ms.is_some());
 }
 
 #[test]
@@ -123,7 +101,7 @@ fn disabled_logging_skips_new_records() {
   handle.set_usage_logging_enabled(false);
   assert!(!handle.usage_logging_enabled());
 
-  let body = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"eventkit.reminders.list_lists","arguments":{}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"eventkit_reminders_list_lists","arguments":{}}}"#;
   let (status, _resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
   stop_server(handle.clone()).expect("stop");
 

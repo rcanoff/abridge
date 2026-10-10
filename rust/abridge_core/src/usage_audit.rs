@@ -162,7 +162,7 @@ mod tests {
   fn disabled_logging_skips_record() {
     let store = UsageAuditStore::new();
     store.set_logging_enabled(false);
-    store.record(EVENT_TOOL_CALL, Some("eventkit.reminders.list_lists"), true, Some(12));
+    store.record(EVENT_TOOL_CALL, Some("eventkit_reminders_list_lists"), true, Some(12));
 
     assert!(store.entries().is_empty());
     assert!(!store.logging_enabled());
@@ -171,7 +171,7 @@ mod tests {
   #[test]
   fn serialized_json_has_no_sensitive_keys() {
     let store = UsageAuditStore::new();
-    store.record(EVENT_TOOL_CALL, Some("eventkit.reminders.list_lists"), true, Some(42));
+    store.record(EVENT_TOOL_CALL, Some("eventkit_reminders_list_lists"), true, Some(42));
 
     let entry = store.entries().into_iter().next().expect("entry");
     let json = serde_json::to_string(&entry).expect("serialize");
@@ -184,7 +184,7 @@ mod tests {
     assert_eq!(object.get("event_type").and_then(|v| v.as_str()), Some(EVENT_TOOL_CALL));
     assert_eq!(
       object.get("tool_name").and_then(|v| v.as_str()),
-      Some("eventkit.reminders.list_lists")
+      Some("eventkit_reminders_list_lists")
     );
   }
 
@@ -197,11 +197,11 @@ mod tests {
   #[test]
   fn record_tool_call_stores_fields() {
     let store = UsageAuditStore::new();
-    store.record(EVENT_TOOL_CALL, Some("my.tool"), false, Some(99));
+    store.record(EVENT_TOOL_CALL, Some("my_tool"), false, Some(99));
 
     let entry = store.entries().into_iter().next().expect("entry");
     assert_eq!(entry.event_type, EVENT_TOOL_CALL);
-    assert_eq!(entry.tool_name.as_deref(), Some("my.tool"));
+    assert_eq!(entry.tool_name.as_deref(), Some("my_tool"));
     assert!(!entry.success);
     assert_eq!(entry.duration_ms, Some(99));
     assert!(entry.timestamp_utc.ends_with('Z'));

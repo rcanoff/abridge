@@ -1,8 +1,8 @@
-# vision.recognize_text Implementation Plan
+# vision_recognize_text Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship `vision.recognize_text` MCP tool (#114) with exhaustive `VNRecognizedTextObservation` JSON projection.
+**Goal:** Ship `vision_recognize_text` MCP tool (#114) with exhaustive `VNRecognizedTextObservation` JSON projection.
 
 **Architecture:** `VisionStore` protocol seam; `VisionSerialization` for faithful Vision JSON; Rust tool registration with `vision.text` capability; flip `vision-text` to shipped; no Apple TCC gate per #151.
 
@@ -59,7 +59,7 @@ fn accepts_vision_text_capability_shape() {
 - [ ] **Step 2: Register tool in tools/mod.rs**
 
 ```rust
-pub const TOOL_RECOGNIZE_TEXT: &str = "vision.recognize_text";
+pub const TOOL_RECOGNIZE_TEXT: &str = "vision_recognize_text";
 ```
 
 Add to `ALL_TOOLS` (bump array length 52 → 53):
@@ -163,7 +163,7 @@ Expected: PASS
 
 ```bash
 git add rust/abridge_core/src/capabilities.rs rust/abridge_core/src/tools/mod.rs
-git commit -m "feat(vision): register vision.recognize_text MCP tool in Rust"
+git commit -m "feat(vision): register vision_recognize_text MCP tool in Rust"
 ```
 
 ---
@@ -205,14 +205,14 @@ fn mcp_tools_list_includes_recognize_text_when_vision_text_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("vision.recognize_text"));
+  assert!(resp.contains("vision_recognize_text"));
 }
 
 #[test]
 fn tools_call_dispatches_recognize_text() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision.recognize_text","arguments":{"image_data":"aGVsbG8="}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"vision_recognize_text","arguments":{"image_data":"aGVsbG8="}}}"#;
 
   let handle = create_server(
     vision_config_on_port(port, vec!["vision.text".into()]),
@@ -429,7 +429,7 @@ CapabilityDefinition(id: "vision-text", capabilityID: "vision.text", label: "Tex
 - [ ] **Step 3: README checkoff**
 
 ```markdown
-- [x] `vision.recognize_text`
+- [x] `vision_recognize_text`
 ```
 
 - [ ] **Step 4: Regenerate Xcode project if new Swift files added**

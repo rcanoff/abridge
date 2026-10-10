@@ -3,11 +3,11 @@ import Foundation
 import Vision
 
 extension VisionProvider {
-    func readQrCode(payloadJson: String) -> ProviderResponse {
+    func detectFaceLandmarks(payloadJson: String) async -> ProviderResponse {
         do {
-            let arguments = try parseReadQrCodeArguments(payloadJson)
-            let observations = try store.readQrCode(request: arguments)
-            let payloadObject = VisionSerialization.readQrCodeResponseJSONObject(observations: observations)
+            let arguments = try parseDetectFaceLandmarksArguments(payloadJson)
+            let observations = try await store.detectFaceLandmarks(request: arguments)
+            let payloadObject = VisionSerialization.detectFaceLandmarksResponseJSONObject(observations: observations)
             let payload = try VisionSerialization.jsonString(from: payloadObject)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as VisionProviderError {
@@ -17,7 +17,7 @@ extension VisionProvider {
         }
     }
 
-    private func parseReadQrCodeArguments(_ payloadJson: String) throws -> VisionReadQrCodeRequest {
+    private func parseDetectFaceLandmarksArguments(_ payloadJson: String) throws -> VisionDetectFaceLandmarksRequest {
         guard let data = payloadJson.data(using: .utf8) else {
             throw VisionProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
@@ -25,19 +25,16 @@ extension VisionProvider {
         let dictionary = try parseJSONObject(from: data)
         let imageData = try requiredImageDataArgument(in: dictionary)
         let orientation = try optionalOrientationArgument(in: dictionary)
-        let revision = try optionalIntArgument(in: dictionary, key: "revision")
-        let regionOfInterest = try optionalRegionOfInterestArgument(in: dictionary)
-        let coalesceCompositeSymbologies = try optionalBoolArgument(
-            in: dictionary,
-            key: "coalesce_composite_symbologies"
-        )
+        let revision = try optionalFaceLandmarksRevisionArgument(in: dictionary)
+        let regionOfInterest = try optionalNormalizedRegionOfInterestArgument(in: dictionary)
+        let constellation = try optionalConstellationArgument(in: dictionary)
 
-        return VisionReadQrCodeRequest(
+        return VisionDetectFaceLandmarksRequest(
             imageData: imageData,
             orientation: orientation,
             revision: revision,
             regionOfInterest: regionOfInterest,
-            coalesceCompositeSymbologies: coalesceCompositeSymbologies
+            constellation: constellation
         )
     }
 
@@ -78,18 +75,6 @@ extension VisionProvider {
         return orientation
     }
 
-    private func optionalBoolArgument(in dictionary: [String: Any], key: String) throws -> Bool? {
-        guard dictionary.keys.contains(key) else { return nil }
-        if dictionary[key] is NSNull {
-            return nil
-        }
-
-        guard let value = dictionary[key] as? Bool else {
-            throw VisionProviderError.invalidArguments("\(key) must be a boolean or null")
-        }
-        return value
-    }
-
     private func optionalIntArgument(in dictionary: [String: Any], key: String) throws -> Int? {
         guard dictionary.keys.contains(key) else { return nil }
         if dictionary[key] is NSNull {
@@ -112,7 +97,22 @@ extension VisionProvider {
         }
     }
 
-    private func optionalRegionOfInterestArgument(in dictionary: [String: Any]) throws -> CGRect? {
+    private func optionalFaceLandmarksRevisionArgument(in dictionary: [String: Any]) throws -> Int? {
+        guard let revision = try optionalIntArgument(in: dictionary, key: "revision") else {
+            return nil
+        }
+
+        let supportedRevisions = VNDetectFaceLandmarksRequest.supportedRevisions
+        guard supportedRevisions.contains(revision) else {
+            throw VisionProviderError.invalidArguments(
+                "revision must be one of the supported face landmark detection revisions"
+            )
+        }
+
+        return revision
+    }
+
+    private func optionalNormalizedRegionOfInterestArgument(in dictionary: [String: Any]) throws -> CGRect? {
         guard dictionary.keys.contains("region_of_interest") else { return nil }
         if dictionary["region_of_interest"] is NSNull {
             return nil
@@ -133,7 +133,64 @@ extension VisionProvider {
         let width = try requiredNumber(in: size, key: "width", label: "region_of_interest.size.width")
         let height = try requiredNumber(in: size, key: "height", label: "region_of_interest.size.height")
 
+        return try normalizedRegionOfInterest(
+            originX: originX,
+            originY: originY,
+            width: width,
+            height: height
+        )
+    }
+
+    private func normalizedRegionOfInterest(
+        originX: CGFloat,
+        originY: CGFloat,
+        width: CGFloat,
+        height: CGFloat
+    ) throws -> CGRect {
+        guard originX >= 0, originY >= 0 else {
+            throw VisionProviderError.invalidArguments("region_of_interest origin must be non-negative")
+        }
+        guard width > 0, height > 0 else {
+            throw VisionProviderError.invalidArguments("region_of_interest size must be positive")
+        }
+        guard originX <= 1, originY <= 1, width <= 1, height <= 1 else {
+            throw VisionProviderError.invalidArguments(
+                "region_of_interest must use normalized unit coordinates between 0 and 1"
+            )
+        }
+        guard originX + width <= 1, originY + height <= 1 else {
+            throw VisionProviderError.invalidArguments(
+                "region_of_interest must fit within normalized unit coordinates"
+            )
+        }
+
         return CGRect(x: originX, y: originY, width: width, height: height)
+    }
+
+    private func optionalConstellationArgument(
+        in dictionary: [String: Any]
+    ) throws -> VNRequestFaceLandmarksConstellation {
+        guard dictionary.keys.contains("constellation") else { return .constellationNotDefined }
+        if dictionary["constellation"] is NSNull {
+            return .constellationNotDefined
+        }
+
+        guard let value = dictionary["constellation"] as? String else {
+            throw VisionProviderError.invalidArguments("constellation must be a string or null")
+        }
+
+        switch value {
+        case "not_defined":
+            return .constellationNotDefined
+        case "65_points":
+            return .constellation65Points
+        case "76_points":
+            return .constellation76Points
+        default:
+            throw VisionProviderError.invalidArguments(
+                "constellation must be one of: not_defined, 65_points, 76_points"
+            )
+        }
     }
 
     private func requiredNumber(in dictionary: [String: Any], key: String, label: String) throws -> CGFloat {

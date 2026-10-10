@@ -7,25 +7,6 @@ import Testing
 struct MapKitProviderOpenNavigationTests {
     @Test
     @MainActor
-    func openNavigationReturnsPermissionDeniedWhenUnauthorized() {
-        let store = MockMapKitStore()
-        store.authorizationStatus = .denied
-        let provider = MapKitProvider(store: store)
-        let response = provider.handle(
-            operation: "open_navigation",
-            payloadJson: navigationPayload(
-                sourceLatitude: 37.3346,
-                sourceLongitude: -122.0090,
-                destinationLatitude: 37.7749,
-                destinationLongitude: -122.4194
-            )
-        )
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("permission_denied") == true)
-    }
-
-    @Test
-    @MainActor
     func openNavigationRequiresSourceAndDestination() {
         let provider = MapKitProvider(store: MockMapKitStore())
         let response = provider.handle(operation: "open_navigation", payloadJson: "{}")

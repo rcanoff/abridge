@@ -1,8 +1,8 @@
-# mapkit.reverse_geocode Implementation Plan
+# mapkit_reverse_geocode Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship `mapkit.reverse_geocode` MCP tool (#106) with exhaustive `MKMapItem` JSON projection and ship the `mapkit.geocode` capability.
+**Goal:** Ship `mapkit_reverse_geocode` MCP tool (#106) with exhaustive `MKMapItem` JSON projection and ship the `mapkit.geocode` capability.
 
 **Architecture:** Extend `MapKitStore` with `reverseGeocode`; use `MKReverseGeocodingRequest` in `LiveMapKitStore`; reuse `MapKitSerialization` and coordinate parsing from `MapKitProviderSearchArguments`; Rust tool registration with new `mapkit.geocode` capability; flip `mapkit-geocode` to shipped; CoreLocation when-in-use gate per #150.
 
@@ -72,7 +72,7 @@ Import `MAPKIT_GEOCODE` in the tests module `use super::{ ... }` block.
 - [ ] **Step 2: Register tool in tools/mod.rs**
 
 ```rust
-pub const TOOL_REVERSE_GEOCODE: &str = "mapkit.reverse_geocode";
+pub const TOOL_REVERSE_GEOCODE: &str = "mapkit_reverse_geocode";
 ```
 
 Add to `ALL_TOOLS` (bump array length 45 → 46), after `TOOL_SEARCH_NEARBY`:
@@ -146,7 +146,7 @@ Expected: PASS
 
 ```bash
 git add rust/abridge_core/src/capabilities.rs rust/abridge_core/src/tools/mod.rs
-git commit -m "feat(mapkit): register mapkit.reverse_geocode MCP tool in Rust"
+git commit -m "feat(mapkit): register mapkit_reverse_geocode MCP tool in Rust"
 ```
 
 ---
@@ -175,14 +175,14 @@ fn mcp_tools_list_includes_reverse_geocode_when_mapkit_geocode_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("mapkit.reverse_geocode"));
+  assert!(resp.contains("mapkit_reverse_geocode"));
 }
 
 #[test]
 fn tools_call_dispatches_reverse_geocode() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"mapkit.reverse_geocode","arguments":{"coordinate":{"latitude":37.3346,"longitude":-122.0090}}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"mapkit_reverse_geocode","arguments":{"coordinate":{"latitude":37.3346,"longitude":-122.0090}}}}"#;
 
   let handle = create_server(
     mapkit_config_on_port(port, vec!["mapkit.geocode".into()]),
@@ -520,7 +520,7 @@ appSettings.saveCapabilityIDs(["mapkit-geocode"])
 - [ ] **Step 4: README checkoff**
 
 ```markdown
-- [x] `mapkit.reverse_geocode`
+- [x] `mapkit_reverse_geocode`
 ```
 
 - [ ] **Step 5: Run full verification**

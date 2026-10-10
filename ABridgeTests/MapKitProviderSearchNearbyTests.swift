@@ -7,20 +7,6 @@ import Testing
 struct MapKitProviderSearchNearbyTests {
     @Test
     @MainActor
-    func searchNearbyReturnsPermissionDeniedWhenUnauthorized() {
-        let store = MockMapKitStore()
-        store.authorizationStatus = .denied
-        let provider = MapKitProvider(store: store)
-        let response = provider.handle(
-            operation: "search_nearby",
-            payloadJson: #"{"coordinate":{"latitude":37.0,"longitude":-122.0}}"#
-        )
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("permission_denied") == true)
-    }
-
-    @Test
-    @MainActor
     func searchNearbyRejectsBothRegionAndCoordinate() {
         let provider = MapKitProvider(store: MockMapKitStore())
         let response = provider.handle(

@@ -1,8 +1,8 @@
-# mapkit.search_nearby Implementation Plan
+# mapkit_search_nearby Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship `mapkit.search_nearby` MCP tool (#105) with exhaustive `MKMapItem` JSON projection, mirroring #104 `search_places` patterns.
+**Goal:** Ship `mapkit_search_nearby` MCP tool (#105) with exhaustive `MKMapItem` JSON projection, mirroring #104 `search_places` patterns.
 
 **Architecture:** Extend `MapKitStore` with `searchNearby`; reuse `MapKitSerialization` and `MapKitSearchFetch`; Rust tool registration with existing `mapkit.search` capability; shared argument parsing extracted from `search_places`.
 
@@ -40,7 +40,7 @@
 - [ ] **Step 1: Add constant and tool definition**
 
 ```rust
-pub const TOOL_SEARCH_NEARBY: &str = "mapkit.search_nearby";
+pub const TOOL_SEARCH_NEARBY: &str = "mapkit_search_nearby";
 ```
 
 Add to `ALL_TOOLS` (bump array length 44 → 45), immediately after `TOOL_SEARCH_PLACES`:
@@ -149,7 +149,7 @@ Expected: PASS
 
 ```bash
 git add rust/abridge_core/src/tools/mod.rs
-git commit -m "feat(mapkit): register mapkit.search_nearby MCP tool in Rust"
+git commit -m "feat(mapkit): register mapkit_search_nearby MCP tool in Rust"
 ```
 
 ---
@@ -178,14 +178,14 @@ fn mcp_tools_list_includes_search_nearby_when_mapkit_search_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("mapkit.search_nearby"));
+  assert!(resp.contains("mapkit_search_nearby"));
 }
 
 #[test]
 fn tools_call_dispatches_search_nearby() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();
-  let body = r#"{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"mapkit.search_nearby","arguments":{"coordinate":{"latitude":37.3346,"longitude":-122.0090},"radius_meters":500}}}"#;
+  let body = r#"{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"mapkit_search_nearby","arguments":{"coordinate":{"latitude":37.3346,"longitude":-122.0090},"radius_meters":500}}}"#;
 
   let handle = create_server(
     mapkit_config_on_port(port, vec!["mapkit.search".into()]),
@@ -444,7 +444,7 @@ git commit -m "feat(mapkit): implement search_nearby provider operation"
 - [ ] **Step 1: README checkoff**
 
 ```markdown
-- [x] `mapkit.search_nearby`
+- [x] `mapkit_search_nearby`
 ```
 
 - [ ] **Step 2: Run full verification**
@@ -459,7 +459,7 @@ Expected: PASS (before merge)
 
 ```bash
 git add README.md
-git commit -m "feat(mapkit): ship mapkit.search_nearby MCP tool"
+git commit -m "feat(mapkit): ship mapkit_search_nearby MCP tool"
 ```
 
 ---

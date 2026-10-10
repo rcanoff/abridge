@@ -7,20 +7,6 @@ import Testing
 struct MapKitProviderForwardGeocodeTests {
     @Test
     @MainActor
-    func forwardGeocodeReturnsPermissionDeniedWhenUnauthorized() {
-        let store = MockMapKitStore()
-        store.authorizationStatus = .denied
-        let provider = MapKitProvider(store: store)
-        let response = provider.handle(
-            operation: "forward_geocode",
-            payloadJson: #"{"address":"1 Apple Park Way, Cupertino, CA"}"#
-        )
-        #expect(response.ok == false)
-        #expect(response.errorJson?.contains("permission_denied") == true)
-    }
-
-    @Test
-    @MainActor
     func forwardGeocodeReturnsSerializedResponse() throws {
         let item = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
             latitude: 37.3346,

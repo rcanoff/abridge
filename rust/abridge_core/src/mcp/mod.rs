@@ -142,11 +142,9 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
     record_tool_call(name, false);
     return tool_error_response(id, "unknown_tool", &format!("unknown tool: {name}"));
   };
-  // Audit under the registry name so wire and dotted calls log identically.
-  let name = tool.name;
 
   if !capability_enabled(state, tool.capability) {
-    record_tool_call(name, false);
+    record_tool_call(tool.name, false);
     return tool_error_response(
       id,
       "capability_disabled",
@@ -155,7 +153,7 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
   }
 
   if !provider_enabled(state, tool.provider) {
-    record_tool_call(name, false);
+    record_tool_call(tool.name, false);
     return tool_error_response(
       id,
       "provider_disabled",
@@ -170,7 +168,7 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
 
   // Enforce the advertised inputSchema before any provider hop (including diagnostics).
   if let Err(message) = arg_validation::validate_tool_arguments(tool, &arguments) {
-    record_tool_call(name, false);
+    record_tool_call(tool.name, false);
     return tool_error_response(id, "invalid_arguments", &message);
   }
 
@@ -178,14 +176,14 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
   let arguments = match crate::typed_args::normalize_tool_arguments(tool, arguments) {
     Ok(value) => value,
     Err(message) => {
-      record_tool_call(name, false);
+      record_tool_call(tool.name, false);
       return tool_error_response(id, "invalid_arguments", &message);
     }
   };
 
   if tool.name == tools::TOOL_GET_USAGE_LOG {
     let limit = parse_usage_log_limit(&arguments);
-    record_tool_call(name, true);
+    record_tool_call(tool.name, true);
     let payload = state.audit_store.usage_log_response(limit);
     let payload_json = match serde_json::to_string(&payload) {
       Ok(json) => json,
@@ -213,7 +211,7 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
     payload_json,
   });
 
-  record_tool_call(name, response.ok);
+  record_tool_call(tool.name, response.ok);
 
   if response.ok {
     json_response(
@@ -256,7 +254,7 @@ fn handle_notification_initialized(id: Option<Value>) -> Response {
 
 fn tool_descriptor(tool: &ToolDefinition) -> Value {
   serde_json::json!({
-    "name": tools::wire_name(tool.name),
+    "name": tool.name,
     "description": tool.description,
     "inputSchema": tools::input_schema(tool)
   })

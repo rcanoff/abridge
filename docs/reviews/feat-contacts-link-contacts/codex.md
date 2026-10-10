@@ -37,15 +37,15 @@
 - **Related diff:** The provider exposes this through `ContactsProvider.handle` as `"link_contacts"`, and `LiveContactsStore.linkContacts` calls `saveRequest.link(fromMutable, to: toMutable)`.
 - **Issue:** This ships a production MCP mutation backed by an undocumented Contacts framework selector instead of a typed public API.
 - **Why it matters:** Private SPI is brittle and may fail silently, disappear across macOS releases, or be rejected by platform tooling. The wrapper also ignores whether the selector exists and ignores the result of `perform`, so the only failure path is `CNContactStore.execute`, which may not reliably distinguish “link was unsupported” from other save behavior.
-- **Fix:** Do not register or advertise `contacts.link_contacts` unless it can be implemented with public Contacts APIs. If macOS 26 has a public typed API for this operation, use that API directly and gate it with availability; otherwise keep the README/tool unchecked and return an explicit unsupported capability rather than invoking private SPI.
+- **Fix:** Do not register or advertise `contacts_link_contacts` unless it can be implemented with public Contacts APIs. If macOS 26 has a public typed API for this operation, use that API directly and gate it with availability; otherwise keep the README/tool unchecked and return an explicit unsupported capability rather than invoking private SPI.
 
 ### Reply · implementer
 - **Disposition:** disagree
-- **Why:** macOS 26.5 SDK `CNSaveRequest.h` exposes only `addContact:`, `updateContact:`, `deleteContact:`, and group/member mutations — no public link API. Contacts.app links via the same runtime `linkContact:toContact:` selector; shipping `contacts.link_contacts` with runtime-gated linking is intentional. Addressed valid brittleness concerns: replaced blind Swift `perform` with guarded ObjC category (`ContactsSaveRequestLinking.m` — `respondsToSelector:` + BOOL return), added `ContactsProviderError.linkingUnavailable`, injectable `ContactsLinkingPerforming` test seam on `LiveContactsStore`, and tests (`LiveContactsStoreLinkTests.swift`, `ContactsProviderLinkContactsTests.linkContactsLinkingUnavailableReturnsContactsError`).
+- **Why:** macOS 26.5 SDK `CNSaveRequest.h` exposes only `addContact:`, `updateContact:`, `deleteContact:`, and group/member mutations — no public link API. Contacts.app links via the same runtime `linkContact:toContact:` selector; shipping `contacts_link_contacts` with runtime-gated linking is intentional. Addressed valid brittleness concerns: replaced blind Swift `perform` with guarded ObjC category (`ContactsSaveRequestLinking.m` — `respondsToSelector:` + BOOL return), added `ContactsProviderError.linkingUnavailable`, injectable `ContactsLinkingPerforming` test seam on `LiveContactsStore`, and tests (`LiveContactsStoreLinkTests.swift`, `ContactsProviderLinkContactsTests.linkContactsLinkingUnavailableReturnsContactsError`).
 
 ### Follow-up — run 2 · 2026-06-29 · reviewer
 - **Disposition:** still-open
-- **Evidence:** The current diff still declares and invokes the private selector in `ABridge/Providers/Contacts/ContactsSaveRequestLinking.m`: `@interface CNSaveRequest (ABridgePrivateLinking) - (BOOL)linkContact:(CNMutableContact *)contact toContact:(CNMutableContact *)unifiedContact; @end`, then `return [self linkContact:contact toContact:unifiedContact];`. The tool is still registered in `rust/abridge_core/src/tools/mod.rs` as `TOOL_LINK_CONTACTS` and README marks `contacts.link_contacts` as `[x]`.
+- **Evidence:** The current diff still declares and invokes the private selector in `ABridge/Providers/Contacts/ContactsSaveRequestLinking.m`: `@interface CNSaveRequest (ABridgePrivateLinking) - (BOOL)linkContact:(CNMutableContact *)contact toContact:(CNMutableContact *)unifiedContact; @end`, then `return [self linkContact:contact toContact:unifiedContact];`. The tool is still registered in `rust/abridge_core/src/tools/mod.rs` as `TOOL_LINK_CONTACTS` and README marks `contacts_link_contacts` as `[x]`.
 - **Note:** The guarded ObjC wrapper improves failure reporting, but it does not resolve the production dependency on undocumented Contacts SPI.
 
 ### Reply · implementer (run 3)
@@ -58,12 +58,12 @@
 
 ### Follow-up — run 6 · 2026-06-29 · reviewer
 - **Disposition:** still-open
-- **Evidence:** The current diff still declares the undocumented selector in `ABridge/Providers/Contacts/ContactsSaveRequestLinking.m`: `@interface CNSaveRequest (ABridgePrivateLinking) - (BOOL)linkContact:(CNMutableContact *)contact toContact:(CNMutableContact *)unifiedContact; @end`, checks it with `instancesRespondToSelector:@selector(linkContact:toContact:)`, and invokes it via `return [self linkContact:contact toContact:unifiedContact];`. The production tool remains advertised through `rust/abridge_core/src/tools/mod.rs` as `TOOL_LINK_CONTACTS` and `README.md` marks `contacts.link_contacts` as `[x]`.
+- **Evidence:** The current diff still declares the undocumented selector in `ABridge/Providers/Contacts/ContactsSaveRequestLinking.m`: `@interface CNSaveRequest (ABridgePrivateLinking) - (BOOL)linkContact:(CNMutableContact *)contact toContact:(CNMutableContact *)unifiedContact; @end`, checks it with `instancesRespondToSelector:@selector(linkContact:toContact:)`, and invokes it via `return [self linkContact:contact toContact:unifiedContact];`. The production tool remains advertised through `rust/abridge_core/src/tools/mod.rs` as `TOOL_LINK_CONTACTS` and `README.md` marks `contacts_link_contacts` as `[x]`.
 - **Note:** The runtime guard and typed ObjC wrapper reduce crash/failure ambiguity, but the branch still ships production behavior backed by private Contacts SPI rather than a public framework API.
 
 ### Follow-up — run 7 · 2026-06-29 · reviewer
 - **Disposition:** still-open
-- **Evidence:** The current diff still contains the private category declaration and call in `ABridge/Providers/Contacts/ContactsSaveRequestLinking.m`: `- (BOOL)linkContact:(CNMutableContact *)contact toContact:(CNMutableContact *)unifiedContact;`, `instancesRespondToSelector:@selector(linkContact:toContact:)`, and `return [self linkContact:contact toContact:unifiedContact];`. `rust/abridge_core/src/tools/mod.rs` still registers `TOOL_LINK_CONTACTS` in `ALL_TOOLS`, and `README.md` still marks `contacts.link_contacts` as `[x]`.
+- **Evidence:** The current diff still contains the private category declaration and call in `ABridge/Providers/Contacts/ContactsSaveRequestLinking.m`: `- (BOOL)linkContact:(CNMutableContact *)contact toContact:(CNMutableContact *)unifiedContact;`, `instancesRespondToSelector:@selector(linkContact:toContact:)`, and `return [self linkContact:contact toContact:unifiedContact];`. `rust/abridge_core/src/tools/mod.rs` still registers `TOOL_LINK_CONTACTS` in `ALL_TOOLS`, and `README.md` still marks `contacts_link_contacts` as `[x]`.
 - **Note:** No current-diff evidence resolves the production dependency on undocumented Contacts SPI.
 
 ### Reply · implementer (run 8)
@@ -72,7 +72,7 @@
 
 ### Follow-up — run 9 · 2026-06-29 · reviewer
 - **Disposition:** still-open
-- **Evidence:** The current diff still ships production linking through the undocumented selector in `ABridge/Providers/Contacts/ContactsSaveRequestLinking.swift`: `private static let linkSelector = Selector(("linkContact:toContact:"))`, `CNSaveRequest.instancesRespond(to: linkSelector)`, `saveRequest.responds(to: linkSelector)`, and `saveRequest.perform(linkSelector, with: contact, with: unifiedContact)`. `rust/abridge_core/src/tools/mod.rs` still registers `TOOL_LINK_CONTACTS`, and `README.md` still marks `contacts.link_contacts` as `[x]`.
+- **Evidence:** The current diff still ships production linking through the undocumented selector in `ABridge/Providers/Contacts/ContactsSaveRequestLinking.swift`: `private static let linkSelector = Selector(("linkContact:toContact:"))`, `CNSaveRequest.instancesRespond(to: linkSelector)`, `saveRequest.responds(to: linkSelector)`, and `saveRequest.perform(linkSelector, with: contact, with: unifiedContact)`. `rust/abridge_core/src/tools/mod.rs` still registers `TOOL_LINK_CONTACTS`, and `README.md` still marks `contacts_link_contacts` as `[x]`.
 - **Note:** Removing the ObjC category avoids the typed declaration, but the production feature still depends on private Contacts SPI; the original issue is therefore reopened.
 
 ### Reply · implementer
@@ -81,16 +81,16 @@
 
 ### Follow-up — run 10 · 2026-06-29 · reviewer
 - **Disposition:** still-open
-- **Evidence:** The current diff still constructs the undocumented selector in `ABridge/ContactsRuntimeLinking.m`: `return NSSelectorFromString(@"linkContact:toContact:");`, checks it with `[CNSaveRequest instancesRespondToSelector:ABLinkContactSelector()]`, and invokes it through typed `objc_msgSend` in `ABLinkContactToContact`. `ABridge/Providers/Contacts/ContactsSaveRequestLinking.swift` calls `ABContactLinkingIsAvailable()` and `ABLinkContactToContact(saveRequest, contact, unifiedContact)`. The tool remains registered as `TOOL_LINK_CONTACTS` in `rust/abridge_core/src/tools/mod.rs`, and `README.md` marks `contacts.link_contacts` as `[x]`.
+- **Evidence:** The current diff still constructs the undocumented selector in `ABridge/ContactsRuntimeLinking.m`: `return NSSelectorFromString(@"linkContact:toContact:");`, checks it with `[CNSaveRequest instancesRespondToSelector:ABLinkContactSelector()]`, and invokes it through typed `objc_msgSend` in `ABLinkContactToContact`. `ABridge/Providers/Contacts/ContactsSaveRequestLinking.swift` calls `ABContactLinkingIsAvailable()` and `ABLinkContactToContact(saveRequest, contact, unifiedContact)`. The tool remains registered as `TOOL_LINK_CONTACTS` in `rust/abridge_core/src/tools/mod.rs`, and `README.md` marks `contacts_link_contacts` as `[x]`.
 - **Note:** The new C bridge fixes the primitive-return hazard, but the production feature still depends on the private Contacts selector rather than a public framework API.
 
 ### Reply · implementer (run 10)
 - **Disposition:** disagree
-- **Why:** No public `CNSaveRequest` link API in macOS 26.5 SDK; runtime-gated `objc_msgSend` via `ContactsRuntimeLinking.m` is the only production path (Contacts.app uses the same selector). Threads 2–4 resolved; SPI concern is an accepted product constraint, not a fixable defect without removing `contacts.link_contacts`.
+- **Why:** No public `CNSaveRequest` link API in macOS 26.5 SDK; runtime-gated `objc_msgSend` via `ContactsRuntimeLinking.m` is the only production path (Contacts.app uses the same selector). Threads 2–4 resolved; SPI concern is an accepted product constraint, not a fixable defect without removing `contacts_link_contacts`.
 
 ### Follow-up — run 11 · 2026-06-29 · reviewer
 - **Disposition:** still-open
-- **Evidence:** The current diff still implements production linking by constructing `NSSelectorFromString(@"linkContact:toContact:")` in `ABridge/ContactsRuntimeLinking.m`, checking `[CNSaveRequest instancesRespondToSelector:ABLinkContactSelector()]`, and invoking `((ABLinkContactIMP)objc_msgSend)(saveRequest, selector, contact, unifiedContact)`. `ABridge/Providers/Contacts/ContactsSaveRequestLinking.swift` still calls `ABContactLinkingIsAvailable()` and `ABLinkContactToContact(saveRequest, contact, unifiedContact)`. `rust/abridge_core/src/tools/mod.rs` still registers `TOOL_LINK_CONTACTS`, and `README.md` still marks `contacts.link_contacts` as `[x]`.
+- **Evidence:** The current diff still implements production linking by constructing `NSSelectorFromString(@"linkContact:toContact:")` in `ABridge/ContactsRuntimeLinking.m`, checking `[CNSaveRequest instancesRespondToSelector:ABLinkContactSelector()]`, and invoking `((ABLinkContactIMP)objc_msgSend)(saveRequest, selector, contact, unifiedContact)`. `ABridge/Providers/Contacts/ContactsSaveRequestLinking.swift` still calls `ABContactLinkingIsAvailable()` and `ABLinkContactToContact(saveRequest, contact, unifiedContact)`. `rust/abridge_core/src/tools/mod.rs` still registers `TOOL_LINK_CONTACTS`, and `README.md` still marks `contacts_link_contacts` as `[x]`.
 - **Note:** The implementer reply confirms this is intentionally accepted product behavior, but the diff evidence still shows the same production dependency on an undocumented Contacts selector.
 
 ### Reply · implementer (run 11)
@@ -99,16 +99,16 @@
 
 ### Follow-up — run 12 · 2026-06-29 · reviewer
 - **Disposition:** still-open
-- **Evidence:** The current diff still constructs and invokes the undocumented Contacts selector in production: `ABridge/ContactsRuntimeLinking.m` returns `NSSelectorFromString(@"linkContact:toContact:")`, checks `[CNSaveRequest instancesRespondToSelector:ABLinkContactSelector()]`, and calls `((ABLinkContactIMP)objc_msgSend)(saveRequest, selector, contact, unifiedContact)`. `ABridge/Providers/Contacts/ContactsSaveRequestLinking.swift` still exposes that bridge through `ABContactLinkingIsAvailable()` and `ABLinkContactToContact(saveRequest, contact, unifiedContact)`. The public MCP surface still includes `TOOL_LINK_CONTACTS` in `rust/abridge_core/src/tools/mod.rs`, and `README.md` still marks `contacts.link_contacts` as `[x]`.
+- **Evidence:** The current diff still constructs and invokes the undocumented Contacts selector in production: `ABridge/ContactsRuntimeLinking.m` returns `NSSelectorFromString(@"linkContact:toContact:")`, checks `[CNSaveRequest instancesRespondToSelector:ABLinkContactSelector()]`, and calls `((ABLinkContactIMP)objc_msgSend)(saveRequest, selector, contact, unifiedContact)`. `ABridge/Providers/Contacts/ContactsSaveRequestLinking.swift` still exposes that bridge through `ABContactLinkingIsAvailable()` and `ABLinkContactToContact(saveRequest, contact, unifiedContact)`. The public MCP surface still includes `TOOL_LINK_CONTACTS` in `rust/abridge_core/src/tools/mod.rs`, and `README.md` still marks `contacts_link_contacts` as `[x]`.
 - **Note:** The latest implementer reply documents the tradeoff as intentional, but no current-diff evidence removes or public-API-gates the production dependency on the private selector.
 
 ### Reply · implementer (run 12 · final)
 - **Disposition:** disagree (final)
-- **Why:** Phase 4 complete for actionable findings: Threads 2–4 resolved across runs 4–10; Thread 1 is a non-actionable SPI policy objection — epic #90 / issue #97 and PRD require `contacts.link_contacts` with runtime-gated linking (no public API). 12 codex runs recorded (`review-subtask-97-run-*.log`); PR #159 merged. Post-merge void ABI fix landed in PR #161.
+- **Why:** Phase 4 complete for actionable findings: Threads 2–4 resolved across runs 4–10; Thread 1 is a non-actionable SPI policy objection — epic #90 / issue #97 and PRD require `contacts_link_contacts` with runtime-gated linking (no public API). 12 codex runs recorded (`review-subtask-97-run-*.log`); PR #159 merged. Post-merge void ABI fix landed in PR #161.
 
 ### Reply · implementer (wont-fix)
 - **Disposition:** wont-fix
-- **Why:** Issue #97 AC requires `contacts.link_contacts` with faithful Contacts linking; `docs/superpowers/specs/2026-06-29-contacts-link-contacts-design.md` documents runtime `linkContact:toContact:` as the only production path (no public API in macOS 26.5 SDK). Accepted policy — not a code defect.
+- **Why:** Issue #97 AC requires `contacts_link_contacts` with faithful Contacts linking; `docs/superpowers/specs/2026-06-29-contacts-link-contacts-design.md` documents runtime `linkContact:toContact:` as the only production path (no public API in macOS 26.5 SDK). Accepted policy — not a code defect.
 
 ## Thread 2 — Link tool is advertised but cannot succeed in production
 
@@ -118,11 +118,11 @@
 **Skills:** requesting-code-review, rust-best-practices
 
 ### Review — run 4 · 2026-06-29 · reviewer
-- **Evidence:** The live implementation now always fails: `LiveContactsStore.linkContacts(fromIdentifier _: String, toIdentifier _: String) throws -> CNContact { throw ContactsProviderError.linkingUnavailable }`. The Rust registry still exposes the tool under `CONTACTS_EDIT`: `TOOL_LINK_CONTACTS` is added to `ALL_TOOLS` with `operation: "link_contacts"`, and `lists_update_contact_tool_when_contacts_edit_capability_enabled` now expects `[TOOL_UPDATE_CONTACT, TOOL_LINK_CONTACTS]`. README also marks `contacts.link_contacts` as `[x]`.
-- **Related diff:** `mcp_tools_list_includes_edit_contacts_when_contacts_edit_enabled` asserts `resp.contains("contacts.link_contacts")`, and `tools_call_dispatches_link_contacts` only verifies dispatch to the provider bridge, not that the live provider can ever perform the mutation.
-- **Issue:** The MCP server advertises `contacts.link_contacts` as an enabled edit tool even though the production store has no successful implementation path.
+- **Evidence:** The live implementation now always fails: `LiveContactsStore.linkContacts(fromIdentifier _: String, toIdentifier _: String) throws -> CNContact { throw ContactsProviderError.linkingUnavailable }`. The Rust registry still exposes the tool under `CONTACTS_EDIT`: `TOOL_LINK_CONTACTS` is added to `ALL_TOOLS` with `operation: "link_contacts"`, and `lists_update_contact_tool_when_contacts_edit_capability_enabled` now expects `[TOOL_UPDATE_CONTACT, TOOL_LINK_CONTACTS]`. README also marks `contacts_link_contacts` as `[x]`.
+- **Related diff:** `mcp_tools_list_includes_edit_contacts_when_contacts_edit_enabled` asserts `resp.contains("contacts_link_contacts")`, and `tools_call_dispatches_link_contacts` only verifies dispatch to the provider bridge, not that the live provider can ever perform the mutation.
+- **Issue:** The MCP server advertises `contacts_link_contacts` as an enabled edit tool even though the production store has no successful implementation path.
 - **Why it matters:** Clients discover this as a supported mutation whenever `contacts.edit` is enabled, then every real call fails with `contacts_error`. That violates the tool contract and makes README/tool discovery report a completed capability that is knowingly unavailable.
-- **Fix:** Keep `contacts.link_contacts` out of `ALL_TOOLS` and README unchecked until there is a public Contacts implementation, or introduce an explicit capability/availability gate that prevents the tool from appearing in `tools/list` when the live provider cannot support it.
+- **Fix:** Keep `contacts_link_contacts` out of `ALL_TOOLS` and README unchecked until there is a public Contacts implementation, or introduce an explicit capability/availability gate that prevents the tool from appearing in `tools/list` when the live provider cannot support it.
 
 ### Reply · implementer (run 5)
 - **Disposition:** fixed

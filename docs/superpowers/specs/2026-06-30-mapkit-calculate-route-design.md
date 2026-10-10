@@ -1,4 +1,4 @@
-# mapkit.calculate_route MCP Tool — Design Spec
+# mapkit_calculate_route MCP Tool — Design Spec
 
 **Date:** 2026-06-30  
 **Status:** Draft  
@@ -7,13 +7,13 @@
 **PRD:** `docs/prd.md` § Future Providers  
 **Conventions:** `docs/conventions.md` § JSON and payloads (framework fidelity)  
 **Foundation:** `docs/superpowers/specs/2026-06-29-mapkit-permissions-foundation-design.md`  
-**Sibling:** `mapkit.estimate_travel_time` (#109; shares `mapkit.routing` capability)
+**Sibling:** `mapkit_estimate_travel_time` (#109; shares `mapkit.routing` capability)
 
 ---
 
 ## Summary
 
-Implement `mapkit.calculate_route` MCP tool: compute turn-by-turn routes between two coordinates via **`MKDirections`**. Returns **exhaustive `MKDirectionsResponse` JSON projection** (source/destination `MKMapItem`, `MKRoute` + `MKRouteStep` geometry and metadata). Register in Rust tool catalog gated by new **`mapkit.routing`** capability. Flip `mapkit-routing` capability to **`shipped: true`**. Enforce **CoreLocation when-in-use** authorization per MapKit foundation (#150).
+Implement `mapkit_calculate_route` MCP tool: compute turn-by-turn routes between two coordinates via **`MKDirections`**. Returns **exhaustive `MKDirectionsResponse` JSON projection** (source/destination `MKMapItem`, `MKRoute` + `MKRouteStep` geometry and metadata). Register in Rust tool catalog gated by new **`mapkit.routing`** capability. Flip `mapkit-routing` capability to **`shipped: true`**. Enforce **CoreLocation when-in-use** authorization per MapKit foundation (#150).
 
 ---
 
@@ -21,7 +21,7 @@ Implement `mapkit.calculate_route` MCP tool: compute turn-by-turn routes between
 
 | Field | Value |
 |-------|-------|
-| MCP name | `mapkit.calculate_route` |
+| MCP name | `mapkit_calculate_route` |
 | Capability | `mapkit.routing` |
 | Provider | `mapkit` |
 | Operation | `calculate_route` |
@@ -183,7 +183,7 @@ Rust tools/call → ProviderBridge → MapKitProvider.calculate_route
 | `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path for `calculate_route` |
 | `ABridgeTests/AppSettingsMapKitTests.swift` | Server gating for `mapkit.routing` |
 | `ABridgeTests/PermissionsStoreMapKitTests.swift` | Location requirement for routing toggle |
-| `README.md` | Check off `mapkit.calculate_route` |
+| `README.md` | Check off `mapkit_calculate_route` |
 
 ### Rust files (modify)
 
@@ -214,7 +214,7 @@ Rust tools/call → ProviderBridge → MapKitProvider.calculate_route
 
 ## Acceptance criteria (#108)
 
-1. `mapkit.calculate_route` in `tools/list` when `mapkit.routing` enabled.
+1. `mapkit_calculate_route` in `tools/list` when `mapkit.routing` enabled.
 2. Valid `tools/call` succeeds against mock/live MapKit per tests.
 3. Disabled capability or missing location permission → typed error (not silent success).
 4. Responses use exhaustive Apple field projection (snake_case keys).

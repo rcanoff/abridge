@@ -94,15 +94,12 @@ Rust routes by `provider` + `operation` string pairs. Swift dispatches on the sa
 
 | Item | Convention | Example |
 |------|------------|---------|
-| Provider ID | lowercase, no spaces | `"eventkit"`, `"mapkit"`, `"contacts"` |
+| Provider ID | lowercase, no spaces | `"eventkit"`, `"mapkit"`, `"corelocation"` |
 | Operation | `snake_case` | `"list_calendars"`, `"create_event"`, `"request_access"` |
 | Error codes (JSON) | `snake_case` | `"unknown_provider"`, `"unknown_operation"` |
-| MCP tool names (registry) | `<provider>.<domain>.<operation>`, or `<provider>.<operation>` when there is no domain | `eventkit.reminders.list_lists`, `mapkit.search_places` |
-| MCP tool names (wire) | registry name with `.` → `_` (`tools::wire_name`) | `eventkit_reminders_list_lists`, `mapkit_search_places` |
+| MCP tool name | `<provider>_<domain>_<operation>`, or `<provider>_<operation>` without a domain; rules in `AGENTS.md` § MCP tool names | `eventkit_reminders_list_lists`, `corelocation_get_current_location` |
 
-The `provider` / `operation` pair is the internal dispatch contract. MCP tool names are the external surface and should map to that pair without introducing a second vocabulary.
-
-`tools/list` advertises the wire name so every name matches `^[a-zA-Z0-9_-]{1,64}$`, which some MCP clients and LLM tool-calling APIs enforce. `tools/call` accepts the wire name and the dotted registry name; the usage audit always records the registry name. Wire names must stay unique (a test enforces it).
+The `provider` / `operation` pair is the internal dispatch contract, and each MCP tool name is built from it, so the external surface adds no second vocabulary.
 
 Config field validation rules (host, port, provider names, bearer token): see `docs/architecture-bootstrap-guide.md` §5 validation matrix.
 

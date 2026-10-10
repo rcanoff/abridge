@@ -1,9 +1,9 @@
-# vision.scan_document MCP Tool — Design Spec
+# vision_recognize_documents MCP Tool — Design Spec
 
 **Date:** 2026-06-30  
 **Status:** Approved  
-**Issue:** #115 (Epic #103; depends on #114 `vision.recognize_text`)  
-**Branch:** `feat/vision-scan-document`  
+**Issue:** #115 (Epic #103; depends on #114 `vision_recognize_text`)  
+**Branch:** `feat/vision-recognize-documents`  
 **PRD:** `docs/prd.md` § Future Providers  
 **Conventions:** `docs/conventions.md` § JSON and payloads (framework fidelity)  
 **Foundation:** `docs/superpowers/specs/2026-06-30-vision-permissions-foundation-design.md`  
@@ -13,7 +13,7 @@
 
 ## Summary
 
-Implement `vision.scan_document` MCP tool: structured document recognition via **`RecognizeDocumentsRequest`** / **`ImageRequestHandler`** (macOS 26 Swift Vision API). Client supplies image bytes as **base64** (no camera or Photos TCC). Returns **exhaustive `DocumentObservation` JSON projection** (recursive `Container` tree, nested Swift `RecognizedTextObservation`, `BarcodeObservation`, `DataDetectorMatch`, geometry helpers in shared `VisionSerialization`). Register in Rust tool catalog gated by **`vision.document`**. Flip `vision-document` capability to **`shipped: true`**. No Apple permission gate per #151 (payload-only V1). Depends on #114 for Vision provider scaffolding and serialization helpers.
+Implement `vision_recognize_documents` MCP tool: structured document recognition via **`RecognizeDocumentsRequest`** / **`ImageRequestHandler`** (macOS 26 Swift Vision API). Client supplies image bytes as **base64** (no camera or Photos TCC). Returns **exhaustive `DocumentObservation` JSON projection** (recursive `Container` tree, nested Swift `RecognizedTextObservation`, `BarcodeObservation`, `DataDetectorMatch`, geometry helpers in shared `VisionSerialization`). Register in Rust tool catalog gated by **`vision.document`**. Flip `vision-document` capability to **`shipped: true`**. No Apple permission gate per #151 (payload-only V1). Depends on #114 for Vision provider scaffolding and serialization helpers.
 
 ---
 
@@ -21,10 +21,10 @@ Implement `vision.scan_document` MCP tool: structured document recognition via *
 
 | Field | Value |
 |-------|-------|
-| MCP name | `vision.scan_document` |
+| MCP name | `vision_recognize_documents` |
 | Capability | `vision.document` |
 | Provider | `vision` |
-| Operation | `scan_document` |
+| Operation | `recognize_documents` |
 
 ### Vision API choice
 
@@ -339,7 +339,7 @@ Distinct from `VNRecognizedTextObservation` used by `recognize_text`. Project al
 ## Architecture
 
 ```
-Rust tools/call → ProviderBridge → VisionProvider.scan_document
+Rust tools/call → ProviderBridge → VisionProvider.recognize_documents
                                         ↓
                               VisionStore (protocol)
                                         ↓
@@ -353,9 +353,9 @@ Rust tools/call → ProviderBridge → VisionProvider.scan_document
 
 | File | Role |
 |------|------|
-| `ABridge/Providers/Vision/VisionProviderScanDocument.swift` | Operation handler + argument parsing |
+| `ABridge/Providers/Vision/VisionProviderRecognizeDocuments.swift` | Operation handler + argument parsing |
 | `ABridge/Providers/Vision/VisionAsyncBridge.swift` | Async `ImageRequestHandler` → sync bridge (extract MapKit pattern) |
-| `ABridgeTests/VisionProviderScanDocumentTests.swift` | Provider end-to-end tests |
+| `ABridgeTests/VisionProviderRecognizeDocumentsTests.swift` | Provider end-to-end tests |
 | `ABridgeTests/VisionDocumentSerializationTests.swift` | `DocumentObservation` projection completeness |
 
 ### Swift files (modify)
@@ -363,14 +363,14 @@ Rust tools/call → ProviderBridge → VisionProvider.scan_document
 | File | Change |
 |------|--------|
 | `ABridge/Providers/Vision/VisionSerialization.swift` | Add document / barcode / contour / Swift text projections |
-| `ABridge/Providers/Vision/VisionStore.swift` | `scanDocument` protocol method + request type |
+| `ABridge/Providers/Vision/VisionStore.swift` | `recognizeDocuments` protocol method + request type |
 | `ABridge/Providers/Vision/LiveVisionStore.swift` | `ImageRequestHandler` async wrapper |
-| `ABridge/Providers/Vision/VisionProviderRouting.swift` | `scan_document` dispatch |
+| `ABridge/Providers/Vision/VisionProviderRouting.swift` | `recognize_documents` dispatch |
 | `ABridge/Models/CapabilityCatalog.swift` | `vision-document` → `shipped: true` |
 | `ABridgeTests/MockVisionStore.swift` | Fake document results for CI |
-| `ABridgeTests/AppleProviderBridgeVisionTests.swift` | Success path for `scan_document` (replace `unknown_operation` expectation) |
+| `ABridgeTests/AppleProviderBridgeVisionTests.swift` | Success path for `recognize_documents` (replace `unknown_operation` expectation) |
 | `ABridgeTests/AppSettingsVisionTests.swift` | Shipped capability server gating |
-| `README.md` | Check off `vision.scan_document` |
+| `README.md` | Check off `vision_recognize_documents` |
 
 ### Rust files (modify)
 
@@ -401,13 +401,13 @@ Rust: tool absent from `tools/list` when `vision.document` not enabled; `tools/c
 
 ---
 
-## Dependency on #114 (`vision.recognize_text`)
+## Dependency on #114 (`vision_recognize_text`)
 
 | #114 deliverable | #115 reuse |
 |------------------|------------|
-| `VisionProvider` + routing shell | Add `scan_document` case |
+| `VisionProvider` + routing shell | Add `recognize_documents` case |
 | `VisionSerialization` geometry helpers | Extend for document tree |
-| `VisionStore` protocol seam | Add `scanDocument` method |
+| `VisionStore` protocol seam | Add `recognizeDocuments` method |
 | `MockVisionStore` pattern | Add canned `DocumentObservation` fixtures |
 | Capability / MCP test patterns | Mirror for `vision.document` |
 
@@ -417,7 +417,7 @@ Rust: tool absent from `tools/list` when `vision.document` not enabled; `tools/c
 
 ## Acceptance criteria (#115)
 
-1. `vision.scan_document` in `tools/list` when `vision.document` enabled.
+1. `vision_recognize_documents` in `tools/list` when `vision.document` enabled.
 2. Valid `tools/call` succeeds against mock/live Vision per tests.
 3. Disabled capability → typed MCP error (not silent success).
 4. Responses use exhaustive Apple field projection (snake_case keys).

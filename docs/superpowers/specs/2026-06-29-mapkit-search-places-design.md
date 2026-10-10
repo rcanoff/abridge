@@ -1,4 +1,4 @@
-# mapkit.search_places MCP Tool — Design Spec
+# mapkit_search_places MCP Tool — Design Spec
 
 **Date:** 2026-06-29  
 **Status:** Approved  
@@ -12,7 +12,7 @@
 
 ## Summary
 
-Implement `mapkit.search_places` MCP tool: natural-language place search via **`MKLocalSearch`**. Returns **exhaustive `MKMapItem` JSON projection** (mechanical snake_case serialization, shared serializer for future MapKit read tools). Register in Rust tool catalog gated by **`mapkit.search`**. Flip `mapkit-search` capability to **`shipped: true`**. Enforce **CoreLocation when-in-use** authorization per MapKit foundation (#150).
+Implement `mapkit_search_places` MCP tool: natural-language place search via **`MKLocalSearch`**. Returns **exhaustive `MKMapItem` JSON projection** (mechanical snake_case serialization, shared serializer for future MapKit read tools). Register in Rust tool catalog gated by **`mapkit.search`**. Flip `mapkit-search` capability to **`shipped: true`**. Enforce **CoreLocation when-in-use** authorization per MapKit foundation (#150).
 
 ---
 
@@ -20,7 +20,7 @@ Implement `mapkit.search_places` MCP tool: natural-language place search via **`
 
 | Field | Value |
 |-------|-------|
-| MCP name | `mapkit.search_places` |
+| MCP name | `mapkit_search_places` |
 | Capability | `mapkit.search` |
 | Provider | `mapkit` |
 | Operation | `search_places` |
@@ -75,7 +75,7 @@ JSON **object** mirroring `MKLocalSearch.Response` (not a bare array):
 
 ## Framework fidelity (`MKMapItem`)
 
-Define **`MapKitSerialization.mapItemJSONObject(from:)`** once; reuse for `search_nearby`, `lookup_place`, routing tools.
+Define **`MapKitSerialization.mapItemJSONObject(from:)`** once; reuse for `search_nearby`, `get_place`, routing tools.
 
 Every `map_items[]` element includes **all serializable `MKMapItem` properties** (macOS 26 SDK), snake_case keys, `null` for absent optionals — never omit keys.
 
@@ -145,7 +145,7 @@ Rust tools/call → ProviderBridge → MapKitProvider.search_places
 | `ABridge/Providers/MapKit/MapKitProvider.swift` | Store + location permission injection; remove stub-only body |
 | `ABridge/Models/CapabilityCatalog.swift` | `mapkit-search` → `shipped: true` |
 | `ABridgeTests/AppleProviderBridgeMapKitTests.swift` | Success path with mock provider |
-| `README.md` | Check off `mapkit.search_places` |
+| `README.md` | Check off `mapkit_search_places` |
 
 ### Rust files (modify)
 
@@ -178,7 +178,7 @@ Rust: tool absent from `tools/list` when `mapkit.search` not enabled; `tools/cal
 
 ## Acceptance criteria (#104)
 
-1. `mapkit.search_places` in `tools/list` when `mapkit.search` enabled.
+1. `mapkit_search_places` in `tools/list` when `mapkit.search` enabled.
 2. Valid `tools/call` succeeds against mock/live MapKit per tests.
 3. Disabled capability or missing location permission → typed error (not silent success).
 4. Responses use exhaustive Apple field projection (snake_case keys).

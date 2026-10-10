@@ -31,7 +31,7 @@ final class PermissionsStore {
 
     var requiresAppleLocationAccess: Bool {
         checkedCapabilityIDs.contains { id in
-            CapabilityCatalog.mapkitCapabilities.contains { $0.id == id && $0.shipped }
+            CapabilityCatalog.corelocationCapabilities.contains { $0.id == id && $0.shipped }
         }
     }
 
@@ -72,6 +72,10 @@ final class PermissionsStore {
         }
 
         if CapabilityCatalog.mapkitCapabilities.contains(where: { $0.id == capabilityID && $0.shipped }) {
+            return true
+        }
+
+        if CapabilityCatalog.corelocationCapabilities.contains(where: { $0.id == capabilityID && $0.shipped }) {
             return authorization.locationAuthorized
         }
 
@@ -104,6 +108,8 @@ final class PermissionsStore {
             CapabilityCatalog.contactsCapabilities.filter(\.shipped).map(\.id)
         case .mapkit:
             CapabilityCatalog.mapkitCapabilities.filter(\.shipped).map(\.id)
+        case .corelocation:
+            CapabilityCatalog.corelocationCapabilities.filter(\.shipped).map(\.id)
         case .vision:
             CapabilityCatalog.visionCapabilities.filter(\.shipped).map(\.id)
         }

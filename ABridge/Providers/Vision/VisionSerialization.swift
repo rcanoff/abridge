@@ -13,30 +13,6 @@ enum VisionSerialization {
         return string
     }
 
-    static func readQrCodeResponseJSONObject(observations: [VNBarcodeObservation]) -> [String: Any] {
-        [
-            "results": observations.map(barcodeObservationJSONObject(from:)),
-        ]
-    }
-
-    static func barcodeObservationJSONObject(from observation: VNBarcodeObservation) -> [String: Any] {
-        [
-            "uuid": observation.uuid.uuidString,
-            "confidence": observation.confidence,
-            "time_range": cmTimeRangeJSONObject(from: observation.timeRange),
-            "request_revision": observation.requestRevision,
-            "bounding_box": cgRectJSONObject(from: observation.boundingBox),
-            "global_segmentation_mask": pixelBufferObservationJSONObject(from: observation.globalSegmentationMask),
-            "top_left": cgPointJSONObject(from: observation.topLeft),
-            "top_right": cgPointJSONObject(from: observation.topRight),
-            "bottom_left": cgPointJSONObject(from: observation.bottomLeft),
-            "bottom_right": cgPointJSONObject(from: observation.bottomRight),
-            "symbology": observation.symbology.rawValue,
-            "payload_string_value": jsonValue(observation.payloadStringValue),
-            "payload_data": observation.payloadData?.base64EncodedString() ?? NSNull(),
-        ]
-    }
-
     static func recognizeTextResponseJSONObject(
         observations: [VNRecognizedTextObservation],
         maxCandidateCount: Int
@@ -106,12 +82,12 @@ enum VisionSerialization {
         return cmTimeRangeJSONObject(from: range)
     }
 
-    static func scanDocumentResponseJSONObject(
+    static func recognizeDocumentsResponseJSONObject(
         observations: [DocumentObservation],
         segmentation: DetectedDocumentObservation?,
         maximumCandidateCount: Int
     ) throws -> [String: Any] {
-        try VisionDocumentSerialization.scanDocumentResponseJSONObject(
+        try VisionDocumentSerialization.recognizeDocumentsResponseJSONObject(
             observations: observations,
             segmentation: segmentation,
             maximumCandidateCount: maximumCandidateCount
@@ -193,8 +169,8 @@ enum VisionSerialization {
         number.map { Double($0) } ?? NSNull()
     }
 
-    static func detectFacesResponseJSONObject(observations: [VNFaceObservation]) -> [String: Any] {
-        VisionFaceSerialization.detectFacesResponseJSONObject(observations: observations)
+    static func detectFaceLandmarksResponseJSONObject(observations: [VNFaceObservation]) -> [String: Any] {
+        VisionFaceSerialization.detectFaceLandmarksResponseJSONObject(observations: observations)
     }
 
     static func fourCCString(from pixelFormat: OSType) -> String {

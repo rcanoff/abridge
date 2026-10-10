@@ -3,17 +3,12 @@ import Foundation
 import ImageIO
 import Vision
 
-@MainActor
 struct LiveVisionStore: VisionStoreing {
-    func detectBarcodes(request: VisionDetectBarcodesRequest) throws -> [BarcodeObservation] {
+    func detectBarcodes(request: VisionDetectBarcodesRequest) async throws -> [BarcodeObservation] {
         let imageSource = try imageSource(from: request.imageData)
         let orientation = request.orientation ?? orientationFromImageSource(imageSource)
         let handler = ImageRequestHandler(request.imageData, orientation: orientation)
-        let detectRequest = makeDetectBarcodesRequest(from: request)
-
-        return try performVisionAsync(operation: "Vision barcode detection") {
-            try await handler.perform(detectRequest)
-        }
+        return try await performVision { try await handler.perform(makeDetectBarcodesRequest(from: request)) }
     }
 
     private func makeDetectBarcodesRequest(from request: VisionDetectBarcodesRequest) -> DetectBarcodesRequest {
@@ -30,28 +25,26 @@ struct LiveVisionStore: VisionStoreing {
         return detectRequest
     }
 
-    func scanDocument(request: VisionScanDocumentRequest) throws -> VisionScanDocumentResult {
+    func recognizeDocuments(request: VisionRecognizeDocumentsRequest) async throws -> VisionRecognizeDocumentsResult {
         let imageSource = try imageSource(from: request.imageData)
         let orientation = request.orientation ?? orientationFromImageSource(imageSource)
         let handler = ImageRequestHandler(request.imageData, orientation: orientation)
-        let recognizeRequest = makeRecognizeDocumentsRequest(from: request)
 
-        let observations = try performVisionAsync(operation: "Vision document recognition") {
-            try await handler.perform(recognizeRequest)
+        let observations = try await performVision {
+            try await handler.perform(makeRecognizeDocumentsRequest(from: request))
         }
-
         let segmentation: DetectedDocumentObservation? = if request.includeSegmentation {
-            try performVisionAsync(operation: "Vision document segmentation") {
-                try await handler.perform(DetectDocumentSegmentationRequest())
-            }
+            try await performVision { try await handler.perform(DetectDocumentSegmentationRequest()) }
         } else {
             nil
         }
 
-        return VisionScanDocumentResult(observations: observations, segmentation: segmentation)
+        return VisionRecognizeDocumentsResult(observations: observations, segmentation: segmentation)
     }
 
-    private func makeRecognizeDocumentsRequest(from request: VisionScanDocumentRequest) -> RecognizeDocumentsRequest {
+    private func makeRecognizeDocumentsRequest(
+        from request: VisionRecognizeDocumentsRequest
+    ) -> RecognizeDocumentsRequest {
         var recognizeRequest = RecognizeDocumentsRequest(request.revision)
         if let regionOfInterest = request.regionOfInterest {
             recognizeRequest.regionOfInterest = regionOfInterest
@@ -65,12 +58,10 @@ struct LiveVisionStore: VisionStoreing {
         return recognizeRequest
     }
 
-    private func performVisionAsync<T>(
-        operation: String,
-        work: @Sendable @escaping () async throws -> T
-    ) throws -> T {
+    /// Maps framework errors to `vision_error`; argument errors pass through.
+    private func performVision<T>(_ work: () async throws -> T) async throws -> T {
         do {
-            return try VisionAsyncBridge.perform(operation: operation, work: work)
+            return try await work()
         } catch let error as VisionProviderError {
             throw error
         } catch {
@@ -78,7 +69,7 @@ struct LiveVisionStore: VisionStoreing {
         }
     }
 
-    func detectFaces(request: VisionDetectFacesRequest) throws -> [VNFaceObservation] {
+    func detectFaceLandmarks(request: VisionDetectFaceLandmarksRequest) async throws -> [VNFaceObservation] {
         let imageSource = try imageSource(from: request.imageData)
         let cgImage = try decodeCGImage(from: imageSource)
         let orientation = request.orientation ?? orientationFromImageSource(imageSource)
@@ -102,7 +93,7 @@ struct LiveVisionStore: VisionStoreing {
         return detectRequest.results ?? []
     }
 
-    func recognizeText(request: VisionRecognizeTextRequest) throws -> [VNRecognizedTextObservation] {
+    func recognizeText(request: VisionRecognizeTextRequest) async throws -> [VNRecognizedTextObservation] {
         let imageSource = try imageSource(from: request.imageData)
         let cgImage = try decodeCGImage(from: imageSource)
         let orientation = request.orientation ?? orientationFromImageSource(imageSource)
@@ -142,33 +133,6 @@ struct LiveVisionStore: VisionStoreing {
         }
 
         return recognizeRequest.results ?? []
-    }
-
-    func readQrCode(request: VisionReadQrCodeRequest) throws -> [VNBarcodeObservation] {
-        let imageSource = try imageSource(from: request.imageData)
-        let cgImage = try decodeCGImage(from: imageSource)
-        let orientation = request.orientation ?? orientationFromImageSource(imageSource)
-
-        let detectRequest = VNDetectBarcodesRequest()
-        detectRequest.symbologies = [.qr]
-        if let revision = request.revision {
-            detectRequest.revision = revision
-        }
-        if let regionOfInterest = request.regionOfInterest {
-            detectRequest.regionOfInterest = regionOfInterest
-        }
-        if let coalesce = request.coalesceCompositeSymbologies {
-            detectRequest.coalesceCompositeSymbologies = coalesce
-        }
-
-        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
-        do {
-            try handler.perform([detectRequest])
-        } catch {
-            throw VisionProviderError.visionError(error.localizedDescription)
-        }
-
-        return detectRequest.results ?? []
     }
 
     private func imageSource(from data: Data) throws -> CGImageSource {

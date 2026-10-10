@@ -62,7 +62,7 @@ enum LiveLocationAuthorization {
     }
 }
 
-/// Shared location permission service for UI + MapKit MCP gates so both see the same sticky status.
+/// Shared location permission service for UI + Core Location MCP gates so both see the same sticky status.
 @MainActor
 enum LiveLocationPermission {
     static let service = LocationPermissionService()

@@ -6,7 +6,7 @@ use support::mock_provider::MockProviderBridge;
 use support::port::{allocate_test_port, http_post, http_post_json};
 
 const TEST_TOKEN: &str = "integration-test-token";
-const TOOL_NAME: &str = "diagnostics.get_usage_log";
+const TOOL_NAME: &str = "diagnostics_get_usage_log";
 
 fn diagnostics_config(port: u16) -> ServerConfig {
   ServerConfig {

@@ -16,7 +16,7 @@ struct VisionRecognizeTextRequest: Equatable {
     let maxCandidateCount: Int
 }
 
-struct VisionScanDocumentRequest: Equatable {
+struct VisionRecognizeDocumentsRequest: Equatable {
     let imageData: Data
     let orientation: CGImagePropertyOrientation?
     let revision: RecognizeDocumentsRequest.Revision?
@@ -27,17 +27,9 @@ struct VisionScanDocumentRequest: Equatable {
     let maximumCandidateCount: Int
 }
 
-struct VisionScanDocumentResult: Equatable {
+struct VisionRecognizeDocumentsResult: Equatable {
     let observations: [DocumentObservation]
     let segmentation: DetectedDocumentObservation?
-}
-
-struct VisionReadQrCodeRequest: Equatable {
-    let imageData: Data
-    let orientation: CGImagePropertyOrientation?
-    let revision: Int?
-    let regionOfInterest: CGRect?
-    let coalesceCompositeSymbologies: Bool?
 }
 
 struct VisionDetectBarcodesRequest: Equatable {
@@ -49,7 +41,7 @@ struct VisionDetectBarcodesRequest: Equatable {
     let coalesceCompositeSymbologies: Bool?
 }
 
-struct VisionDetectFacesRequest: Equatable {
+struct VisionDetectFaceLandmarksRequest: Equatable {
     let imageData: Data
     let orientation: CGImagePropertyOrientation?
     let revision: Int?
@@ -57,11 +49,10 @@ struct VisionDetectFacesRequest: Equatable {
     let constellation: VNRequestFaceLandmarksConstellation
 }
 
-@MainActor
-protocol VisionStoreing {
-    func recognizeText(request: VisionRecognizeTextRequest) throws -> [VNRecognizedTextObservation]
-    func scanDocument(request: VisionScanDocumentRequest) throws -> VisionScanDocumentResult
-    func readQrCode(request: VisionReadQrCodeRequest) throws -> [VNBarcodeObservation]
-    func detectBarcodes(request: VisionDetectBarcodesRequest) throws -> [BarcodeObservation]
-    func detectFaces(request: VisionDetectFacesRequest) throws -> [VNFaceObservation]
+/// Called only on the Vision worker thread (see `VisionAsyncBridge`).
+protocol VisionStoreing: Sendable {
+    func recognizeText(request: VisionRecognizeTextRequest) async throws -> [VNRecognizedTextObservation]
+    func recognizeDocuments(request: VisionRecognizeDocumentsRequest) async throws -> VisionRecognizeDocumentsResult
+    func detectBarcodes(request: VisionDetectBarcodesRequest) async throws -> [BarcodeObservation]
+    func detectFaceLandmarks(request: VisionDetectFaceLandmarksRequest) async throws -> [VNFaceObservation]
 }

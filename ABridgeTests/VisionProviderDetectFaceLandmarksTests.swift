@@ -3,14 +3,14 @@ import Foundation
 import Testing
 import Vision
 
-@Suite("VisionProviderDetectFaces")
-struct VisionProviderDetectFacesTests {
+@Suite("VisionProviderDetectFaceLandmarks")
+struct VisionProviderDetectFaceLandmarksTests {
     @Test
     @MainActor
-    func detectFacesRejectsInvalidBase64() {
+    func detectFaceLandmarksRejectsInvalidBase64() {
         let provider = VisionProvider(store: MockVisionStore())
         let response = provider.handle(
-            operation: "detect_faces",
+            operation: "detect_face_landmarks",
             payloadJson: #"{"image_data":"not-valid-base64!!!"}"#
         )
         #expect(response.ok == false)
@@ -20,10 +20,10 @@ struct VisionProviderDetectFacesTests {
 
     @Test
     @MainActor
-    func detectFacesRejectsUnsupportedRevision() {
+    func detectFaceLandmarksRejectsUnsupportedRevision() {
         let provider = VisionProvider(store: MockVisionStore())
         let response = provider.handle(
-            operation: "detect_faces",
+            operation: "detect_face_landmarks",
             payloadJson: #"{"image_data":"aGVsbG8=","revision":999}"#
         )
         #expect(response.ok == false)
@@ -33,10 +33,10 @@ struct VisionProviderDetectFacesTests {
 
     @Test
     @MainActor
-    func detectFacesRejectsInvalidRegionOfInterest() {
+    func detectFaceLandmarksRejectsInvalidRegionOfInterest() {
         let provider = VisionProvider(store: MockVisionStore())
         let response = provider.handle(
-            operation: "detect_faces",
+            operation: "detect_face_landmarks",
             payloadJson: #"""
             {"image_data":"aGVsbG8=","region_of_interest":{
                 "origin":{"x":-0.1,"y":0.2},"size":{"width":0.5,"height":0.6}
@@ -50,10 +50,10 @@ struct VisionProviderDetectFacesTests {
 
     @Test
     @MainActor
-    func detectFacesRejectsInvalidConstellation() {
+    func detectFaceLandmarksRejectsInvalidConstellation() {
         let provider = VisionProvider(store: MockVisionStore())
         let response = provider.handle(
-            operation: "detect_faces",
+            operation: "detect_face_landmarks",
             payloadJson: #"{"image_data":"aGVsbG8=","constellation":"invalid"}"#
         )
         #expect(response.ok == false)
@@ -63,7 +63,7 @@ struct VisionProviderDetectFacesTests {
 
     @Test
     @MainActor
-    func detectFacesReturnsSerializedResults() throws {
+    func detectFaceLandmarksReturnsSerializedResults() throws {
         let observations = try VisionTestFixtures.sampleFaceObservations()
         let store = MockVisionStore()
         store.faceObservations = observations
@@ -72,7 +72,7 @@ struct VisionProviderDetectFacesTests {
         let encoded = imageData.base64EncodedString()
 
         let response = provider.handle(
-            operation: "detect_faces",
+            operation: "detect_face_landmarks",
             payloadJson: #"{"image_data":"\#(encoded)"}"#
         )
 
@@ -87,7 +87,7 @@ struct VisionProviderDetectFacesTests {
 
     @Test
     @MainActor
-    func detectFacesForwardsOptionalArgumentsToStore() throws {
+    func detectFaceLandmarksForwardsOptionalArgumentsToStore() throws {
         let observations = try VisionTestFixtures.sampleFaceObservations()
         let store = MockVisionStore()
         store.faceObservations = observations
@@ -96,7 +96,7 @@ struct VisionProviderDetectFacesTests {
         let encoded = imageData.base64EncodedString()
 
         _ = provider.handle(
-            operation: "detect_faces",
+            operation: "detect_face_landmarks",
             payloadJson: #"""
             {"image_data":"\#(
                 encoded
@@ -106,7 +106,7 @@ struct VisionProviderDetectFacesTests {
             """#
         )
 
-        #expect(store.lastDetectFacesRequest?.constellation == .constellation65Points)
-        #expect(store.lastDetectFacesRequest?.regionOfInterest != nil)
+        #expect(store.lastDetectFaceLandmarksRequest?.constellation == .constellation65Points)
+        #expect(store.lastDetectFaceLandmarksRequest?.regionOfInterest != nil)
     }
 }

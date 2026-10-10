@@ -1,9 +1,9 @@
-# vision.detect_faces MCP Tool — Design Spec
+# vision_detect_face_landmarks MCP Tool — Design Spec
 
 **Date:** 2026-06-30  
 **Status:** Approved  
-**Issue:** #118 (Epic #103; depends on #114 `vision.recognize_text`)  
-**Branch:** `feat/vision-detect-faces`  
+**Issue:** #118 (Epic #103; depends on #114 `vision_recognize_text`)  
+**Branch:** `feat/vision-detect-face-landmarks`  
 **PRD:** `docs/prd.md` § Future Providers  
 **Conventions:** `docs/conventions.md` § JSON and payloads (framework fidelity)  
 **Foundation:** `docs/superpowers/specs/2026-06-30-vision-permissions-foundation-design.md`  
@@ -13,9 +13,9 @@
 
 ## Summary
 
-Implement `vision.detect_faces` MCP tool: face detection with bounding boxes and facial landmarks via **`VNDetectFaceLandmarksRequest`** / **`VNImageRequestHandler`**. Client supplies image bytes as **base64** (no camera or Photos TCC). Returns **exhaustive `VNFaceObservation` JSON projection** (mechanical snake_case serialization, shared `VisionSerialization` helpers from #114). Register in Rust tool catalog gated by **`vision.faces`**. Flip `vision-faces` capability to **`shipped: true`**. No Apple permission gate per #151 (payload-only V1).
+Implement `vision_detect_face_landmarks` MCP tool: face detection with bounding boxes and facial landmarks via **`VNDetectFaceLandmarksRequest`** / **`VNImageRequestHandler`**. Client supplies image bytes as **base64** (no camera or Photos TCC). Returns **exhaustive `VNFaceObservation` JSON projection** (mechanical snake_case serialization, shared `VisionSerialization` helpers from #114). Register in Rust tool catalog gated by **`vision.faces`**. Flip `vision-faces` capability to **`shipped: true`**. No Apple permission gate per #151 (payload-only V1).
 
-**Pattern:** Mirrors `vision.recognize_text` (#114) — synchronous `VNImageRequestHandler.perform`, `VisionStore` protocol seam, dedicated provider operation file, Rust tool registration. `VNDetectFaceLandmarksRequest` runs face detection when no input observations are supplied, then populates `landmarks` on each `VNFaceObservation`.
+**Pattern:** Mirrors `vision_recognize_text` (#114) — synchronous `VNImageRequestHandler.perform`, `VisionStore` protocol seam, dedicated provider operation file, Rust tool registration. `VNDetectFaceLandmarksRequest` runs face detection when no input observations are supplied, then populates `landmarks` on each `VNFaceObservation`.
 
 ---
 
@@ -23,10 +23,10 @@ Implement `vision.detect_faces` MCP tool: face detection with bounding boxes and
 
 | Field | Value |
 |-------|-------|
-| MCP name | `vision.detect_faces` |
+| MCP name | `vision_detect_face_landmarks` |
 | Capability | `vision.faces` |
 | Provider | `vision` |
-| Operation | `detect_faces` |
+| Operation | `detect_face_landmarks` |
 
 ### Vision API choice
 
@@ -191,7 +191,7 @@ Reuse the helper from #114 (`uuid`, `confidence`, `time_range`, `request_revisio
 ## Architecture
 
 ```
-Rust tools/call → ProviderBridge → VisionProvider.detect_faces
+Rust tools/call → ProviderBridge → VisionProvider.detect_face_landmarks
                                         ↓
                               VisionStore (protocol)
                                         ↓
@@ -205,23 +205,23 @@ Rust tools/call → ProviderBridge → VisionProvider.detect_faces
 | File | Role |
 |------|------|
 | `ABridge/Providers/Vision/VisionFaceSerialization.swift` | `VNFaceObservation` / landmark region JSON |
-| `ABridge/Providers/Vision/VisionProviderDetectFaces.swift` | Operation handler |
+| `ABridge/Providers/Vision/VisionProviderDetectFaceLandmarks.swift` | Operation handler |
 | `ABridgeTests/VisionFaceSerializationTests.swift` | Landmark projection completeness |
-| `ABridgeTests/VisionProviderDetectFacesTests.swift` | Provider end-to-end tests |
+| `ABridgeTests/VisionProviderDetectFaceLandmarksTests.swift` | Provider end-to-end tests |
 
 ### Swift files (modify)
 
 | File | Change |
 |------|--------|
-| `ABridge/Providers/Vision/VisionSerialization.swift` | `detectFacesResponseJSONObject` wrapper delegating to face serialization |
-| `ABridge/Providers/Vision/VisionStore.swift` | `VisionDetectFacesRequest` + `detectFaces` on protocol |
+| `ABridge/Providers/Vision/VisionSerialization.swift` | `detectFaceLandmarksResponseJSONObject` wrapper delegating to face serialization |
+| `ABridge/Providers/Vision/VisionStore.swift` | `VisionDetectFaceLandmarksRequest` + `detectFaceLandmarks` on protocol |
 | `ABridge/Providers/Vision/LiveVisionStore.swift` | `VNDetectFaceLandmarksRequest` sync wrapper |
-| `ABridge/Providers/Vision/VisionProviderRouting.swift` | `detect_faces` dispatch |
+| `ABridge/Providers/Vision/VisionProviderRouting.swift` | `detect_face_landmarks` dispatch |
 | `ABridgeTests/MockVisionStore.swift` | Fake face results for CI |
-| `ABridgeTests/AppleProviderBridgeVisionTests.swift` | Success path for `detect_faces` |
+| `ABridgeTests/AppleProviderBridgeVisionTests.swift` | Success path for `detect_face_landmarks` |
 | `ABridgeTests/AppSettingsVisionTests.swift` | Shipped capability server gating |
 | `ABridge/Models/CapabilityCatalog.swift` | `vision-faces` → `shipped: true` |
-| `README.md` | Check off `vision.detect_faces` |
+| `README.md` | Check off `vision_detect_face_landmarks` |
 
 ### Rust files (modify)
 
@@ -252,13 +252,13 @@ Rust: tool absent from `tools/list` when `vision.faces` not enabled; `tools/call
 
 ---
 
-## Dependency on #114 (`vision.recognize_text`)
+## Dependency on #114 (`vision_recognize_text`)
 
 | #114 deliverable | #118 reuse |
 |------------------|------------|
-| `VisionProvider` + routing shell | Add `detect_faces` case |
+| `VisionProvider` + routing shell | Add `detect_face_landmarks` case |
 | `VisionSerialization` geometry helpers | Extend for face / landmark regions |
-| `VisionStore` protocol seam | Add `detectFaces` method |
+| `VisionStore` protocol seam | Add `detectFaceLandmarks` method |
 | `MockVisionStore` pattern | Add canned `VNFaceObservation` fixtures |
 | Capability / MCP test patterns | Mirror for `vision.faces` |
 
@@ -268,7 +268,7 @@ Rust: tool absent from `tools/list` when `vision.faces` not enabled; `tools/call
 
 ## Acceptance criteria (#118)
 
-1. `vision.detect_faces` in `tools/list` when `vision.faces` enabled.
+1. `vision_detect_face_landmarks` in `tools/list` when `vision.faces` enabled.
 2. Valid `tools/call` succeeds against mock/live Vision per tests.
 3. Disabled capability → typed MCP error (not silent success).
 4. Responses use exhaustive Apple field projection (snake_case keys).

@@ -4,10 +4,6 @@ import MapKit
 
 extension MapKitProvider {
     func calculateRoute(payloadJson: String) -> ProviderResponse {
-        guard isLocationAuthorized else {
-            return errorResponse(code: "permission_denied", message: "Location access not granted")
-        }
-
         do {
             let arguments = try parseCalculateRouteArguments(payloadJson)
             let result = try store.calculateRoute(request: arguments)

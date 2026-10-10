@@ -16,7 +16,7 @@ struct ProductionABridgeAppStoreMaker: ABridgeAppStoreMaking {
         let permissionService = RemindersPermissionService()
         let eventsPermissionService = EventsPermissionService()
         let contactsPermissionService = ContactsPermissionService()
-        // Shared with MapKit MCP gates so UI and tools see the same sticky location status.
+        // Shared with Core Location MCP gates so UI and tools see the same sticky location status.
         let locationPermissionService = LiveLocationPermission.service
         let store = AppStore(
             permissionService: permissionService,

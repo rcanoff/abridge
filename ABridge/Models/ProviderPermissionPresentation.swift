@@ -5,6 +5,7 @@ enum ProviderPermissionKind: String, CaseIterable, Identifiable {
     case calendarsAndEvents
     case contacts
     case mapkit
+    case corelocation
     case vision
 
     var id: String {
@@ -17,12 +18,16 @@ enum ProviderPermissionKind: String, CaseIterable, Identifiable {
         case .calendarsAndEvents: "Calendars & Events"
         case .contacts: "Contacts"
         case .mapkit: "MapKit"
+        case .corelocation: "Core Location"
         case .vision: "Vision"
         }
     }
 
     var needsOSAccess: Bool {
-        self != .vision
+        switch self {
+        case .mapkit, .vision: false
+        case .reminders, .calendarsAndEvents, .contacts, .corelocation: true
+        }
     }
 
     /// Calendar collection whose MCP sharing the user can narrow, if any.
@@ -30,7 +35,7 @@ enum ProviderPermissionKind: String, CaseIterable, Identifiable {
         switch self {
         case .reminders: .reminderLists
         case .calendarsAndEvents: .eventCalendars
-        case .contacts, .mapkit, .vision: nil
+        case .contacts, .mapkit, .corelocation, .vision: nil
         }
     }
 }

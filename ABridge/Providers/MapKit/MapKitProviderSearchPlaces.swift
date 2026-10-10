@@ -4,10 +4,6 @@ import MapKit
 
 extension MapKitProvider {
     func searchPlaces(payloadJson: String) -> ProviderResponse {
-        guard isLocationAuthorized else {
-            return errorResponse(code: "permission_denied", message: "Location access not granted")
-        }
-
         do {
             let arguments = try parseSearchPlacesArguments(payloadJson)
             let result = try store.searchPlaces(request: arguments)

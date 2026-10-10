@@ -1,4 +1,4 @@
-# vision.recognize_text MCP Tool — Design Spec
+# vision_recognize_text MCP Tool — Design Spec
 
 **Date:** 2026-06-30  
 **Status:** Approved  
@@ -12,7 +12,7 @@
 
 ## Summary
 
-Implement `vision.recognize_text` MCP tool: optical character recognition via **`VNRecognizeTextRequest`** / **`VNImageRequestHandler`**. Client supplies image bytes as **base64** (no camera or Photos TCC). Returns **exhaustive `VNRecognizedTextObservation` JSON projection** (mechanical snake_case serialization, shared `VisionSerialization` for future Vision tools). Register in Rust tool catalog gated by **`vision.text`**. Flip `vision-text` capability to **`shipped: true`**. No Apple permission gate per #151 (payload-only V1).
+Implement `vision_recognize_text` MCP tool: optical character recognition via **`VNRecognizeTextRequest`** / **`VNImageRequestHandler`**. Client supplies image bytes as **base64** (no camera or Photos TCC). Returns **exhaustive `VNRecognizedTextObservation` JSON projection** (mechanical snake_case serialization, shared `VisionSerialization` for future Vision tools). Register in Rust tool catalog gated by **`vision.text`**. Flip `vision-text` capability to **`shipped: true`**. No Apple permission gate per #151 (payload-only V1).
 
 ---
 
@@ -20,7 +20,7 @@ Implement `vision.recognize_text` MCP tool: optical character recognition via **
 
 | Field | Value |
 |-------|-------|
-| MCP name | `vision.recognize_text` |
+| MCP name | `vision_recognize_text` |
 | Capability | `vision.text` |
 | Provider | `vision` |
 | Operation | `recognize_text` |
@@ -114,7 +114,7 @@ JSON **object** mirroring `VNRecognizeTextRequest.results` (not a bare array):
 
 ## Framework fidelity
 
-Define **`VisionSerialization`** once; reuse for `scan_document`, barcode, and face tools.
+Define **`VisionSerialization`** once; reuse for `recognize_documents`, barcode, and face tools.
 
 Every `results[]` element is a **complete `VNRecognizedTextObservation` projection** — all keys present, `null` for absent optionals, snake_case encoding. Never omit keys.
 
@@ -229,7 +229,7 @@ Rust tools/call → ProviderBridge → VisionProvider.recognize_text
 | `ABridge/Models/CapabilityCatalog.swift` | `vision-text` → `shipped: true` |
 | `ABridgeTests/AppleProviderBridgeVisionTests.swift` | Success path with mock provider |
 | `ABridgeTests/AppSettingsVisionTests.swift` | Shipped capability server gating |
-| `README.md` | Check off `vision.recognize_text` |
+| `README.md` | Check off `vision_recognize_text` |
 
 ### Rust files (modify)
 
@@ -262,7 +262,7 @@ Rust: tool absent from `tools/list` when `vision.text` not enabled; `tools/call`
 
 ## Acceptance criteria (#114)
 
-1. `vision.recognize_text` in `tools/list` when `vision.text` enabled.
+1. `vision_recognize_text` in `tools/list` when `vision.text` enabled.
 2. Valid `tools/call` succeeds against mock/live Vision per tests.
 3. Disabled capability → typed MCP error (not silent success).
 4. Responses use exhaustive Apple field projection (snake_case keys).

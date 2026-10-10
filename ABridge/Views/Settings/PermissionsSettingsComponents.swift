@@ -242,6 +242,7 @@ struct ProviderPermissionsCard: View {
         case .calendarsAndEvents: "calendar"
         case .contacts: "person.crop.circle"
         case .mapkit: "mappin.and.ellipse"
+        case .corelocation: "location"
         case .vision: "eye"
         }
     }

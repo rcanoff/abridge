@@ -28,9 +28,9 @@ pub const CONTACTS_DELETE: &str = "contacts.delete";
 pub const MAPKIT_SEARCH: &str = "mapkit.search";
 pub const MAPKIT_GEOCODE: &str = "mapkit.geocode";
 pub const MAPKIT_ROUTING: &str = "mapkit.routing";
-pub const MAPKIT_LOCATION: &str = "mapkit.location";
 pub const MAPKIT_READ: &str = "mapkit.read";
 pub const MAPKIT_NAVIGATION: &str = "mapkit.navigation";
+pub const CORELOCATION_READ: &str = "corelocation.read";
 pub const DIAGNOSTICS_READ: &str = "diagnostics.read";
 pub const VISION_TEXT: &str = "vision.text";
 pub const VISION_DOCUMENT: &str = "vision.document";
@@ -46,9 +46,9 @@ pub fn is_valid_capability_id(id: &str) -> bool {
     || id == MAPKIT_SEARCH
     || id == MAPKIT_GEOCODE
     || id == MAPKIT_ROUTING
-    || id == MAPKIT_LOCATION
     || id == MAPKIT_READ
     || id == MAPKIT_NAVIGATION
+    || id == CORELOCATION_READ
     || id == DIAGNOSTICS_READ
     || id == VISION_TEXT
     || id == VISION_DOCUMENT
@@ -98,9 +98,9 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
       | MAPKIT_SEARCH
       | MAPKIT_GEOCODE
       | MAPKIT_ROUTING
-      | MAPKIT_LOCATION
       | MAPKIT_READ
       | MAPKIT_NAVIGATION
+      | CORELOCATION_READ
       | DIAGNOSTICS_READ
       | VISION_TEXT
       | VISION_DOCUMENT
@@ -112,14 +112,14 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
 #[cfg(test)]
 mod tests {
   use super::{
-    CONTACTS_CREATE, CONTACTS_DELETE, CONTACTS_EDIT, CONTACTS_READ, CONTACTS_SEARCH, DIAGNOSTICS_READ,
-    EVENTKIT_CALENDARS_CREATE, EVENTKIT_CALENDARS_DELETE, EVENTKIT_CALENDARS_EDIT, EVENTKIT_CALENDARS_READ,
-    EVENTKIT_EVENTS_ALARMS, EVENTKIT_EVENTS_CREATE, EVENTKIT_EVENTS_DELETE, EVENTKIT_EVENTS_EDIT,
-    EVENTKIT_EVENTS_INVITATIONS, EVENTKIT_EVENTS_READ, EVENTKIT_EVENTS_RECURRENCE, EVENTKIT_EVENTS_SEARCH,
-    EVENTKIT_REMINDERS_ALARMS, EVENTKIT_REMINDERS_COMPLETE, EVENTKIT_REMINDERS_CREATE, EVENTKIT_REMINDERS_DELETE,
-    EVENTKIT_REMINDERS_EDIT, EVENTKIT_REMINDERS_READ, EVENTKIT_REMINDERS_RECURRENCE, EVENTKIT_REMINDERS_SEARCH,
-    MAPKIT_GEOCODE, MAPKIT_LOCATION, MAPKIT_NAVIGATION, MAPKIT_READ, MAPKIT_ROUTING, MAPKIT_SEARCH, VISION_BARCODES,
-    VISION_DOCUMENT, VISION_FACES, VISION_TEXT, is_allowed_in_v1, is_valid_capability_id,
+    CONTACTS_CREATE, CONTACTS_DELETE, CONTACTS_EDIT, CONTACTS_READ, CONTACTS_SEARCH, CORELOCATION_READ,
+    DIAGNOSTICS_READ, EVENTKIT_CALENDARS_CREATE, EVENTKIT_CALENDARS_DELETE, EVENTKIT_CALENDARS_EDIT,
+    EVENTKIT_CALENDARS_READ, EVENTKIT_EVENTS_ALARMS, EVENTKIT_EVENTS_CREATE, EVENTKIT_EVENTS_DELETE,
+    EVENTKIT_EVENTS_EDIT, EVENTKIT_EVENTS_INVITATIONS, EVENTKIT_EVENTS_READ, EVENTKIT_EVENTS_RECURRENCE,
+    EVENTKIT_EVENTS_SEARCH, EVENTKIT_REMINDERS_ALARMS, EVENTKIT_REMINDERS_COMPLETE, EVENTKIT_REMINDERS_CREATE,
+    EVENTKIT_REMINDERS_DELETE, EVENTKIT_REMINDERS_EDIT, EVENTKIT_REMINDERS_READ, EVENTKIT_REMINDERS_RECURRENCE,
+    EVENTKIT_REMINDERS_SEARCH, MAPKIT_GEOCODE, MAPKIT_NAVIGATION, MAPKIT_READ, MAPKIT_ROUTING, MAPKIT_SEARCH,
+    VISION_BARCODES, VISION_DOCUMENT, VISION_FACES, VISION_TEXT, is_allowed_in_v1, is_valid_capability_id,
   };
 
   #[test]
@@ -176,9 +176,9 @@ mod tests {
   }
 
   #[test]
-  fn accepts_mapkit_location_capability_shape() {
-    assert!(is_valid_capability_id(MAPKIT_LOCATION));
-    assert!(is_allowed_in_v1(MAPKIT_LOCATION));
+  fn accepts_corelocation_read_capability_shape() {
+    assert!(is_valid_capability_id(CORELOCATION_READ));
+    assert!(is_allowed_in_v1(CORELOCATION_READ));
   }
 
   #[test]
@@ -256,6 +256,7 @@ mod tests {
     assert!(is_allowed_in_v1(CONTACTS_EDIT));
     assert!(is_allowed_in_v1(CONTACTS_DELETE));
     assert!(is_allowed_in_v1(MAPKIT_SEARCH));
+    assert!(is_allowed_in_v1(CORELOCATION_READ));
     assert!(!is_allowed_in_v1("eventkit.reminders.write"));
   }
 }
@@ -266,6 +267,7 @@ pub const SETTINGS_GROUP_CALENDARS: &str = "calendars";
 pub const SETTINGS_GROUP_EVENTS: &str = "events";
 pub const SETTINGS_GROUP_CONTACTS: &str = "contacts";
 pub const SETTINGS_GROUP_MAPKIT: &str = "mapkit";
+pub const SETTINGS_GROUP_CORELOCATION: &str = "corelocation";
 pub const SETTINGS_GROUP_VISION: &str = "vision";
 
 /// Settings catalog entry — single source of truth for capability IDs shown in the app.
@@ -452,14 +454,14 @@ pub fn settings_capability_catalog() -> Vec<SettingsCapabilityDefinition> {
       "Navigation",
       true,
     ),
+    settings_entry(SETTINGS_GROUP_MAPKIT, "mapkit-read", MAPKIT_READ, "Read", true),
     settings_entry(
-      SETTINGS_GROUP_MAPKIT,
-      "mapkit-location",
-      MAPKIT_LOCATION,
-      "Location",
+      SETTINGS_GROUP_CORELOCATION,
+      "corelocation-read",
+      CORELOCATION_READ,
+      "Current location",
       true,
     ),
-    settings_entry(SETTINGS_GROUP_MAPKIT, "mapkit-read", MAPKIT_READ, "Read", true),
     // vision
     settings_entry(SETTINGS_GROUP_VISION, "vision-text", VISION_TEXT, "Text", true),
     settings_entry(

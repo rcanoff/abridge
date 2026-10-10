@@ -13,6 +13,7 @@ struct CapabilityCatalogSourceOfTruthTests {
                 + CapabilityCatalog.eventsCapabilities
                 + CapabilityCatalog.contactsCapabilities
                 + CapabilityCatalog.mapkitCapabilities
+                + CapabilityCatalog.corelocationCapabilities
                 + CapabilityCatalog.visionCapabilities
 
         #expect(fromSwift.count == fromRust.count)
