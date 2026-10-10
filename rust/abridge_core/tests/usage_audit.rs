@@ -44,6 +44,34 @@ fn tools_call_produces_audit_entry() {
 }
 
 #[test]
+fn tools_call_by_wire_name_succeeds_and_audits_registry_name() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"eventkit_reminders_list_lists","arguments":{}}}"#;
+
+  let handle = create_server(config_on_port(port), Box::new(mock.clone_for_server())).expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle.clone()).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#), "{resp}");
+  assert_eq!(*mock.call_count.lock().expect("lock"), 1);
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.provider, "eventkit");
+  assert_eq!(recorded.operation, "list_lists");
+  assert_eq!(recorded.payload_json, "{}");
+
+  let entries = handle.usage_audit_entries();
+  let tool_call = entries
+    .iter()
+    .find(|entry| entry.event_type == "tool_call")
+    .expect("tool_call audit entry");
+  assert_eq!(tool_call.tool_name.as_deref(), Some("eventkit.reminders.list_lists"));
+  assert!(tool_call.success);
+}
+
+#[test]
 fn initialize_produces_mcp_initialize_entry() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();

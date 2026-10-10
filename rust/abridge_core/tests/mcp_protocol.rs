@@ -145,8 +145,8 @@ fn mcp_tools_list_filtered_by_capability() {
   stop_server(handle_with_read).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.reminders.list_lists"));
-  assert!(resp.contains("eventkit.reminders.list_reminders"));
+  assert!(resp.contains("eventkit_reminders_list_lists"));
+  assert!(resp.contains("eventkit_reminders_list_reminders"));
 
   let port_empty = allocate_test_port();
   let handle_empty =
@@ -186,8 +186,8 @@ fn mcp_tools_list_excludes_disabled_provider() {
 
   assert_eq!(status, 200);
   assert!(resp.contains(r#""tools":[]"#));
-  assert!(!resp.contains("eventkit.reminders.list_lists"));
-  assert!(!resp.contains("eventkit.reminders.list_reminders"));
+  assert!(!resp.contains("eventkit_reminders_list_lists"));
+  assert!(!resp.contains("eventkit_reminders_list_reminders"));
 }
 
 #[test]
@@ -206,8 +206,8 @@ fn mcp_tools_list_includes_list_calendars_when_calendars_read_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.calendars.list_calendars"));
-  assert!(!resp.contains("eventkit.reminders.list_lists"));
+  assert!(resp.contains("eventkit_calendars_list_calendars"));
+  assert!(!resp.contains("eventkit_reminders_list_lists"));
 }
 
 #[test]
@@ -226,8 +226,8 @@ fn mcp_tools_list_includes_create_calendar_when_calendars_create_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.calendars.create_calendar"));
-  assert!(!resp.contains("eventkit.calendars.list_calendars"));
+  assert!(resp.contains("eventkit_calendars_create_calendar"));
+  assert!(!resp.contains("eventkit_calendars_list_calendars"));
 }
 
 #[test]
@@ -246,8 +246,8 @@ fn mcp_tools_list_includes_update_calendar_when_calendars_edit_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.calendars.update_calendar"));
-  assert!(!resp.contains("eventkit.calendars.create_calendar"));
+  assert!(resp.contains("eventkit_calendars_update_calendar"));
+  assert!(!resp.contains("eventkit_calendars_create_calendar"));
 }
 
 #[test]
@@ -266,8 +266,8 @@ fn mcp_tools_list_includes_search_events_when_events_search_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.events.search_events"));
-  assert!(!resp.contains("eventkit.events.list_events"));
+  assert!(resp.contains("eventkit_events_search_events"));
+  assert!(!resp.contains("eventkit_events_list_events"));
 }
 
 #[test]
@@ -309,9 +309,9 @@ fn mcp_tools_list_includes_list_events_when_events_read_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.events.list_events"));
-  assert!(resp.contains("eventkit.events.get_event"));
-  assert!(!resp.contains("eventkit.calendars.list_calendars"));
+  assert!(resp.contains("eventkit_events_list_events"));
+  assert!(resp.contains("eventkit_events_get_event"));
+  assert!(!resp.contains("eventkit_calendars_list_calendars"));
 }
 
 #[test]
@@ -376,8 +376,8 @@ fn mcp_tools_list_includes_create_event_when_events_create_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.events.create_event"));
-  assert!(!resp.contains("eventkit.events.get_event"));
+  assert!(resp.contains("eventkit_events_create_event"));
+  assert!(!resp.contains("eventkit_events_get_event"));
 }
 
 #[test]
@@ -420,9 +420,9 @@ fn mcp_tools_list_includes_update_event_when_events_edit_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.events.update_event"));
-  assert!(resp.contains("eventkit.events.move_event"));
-  assert!(!resp.contains("eventkit.events.create_event"));
+  assert!(resp.contains("eventkit_events_update_event"));
+  assert!(resp.contains("eventkit_events_move_event"));
+  assert!(!resp.contains("eventkit_events_create_event"));
 }
 
 #[test]
@@ -489,8 +489,8 @@ fn mcp_tools_list_includes_delete_event_when_events_delete_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.events.delete_event"));
-  assert!(!resp.contains("eventkit.events.update_event"));
+  assert!(resp.contains("eventkit_events_delete_event"));
+  assert!(!resp.contains("eventkit_events_update_event"));
 }
 
 #[test]
@@ -532,8 +532,8 @@ fn mcp_tools_list_includes_delete_calendar_when_calendars_delete_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.calendars.delete_calendar"));
-  assert!(!resp.contains("eventkit.calendars.update_calendar"));
+  assert!(resp.contains("eventkit_calendars_delete_calendar"));
+  assert!(!resp.contains("eventkit_calendars_update_calendar"));
 }
 
 #[test]
@@ -731,8 +731,8 @@ fn mcp_tools_list_includes_search_reminders_when_search_capability_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.reminders.search_reminders"));
-  assert!(!resp.contains("eventkit.reminders.list_reminders"));
+  assert!(resp.contains("eventkit_reminders_search_reminders"));
+  assert!(!resp.contains("eventkit_reminders_list_reminders"));
 }
 
 #[test]
@@ -776,7 +776,7 @@ fn mcp_tools_list_includes_get_reminder() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.reminders.get_reminder"));
+  assert!(resp.contains("eventkit_reminders_get_reminder"));
 }
 
 #[test]
@@ -795,9 +795,9 @@ fn mcp_tools_list_includes_create_reminder_when_create_capability_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.reminders.create_reminder"));
-  assert!(resp.contains("eventkit.reminders.create_list"));
-  assert!(!resp.contains("eventkit.reminders.list_reminders"));
+  assert!(resp.contains("eventkit_reminders_create_reminder"));
+  assert!(resp.contains("eventkit_reminders_create_list"));
+  assert!(!resp.contains("eventkit_reminders_list_reminders"));
 }
 
 #[test]
@@ -841,9 +841,9 @@ fn mcp_tools_list_includes_update_reminder_when_edit_capability_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.reminders.update_reminder"));
-  assert!(resp.contains("eventkit.reminders.move_reminder"));
-  assert!(!resp.contains("eventkit.reminders.create_reminder"));
+  assert!(resp.contains("eventkit_reminders_update_reminder"));
+  assert!(resp.contains("eventkit_reminders_move_reminder"));
+  assert!(!resp.contains("eventkit_reminders_create_reminder"));
 }
 
 #[test]
@@ -911,9 +911,9 @@ fn mcp_tools_list_includes_complete_tools_when_complete_capability_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.reminders.complete_reminder"));
-  assert!(resp.contains("eventkit.reminders.uncomplete_reminder"));
-  assert!(!resp.contains("eventkit.reminders.update_reminder"));
+  assert!(resp.contains("eventkit_reminders_complete_reminder"));
+  assert!(resp.contains("eventkit_reminders_uncomplete_reminder"));
+  assert!(!resp.contains("eventkit_reminders_update_reminder"));
 }
 
 #[test]
@@ -978,10 +978,10 @@ fn mcp_tools_list_includes_set_reminder_alarms_when_alarms_capability_enabled() 
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.reminders.set_reminder_alarms"));
-  assert!(!resp.contains("eventkit.reminders.update_reminder"));
+  assert!(resp.contains("eventkit_reminders_set_reminder_alarms"));
+  assert!(!resp.contains("eventkit_reminders_update_reminder"));
   assert_eq!(
-    tool_input_property_items_type(&resp, "eventkit.reminders.set_reminder_alarms", "alarms").as_deref(),
+    tool_input_property_items_type(&resp, "eventkit_reminders_set_reminder_alarms", "alarms").as_deref(),
     Some("object")
   );
 }
@@ -1026,10 +1026,10 @@ fn mcp_tools_list_includes_set_event_alarms_when_events_alarms_capability_enable
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.events.set_event_alarms"));
-  assert!(!resp.contains("eventkit.events.update_event"));
+  assert!(resp.contains("eventkit_events_set_event_alarms"));
+  assert!(!resp.contains("eventkit_events_update_event"));
   assert_eq!(
-    tool_input_property_items_type(&resp, "eventkit.events.set_event_alarms", "alarms").as_deref(),
+    tool_input_property_items_type(&resp, "eventkit_events_set_event_alarms", "alarms").as_deref(),
     Some("object")
   );
 }
@@ -1074,10 +1074,10 @@ fn mcp_tools_list_includes_set_reminder_recurrence_when_recurrence_capability_en
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.reminders.set_reminder_recurrence"));
-  assert!(!resp.contains("eventkit.reminders.update_reminder"));
+  assert!(resp.contains("eventkit_reminders_set_reminder_recurrence"));
+  assert!(!resp.contains("eventkit_reminders_update_reminder"));
   assert_eq!(
-    tool_input_property_items_type(&resp, "eventkit.reminders.set_reminder_recurrence", "recurrence_rules").as_deref(),
+    tool_input_property_items_type(&resp, "eventkit_reminders_set_reminder_recurrence", "recurrence_rules").as_deref(),
     Some("object")
   );
 }
@@ -1122,10 +1122,10 @@ fn mcp_tools_list_includes_set_event_recurrence_when_events_recurrence_capabilit
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.events.set_event_recurrence"));
-  assert!(!resp.contains("eventkit.events.update_event"));
+  assert!(resp.contains("eventkit_events_set_event_recurrence"));
+  assert!(!resp.contains("eventkit_events_update_event"));
   assert_eq!(
-    tool_input_property_items_type(&resp, "eventkit.events.set_event_recurrence", "recurrence_rules").as_deref(),
+    tool_input_property_items_type(&resp, "eventkit_events_set_event_recurrence", "recurrence_rules").as_deref(),
     Some("object")
   );
 }
@@ -1170,10 +1170,10 @@ fn mcp_tools_list_includes_invitation_tools_when_events_invitations_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.events.accept_invitation"));
-  assert!(resp.contains("eventkit.events.decline_invitation"));
-  assert!(resp.contains("eventkit.events.tentative_invitation"));
-  assert!(!resp.contains("eventkit.events.delete_event"));
+  assert!(resp.contains("eventkit_events_accept_invitation"));
+  assert!(resp.contains("eventkit_events_decline_invitation"));
+  assert!(resp.contains("eventkit_events_tentative_invitation"));
+  assert!(!resp.contains("eventkit_events_delete_event"));
 }
 
 #[test]
@@ -1261,9 +1261,9 @@ fn mcp_tools_list_includes_delete_reminder_when_delete_capability_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("eventkit.reminders.delete_reminder"));
-  assert!(resp.contains("eventkit.reminders.delete_list"));
-  assert!(!resp.contains("eventkit.reminders.update_reminder"));
+  assert!(resp.contains("eventkit_reminders_delete_reminder"));
+  assert!(resp.contains("eventkit_reminders_delete_list"));
+  assert!(!resp.contains("eventkit_reminders_update_reminder"));
 }
 
 #[test]
@@ -1352,10 +1352,10 @@ fn mcp_tools_list_includes_list_contacts_when_contacts_read_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("contacts.list_contacts"));
-  assert!(resp.contains("contacts.list_groups"));
-  assert!(resp.contains("contacts.get_contact"));
-  assert!(!resp.contains("eventkit.reminders.list_reminders"));
+  assert!(resp.contains("contacts_list_contacts"));
+  assert!(resp.contains("contacts_list_groups"));
+  assert!(resp.contains("contacts_get_contact"));
+  assert!(!resp.contains("eventkit_reminders_list_reminders"));
 }
 
 #[test]
@@ -1491,9 +1491,9 @@ fn mcp_tools_list_includes_search_contacts_when_contacts_search_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("contacts.search_contacts"));
-  assert!(!resp.contains("contacts.list_contacts"));
-  assert!(!resp.contains("contacts.get_contact"));
+  assert!(resp.contains("contacts_search_contacts"));
+  assert!(!resp.contains("contacts_list_contacts"));
+  assert!(!resp.contains("contacts_get_contact"));
 }
 
 #[test]
@@ -1512,13 +1512,13 @@ fn mcp_tools_list_includes_delete_contact_when_contacts_delete_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("contacts.delete_contact"));
-  assert!(resp.contains("contacts.delete_group"));
-  assert!(!resp.contains("contacts.list_contacts"));
-  assert!(!resp.contains("contacts.get_contact"));
-  assert!(!resp.contains("contacts.update_contact"));
-  assert!(!resp.contains("contacts.link_contacts"));
-  assert!(!resp.contains("contacts.unlink_contacts"));
+  assert!(resp.contains("contacts_delete_contact"));
+  assert!(resp.contains("contacts_delete_group"));
+  assert!(!resp.contains("contacts_list_contacts"));
+  assert!(!resp.contains("contacts_get_contact"));
+  assert!(!resp.contains("contacts_update_contact"));
+  assert!(!resp.contains("contacts_link_contacts"));
+  assert!(!resp.contains("contacts_unlink_contacts"));
 }
 
 #[test]
@@ -1537,11 +1537,11 @@ fn mcp_tools_list_includes_edit_contacts_when_contacts_edit_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("contacts.update_contact"));
-  assert!(resp.contains("contacts.link_contacts"));
-  assert!(resp.contains("contacts.unlink_contacts"));
-  assert!(!resp.contains("contacts.list_contacts"));
-  assert!(!resp.contains("contacts.delete_contact"));
+  assert!(resp.contains("contacts_update_contact"));
+  assert!(resp.contains("contacts_link_contacts"));
+  assert!(resp.contains("contacts_unlink_contacts"));
+  assert!(!resp.contains("contacts_list_contacts"));
+  assert!(!resp.contains("contacts_delete_contact"));
 }
 
 #[test]
@@ -1678,7 +1678,7 @@ fn mcp_tools_list_includes_search_places_when_mapkit_search_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("mapkit.search_places"));
+  assert!(resp.contains("mapkit_search_places"));
 }
 
 #[test]
@@ -1697,7 +1697,7 @@ fn mcp_tools_list_includes_search_nearby_when_mapkit_search_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("mapkit.search_nearby"));
+  assert!(resp.contains("mapkit_search_nearby"));
 }
 
 #[test]
@@ -1762,7 +1762,7 @@ fn mcp_tools_list_includes_reverse_geocode_when_mapkit_geocode_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("mapkit.reverse_geocode"));
+  assert!(resp.contains("mapkit_reverse_geocode"));
 }
 
 #[test]
@@ -1804,7 +1804,7 @@ fn mcp_tools_list_includes_forward_geocode_when_mapkit_geocode_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("mapkit.forward_geocode"));
+  assert!(resp.contains("mapkit_forward_geocode"));
 }
 
 #[test]
@@ -1846,7 +1846,7 @@ fn mcp_tools_list_includes_calculate_route_when_mapkit_routing_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("mapkit.calculate_route"));
+  assert!(resp.contains("mapkit_calculate_route"));
 }
 
 #[test]
@@ -1889,7 +1889,7 @@ fn mcp_tools_list_includes_estimate_travel_time_when_mapkit_routing_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("mapkit.estimate_travel_time"));
+  assert!(resp.contains("mapkit_estimate_travel_time"));
 }
 
 #[test]
@@ -1930,7 +1930,7 @@ fn mcp_tools_list_includes_get_current_location_when_mapkit_location_enabled() {
   let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
   stop_server(handle).expect("stop");
   assert_eq!(status, 200);
-  assert!(resp.contains("mapkit.get_current_location"));
+  assert!(resp.contains("mapkit_get_current_location"));
 }
 
 #[test]
@@ -1971,7 +1971,7 @@ fn mcp_tools_list_includes_lookup_place_when_mapkit_read_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("mapkit.lookup_place"));
+  assert!(resp.contains("mapkit_lookup_place"));
 }
 
 #[test]
@@ -2013,7 +2013,7 @@ fn mcp_tools_list_includes_open_navigation_when_mapkit_navigation_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("mapkit.open_navigation"));
+  assert!(resp.contains("mapkit_open_navigation"));
 }
 
 #[test]
@@ -2056,7 +2056,7 @@ fn mcp_tools_list_includes_recognize_text_when_vision_text_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("vision.recognize_text"));
+  assert!(resp.contains("vision_recognize_text"));
 }
 
 #[test]
@@ -2098,7 +2098,7 @@ fn mcp_tools_list_includes_scan_document_when_vision_document_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("vision.scan_document"));
+  assert!(resp.contains("vision_scan_document"));
 }
 
 #[test]
@@ -2140,7 +2140,7 @@ fn mcp_tools_list_includes_read_qr_code_when_vision_barcodes_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("vision.read_qr_code"));
+  assert!(resp.contains("vision_read_qr_code"));
 }
 
 #[test]
@@ -2182,7 +2182,7 @@ fn mcp_tools_list_includes_detect_barcodes_when_vision_barcodes_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("vision.detect_barcodes"));
+  assert!(resp.contains("vision_detect_barcodes"));
 }
 
 #[test]
@@ -2224,7 +2224,7 @@ fn mcp_tools_list_includes_detect_faces_when_vision_faces_enabled() {
   stop_server(handle).expect("stop");
 
   assert_eq!(status, 200);
-  assert!(resp.contains("vision.detect_faces"));
+  assert!(resp.contains("vision_detect_faces"));
 }
 
 #[test]

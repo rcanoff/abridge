@@ -74,81 +74,81 @@ Icon tracing (`just gen-icon-svg`) also needs ImageMagick and potrace.
 
 ## MCP tools
 
-Tool names use `<provider>.<domain>.<operation>`. Discover the live set with `tools/list`; call with `tools/call`.
+Tool names use `<provider>_<domain>_<operation>`, so they match `^[a-zA-Z0-9_-]{1,64}$` (some clients, e.g. Grok CLI, reject dots). `tools/call` also accepts the dotted form `<provider>.<domain>.<operation>`, which the Diagnostics log uses. Discover the live set with `tools/list`; call with `tools/call`.
 
 ### EventKit: Reminders
 
-- `eventkit.reminders.list_lists`
-- `eventkit.reminders.create_list`
-- `eventkit.reminders.delete_list`
-- `eventkit.reminders.list_reminders`
-- `eventkit.reminders.search_reminders`
-- `eventkit.reminders.get_reminder`
-- `eventkit.reminders.create_reminder`
-- `eventkit.reminders.update_reminder`
-- `eventkit.reminders.delete_reminder`
-- `eventkit.reminders.move_reminder`
-- `eventkit.reminders.complete_reminder`
-- `eventkit.reminders.uncomplete_reminder`
-- `eventkit.reminders.set_reminder_alarms`
-- `eventkit.reminders.set_reminder_recurrence`
+- `eventkit_reminders_list_lists`
+- `eventkit_reminders_create_list`
+- `eventkit_reminders_delete_list`
+- `eventkit_reminders_list_reminders`
+- `eventkit_reminders_search_reminders`
+- `eventkit_reminders_get_reminder`
+- `eventkit_reminders_create_reminder`
+- `eventkit_reminders_update_reminder`
+- `eventkit_reminders_delete_reminder`
+- `eventkit_reminders_move_reminder`
+- `eventkit_reminders_complete_reminder`
+- `eventkit_reminders_uncomplete_reminder`
+- `eventkit_reminders_set_reminder_alarms`
+- `eventkit_reminders_set_reminder_recurrence`
 
 ### EventKit: Calendars and Events
 
-- `eventkit.calendars.list_calendars`
-- `eventkit.calendars.create_calendar`
-- `eventkit.calendars.update_calendar`
-- `eventkit.calendars.delete_calendar`
-- `eventkit.events.list_events`
-- `eventkit.events.search_events`
-- `eventkit.events.get_event`
-- `eventkit.events.create_event`
-- `eventkit.events.update_event`
-- `eventkit.events.delete_event`
-- `eventkit.events.move_event`
-- `eventkit.events.set_event_alarms`
-- `eventkit.events.set_event_recurrence`
+- `eventkit_calendars_list_calendars`
+- `eventkit_calendars_create_calendar`
+- `eventkit_calendars_update_calendar`
+- `eventkit_calendars_delete_calendar`
+- `eventkit_events_list_events`
+- `eventkit_events_search_events`
+- `eventkit_events_get_event`
+- `eventkit_events_create_event`
+- `eventkit_events_update_event`
+- `eventkit_events_delete_event`
+- `eventkit_events_move_event`
+- `eventkit_events_set_event_alarms`
+- `eventkit_events_set_event_recurrence`
 
 Invitation RSVP (`accept_invitation`, `decline_invitation`, `tentative_invitation`) is not supported.
 
 ### Contacts
 
-- `contacts.list_contacts`
-- `contacts.search_contacts`
-- `contacts.get_contact`
-- `contacts.create_contact`
-- `contacts.update_contact`
-- `contacts.delete_contact`
-- `contacts.link_contacts`
-- `contacts.unlink_contacts`
-- `contacts.list_groups`
-- `contacts.create_group`
-- `contacts.update_group`
-- `contacts.delete_group`
+- `contacts_list_contacts`
+- `contacts_search_contacts`
+- `contacts_get_contact`
+- `contacts_create_contact`
+- `contacts_update_contact`
+- `contacts_delete_contact`
+- `contacts_link_contacts`
+- `contacts_unlink_contacts`
+- `contacts_list_groups`
+- `contacts_create_group`
+- `contacts_update_group`
+- `contacts_delete_group`
 
 ### MapKit
 
-- `mapkit.search_places`
-- `mapkit.search_nearby`
-- `mapkit.reverse_geocode`
-- `mapkit.forward_geocode`
-- `mapkit.calculate_route`
-- `mapkit.estimate_travel_time`
-- `mapkit.open_navigation`
-- `mapkit.lookup_place`
-- `mapkit.get_current_location`
+- `mapkit_search_places`
+- `mapkit_search_nearby`
+- `mapkit_reverse_geocode`
+- `mapkit_forward_geocode`
+- `mapkit_calculate_route`
+- `mapkit_estimate_travel_time`
+- `mapkit_open_navigation`
+- `mapkit_lookup_place`
+- `mapkit_get_current_location`
 
 ### Vision
 
-- `vision.recognize_text`
-- `vision.scan_document`
-- `vision.read_qr_code`
-- `vision.detect_barcodes`
-- `vision.detect_faces`
+- `vision_recognize_text`
+- `vision_scan_document`
+- `vision_read_qr_code`
+- `vision_detect_barcodes`
+- `vision_detect_faces`
 
 ### Diagnostics
 
-- `diagnostics.get_usage_log`
+- `diagnostics_get_usage_log`
 
 ### Not supported
 

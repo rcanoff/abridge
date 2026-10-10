@@ -482,8 +482,19 @@ pub fn tools_for_capabilities(enabled: &[String]) -> Vec<&'static ToolDefinition
     .collect()
 }
 
+/// Name advertised in `tools/list`. Dots become underscores so the name matches
+/// `^[a-zA-Z0-9_-]{1,64}$`, which many MCP clients and LLM tool-calling APIs
+/// enforce (Grok CLI drops every dotted tool).
+pub fn wire_name(name: &str) -> String {
+  name.replace('.', "_")
+}
+
+/// Resolves a `tools/call` name. Accepts the advertised wire name and the
+/// dotted registry name, so callers that hardcoded dotted names keep working.
 pub fn resolve_tool(name: &str) -> Option<&'static ToolDefinition> {
-  all_tools().iter().find(|tool| tool.name == name)
+  all_tools()
+    .iter()
+    .find(|tool| tool.name == name || wire_name(tool.name) == name)
 }
 
 fn coordinate_schema() -> serde_json::Value {
@@ -1680,7 +1691,7 @@ mod tests {
     TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS,
     TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION,
     TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT,
-    TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools, input_schema, tools_for_capabilities,
+    TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools, input_schema, resolve_tool, tools_for_capabilities, wire_name,
   };
 
   fn array_items_type(schema: &serde_json::Value, property: &str) -> Option<String> {
@@ -1704,6 +1715,32 @@ mod tests {
       .and_then(|items| items.get("properties"))
       .and_then(|value| value.as_object())
       .cloned()
+  }
+
+  #[test]
+  fn wire_names_are_unique_and_client_safe() {
+    let mut seen = std::collections::HashSet::new();
+    for tool in all_tools() {
+      let wire = wire_name(tool.name);
+      assert!((1..=64).contains(&wire.len()), "{wire} must be 1-64 chars");
+      assert!(
+        wire
+          .bytes()
+          .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-'),
+        "{wire} has characters outside [a-zA-Z0-9_-]"
+      );
+      assert!(seen.insert(wire.clone()), "{wire} collides with another tool");
+    }
+  }
+
+  #[test]
+  fn resolve_tool_accepts_wire_and_dotted_names() {
+    for tool in all_tools() {
+      assert_eq!(resolve_tool(tool.name).map(|t| t.name), Some(tool.name));
+      assert_eq!(resolve_tool(&wire_name(tool.name)).map(|t| t.name), Some(tool.name));
+    }
+    assert_eq!(wire_name(TOOL_LIST_LISTS), "eventkit_reminders_list_lists");
+    assert!(resolve_tool("eventkit_reminders.list_lists").is_none());
   }
 
   #[test]
