@@ -5,7 +5,8 @@ pub const PROTOCOL_VERSION: &str = "2024-11-05";
 pub const SERVER_NAME: &str = "abridge";
 
 /// Workflow index returned by `initialize`. Clients can show this before inlining every schema.
-pub const SERVER_INSTRUCTIONS: &str = "Events: eventkit_events_search_events for a title, or \
+pub const SERVER_INSTRUCTIONS: &str = "Across notes, reminders, and events: abridge_search_items. \
+Events: eventkit_events_search_events for a title, or \
 eventkit_events_list_events for a date window. Reminders: eventkit_reminders_search_reminders. \
 Contacts: contacts_search_contacts. Notes: notes_search_notes, then notes_get_note for the body; \
 notes_get_attachment directly when a search match names an attachment. Places: \

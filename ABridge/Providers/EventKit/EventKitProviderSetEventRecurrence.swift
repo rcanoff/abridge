@@ -22,7 +22,7 @@ extension EventKitProvider {
             }
 
             event.recurrenceRules = arguments.recurrenceRules
-            try store.saveEvent(event, commit: true)
+            try store.saveEvent(event, span: .thisEvent, commit: true)
 
             let payload = try EventKitSerialization.jsonString(
                 from: serializedEventJSONObject(from: event)

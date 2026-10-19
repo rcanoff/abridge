@@ -165,12 +165,12 @@ final class LiveEventKitStore: EventKitStoreing {
         EKEvent(eventStore: eventStore)
     }
 
-    func saveEvent(_ event: EKEvent, commit: Bool) throws {
-        try eventStore.save(event, span: .thisEvent, commit: commit)
+    func saveEvent(_ event: EKEvent, span: EKSpan, commit: Bool) throws {
+        try eventStore.save(event, span: span, commit: commit)
     }
 
-    func removeEvent(_ event: EKEvent, commit: Bool) throws {
-        try eventStore.remove(event, span: .thisEvent, commit: commit)
+    func removeEvent(_ event: EKEvent, span: EKSpan, commit: Bool) throws {
+        try eventStore.remove(event, span: span, commit: commit)
     }
 }
 

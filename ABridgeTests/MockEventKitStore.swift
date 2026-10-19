@@ -35,6 +35,9 @@ final class MockEventKitStore: EventKitStoreing {
     }
 
     var lastEventQuery: EventQuery?
+    var lastEventSpan: EKSpan?
+    /// `calendarItemIdentifier` → shared `event_identifier` for occurrences of one series.
+    var eventIdentifierByItem: [String: String] = [:]
 
     func reminderAuthorizationStatus() -> EKAuthorizationStatus {
         authorizationStatus

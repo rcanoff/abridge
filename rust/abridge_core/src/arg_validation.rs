@@ -60,6 +60,18 @@ fn validate_cross_field_rules(tool: &ToolDefinition, arguments: &Value) -> Resul
     }
     tools::TOOL_NOTES_CREATE_FOLDER => require_create_folder_parent(arguments),
     tools::TOOL_CREATE_EVENT | tools::TOOL_UPDATE_EVENT => validate_event_dates(arguments),
+    tools::TOOL_DELETE_REMINDER => require_exactly_one(
+      arguments,
+      "calendar_item_identifier",
+      "reminder_title",
+      "Provide exactly one of calendar_item_identifier or reminder_title.",
+    ),
+    tools::TOOL_DELETE_EVENT => require_exactly_one(
+      arguments,
+      "event_identifier",
+      "event_title",
+      "Provide exactly one of event_identifier or event_title.",
+    ),
     _ => Ok(()),
   }
 }
@@ -380,10 +392,10 @@ fn looks_like_iso8601_date_time(text: &str) -> bool {
 mod tests {
   use super::*;
   use crate::tools::{
-    TOOL_CALCULATE_ROUTE, TOOL_CREATE_CONTACT, TOOL_CREATE_EVENT, TOOL_CREATE_REMINDER, TOOL_ESTIMATE_TRAVEL_TIME,
-    TOOL_GET_EVENT, TOOL_LIST_EVENTS, TOOL_LIST_LISTS, TOOL_NOTES_CREATE_FOLDER, TOOL_NOTES_DELETE_NOTE,
-    TOOL_NOTES_GET_NOTE, TOOL_NOTES_LIST_NOTES, TOOL_NOTES_MOVE_NOTE, TOOL_RECOGNIZE_TEXT, TOOL_SEARCH_CONTACTS,
-    TOOL_UPDATE_EVENT, resolve_tool,
+    TOOL_CALCULATE_ROUTE, TOOL_CREATE_CONTACT, TOOL_CREATE_EVENT, TOOL_CREATE_REMINDER, TOOL_DELETE_EVENT,
+    TOOL_DELETE_REMINDER, TOOL_ESTIMATE_TRAVEL_TIME, TOOL_GET_EVENT, TOOL_LIST_EVENTS, TOOL_LIST_LISTS,
+    TOOL_NOTES_CREATE_FOLDER, TOOL_NOTES_DELETE_NOTE, TOOL_NOTES_GET_NOTE, TOOL_NOTES_LIST_NOTES, TOOL_NOTES_MOVE_NOTE,
+    TOOL_RECOGNIZE_TEXT, TOOL_SEARCH_CONTACTS, TOOL_UPDATE_EVENT, resolve_tool,
   };
   use serde_json::json;
 
@@ -662,6 +674,73 @@ mod tests {
       &json!({ "note_title": "Title", "folder_path": "Work/Clients", "account_identifier": "acct" }),
     )
     .expect("move");
+  }
+
+  #[test]
+  fn delete_reminder_and_event_require_exactly_one_target() {
+    let reminder = resolve_tool(TOOL_DELETE_REMINDER).expect("tool");
+    let neither = validate_tool_arguments(reminder, &json!({})).expect_err("neither reminder");
+    assert!(
+      neither.contains("exactly one of calendar_item_identifier or reminder_title"),
+      "{neither}"
+    );
+    let both = validate_tool_arguments(
+      reminder,
+      &json!({ "calendar_item_identifier": "r", "reminder_title": "Milk" }),
+    )
+    .expect_err("both reminders");
+    assert!(
+      both.contains("exactly one of calendar_item_identifier or reminder_title"),
+      "{both}"
+    );
+    validate_tool_arguments(
+      reminder,
+      &json!({ "reminder_title": "Milk", "calendar_identifier": "list" }),
+    )
+    .expect("title");
+
+    let event = resolve_tool(TOOL_DELETE_EVENT).expect("tool");
+    let missing = validate_tool_arguments(event, &json!({})).expect_err("neither event");
+    assert!(
+      missing.contains("exactly one of event_identifier or event_title"),
+      "{missing}"
+    );
+    validate_tool_arguments(
+      event,
+      &json!({
+        "event_title": "Standup",
+        "occurrence_date": "2026-10-26",
+        "span": "future_events"
+      }),
+    )
+    .expect("title");
+    let bad_span =
+      validate_tool_arguments(event, &json!({ "event_identifier": "e", "span": "all" })).expect_err("span");
+    assert!(bad_span.contains("span"), "{bad_span}");
+  }
+
+  #[test]
+  fn recurrence_day_of_the_week_is_a_weekday_name() {
+    let tool = resolve_tool(TOOL_CREATE_EVENT).expect("tool");
+    let base = json!({
+      "calendar_identifier": "cal",
+      "title": "Standup",
+      "start_date": "2026-10-26T09:00:00-04:00",
+      "end_date": "2026-10-26T09:30:00-04:00"
+    });
+    let mut named = base.clone();
+    named["recurrence_rules"] = json!([{
+      "frequency": "weekly",
+      "days_of_the_week": [{ "day_of_the_week": "monday", "week_number": 1 }]
+    }]);
+    validate_tool_arguments(tool, &named).expect("weekday name");
+    let mut numbered = base;
+    numbered["recurrence_rules"] = json!([{
+      "frequency": "weekly",
+      "days_of_the_week": [{ "day_of_the_week": 2 }]
+    }]);
+    let err = validate_tool_arguments(tool, &numbered).expect_err("integer weekday");
+    assert!(err.contains("day_of_the_week"), "{err}");
   }
 
   #[test]

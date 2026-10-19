@@ -132,13 +132,15 @@ final class StalledEventKitStore: EventKitStoreing {
         EKEvent(eventStore: EKEventStore())
     }
 
-    func saveEvent(_ event: EKEvent, commit: Bool) throws {
+    func saveEvent(_ event: EKEvent, span: EKSpan, commit: Bool) throws {
         _ = event
+        _ = span
         _ = commit
     }
 
-    func removeEvent(_ event: EKEvent, commit: Bool) throws {
+    func removeEvent(_ event: EKEvent, span: EKSpan, commit: Bool) throws {
         _ = event
+        _ = span
         _ = commit
     }
 

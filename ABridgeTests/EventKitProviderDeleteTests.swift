@@ -90,4 +90,124 @@ struct EventKitProviderDeleteTests {
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("permission_denied") == true)
     }
+
+    @Test
+    @MainActor
+    func deleteReminderByUniqueTitleRemovesThatReminder() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "groceries", title: "Groceries")]
+        let reminder = EventKitTestSupport.makeReminder(
+            calendarItemIdentifier: "rem-milk",
+            calendarIdentifier: "groceries",
+            title: "Buy Milk"
+        )
+        reminder.calendar?.title = "Groceries"
+        mockStore.reminders = [reminder]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "delete_reminder",
+            payloadJson: #"{"reminder_title":"buy milk"}"#
+        )
+
+        #expect(response.ok == true)
+        #expect(response.payloadJson.contains("\"calendar_item_identifier\":\"rem-milk\""))
+        #expect(mockStore.reminders.isEmpty)
+    }
+
+    @Test
+    @MainActor
+    func deleteReminderByTitleRefusesAmbiguousMatches() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [
+            mockStore.makeTestCalendar(calendarIdentifier: "groceries", title: "Groceries"),
+            mockStore.makeTestCalendar(calendarIdentifier: "work", title: "Work"),
+        ]
+        let groceries = EventKitTestSupport.makeReminder(
+            calendarItemIdentifier: "rem-g",
+            calendarIdentifier: "groceries",
+            title: "Buy milk"
+        )
+        groceries.calendar?.title = "Groceries"
+        groceries.dueDateComponents = DateComponents(year: 2026, month: 10, day: 26)
+        let work = EventKitTestSupport.makeReminder(
+            calendarItemIdentifier: "rem-w",
+            calendarIdentifier: "work",
+            title: "BUY MILK",
+            isCompleted: true
+        )
+        work.calendar?.title = "Work"
+        mockStore.reminders = [work, groceries]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "delete_reminder",
+            payloadJson: #"{"reminder_title":"Buy milk"}"#
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("reminder_title_ambiguous") == true)
+        #expect(response.errorJson?.contains("rem-g in Groceries, due 2026-10-26, completed false") == true)
+        #expect(response.errorJson?.contains("rem-w in Work, completed true") == true)
+        #expect(mockStore.reminders.count == 2)
+    }
+
+    @Test
+    @MainActor
+    func deleteReminderByTitleCanScopeToOneList() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [
+            mockStore.makeTestCalendar(calendarIdentifier: "groceries", title: "Groceries"),
+            mockStore.makeTestCalendar(calendarIdentifier: "work", title: "Work"),
+        ]
+        mockStore.reminders = [
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: "rem-g",
+                calendarIdentifier: "groceries",
+                title: "Buy milk"
+            ),
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: "rem-w",
+                calendarIdentifier: "work",
+                title: "Buy milk"
+            ),
+        ]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "delete_reminder",
+            payloadJson: #"{"reminder_title":"Buy milk","calendar_identifier":"work"}"#
+        )
+
+        #expect(response.ok == true)
+        #expect(mockStore.reminders.map(\.calendarItemIdentifier) == ["rem-g"])
+    }
+
+    @Test
+    @MainActor
+    func deleteReminderByMissingTitleReturnsNotFound() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "groceries")]
+        mockStore.reminders = [
+            EventKitTestSupport.makeReminder(
+                calendarItemIdentifier: "rem-g",
+                calendarIdentifier: "groceries",
+                title: "Other"
+            ),
+        ]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "delete_reminder",
+            payloadJson: #"{"reminder_title":"Buy milk"}"#
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("not_found") == true)
+        #expect(mockStore.reminders.count == 1)
+    }
 }

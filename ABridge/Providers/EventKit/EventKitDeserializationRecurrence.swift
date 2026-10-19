@@ -95,11 +95,15 @@ extension EventKitDeserialization {
         }
 
         return try array.map { element in
-            guard let dictionary = element as? [String: Any],
-                  let dayRaw = try optionalInt(dictionary["day_of_the_week"]),
-                  let ekDay = EKWeekday(rawValue: dayRaw)
+            guard let dictionary = element as? [String: Any] else {
+                throw EventKitProviderError.invalidArguments("days_of_the_week entries must be objects")
+            }
+            guard let name = dictionary["day_of_the_week"] as? String,
+                  let ekDay = EventKitSerialization.weekday(from: name)
             else {
-                throw EventKitProviderError.invalidArguments("days_of_the_week entries require day_of_the_week")
+                throw EventKitProviderError.invalidArguments(
+                    "days_of_the_week entries require day_of_the_week (sunday through saturday)"
+                )
             }
             let weekNumber = try optionalInt(dictionary["week_number"]) ?? 0
             return EKRecurrenceDayOfWeek(ekDay, weekNumber: weekNumber)

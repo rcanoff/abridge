@@ -23,12 +23,7 @@ extension MockEventKitStore {
     }
 
     func fetchEvent(withIdentifier id: String) throws -> EKEvent? {
-        events.first { event in
-            if event.eventIdentifier == id {
-                return true
-            }
-            return Self.syntheticEventIdentifier(for: event) == id
-        }
+        events.first { eventIdentifier(for: $0) == id }
     }
 
     static func syntheticEventIdentifier(for event: EKEvent) -> String {
@@ -38,14 +33,18 @@ extension MockEventKitStore {
     }
 
     func eventIdentifier(for event: EKEvent) -> String? {
-        event.eventIdentifier ?? Self.syntheticEventIdentifier(for: event)
+        if let override = eventIdentifierByItem[event.calendarItemIdentifier] {
+            return override
+        }
+        return event.eventIdentifier ?? Self.syntheticEventIdentifier(for: event)
     }
 
     func makeEvent() -> EKEvent {
         EKEvent(eventStore: eventStore)
     }
 
-    func saveEvent(_ event: EKEvent, commit: Bool) throws {
+    func saveEvent(_ event: EKEvent, span: EKSpan, commit: Bool) throws {
+        lastEventSpan = span
         guard commit else { return }
 
         let existingID = event.calendarItemIdentifier
@@ -61,7 +60,8 @@ extension MockEventKitStore {
         }
     }
 
-    func removeEvent(_ event: EKEvent, commit: Bool) throws {
+    func removeEvent(_ event: EKEvent, span: EKSpan, commit: Bool) throws {
+        lastEventSpan = span
         guard commit else { return }
         events.removeAll { $0.calendarItemIdentifier == event.calendarItemIdentifier }
     }

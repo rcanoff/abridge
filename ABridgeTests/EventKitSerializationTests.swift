@@ -301,7 +301,8 @@ struct EventKitSerializationTests {
 
         let daysOfWeek = rule["days_of_the_week"] as? [[String: Any]]
         #expect(daysOfWeek?.count == 1)
-        #expect(daysOfWeek?.first?["day_of_the_week"] as? Int == EKWeekday.monday.rawValue)
+        #expect(daysOfWeek?.first?["day_of_the_week"] as? String == "monday")
+        #expect(daysOfWeek?.first?["week_number"] as? Int == 0)
 
         #expect(rule["days_of_the_month"] as? [Int] == [15])
         #expect(rule["days_of_the_year"] as? [Int] == [180])

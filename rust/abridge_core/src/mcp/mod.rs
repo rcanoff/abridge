@@ -1,5 +1,6 @@
 //! MCP JSON-RPC dispatch over authenticated HTTP POST /mcp.
 
+mod cross_search;
 mod notes_content;
 mod protocol;
 
@@ -110,7 +111,7 @@ fn handle_tools_list(id: Option<Value>, state: &McpState) -> Response {
 
   let tools: Vec<Value> = tools::tools_for_capabilities(&state.enabled_capabilities)
     .into_iter()
-    .filter(|tool| provider_enabled(state, tool.provider))
+    .filter(|tool| tool.name == tools::TOOL_SEARCH_ITEMS || provider_enabled(state, tool.provider))
     .map(tool_descriptor)
     .collect();
 
@@ -146,7 +147,16 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
     return tool_error_response(id, "unknown_tool", &format!("unknown tool: {name}"));
   };
 
-  if !capability_enabled(state, tool.capability) {
+  if tool.name == tools::TOOL_SEARCH_ITEMS {
+    if !tools::search_items_enabled(&state.enabled_capabilities) {
+      record_tool_call(tool.name, false);
+      return tool_error_response(
+        id,
+        "capability_disabled",
+        "capability not enabled: notes.search, eventkit.reminders.search, or eventkit.events.search",
+      );
+    }
+  } else if !capability_enabled(state, tool.capability) {
     record_tool_call(tool.name, false);
     return tool_error_response(
       id,
@@ -155,7 +165,7 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
     );
   }
 
-  if !provider_enabled(state, tool.provider) {
+  if tool.name != tools::TOOL_SEARCH_ITEMS && !provider_enabled(state, tool.provider) {
     record_tool_call(tool.name, false);
     return tool_error_response(
       id,
@@ -183,6 +193,37 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
       return tool_error_response(id, "invalid_arguments", &message);
     }
   };
+
+  if tool.name == tools::TOOL_SEARCH_ITEMS {
+    let enabled = state.enabled_capabilities.clone();
+    let providers = state.enabled_providers.clone();
+    let outcome = cross_search::search(
+      &arguments,
+      &enabled,
+      |name| providers.iter().any(|entry| entry.name == name && entry.enabled),
+      state.provider.as_ref(),
+      None,
+    );
+    return match outcome {
+      Ok(payload) => {
+        record_tool_call(tool.name, true);
+        json_response(
+          StatusCode::OK,
+          json_rpc_result(
+            id,
+            serde_json::json!({
+              "content": [{ "type": "text", "text": payload.to_string() }],
+              "isError": false
+            }),
+          ),
+        )
+      }
+      Err(message) => {
+        record_tool_call(tool.name, false);
+        tool_error_response(id, "invalid_arguments", &message)
+      }
+    };
+  }
 
   if tool.provider == "notes" {
     let outcome = crate::notes::call(tool.operation, &arguments);
