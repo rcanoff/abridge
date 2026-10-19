@@ -64,6 +64,7 @@ pub(crate) fn get_attachment(path: &Path, arguments: &Value) -> Result<NotesOutp
   let identifier = query::required_identifier(arguments, "attachment_identifier")?;
   let delivery = delivery(arguments)?;
   let page = content_page(arguments)?;
+  let pdf_page = pdf_page(arguments, &delivery)?;
   let snap = store::load(path)?;
   let Some(row) = store::row_by_identifier(&snap.attachments, &identifier) else {
     return Err(NotesError::new("not_found", "attachment not found"));
@@ -76,7 +77,7 @@ pub(crate) fn get_attachment(path: &Path, arguments: &Value) -> Result<NotesOutp
   }
   match delivery {
     Delivery::Markdown => markdown_output(path, &snap, row, page),
-    Delivery::Image => image_output(path, &snap, row),
+    Delivery::Image => image_output(path, &snap, row, pdf_page),
     Delivery::Original => original_output(path, &snap, row),
   }
 }
@@ -91,6 +92,21 @@ fn content_page(arguments: &Value) -> Result<(usize, usize), NotesError> {
     Some(value) => bounded_u64(value, 0, u64::MAX, "offset")?,
   };
   Ok((offset as usize, max_characters as usize))
+}
+
+/// The 1-based PDF page `format` `image` renders; only image takes `page`.
+fn pdf_page(arguments: &Value, delivery: &Delivery) -> Result<Option<u32>, NotesError> {
+  match arguments.get("page") {
+    None | Some(Value::Null) => Ok(None),
+    Some(_) if !matches!(delivery, Delivery::Image) => Err(NotesError::new(
+      "notes_error",
+      "page applies only to format image; markdown already covers every page",
+    )),
+    Some(value) => {
+      let number = bounded_u64(value, 1, u64::from(u32::MAX), "page")?;
+      Ok(Some(u32::try_from(number).unwrap_or(u32::MAX)))
+    }
+  }
 }
 
 fn bounded_u64(value: &Value, minimum: u64, maximum: u64, key: &str) -> Result<u64, NotesError> {
@@ -150,6 +166,7 @@ fn markdown_output(
       source_path: file_path.as_deref(),
       export_path: None,
       page: Some(page),
+      pdf_page: None,
       compact: false,
     },
   ))
@@ -396,45 +413,18 @@ fn escape_label(text: &str) -> String {
   out
 }
 
-fn image_output(path: &Path, snap: &Snapshot, row: &EntityRow) -> Result<NotesOutput, NotesError> {
+fn image_output(path: &Path, snap: &Snapshot, row: &EntityRow, page: Option<u32>) -> Result<NotesOutput, NotesError> {
   let file_path = locate(path, snap, row)?;
   let uti = store::text(row, "typeUTI").unwrap_or("");
   let source_type = mime_type(&file_path);
   if wants_page_jpeg(uti, &file_path) {
-    return match rendition::jpeg_first_page(&file_path) {
-      Some(jpeg) => Ok(payload_output(
-        snap,
-        row,
-        Payload {
-          format: "image",
-          content: None,
-          rendition: Some("jpeg_first_page"),
-          file: Some(AttachmentFile {
-            bytes: jpeg,
-            mime_type: "image/jpeg",
-            uri: file_uri(&file_path),
-          }),
-          source_path: Some(&file_path),
-          export_path: None,
-          page: None,
-          compact: true,
-        },
-      )),
-      None => Ok(payload_output(
-        snap,
-        row,
-        Payload {
-          format: "image",
-          content: None,
-          rendition: None,
-          file: Some(raw_file(&file_path)?),
-          source_path: Some(&file_path),
-          export_path: None,
-          page: None,
-          compact: true,
-        },
-      )),
-    };
+    return pdf_page_output(snap, row, &file_path, page.unwrap_or(1));
+  }
+  if page.is_some_and(|number| number > 1) {
+    return Err(NotesError::new(
+      "notes_error",
+      "page applies only to a PDF or a scan; this attachment is a single image",
+    ));
   }
   if !is_visual(uti, Some(&file_path)) {
     return Err(NotesError::new(
@@ -470,9 +460,88 @@ fn image_output(path: &Path, snap: &Snapshot, row: &EntityRow) -> Result<NotesOu
       source_path: Some(&file_path),
       export_path: None,
       page: None,
+      pdf_page: None,
       compact: true,
     },
   ))
+}
+
+/// One page of a PDF or scan as a JPEG. The JSON names the page and, when the PDF could be read,
+/// how many pages it has, so a caller knows to ask for the rest.
+fn pdf_page_output(snap: &Snapshot, row: &EntityRow, file_path: &Path, page: u32) -> Result<NotesOutput, NotesError> {
+  let pdf = read_pdf(file_path, page)?;
+  let rendered = match pdf.as_deref() {
+    Some(bytes) => rendition::jpeg_pdf_page(bytes, page),
+    None => rendition::PdfPage::Unrendered { page_count: None },
+  };
+  let (jpeg, page_count) = match rendered {
+    rendition::PdfPage::Rendered { jpeg, page_count } => (Some(jpeg), Some(page_count)),
+    rendition::PdfPage::OutOfRange { page_count } => {
+      return Err(NotesError::new(
+        "page_out_of_range",
+        format!("page {page} does not exist; the PDF has {page_count} page(s)"),
+      ));
+    }
+    // `sips` renders a PDF's first page directly, so page 1 survives a PDF `lopdf` cannot split.
+    rendition::PdfPage::Unrendered { page_count } if page == 1 => (rendition::jpeg_rendition(file_path), page_count),
+    rendition::PdfPage::Unrendered { .. } => {
+      return Err(NotesError::new(
+        "page_unrendered",
+        format!("page {page} could not be rendered; use format original for the whole PDF"),
+      ));
+    }
+  };
+  let (file, rendition_kind) = match jpeg {
+    Some(bytes) => (
+      AttachmentFile {
+        bytes,
+        mime_type: "image/jpeg",
+        uri: file_uri(file_path),
+      },
+      Some("jpeg_page"),
+    ),
+    None => (raw_file(file_path)?, None),
+  };
+  Ok(payload_output(
+    snap,
+    row,
+    Payload {
+      format: "image",
+      content: None,
+      rendition: rendition_kind,
+      file: Some(file),
+      source_path: Some(file_path),
+      export_path: None,
+      page: None,
+      pdf_page: rendition_kind.map(|_| (page, page_count)),
+      compact: true,
+    },
+  ))
+}
+
+/// The PDF's bytes for page splitting, or `None` past the extraction limit. Only page 1 can be
+/// rendered without reading the file (by `sips`), so a later page of a too-large PDF is refused.
+fn read_pdf(file_path: &Path, page: u32) -> Result<Option<Vec<u8>>, NotesError> {
+  let file = crate::private_dir::open_regular(file_path).map_err(|_| unavailable())?;
+  let len = file.metadata().map_err(|_| unavailable())?.len();
+  if len > EXTRACTION_MAX_BYTES {
+    if page == 1 {
+      return Ok(None);
+    }
+    return Err(NotesError::new(
+      "extraction_too_large",
+      format!(
+        "the PDF is larger than {} MiB, so only page 1 can be rendered; use format original for the whole file",
+        EXTRACTION_MAX_BYTES / 1024 / 1024
+      ),
+    ));
+  }
+  let mut bytes = Vec::new();
+  file
+    .take(EXTRACTION_MAX_BYTES + 1)
+    .read_to_end(&mut bytes)
+    .map_err(|_| unavailable())?;
+  Ok(Some(bytes))
 }
 
 fn original_output(path: &Path, snap: &Snapshot, row: &EntityRow) -> Result<NotesOutput, NotesError> {
@@ -492,6 +561,7 @@ fn original_output(path: &Path, snap: &Snapshot, row: &EntityRow) -> Result<Note
       source_path: Some(&source),
       export_path: Some(&export),
       page: None,
+      pdf_page: None,
       compact: true,
     },
   ))
@@ -505,6 +575,8 @@ struct Payload<'a> {
   source_path: Option<&'a Path>,
   export_path: Option<&'a Path>,
   page: Option<(usize, usize)>,
+  /// The rendered PDF page and the PDF's page count, when it could be read.
+  pdf_page: Option<(u32, Option<u32>)>,
   compact: bool,
 }
 
@@ -517,6 +589,7 @@ fn payload_output(snap: &Snapshot, row: &EntityRow, delivered: Payload<'_>) -> N
     source_path,
     export_path,
     page,
+    pdf_page,
     compact,
   } = delivered;
   let mut payload =
@@ -548,6 +621,12 @@ fn payload_output(snap: &Snapshot, row: &EntityRow, delivered: Payload<'_>) -> N
     }
     if let Some(kind) = rendition {
       object.insert("rendition".into(), Value::String(kind.to_string()));
+    }
+    if let Some((number, page_count)) = pdf_page {
+      object.insert("page".into(), Value::from(number));
+      if let Some(page_count) = page_count {
+        object.insert("page_count".into(), Value::from(page_count));
+      }
     }
     if let Some(path) = source_path {
       object.insert("source_path".into(), Value::String(absolute_path(path)));

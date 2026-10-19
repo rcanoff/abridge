@@ -455,21 +455,45 @@ fn original_ages_out_export_entries_older_than_a_day() {
   let _ = std::fs::remove_dir_all(fresh);
 }
 
-/// `sips` renders page 1 of a generated PDF, and a non-model image is marked as a JPEG rendition.
+/// `sips` renders the requested page of a generated PDF, and a non-model image is marked as a JPEG
+/// rendition. Page 1 is square and page 2 is wide, so the JPEG's shape shows which page came back.
 #[cfg(target_os = "macos")]
 #[test]
-fn renders_a_pdf_first_page_and_marks_a_scaled_photo() {
+fn renders_a_pdf_page_and_marks_a_scaled_photo() {
   let (_dir, store) = attachment_store();
   let root = store.parent().unwrap();
   let pdf = root.join("Accounts/acct-1/FallbackPDFs/att-scan/226_GEN/FallbackPDF.pdf");
-  std::fs::write(&pdf, one_page_pdf()).expect("pdf");
+  std::fs::write(&pdf, pdf_with_pages(&[(200, 200), (300, 100)])).expect("pdf");
   let scan = get_attachment_as(&store, "att-scan", "image").expect("scan");
   assert_eq!(scan.payload["format"], "image");
-  assert_eq!(scan.payload["rendition"], "jpeg_first_page");
+  assert_eq!(scan.payload["rendition"], "jpeg_page");
+  assert_eq!(scan.payload["page"], 1);
+  assert_eq!(scan.payload["page_count"], 2);
   assert_eq!(scan.payload["type_uti"], "com.apple.paper.doc.scan");
   let file = scan.file.expect("jpeg");
   assert_eq!(file.mime_type, "image/jpeg");
-  assert!(file.bytes.starts_with(&[0xff, 0xd8, 0xff]));
+  let (width, height) = jpeg_size(&file.bytes);
+  assert_eq!(width, height, "page 1 is square");
+
+  let second = call_output(
+    &store,
+    "get_attachment",
+    &json!({ "attachment_identifier": "att-scan", "format": "image", "page": 2 }),
+  )
+  .expect("page 2");
+  assert_eq!(second.payload["page"], 2);
+  assert_eq!(second.payload["page_count"], 2);
+  let (width, height) = jpeg_size(&second.file.expect("jpeg").bytes);
+  assert!(width > height * 2, "page 2 is wide: {width}x{height}");
+
+  let past = call_output(
+    &store,
+    "get_attachment",
+    &json!({ "attachment_identifier": "att-scan", "format": "image", "page": 3 }),
+  )
+  .expect_err("past the end");
+  assert_eq!(past.code, "page_out_of_range");
+  assert!(past.message.contains("2 page"), "{}", past.message);
 
   let conn = rusqlite::Connection::open(&store).expect("fixture db");
   conn
@@ -487,23 +511,48 @@ fn renders_a_pdf_first_page_and_marks_a_scaled_photo() {
   assert!(photo_file.bytes.starts_with(&[0xff, 0xd8, 0xff]));
 }
 
+/// Width and height from a JPEG's start-of-frame marker.
 #[cfg(target_os = "macos")]
-fn one_page_pdf() -> Vec<u8> {
-  let stream = b"1 0 0 rg 40 40 120 120 re f\n";
-  let contents = format!("<< /Length {} >>\nstream\n", stream.len());
-  let objects: [Vec<u8>; 4] = [
+fn jpeg_size(jpeg: &[u8]) -> (u32, u32) {
+  assert!(jpeg.starts_with(&[0xff, 0xd8, 0xff]), "not a JPEG");
+  let mut at = 2;
+  while at + 9 < jpeg.len() {
+    let marker = jpeg[at + 1];
+    let length = usize::from(u16::from_be_bytes([jpeg[at + 2], jpeg[at + 3]]));
+    if matches!(marker, 0xc0..=0xc3) {
+      let height = u32::from(u16::from_be_bytes([jpeg[at + 5], jpeg[at + 6]]));
+      let width = u32::from(u16::from_be_bytes([jpeg[at + 7], jpeg[at + 8]]));
+      return (width, height);
+    }
+    at += 2 + length;
+  }
+  panic!("no start-of-frame marker");
+}
+
+/// A PDF with one filled page per `(width, height)` media box.
+#[cfg(target_os = "macos")]
+fn pdf_with_pages(sizes: &[(u32, u32)]) -> Vec<u8> {
+  let stream = b"1 0 0 rg 20 20 60 60 re f\n";
+  let kids: Vec<String> = (0..sizes.len()).map(|index| format!("{} 0 R", 3 + 2 * index)).collect();
+  let mut objects: Vec<Vec<u8>> = vec![
     b"<< /Type /Catalog /Pages 2 0 R >>".to_vec(),
-    b"<< /Type /Pages /Count 1 /Kids [3 0 R] >>".to_vec(),
-    b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R >>".to_vec(),
-    {
-      let mut object = contents.into_bytes();
-      object.extend_from_slice(stream);
-      object.extend_from_slice(b"endstream");
-      object
-    },
+    format!("<< /Type /Pages /Count {} /Kids [{}] >>", sizes.len(), kids.join(" ")).into_bytes(),
   ];
+  for (index, (width, height)) in sizes.iter().enumerate() {
+    objects.push(
+      format!(
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {width} {height}] /Contents {} 0 R >>",
+        4 + 2 * index
+      )
+      .into_bytes(),
+    );
+    let mut contents = format!("<< /Length {} >>\nstream\n", stream.len()).into_bytes();
+    contents.extend_from_slice(stream);
+    contents.extend_from_slice(b"endstream");
+    objects.push(contents);
+  }
   let mut out = Vec::from(&b"%PDF-1.4\n"[..]);
-  let mut offsets = vec![0];
+  let mut offsets = Vec::with_capacity(objects.len());
   for (index, object) in objects.iter().enumerate() {
     offsets.push(out.len());
     out.extend(format!("{} 0 obj\n", index + 1).bytes());
@@ -513,7 +562,7 @@ fn one_page_pdf() -> Vec<u8> {
   let xref = out.len();
   out.extend(format!("xref\n0 {}\n", objects.len() + 1).bytes());
   out.extend_from_slice(b"0000000000 65535 f \n");
-  for offset in offsets.into_iter().skip(1) {
+  for offset in offsets {
     out.extend(format!("{offset:010} 00000 n \n").bytes());
   }
   out.extend(
@@ -546,4 +595,24 @@ fn tiny_bmp() -> Vec<u8> {
   }
   bytes.resize(54 + pixels as usize, 0x7f);
   bytes
+}
+
+#[test]
+fn page_is_only_for_image_and_multi_page_files() {
+  let (_dir, store) = attachment_store();
+  let markdown = call_output(
+    &store,
+    "get_attachment",
+    &json!({ "attachment_identifier": "att-scan", "page": 2 }),
+  )
+  .expect_err("page with markdown");
+  assert!(markdown.message.contains("format image"), "{}", markdown.message);
+
+  let photo = call_output(
+    &store,
+    "get_attachment",
+    &json!({ "attachment_identifier": "att-1", "format": "image", "page": 2 }),
+  )
+  .expect_err("page 2 of a photo");
+  assert!(photo.message.contains("single image"), "{}", photo.message);
 }

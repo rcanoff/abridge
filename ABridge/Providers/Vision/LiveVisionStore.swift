@@ -4,11 +4,15 @@ import ImageIO
 import Vision
 
 struct LiveVisionStore: VisionStoreing {
-    func detectBarcodes(request: VisionDetectBarcodesRequest) async throws -> [BarcodeObservation] {
-        let imageSource = try imageSource(from: request.imageData)
+    func detectBarcodes(request: VisionDetectBarcodesRequest) async throws -> VisionStoreResult<[BarcodeObservation]> {
+        let prepared = try VisionPdf.prepare(data: request.imageData, page: request.page)
+        let imageSource = try imageSource(from: prepared.imageData)
         let orientation = request.orientation ?? orientationFromImageSource(imageSource)
-        let handler = ImageRequestHandler(request.imageData, orientation: orientation)
-        return try await performVision { try await handler.perform(makeDetectBarcodesRequest(from: request)) }
+        let handler = ImageRequestHandler(prepared.imageData, orientation: orientation)
+        let observations = try await performVision {
+            try await handler.perform(makeDetectBarcodesRequest(from: request))
+        }
+        return VisionStoreResult(value: observations, pdf: prepared.pdf)
     }
 
     private func makeDetectBarcodesRequest(from request: VisionDetectBarcodesRequest) -> DetectBarcodesRequest {
@@ -25,10 +29,13 @@ struct LiveVisionStore: VisionStoreing {
         return detectRequest
     }
 
-    func recognizeDocuments(request: VisionRecognizeDocumentsRequest) async throws -> VisionRecognizeDocumentsResult {
-        let imageSource = try imageSource(from: request.imageData)
+    func recognizeDocuments(
+        request: VisionRecognizeDocumentsRequest
+    ) async throws -> VisionStoreResult<VisionRecognizeDocumentsResult> {
+        let prepared = try VisionPdf.prepare(data: request.imageData, page: request.page)
+        let imageSource = try imageSource(from: prepared.imageData)
         let orientation = request.orientation ?? orientationFromImageSource(imageSource)
-        let handler = ImageRequestHandler(request.imageData, orientation: orientation)
+        let handler = ImageRequestHandler(prepared.imageData, orientation: orientation)
 
         let observations = try await performVision {
             try await handler.perform(makeRecognizeDocumentsRequest(from: request))
@@ -39,7 +46,10 @@ struct LiveVisionStore: VisionStoreing {
             nil
         }
 
-        return VisionRecognizeDocumentsResult(observations: observations, segmentation: segmentation)
+        return VisionStoreResult(
+            value: VisionRecognizeDocumentsResult(observations: observations, segmentation: segmentation),
+            pdf: prepared.pdf
+        )
     }
 
     private func makeRecognizeDocumentsRequest(
@@ -69,8 +79,11 @@ struct LiveVisionStore: VisionStoreing {
         }
     }
 
-    func detectFaceLandmarks(request: VisionDetectFaceLandmarksRequest) async throws -> [VNFaceObservation] {
-        let imageSource = try imageSource(from: request.imageData)
+    func detectFaceLandmarks(
+        request: VisionDetectFaceLandmarksRequest
+    ) async throws -> VisionStoreResult<[VNFaceObservation]> {
+        let prepared = try VisionPdf.prepare(data: request.imageData, page: request.page)
+        let imageSource = try imageSource(from: prepared.imageData)
         let cgImage = try decodeCGImage(from: imageSource)
         let orientation = request.orientation ?? orientationFromImageSource(imageSource)
 
@@ -90,11 +103,14 @@ struct LiveVisionStore: VisionStoreing {
             throw VisionProviderError.visionError(error.localizedDescription)
         }
 
-        return detectRequest.results ?? []
+        return VisionStoreResult(value: detectRequest.results ?? [], pdf: prepared.pdf)
     }
 
-    func recognizeText(request: VisionRecognizeTextRequest) async throws -> [VNRecognizedTextObservation] {
-        let imageSource = try imageSource(from: request.imageData)
+    func recognizeText(
+        request: VisionRecognizeTextRequest
+    ) async throws -> VisionStoreResult<[VNRecognizedTextObservation]> {
+        let prepared = try VisionPdf.prepare(data: request.imageData, page: request.page)
+        let imageSource = try imageSource(from: prepared.imageData)
         let cgImage = try decodeCGImage(from: imageSource)
         let orientation = request.orientation ?? orientationFromImageSource(imageSource)
 
@@ -132,7 +148,7 @@ struct LiveVisionStore: VisionStoreing {
             throw VisionProviderError.visionError(error.localizedDescription)
         }
 
-        return recognizeRequest.results ?? []
+        return VisionStoreResult(value: recognizeRequest.results ?? [], pdf: prepared.pdf)
     }
 
     private func imageSource(from data: Data) throws -> CGImageSource {

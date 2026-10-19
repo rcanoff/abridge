@@ -10,6 +10,7 @@ extension VisionProvider {
 
         let dictionary = try parseJSONObject(from: data)
         let imageData = try imageDataArgument(in: dictionary)
+        let page = try pageArgument(in: dictionary)
         let orientation = try optionalOrientationArgument(in: dictionary)
         let revision = try optionalDocumentRevisionArgument(in: dictionary)
         let regionOfInterest = try optionalNormalizedRegionOfInterestArgument(in: dictionary)
@@ -20,6 +21,7 @@ extension VisionProvider {
 
         return VisionRecognizeDocumentsRequest(
             imageData: imageData,
+            page: page,
             orientation: orientation,
             revision: revision,
             regionOfInterest: regionOfInterest,

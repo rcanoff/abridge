@@ -5,6 +5,7 @@ enum VisionProviderError: Error, Equatable {
     case serializationFailed
     case visionError(String)
     case invalidArguments(String)
+    case pageOutOfRange(String)
 }
 
 enum VisionImageLimits {
@@ -43,6 +44,8 @@ struct VisionProvider {
         switch error {
         case let .invalidArguments(message):
             errorResponse(code: "invalid_arguments", message: message)
+        case let .pageOutOfRange(message):
+            errorResponse(code: "page_out_of_range", message: message)
         case .serializationFailed:
             errorResponse(code: "vision_error", message: "Failed to serialize Vision response")
         case let .visionError(message):
@@ -66,6 +69,32 @@ struct VisionProvider {
         default:
             throw VisionProviderError.invalidArguments("Provide exactly one of image_data or image_path.")
         }
+    }
+
+    /// 1-based PDF page. Omitted or null means page 1.
+    func pageArgument(in dictionary: [String: Any]) throws -> Int {
+        guard dictionary.keys.contains("page") else { return 1 }
+        if dictionary["page"] is NSNull {
+            return 1
+        }
+        // JSONSerialization boxes 0 and 1 as NSNumber, and `is Bool` is true for those.
+        // CFBoolean is the actual JSON true/false.
+        guard let number = dictionary["page"] as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID() else {
+            throw VisionProviderError.invalidArguments("page must be an integer greater than or equal to 1")
+        }
+        let double = number.doubleValue
+        guard double.rounded() == double, double >= 1, double <= Double(Int.max) else {
+            throw VisionProviderError.invalidArguments("page must be an integer greater than or equal to 1")
+        }
+        return number.intValue
+    }
+
+    func attachingPdfPage(_ object: [String: Any], pdf: VisionPdfInfo?) -> [String: Any] {
+        guard let pdf else { return object }
+        var object = object
+        object["page"] = pdf.page
+        object["page_count"] = pdf.pageCount
+        return object
     }
 
     private func imageData(atAbsolutePath path: String) throws -> Data {

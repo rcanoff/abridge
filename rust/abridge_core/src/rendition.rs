@@ -1,6 +1,6 @@
 //! JPEG renditions, made with macOS `sips`, of images a model cannot take (Notes attachments,
 //! contact photos): types models do not read (HEIC, TIFF, …) and images over the model image size
-//! limit. The same ladder renders page 1 of a PDF. Also the shared size limits for image and file
+//! limit. The same ladder renders one page of a PDF. Also the shared size limits for image and file
 //! content.
 
 use std::path::Path;
@@ -38,16 +38,55 @@ pub(crate) fn jpeg_rendition(source: &Path) -> Option<Vec<u8>> {
   render_in(&scratch, source)
 }
 
-/// JPEG of PDF page 1 within the model image limit. `sips` renders the first page and ignores
-/// the rest. `None` when `sips` cannot make one.
-pub(crate) fn jpeg_first_page(source: &Path) -> Option<Vec<u8>> {
-  jpeg_rendition(source)
+/// One page of a PDF, rendered for a model.
+pub(crate) enum PdfPage {
+  Rendered {
+    jpeg: Vec<u8>,
+    page_count: u32,
+  },
+  OutOfRange {
+    page_count: u32,
+  },
+  /// `lopdf` could not read the PDF (`page_count` is `None`), or `sips` could not render the page.
+  Unrendered {
+    page_count: Option<u32>,
+  },
+}
+
+/// JPEG of one 1-based `page` of `pdf` within the model image limit. `sips` renders only a PDF's
+/// first page, so the requested page is copied into a one-page PDF first.
+pub(crate) fn jpeg_pdf_page(pdf: &[u8], page: u32) -> PdfPage {
+  let Ok(mut document) = lopdf::Document::load_mem(pdf) else {
+    return PdfPage::Unrendered { page_count: None };
+  };
+  let page_count = u32::try_from(document.get_pages().len()).unwrap_or(u32::MAX);
+  if page == 0 || page > page_count {
+    return PdfPage::OutOfRange { page_count };
+  }
+  let others: Vec<u32> = (1..=page_count).filter(|number| *number != page).collect();
+  document.delete_pages(&others);
+  document.prune_objects();
+  let mut single = Vec::new();
+  let jpeg = document
+    .save_to(&mut single)
+    .ok()
+    .and_then(|()| render_bytes("in.pdf", &single));
+  match jpeg {
+    Some(jpeg) => PdfPage::Rendered { jpeg, page_count },
+    None => PdfPage::Unrendered {
+      page_count: Some(page_count),
+    },
+  }
 }
 
 /// `jpeg_rendition` for image bytes held in memory (a contact photo, for example).
 pub(crate) fn jpeg_rendition_of_bytes(bytes: &[u8]) -> Option<Vec<u8>> {
+  render_bytes("in.img", bytes)
+}
+
+fn render_bytes(name: &str, bytes: &[u8]) -> Option<Vec<u8>> {
   let scratch = ScratchDir::create().ok()?;
-  let input = scratch.write_bytes("in.img", bytes).ok()?;
+  let input = scratch.write_bytes(name, bytes).ok()?;
   render_in(&scratch, &input)
 }
 
