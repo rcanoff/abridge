@@ -18,11 +18,15 @@ struct ProductionABridgeAppStoreMaker: ABridgeAppStoreMaking {
         let contactsPermissionService = ContactsPermissionService()
         // Shared with Core Location MCP gates so UI and tools see the same sticky location status.
         let locationPermissionService = LiveLocationPermission.service
+        let notesFullDiskAccessService = NotesFullDiskAccessService()
+        let notesAutomationService = NotesAutomationService()
         let store = AppStore(
             permissionService: permissionService,
             eventsPermissionService: eventsPermissionService,
             contactsPermissionService: contactsPermissionService,
-            locationPermissionService: locationPermissionService
+            locationPermissionService: locationPermissionService,
+            notesFullDiskAccessService: notesFullDiskAccessService,
+            notesAutomationService: notesAutomationService
         )
         let settingsStore = SettingsStore(
             appSettings: appSettings,
@@ -30,7 +34,9 @@ struct ProductionABridgeAppStoreMaker: ABridgeAppStoreMaking {
             permissionService: permissionService,
             eventsPermissionService: eventsPermissionService,
             contactsPermissionService: contactsPermissionService,
-            locationPermissionService: locationPermissionService
+            locationPermissionService: locationPermissionService,
+            notesFullDiskAccessService: notesFullDiskAccessService,
+            notesAutomationService: notesAutomationService
         )
         let permissionsStore = PermissionsStore(appSettings: appSettings)
         return ABridgeAppBootstrap.Stores(

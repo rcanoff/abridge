@@ -6,7 +6,7 @@ import Testing
 struct EventKitProviderSearchEventsTests {
     @Test
     @MainActor
-    func searchEventsFiltersByQuery() throws {
+    func searchEventsReturnsTheDateRangeForRustRanking() throws {
         let mockStore = MockEventKitStore()
         mockStore.eventAuthorizationStatusValue = .fullAccess
         let start = Date(timeIntervalSince1970: 1_700_000_000)
@@ -43,8 +43,10 @@ struct EventKitProviderSearchEventsTests {
         let decoded = try JSONSerialization.jsonObject(with: data)
         let events = try #require(decoded as? [[String: Any]])
 
-        #expect(events.count == 1)
-        #expect(events.first?["title"] as? String == "Team Standup")
+        #expect(events.count == 2)
+        let titles = events.compactMap { $0["title"] as? String }
+        #expect(titles.contains("Team Standup"))
+        #expect(titles.contains("Lunch"))
     }
 
     @Test

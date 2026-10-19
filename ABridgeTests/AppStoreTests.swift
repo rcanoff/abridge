@@ -9,7 +9,11 @@ struct AppStoreTests {
     func refreshStatusUpdatesPermissionStatus() {
         let mock = MockRemindersPermissionService()
         mock.status = .denied
-        let store = AppStore(permissionService: mock)
+        let store = AppStore(
+            permissionService: mock,
+            notesFullDiskAccessService: MockNotesFullDiskAccessService(),
+            notesAutomationService: MockNotesAutomationService()
+        )
 
         store.refreshStatus()
 
@@ -39,7 +43,11 @@ struct AppStoreTests {
         mock.requestResult = .failure(
             RemindersPermissionError.requestFailed("permission denied by user")
         )
-        let store = AppStore(permissionService: mock)
+        let store = AppStore(
+            permissionService: mock,
+            notesFullDiskAccessService: MockNotesFullDiskAccessService(),
+            notesAutomationService: MockNotesAutomationService()
+        )
 
         await store.requestAccess()
 
@@ -81,7 +89,11 @@ struct AppStoreTests {
     @MainActor
     func refreshStatusKeepsGrantedAccessAfterRequestDespiteStaleEventKit() async {
         let service = StaleRemindersPermissionService()
-        let store = AppStore(permissionService: service)
+        let store = AppStore(
+            permissionService: service,
+            notesFullDiskAccessService: MockNotesFullDiskAccessService(),
+            notesAutomationService: MockNotesAutomationService()
+        )
 
         await store.requestAccess()
         store.refreshStatus()
@@ -107,7 +119,11 @@ struct AppStoreTests {
     func refreshStatusUpdatesCalendarPermissionStatus() {
         let mock = MockEventsPermissionService()
         mock.status = .denied
-        let store = AppStore(eventsPermissionService: mock)
+        let store = AppStore(
+            eventsPermissionService: mock,
+            notesFullDiskAccessService: MockNotesFullDiskAccessService(),
+            notesAutomationService: MockNotesAutomationService()
+        )
 
         store.refreshStatus()
 

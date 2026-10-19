@@ -1,5 +1,6 @@
 //! MCP JSON-RPC dispatch over authenticated HTTP POST /mcp.
 
+mod notes_content;
 mod protocol;
 
 use std::sync::Arc;
@@ -32,7 +33,8 @@ pub struct McpState {
 }
 
 use protocol::{
-  INVALID_REQUEST, JSONRPC_VERSION, METHOD_NOT_FOUND, PROTOCOL_VERSION, SERVER_NAME, json_rpc_error, json_rpc_result,
+  INVALID_REQUEST, JSONRPC_VERSION, METHOD_NOT_FOUND, PROTOCOL_VERSION, SERVER_INSTRUCTIONS, SERVER_NAME,
+  json_rpc_error, json_rpc_result,
 };
 
 pub async fn handle_mcp(State(state): State<McpState>, body: axum::body::Bytes) -> Response {
@@ -92,7 +94,8 @@ fn handle_initialize(id: Option<Value>, _params: Value, state: &McpState) -> Res
     "serverInfo": {
       "name": SERVER_NAME,
       "version": state.app_version
-    }
+    },
+    "instructions": SERVER_INSTRUCTIONS
   });
 
   state.audit_store.record(EVENT_MCP_INITIALIZE, None, true, None);
@@ -181,12 +184,33 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
     }
   };
 
+  if tool.provider == "notes" {
+    let outcome = crate::notes::call(tool.operation, &arguments);
+    record_tool_call(tool.name, outcome.is_ok());
+    let (is_error, content) = notes_content::content(outcome);
+    return json_response(
+      StatusCode::OK,
+      json_rpc_result(
+        id,
+        serde_json::json!({
+          "content": content,
+          "isError": is_error
+        }),
+      ),
+    );
+  }
+
   if tool.name == tools::TOOL_GET_USAGE_LOG {
     let limit = parse_usage_log_limit(&arguments);
     record_tool_call(tool.name, true);
     let payload = state.audit_store.usage_log_response(limit);
-    let payload_json = match serde_json::to_string(&payload) {
-      Ok(json) => json,
+    let payload_json = match serde_json::to_value(&payload) {
+      Ok(value) => match serde_json::to_string(&crate::agent_shape::shape_usage_log(&value)) {
+        Ok(json) => json,
+        Err(_) => {
+          return tool_error_response(id, "serialization_error", "failed to serialize usage log");
+        }
+      },
       Err(_) => {
         return tool_error_response(id, "serialization_error", "failed to serialize usage log");
       }
@@ -203,23 +227,25 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
     );
   }
 
-  let payload_json = serde_json::to_string(&arguments).unwrap_or_else(|_| "{}".into());
-
+  let prepared = crate::agent_shape::prepare(tool, &arguments);
   let response = state.provider.call_provider(ProviderRequest {
     provider: tool.provider.into(),
-    operation: tool.operation.into(),
-    payload_json,
+    operation: prepared.operation.clone(),
+    payload_json: prepared.payload_json.clone(),
   });
 
   record_tool_call(tool.name, response.ok);
 
   if response.ok {
+    let shaped = crate::agent_shape::shape(tool.name, &prepared, &response.payload_json);
+    let mut content = vec![serde_json::json!({ "type": "text", "text": shaped.text })];
+    content.extend(shaped.images);
     json_response(
       StatusCode::OK,
       json_rpc_result(
         id,
         serde_json::json!({
-          "content": [{ "type": "text", "text": response.payload_json }],
+          "content": content,
           "isError": false
         }),
       ),

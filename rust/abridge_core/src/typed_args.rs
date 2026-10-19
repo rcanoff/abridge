@@ -14,15 +14,47 @@ use crate::tools::{self, ToolDefinition};
 pub fn normalize_tool_arguments(tool: &ToolDefinition, arguments: Value) -> Result<Value, String> {
   match tool.name {
     tools::TOOL_CREATE_REMINDER => normalize_typed::<CreateReminderArgs>(arguments, "create_reminder"),
-    tools::TOOL_CREATE_EVENT => normalize_typed::<CreateEventArgs>(arguments, "create_event"),
+    tools::TOOL_CREATE_EVENT => {
+      let mut value = normalize_typed::<CreateEventArgs>(arguments, "create_event")?;
+      anchor_event_dates(&mut value)?;
+      Ok(value)
+    }
     tools::TOOL_UPDATE_REMINDER => normalize_typed::<UpdateReminderArgs>(arguments, "update_reminder"),
-    tools::TOOL_UPDATE_EVENT => normalize_typed::<UpdateEventArgs>(arguments, "update_event"),
+    tools::TOOL_UPDATE_EVENT => {
+      let mut value = normalize_typed::<UpdateEventArgs>(arguments, "update_event")?;
+      anchor_event_dates(&mut value)?;
+      Ok(value)
+    }
     tools::TOOL_CREATE_CONTACT => normalize_typed::<CreateContactArgs>(arguments, "create_contact"),
     tools::TOOL_UPDATE_CONTACT => normalize_typed::<UpdateContactArgs>(arguments, "update_contact"),
     tools::TOOL_CALCULATE_ROUTE => normalize_typed::<CalculateRouteArgs>(arguments, "calculate_route"),
     tools::TOOL_FORWARD_GEOCODE => normalize_typed::<ForwardGeocodeArgs>(arguments, "forward_geocode"),
     _ => Ok(arguments),
   }
+}
+
+/// Rewrite event dates into instants before Swift. A wall time uses the given `time_zone`.
+/// An all-day calendar date becomes local midnight in that zone, or the server Mac's zone when
+/// the event has none, so the day read back is the day that was written.
+fn anchor_event_dates(value: &mut Value) -> Result<(), String> {
+  let zone = value
+    .get("time_zone")
+    .and_then(Value::as_str)
+    .filter(|zone| !zone.is_empty())
+    .map(str::to_string);
+  let all_day = value.get("is_all_day").and_then(Value::as_bool) == Some(true);
+  let Some(object) = value.as_object_mut() else {
+    return Ok(());
+  };
+  for key in ["start_date", "end_date"] {
+    let Some(text) = object.get(key).and_then(Value::as_str).map(str::to_string) else {
+      continue;
+    };
+    if let Some(anchored) = crate::datetime::normalize_event_date(key, &text, all_day, zone.as_deref())? {
+      object.insert(key.to_string(), Value::String(anchored));
+    }
+  }
+  Ok(())
 }
 
 fn normalize_typed<T>(arguments: Value, label: &str) -> Result<Value, String>
@@ -104,7 +136,8 @@ struct UpdateEventArgs {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 struct CreateContactArgs {
-  container_identifier: String,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
+  container_identifier: Option<String>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   contact_type: Option<String>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -218,6 +251,26 @@ mod tests {
   }
 
   #[test]
+  fn create_contact_omits_container_and_keeps_read_shaped_phone() {
+    let tool = resolve_tool(tools::TOOL_CREATE_CONTACT).expect("tool");
+    let out = normalize_tool_arguments(
+      tool,
+      json!({
+        "given_name": "Ada",
+        "phone_numbers": [{ "label": "mobile", "identifier": "p1", "value": "555-0100" }],
+        "email_addresses": [{ "label": "work", "value": "ada@example.com" }],
+        "postal_addresses": [{ "label": "home", "value": { "street": "1 Main", "city": "Town" } }]
+      }),
+    )
+    .expect("ok");
+    assert!(out.get("container_identifier").is_none());
+    assert_eq!(out["phone_numbers"][0]["value"], "555-0100");
+    assert_eq!(out["phone_numbers"][0]["label"], "mobile");
+    assert_eq!(out["email_addresses"][0]["value"], "ada@example.com");
+    assert_eq!(out["postal_addresses"][0]["value"]["street"], "1 Main");
+  }
+
+  #[test]
   fn calculate_route_requires_source_and_destination() {
     let tool = resolve_tool(tools::TOOL_CALCULATE_ROUTE).expect("tool");
     let out = normalize_tool_arguments(
@@ -245,5 +298,114 @@ mod tests {
     )
     .expect_err("type");
     assert!(err.contains("typed create_reminder"), "{err}");
+  }
+
+  #[test]
+  fn create_event_wall_time_uses_the_given_zone() {
+    let tool = resolve_tool(tools::TOOL_CREATE_EVENT).expect("tool");
+    let out = normalize_tool_arguments(
+      tool,
+      json!({
+        "calendar_identifier": "cal-1",
+        "title": "Standup",
+        "time_zone": "America/New_York",
+        "start_date": "2026-10-19T09:00:00",
+        "end_date": "2026-01-15T09:00"
+      }),
+    )
+    .expect("ok");
+    assert_eq!(out["start_date"], "2026-10-19T09:00:00-04:00");
+    assert_eq!(out["end_date"], "2026-01-15T09:00:00-05:00");
+    assert_eq!(out["time_zone"], "America/New_York");
+  }
+
+  #[test]
+  fn create_event_all_day_date_stays_that_calendar_day() {
+    let tool = resolve_tool(tools::TOOL_CREATE_EVENT).expect("tool");
+    let out = normalize_tool_arguments(
+      tool,
+      json!({
+        "calendar_identifier": "cal-1",
+        "title": "Off",
+        "is_all_day": true,
+        "start_date": "2026-10-19",
+        "end_date": "2026-10-20"
+      }),
+    )
+    .expect("ok");
+    assert_eq!(out["start_date"], "2026-10-19T00:00:00Z");
+    assert_eq!(out["end_date"], "2026-10-20T00:00:00Z");
+  }
+
+  #[test]
+  fn create_event_all_day_in_new_york_is_local_midnight() {
+    let tool = resolve_tool(tools::TOOL_CREATE_EVENT).expect("tool");
+    let out = normalize_tool_arguments(
+      tool,
+      json!({
+        "calendar_identifier": "cal-1",
+        "title": "Off",
+        "is_all_day": true,
+        "time_zone": "America/New_York",
+        "start_date": "2026-10-19",
+        "end_date": "2026-10-20"
+      }),
+    )
+    .expect("ok");
+    assert_eq!(out["start_date"], "2026-10-19T04:00:00Z");
+    assert_eq!(out["end_date"], "2026-10-20T04:00:00Z");
+  }
+
+  #[test]
+  fn create_event_future_summer_keeps_daylight_time() {
+    let tool = resolve_tool(tools::TOOL_CREATE_EVENT).expect("tool");
+    let out = normalize_tool_arguments(
+      tool,
+      json!({
+        "calendar_identifier": "cal-1",
+        "title": "Later",
+        "time_zone": "America/New_York",
+        "start_date": "2100-07-15T12:00:00",
+        "end_date": "2100-07-15T13:00:00"
+      }),
+    )
+    .expect("ok");
+    assert_eq!(out["start_date"], "2100-07-15T12:00:00-04:00");
+    assert_eq!(out["end_date"], "2100-07-15T13:00:00-04:00");
+  }
+
+  #[test]
+  fn create_event_rejects_a_dst_gap() {
+    let tool = resolve_tool(tools::TOOL_CREATE_EVENT).expect("tool");
+    let err = normalize_tool_arguments(
+      tool,
+      json!({
+        "calendar_identifier": "cal-1",
+        "title": "Gap",
+        "time_zone": "America/New_York",
+        "start_date": "2026-03-08T02:30:00",
+        "end_date": "2026-03-08T03:30:00"
+      }),
+    )
+    .expect_err("gap");
+    assert!(err.contains("gap") && err.contains("2026-03-08T02:30:00"), "{err}");
+  }
+
+  #[test]
+  fn create_reminder_due_without_zone_stays_without_zone() {
+    let tool = resolve_tool(tools::TOOL_CREATE_REMINDER).expect("tool");
+    let out = normalize_tool_arguments(
+      tool,
+      json!({
+        "calendar_identifier": "list-1",
+        "title": "Pay",
+        "time_zone": "America/New_York",
+        "due_date_components": { "year": 2026, "month": 10, "day": 19, "hour": 9, "minute": 0 }
+      }),
+    )
+    .expect("ok");
+    assert!(out["due_date_components"].get("time_zone").is_none());
+    assert_eq!(out["due_date_components"]["hour"], 9);
+    assert_eq!(out["time_zone"], "America/New_York");
   }
 }

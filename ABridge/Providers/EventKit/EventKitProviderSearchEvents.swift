@@ -6,7 +6,6 @@ extension EventKitProvider {
         let startDate: Date
         let endDate: Date
         let calendarIdentifier: String?
-        let query: String
     }
 
     func searchEvents(payloadJson: String) -> ProviderResponse {
@@ -22,8 +21,8 @@ extension EventKitProvider {
                 end: arguments.endDate,
                 calendars: calendars
             )
+            // Text ranking is fzf-style in Rust (`query`). EventKit still applies the date and calendar predicate.
             let events = try store.fetchEvents(matching: predicate)
-                .filter { matchesQuery($0, query: arguments.query) }
             let payloadObjects = events.map { serializedEventJSONObject(from: $0) }
             let payload = try EventKitSerialization.jsonString(from: payloadObjects)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
@@ -31,15 +30,6 @@ extension EventKitProvider {
             return providerErrorResponse(from: error)
         } catch {
             return providerError(from: error)
-        }
-    }
-
-    private func matchesQuery(_ event: EKEvent, query: String) -> Bool {
-        let needle = query.lowercased()
-        let candidates = [event.title, event.notes, event.location]
-        return candidates.contains { field in
-            guard let field else { return false }
-            return field.lowercased().contains(needle)
         }
     }
 
@@ -62,13 +52,13 @@ extension EventKitProvider {
         }
 
         let calendarIdentifier = try optionalStringArgument(named: "calendar_identifier", in: dictionary)
-        let query = try requiredNonEmptyStringArgument(named: "query", in: dictionary)
+        // Schema requires query. Rust ranks the predicate results; the provider does not substring-filter.
+        _ = try requiredNonEmptyStringArgument(named: "query", in: dictionary)
 
         return SearchEventsArguments(
             startDate: startDate,
             endDate: endDate,
-            calendarIdentifier: calendarIdentifier,
-            query: query
+            calendarIdentifier: calendarIdentifier
         )
     }
 

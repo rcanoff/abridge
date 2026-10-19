@@ -36,6 +36,11 @@ pub const VISION_TEXT: &str = "vision.text";
 pub const VISION_DOCUMENT: &str = "vision.document";
 pub const VISION_BARCODES: &str = "vision.barcodes";
 pub const VISION_FACES: &str = "vision.faces";
+pub const NOTES_READ: &str = "notes.read";
+pub const NOTES_SEARCH: &str = "notes.search";
+pub const NOTES_CREATE: &str = "notes.create";
+pub const NOTES_EDIT: &str = "notes.edit";
+pub const NOTES_DELETE: &str = "notes.delete";
 
 pub fn is_valid_capability_id(id: &str) -> bool {
   if id == CONTACTS_READ
@@ -54,6 +59,11 @@ pub fn is_valid_capability_id(id: &str) -> bool {
     || id == VISION_DOCUMENT
     || id == VISION_BARCODES
     || id == VISION_FACES
+    || id == NOTES_READ
+    || id == NOTES_SEARCH
+    || id == NOTES_CREATE
+    || id == NOTES_EDIT
+    || id == NOTES_DELETE
   {
     return true;
   }
@@ -106,6 +116,11 @@ pub fn is_allowed_in_v1(id: &str) -> bool {
       | VISION_DOCUMENT
       | VISION_BARCODES
       | VISION_FACES
+      | NOTES_READ
+      | NOTES_SEARCH
+      | NOTES_CREATE
+      | NOTES_EDIT
+      | NOTES_DELETE
   )
 }
 
@@ -119,7 +134,8 @@ mod tests {
     EVENTKIT_EVENTS_SEARCH, EVENTKIT_REMINDERS_ALARMS, EVENTKIT_REMINDERS_COMPLETE, EVENTKIT_REMINDERS_CREATE,
     EVENTKIT_REMINDERS_DELETE, EVENTKIT_REMINDERS_EDIT, EVENTKIT_REMINDERS_READ, EVENTKIT_REMINDERS_RECURRENCE,
     EVENTKIT_REMINDERS_SEARCH, MAPKIT_GEOCODE, MAPKIT_NAVIGATION, MAPKIT_READ, MAPKIT_ROUTING, MAPKIT_SEARCH,
-    VISION_BARCODES, VISION_DOCUMENT, VISION_FACES, VISION_TEXT, is_allowed_in_v1, is_valid_capability_id,
+    NOTES_CREATE, NOTES_DELETE, NOTES_EDIT, NOTES_READ, NOTES_SEARCH, VISION_BARCODES, VISION_DOCUMENT, VISION_FACES,
+    VISION_TEXT, is_allowed_in_v1, is_valid_capability_id,
   };
 
   #[test]
@@ -218,6 +234,14 @@ mod tests {
   }
 
   #[test]
+  fn accepts_notes_capability_shapes() {
+    for id in [NOTES_READ, NOTES_SEARCH, NOTES_CREATE, NOTES_EDIT, NOTES_DELETE] {
+      assert!(is_valid_capability_id(id), "{id}");
+      assert!(is_allowed_in_v1(id), "{id}");
+    }
+  }
+
+  #[test]
   fn rejects_uppercase_capability() {
     assert!(!is_valid_capability_id("EventKit.Reminders.Read"));
   }
@@ -255,6 +279,11 @@ mod tests {
     assert!(is_allowed_in_v1(CONTACTS_CREATE));
     assert!(is_allowed_in_v1(CONTACTS_EDIT));
     assert!(is_allowed_in_v1(CONTACTS_DELETE));
+    assert!(is_allowed_in_v1(NOTES_READ));
+    assert!(is_allowed_in_v1(NOTES_SEARCH));
+    assert!(is_allowed_in_v1(NOTES_CREATE));
+    assert!(is_allowed_in_v1(NOTES_EDIT));
+    assert!(is_allowed_in_v1(NOTES_DELETE));
     assert!(is_allowed_in_v1(MAPKIT_SEARCH));
     assert!(is_allowed_in_v1(CORELOCATION_READ));
     assert!(!is_allowed_in_v1("eventkit.reminders.write"));
@@ -269,6 +298,7 @@ pub const SETTINGS_GROUP_CONTACTS: &str = "contacts";
 pub const SETTINGS_GROUP_MAPKIT: &str = "mapkit";
 pub const SETTINGS_GROUP_CORELOCATION: &str = "corelocation";
 pub const SETTINGS_GROUP_VISION: &str = "vision";
+pub const SETTINGS_GROUP_NOTES: &str = "notes";
 
 /// Settings catalog entry — single source of truth for capability IDs shown in the app.
 #[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
@@ -479,6 +509,12 @@ pub fn settings_capability_catalog() -> Vec<SettingsCapabilityDefinition> {
       true,
     ),
     settings_entry(SETTINGS_GROUP_VISION, "vision-faces", VISION_FACES, "Faces", true),
+    // notes
+    settings_entry(SETTINGS_GROUP_NOTES, "notes-read", NOTES_READ, "Read", true),
+    settings_entry(SETTINGS_GROUP_NOTES, "notes-search", NOTES_SEARCH, "Search", true),
+    settings_entry(SETTINGS_GROUP_NOTES, "notes-create", NOTES_CREATE, "Create", true),
+    settings_entry(SETTINGS_GROUP_NOTES, "notes-edit", NOTES_EDIT, "Edit", true),
+    settings_entry(SETTINGS_GROUP_NOTES, "notes-delete", NOTES_DELETE, "Delete", true),
   ]
 }
 
@@ -510,11 +546,11 @@ mod catalog_tests {
   #[test]
   fn catalog_has_expected_count_and_unique_capability_ids() {
     let catalog = settings_capability_catalog();
-    assert_eq!(catalog.len(), 35);
+    assert_eq!(catalog.len(), 40);
     let mut ids: Vec<_> = catalog.iter().map(|e| e.capability_id.clone()).collect();
     ids.sort();
     ids.dedup();
-    assert_eq!(ids.len(), 35);
+    assert_eq!(ids.len(), 40);
   }
 
   #[test]

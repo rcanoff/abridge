@@ -1,3 +1,4 @@
+import CoreLocation
 import Foundation
 
 enum MapKitProviderError: Error, Equatable {
@@ -28,6 +29,47 @@ struct MapKitProvider {
 
     init(store: any MapKitStoreing = LiveMapKitStore()) {
         self.store = store
+    }
+
+    func routeEndpoint(named key: String, in dictionary: [String: Any]) throws -> MapKitRouteEndpoint {
+        let endpointDictionary = SchemaTrustedPayload.requiredObject(dictionary, key)
+        let coordinate = try optionalRouteCoordinate(in: endpointDictionary, prefix: "\(key).coordinate")
+        let name = SchemaTrustedPayload.optionalString(endpointDictionary, "name")
+        let identifier = SchemaTrustedPayload.optionalString(endpointDictionary, "identifier")
+        if coordinate == nil, identifier == nil {
+            throw MapKitProviderError.invalidArguments(
+                "\(key) needs a coordinate or a MapKit place identifier"
+            )
+        }
+        return MapKitRouteEndpoint(coordinate: coordinate, name: name, identifier: identifier)
+    }
+
+    func optionalRouteCoordinate(
+        in dictionary: [String: Any],
+        prefix: String
+    ) throws -> CLLocationCoordinate2D? {
+        guard dictionary.keys.contains("coordinate"), !(dictionary["coordinate"] is NSNull) else {
+            return nil
+        }
+        guard let coordinateDictionary = dictionary["coordinate"] as? [String: Any] else {
+            throw MapKitProviderError.invalidArguments("\(prefix) must be an object")
+        }
+
+        let latitude = try requiredCoordinateComponent(
+            named: "latitude",
+            in: coordinateDictionary,
+            minimum: -90,
+            maximum: 90,
+            prefix: prefix
+        )
+        let longitude = try requiredCoordinateComponent(
+            named: "longitude",
+            in: coordinateDictionary,
+            minimum: -180,
+            maximum: 180,
+            prefix: prefix
+        )
+        return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
 
     func parseJSONObject(from data: Data) throws -> [String: Any] {

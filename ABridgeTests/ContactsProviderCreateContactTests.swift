@@ -36,6 +36,7 @@ struct ContactsProviderCreateContactTests {
         "social_profiles",
         "instant_message_addresses",
         "dates",
+        "container_identifier",
     ]
 
     @Test
@@ -144,6 +145,60 @@ struct ContactsProviderCreateContactTests {
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
         #expect(response.errorJson?.contains("Unknown container_identifier") == true)
+        #expect(response.errorJson?.contains("contacts_list_containers") == true)
+    }
+
+    @Test
+    @MainActor
+    func createContactUsesDefaultContainerWhenOmitted() throws {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        mockStore.knownContainerIdentifiers = ["container-1", "icloud"]
+        mockStore.defaultContainerIdentifierValue = "icloud"
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_contact",
+            payloadJson: #"{"given_name":"Ada"}"#
+        )
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let contact = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        #expect(contact["container_identifier"] as? String == "icloud")
+        #expect(contact["given_name"] as? String == "Ada")
+        #expect(mockStore.contactContainers[mockStore.contacts[0].identifier] == "icloud")
+    }
+
+    @Test
+    @MainActor
+    func createContactAcceptsReadShapedPhoneEmailAndAddress() {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_contact",
+            payloadJson: #"""
+            {
+              "given_name": "Ada",
+              "phone_numbers": [{ "label": "mobile", "identifier": "p1", "value": "+1-555-0100" }],
+              "email_addresses": [{ "label": "work", "value": "ada@example.com" }],
+              "postal_addresses": [{
+                "label": "home",
+                "value": { "street": "1 Infinite Loop", "city": "Cupertino", "state": "CA" }
+              }]
+            }
+            """#
+        )
+
+        #expect(response.ok == true)
+        let saved = mockStore.contacts.first
+        #expect(saved?.phoneNumbers.first?.label == "mobile")
+        #expect(saved?.phoneNumbers.first?.value.stringValue == "+1-555-0100")
+        #expect(saved?.emailAddresses.first?.value as? String == "ada@example.com")
+        #expect(saved?.postalAddresses.first?.value.street == "1 Infinite Loop")
+        #expect(saved?.postalAddresses.first?.value.city == "Cupertino")
     }
 
     @Test

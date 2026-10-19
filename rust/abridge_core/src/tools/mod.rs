@@ -34,6 +34,7 @@ pub const TOOL_DECLINE_INVITATION: &str = "eventkit_events_decline_invitation";
 pub const TOOL_TENTATIVE_INVITATION: &str = "eventkit_events_tentative_invitation";
 pub const TOOL_LIST_CONTACTS: &str = "contacts_list_contacts";
 pub const TOOL_LIST_GROUPS: &str = "contacts_list_groups";
+pub const TOOL_LIST_CONTAINERS: &str = "contacts_list_containers";
 pub const TOOL_GET_CONTACT: &str = "contacts_get_contact";
 pub const TOOL_SEARCH_CONTACTS: &str = "contacts_search_contacts";
 pub const TOOL_CREATE_CONTACT: &str = "contacts_create_contact";
@@ -58,6 +59,26 @@ pub const TOOL_RECOGNIZE_TEXT: &str = "vision_recognize_text";
 pub const TOOL_RECOGNIZE_DOCUMENTS: &str = "vision_recognize_documents";
 pub const TOOL_DETECT_BARCODES: &str = "vision_detect_barcodes";
 pub const TOOL_DETECT_FACE_LANDMARKS: &str = "vision_detect_face_landmarks";
+pub const TOOL_NOTES_LIST_FOLDERS: &str = "notes_list_folders";
+pub const TOOL_NOTES_LIST_NOTES: &str = "notes_list_notes";
+pub const TOOL_NOTES_GET_NOTE: &str = "notes_get_note";
+pub const TOOL_NOTES_GET_ATTACHMENT: &str = "notes_get_attachment";
+pub const TOOL_NOTES_SEARCH_NOTES: &str = "notes_search_notes";
+pub const TOOL_NOTES_CREATE_NOTE: &str = "notes_create_note";
+pub const TOOL_NOTES_UPDATE_NOTE: &str = "notes_update_note";
+pub const TOOL_NOTES_MOVE_NOTE: &str = "notes_move_note";
+pub const TOOL_NOTES_DELETE_NOTE: &str = "notes_delete_note";
+pub const TOOL_NOTES_CREATE_FOLDER: &str = "notes_create_folder";
+pub const TOOL_NOTES_DELETE_FOLDER: &str = "notes_delete_folder";
+
+macro_rules! notes_markdown {
+  () => {
+    "body is Markdown, the same dialect notes_get_note returns. A leading `# Title` is the note title. HTML is \
+     converted; warnings name every converted tag and every removed tag. Headings are stored as bold and read \
+     back as # / ##; deeper headings read back as bold. A blank line between blocks becomes an empty line, which is how Notes spaces sections. A table becomes a Notes table. \
+     `[title](attachment:<id>)` does not attach or keep a file"
+  };
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ToolDefinition {
@@ -67,28 +88,65 @@ pub struct ToolDefinition {
   pub operation: &'static str,
   pub description: &'static str,
 }
+macro_rules! fuzzy_query {
+  () => {
+    "query is AND across words. `|` is OR (`Lisbon | queijo` is one call). \"buy milk\" is one exact phrase \
+     (spaces stay; case and accents are ignored). A leading ' is an exact substring of one word and does not \
+     quote spaces. `^` and `$` anchor a word, `!` excludes. An unmatched quote is ignored"
+  };
+}
 
-const ALL_TOOLS: [ToolDefinition; 56] = [
+macro_rules! event_time_offset {
+  () => {
+    "Timed start and end carry a numeric offset from the event's time zone, or the server Mac's when the event has none, not the caller's. All-day start_date and end_date are calendar dates YYYY-MM-DD; end_date is exclusive (the day after the last day). The day is the serialized instant in the event's time zone, or this Mac's zone when the event has none."
+  };
+}
+
+macro_rules! client_resolves_relative_date {
+  () => {
+    "for example 2026-10-26T09:00:00-04:00, or wall time 2026-10-26T09:00:00 with time_zone \
+     America/New_York. This Mac's zone is not applied"
+  };
+}
+
+/// Wording for fields that take only an absolute instant (no time_zone companion).
+macro_rules! absolute_instant {
+  () => {
+    "Absolute time with a numeric offset (Z or ±HH:MM), for example 2026-10-26T09:00:00-04:00. A wall time \
+     without an offset is rejected; this Mac's zone is not applied."
+  };
+}
+
+/// Reminder dates are calendar components; the client resolves relative dates.
+macro_rules! reminder_dates {
+  () => {
+    "Resolve relative dates such as next Monday on the client, then send due_date_components, for example \
+     {\"year\":2026,\"month\":10,\"day\":26,\"hour\":9,\"minute\":0,\"time_zone\":\"America/New_York\"}"
+  };
+}
+
+const ALL_TOOLS: [ToolDefinition; 68] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
     provider: "eventkit",
     operation: "list_calendars",
-    description: "List event calendars",
+    description: "List event calendars. Each row has calendar_identifier, title, type, source \
+                  {source_identifier, title, type}, and color.",
   },
   ToolDefinition {
     name: TOOL_CREATE_CALENDAR,
     capability: capabilities::EVENTKIT_CALENDARS_CREATE,
     provider: "eventkit",
     operation: "create_calendar",
-    description: "Create an event calendar with optional color and source",
+    description: "Create an event calendar. Requires title. color and source are optional.",
   },
   ToolDefinition {
     name: TOOL_UPDATE_CALENDAR,
     capability: capabilities::EVENTKIT_CALENDARS_EDIT,
     provider: "eventkit",
     operation: "update_calendar",
-    description: "Update an event calendar by calendar_identifier with optional title, color, and source",
+    description: "Update an event calendar by calendar_identifier. Omitted fields stay unchanged.",
   },
   ToolDefinition {
     name: TOOL_DELETE_CALENDAR,
@@ -102,42 +160,61 @@ const ALL_TOOLS: [ToolDefinition; 56] = [
     capability: capabilities::EVENTKIT_EVENTS_READ,
     provider: "eventkit",
     operation: "list_events",
-    description: "List events in a date range, optionally filtered by calendar_identifier",
+    description: concat!(
+      "List events in a date window. To find one title, call eventkit_events_search_events. ",
+      event_time_offset!(),
+      " Rows of a series share event_identifier; get, update, and delete change the occurrence EventKit \
+       returns for that id. limit defaults to 50 (max 200); offset pages."
+    ),
   },
   ToolDefinition {
     name: TOOL_GET_EVENT,
     capability: capabilities::EVENTKIT_EVENTS_READ,
     provider: "eventkit",
     operation: "get_event",
-    description: "Get a single event by event_identifier",
+    description: concat!(
+      "Get one event by event_identifier. ",
+      event_time_offset!(),
+      " notes is plain text or Markdown. For a series this is the occurrence EventKit returns for that id."
+    ),
   },
   ToolDefinition {
     name: TOOL_SEARCH_EVENTS,
     capability: capabilities::EVENTKIT_EVENTS_SEARCH,
     provider: "eventkit",
     operation: "search_events",
-    description: "Search events with optional date range, calendar, and text query filters",
+    description: concat!(
+      "Search events by title, notes, or location. With no dates, the range is 1 year before through 2 years \
+       after the server Mac's current time, not the caller's. ",
+      fuzzy_query!(),
+      ". Dates and calendar_identifier still filter. Each row is one occurrence. ",
+      event_time_offset!(),
+      " Rows of a series share event_identifier. limit defaults to 50 (max 200)."
+    ),
   },
   ToolDefinition {
     name: TOOL_CREATE_EVENT,
     capability: capabilities::EVENTKIT_EVENTS_CREATE,
     provider: "eventkit",
     operation: "create_event",
-    description: "Create an event in the given calendar with optional EventKit fields",
+    description: "Create an event. Requires calendar_identifier, title, start_date, and end_date. Alarm, recurrence, and \
+                  structured_location fields are on those properties.",
   },
   ToolDefinition {
     name: TOOL_UPDATE_EVENT,
     capability: capabilities::EVENTKIT_EVENTS_EDIT,
     provider: "eventkit",
     operation: "update_event",
-    description: "Update an existing event by event_identifier with optional EventKit fields",
+    description: "Update an event by event_identifier. Omitted fields stay unchanged. alarms, recurrence_rules, and \
+                  structured_location replace the whole value when sent; [] clears alarms or recurrence.",
   },
   ToolDefinition {
     name: TOOL_MOVE_EVENT,
     capability: capabilities::EVENTKIT_EVENTS_EDIT,
     provider: "eventkit",
     operation: "move_event",
-    description: "Move an event to another calendar by event_identifier and target calendar_identifier",
+    description: "Move an event to another calendar. Requires event_identifier and calendar_identifier. Other \
+                  fields stay unchanged.",
   },
   ToolDefinition {
     name: TOOL_DELETE_EVENT,
@@ -151,56 +228,82 @@ const ALL_TOOLS: [ToolDefinition; 56] = [
     capability: capabilities::EVENTKIT_REMINDERS_READ,
     provider: "eventkit",
     operation: "list_lists",
-    description: "List reminder lists (calendars)",
+    description: "List reminder lists. Each row has calendar_identifier, title, type, source \
+                  {source_identifier, title, type}, and color.",
   },
   ToolDefinition {
     name: TOOL_LIST_REMINDERS,
     capability: capabilities::EVENTKIT_REMINDERS_READ,
     provider: "eventkit",
     operation: "list_reminders",
-    description: "List reminders, optionally filtered by calendar_identifier",
+    description: "List reminders. To find one title, call eventkit_reminders_search_reminders. due_date is YYYY-MM-DD when \
+                  date-only. A timed due with a components time_zone has that zone's numeric offset. With no components \
+                  time_zone a timed due is that wall time with no offset and floating: true (wherever the user is), not \
+                  the server Mac's zone. A due window returns only reminders that have a due date. limit defaults to 50 \
+                  (max 200).",
   },
   ToolDefinition {
     name: TOOL_GET_REMINDER,
     capability: capabilities::EVENTKIT_REMINDERS_READ,
     provider: "eventkit",
     operation: "get_reminder",
-    description: "Get a single reminder by calendar_item_identifier",
+    description: "Get one reminder by calendar_item_identifier. due_date and start_date are YYYY-MM-DD when \
+                  date-only. A timed value with a components time_zone has that zone's numeric offset. With no \
+                  components time_zone a timed value is that wall time with no offset and floating: true \
+                  (wherever the user is), not the server Mac's zone. The reminder time_zone is separate and does \
+                  not stamp the due or start time.",
   },
   ToolDefinition {
     name: TOOL_SEARCH_REMINDERS,
     capability: capabilities::EVENTKIT_REMINDERS_SEARCH,
     provider: "eventkit",
     operation: "search_reminders",
-    description: "Fetch reminders via EventKit predicates only (no free-text search): completion_status incomplete → predicateForIncompleteReminders(withDueDateStarting:ending:calendars:); completed → predicateForCompletedReminders(withCompletionDateStarting:ending:calendars:); all → predicateForReminders(in:). Optional calendar_identifier scopes calendars. due_date_starting/due_date_ending only with incomplete; completion_date_starting/completion_date_ending only with completed; all has no date window in EventKit.",
+    description: concat!(
+      "Search reminders by title, notes, and location. ",
+      fuzzy_query!(),
+      ". completion_status, due dates, and include_overdue match list reminders. A due window returns only \
+       reminders that have a due date. limit defaults to 50 (max 200)."
+    ),
   },
   ToolDefinition {
     name: TOOL_CREATE_REMINDER,
     capability: capabilities::EVENTKIT_REMINDERS_CREATE,
     provider: "eventkit",
     operation: "create_reminder",
-    description: "Create a reminder in the given calendar with optional EventKit fields",
+    description: concat!(
+      "Create a reminder. Requires calendar_identifier and title. A due or start time with hour and minute but \
+       no components time_zone stays floating on write. ",
+      reminder_dates!(),
+      ". Date, alarm, and recurrence fields are on those properties."
+    ),
   },
   ToolDefinition {
     name: TOOL_CREATE_LIST,
     capability: capabilities::EVENTKIT_REMINDERS_CREATE,
     provider: "eventkit",
     operation: "create_list",
-    description: "Create a reminder list with optional color and source",
+    description: "Create a reminder list. Requires title. color and source are optional.",
   },
   ToolDefinition {
     name: TOOL_UPDATE_REMINDER,
     capability: capabilities::EVENTKIT_REMINDERS_EDIT,
     provider: "eventkit",
     operation: "update_reminder",
-    description: "Update an existing reminder by calendar_item_identifier with optional EventKit fields",
+    description: concat!(
+      "Update a reminder by calendar_item_identifier. Omitted fields stay unchanged. ",
+      reminder_dates!(),
+      ". A due or start time with hour and minute but no components time_zone stays floating on write. Null \
+       due_date_components or start_date_components clears that date. alarms and recurrence_rules \
+       replace the whole list when sent."
+    ),
   },
   ToolDefinition {
     name: TOOL_MOVE_REMINDER,
     capability: capabilities::EVENTKIT_REMINDERS_EDIT,
     provider: "eventkit",
     operation: "move_reminder",
-    description: "Move a reminder to another list by calendar_item_identifier and target calendar_identifier",
+    description: "Move a reminder to another list. Requires calendar_item_identifier and calendar_identifier. \
+                  Other fields stay unchanged.",
   },
   ToolDefinition {
     name: TOOL_DELETE_REMINDER,
@@ -221,133 +324,167 @@ const ALL_TOOLS: [ToolDefinition; 56] = [
     capability: capabilities::EVENTKIT_REMINDERS_COMPLETE,
     provider: "eventkit",
     operation: "complete_reminder",
-    description: "Set EKReminder.isCompleted = true for calendar_item_identifier (EventKit sets completionDate). Re-fetches after save. For recurring reminders, EventKit advances the series so the obtainable item is typically the next incomplete occurrence (is_completed may be false).",
+    description: "Set a reminder complete by calendar_item_identifier. EventKit sets the completion date and \
+                  advances a repeating reminder, so the result may be the next occurrence.",
   },
   ToolDefinition {
     name: TOOL_UNCOMPLETE_REMINDER,
     capability: capabilities::EVENTKIT_REMINDERS_COMPLETE,
     provider: "eventkit",
     operation: "uncomplete_reminder",
-    description: "Set EKReminder.isCompleted = false for calendar_item_identifier (EventKit clears completionDate). Re-fetches after save.",
+    description: "Set a reminder incomplete by calendar_item_identifier. EventKit clears the completion date.",
   },
   ToolDefinition {
     name: TOOL_SET_REMINDER_ALARMS,
     capability: capabilities::EVENTKIT_REMINDERS_ALARMS,
     provider: "eventkit",
     operation: "set_reminder_alarms",
-    description: "Replace a reminder's alarms by calendar_item_identifier; pass an empty array to remove all",
+    description: "Set a reminder's alarms by calendar_item_identifier. alarms replaces the list; [] removes \
+                  all. Other fields stay unchanged. Alarm fields are on alarms.",
   },
   ToolDefinition {
     name: TOOL_SET_EVENT_ALARMS,
     capability: capabilities::EVENTKIT_EVENTS_ALARMS,
     provider: "eventkit",
     operation: "set_event_alarms",
-    description: "Replace an event's alarms by event_identifier; pass an empty array to remove all",
+    description: "Set an event's alarms by event_identifier. alarms replaces the list; [] removes all. Other \
+                  fields stay unchanged. Alarm fields are on alarms.",
   },
   ToolDefinition {
     name: TOOL_SET_REMINDER_RECURRENCE,
     capability: capabilities::EVENTKIT_REMINDERS_RECURRENCE,
     provider: "eventkit",
     operation: "set_reminder_recurrence",
-    description: "Replace EKReminder.recurrenceRules by calendar_item_identifier; pass an empty array to remove all. EventKit requires dueDateComponents on a repeating reminder (Apple: \"A repeating reminder must have a due date.\"); set due_date_components via create_reminder/update_reminder first. This tool does not invent a due date.",
+    description: "Set a reminder's recurrence rules by calendar_item_identifier. recurrence_rules replaces the \
+                  list; [] clears it. A repeating reminder must already have a due date. Other fields stay unchanged.",
   },
   ToolDefinition {
     name: TOOL_SET_EVENT_RECURRENCE,
     capability: capabilities::EVENTKIT_EVENTS_RECURRENCE,
     provider: "eventkit",
     operation: "set_event_recurrence",
-    description: "Replace an event's recurrence rules by event_identifier; pass an empty array to remove all",
+    description: "Set recurrence on one event by event_identifier. recurrence_rules replaces the list; [] \
+                  clears it. Does not return later occurrences.",
   },
   ToolDefinition {
     name: TOOL_ACCEPT_INVITATION,
     capability: capabilities::EVENTKIT_EVENTS_INVITATIONS,
     provider: "eventkit",
     operation: "accept_invitation",
-    description: "Accept a calendar invitation for an event by event_identifier",
+    description: "Set an event invitation to accepted by event_identifier.",
   },
   ToolDefinition {
     name: TOOL_DECLINE_INVITATION,
     capability: capabilities::EVENTKIT_EVENTS_INVITATIONS,
     provider: "eventkit",
     operation: "decline_invitation",
-    description: "Decline a calendar invitation for an event by event_identifier",
+    description: "Set an event invitation to declined by event_identifier.",
   },
   ToolDefinition {
     name: TOOL_TENTATIVE_INVITATION,
     capability: capabilities::EVENTKIT_EVENTS_INVITATIONS,
     provider: "eventkit",
     operation: "tentative_invitation",
-    description: "Mark a calendar invitation tentative for an event by event_identifier",
+    description: "Set an event invitation to tentative by event_identifier.",
   },
   ToolDefinition {
     name: TOOL_LIST_CONTACTS,
     capability: capabilities::CONTACTS_READ,
     provider: "contacts",
     operation: "list_contacts",
-    description: "List contacts, optionally filtered by container_identifier",
+    description: "List contacts, optionally in one container. Summaries: identifier, name, nickname, \
+                  organization_name, job_title, container_identifier, phone (first, no label), email (first, no \
+                  label). No photo bytes. Labels are words (mobile, home, work, home fax); omit a label you do not \
+                  know. To change one email, contacts_get_contact first; email_addresses replaces the whole list. \
+                  limit defaults to 50 (max 200); offset pages.",
   },
   ToolDefinition {
     name: TOOL_LIST_GROUPS,
     capability: capabilities::CONTACTS_READ,
     provider: "contacts",
     operation: "list_groups",
-    description: "List contact groups, optionally filtered by container_identifier",
+    description: "List contact groups, optionally in one container. Each has identifier and name. limit defaults \
+                  to 50 (max 200); offset pages.",
+  },
+  ToolDefinition {
+    name: TOOL_LIST_CONTAINERS,
+    capability: capabilities::CONTACTS_READ,
+    provider: "contacts",
+    operation: "list_containers",
+    description: "List contact containers. Each has identifier, name, and type (local, exchange, or carddav). \
+                  is_default marks the container create uses when container_identifier is omitted.",
   },
   ToolDefinition {
     name: TOOL_GET_CONTACT,
     capability: capabilities::CONTACTS_READ,
     provider: "contacts",
     operation: "get_contact",
-    description: "Get a single contact by contact_identifier",
+    description: "Get one contact by contact_identifier. Phone, email, and URL values are strings with an \
+                  optional label (plain words such as mobile or home fax; a custom label is unchanged). A postal \
+                  address is that same object on read and write. A photo follows the JSON as image content.",
   },
   ToolDefinition {
     name: TOOL_SEARCH_CONTACTS,
     capability: capabilities::CONTACTS_SEARCH,
     provider: "contacts",
     operation: "search_contacts",
-    description: "Search contacts by name, email_address, and/or phone_number with optional container_identifier",
+    description: concat!(
+      "Search contacts by name, nickname, organization, job title, email, phone, and note. ",
+      fuzzy_query!(),
+      ". Provide at least one of query, name, email_address, or phone_number. name, email_address, and \
+       phone_number are Contacts predicates and apply only when query is omitted. container_identifier limits \
+       either path. Summaries: identifier, name, nickname, organization_name, job_title, \
+       container_identifier, phone (first, no label), email (first, no label). No photo bytes. limit defaults \
+       to 50 (max 200)."
+    ),
   },
   ToolDefinition {
     name: TOOL_CREATE_CONTACT,
     capability: capabilities::CONTACTS_CREATE,
     provider: "contacts",
     operation: "create_contact",
-    description: "Create a contact in the given container with optional CNContact fields",
+    description: "Create a contact. Requires at least one of given_name, family_name, or organization_name. \
+                  Omit container_identifier for the default container. Labeled values and dates match get; date \
+                  fields are on birthday, non_gregorian_birthday, and dates.",
   },
   ToolDefinition {
     name: TOOL_CREATE_GROUP,
     capability: capabilities::CONTACTS_CREATE,
     provider: "contacts",
     operation: "create_group",
-    description: "Create a contact group in the given container",
+    description: "Create a contact group. Requires name. Omit container_identifier for the default container.",
   },
   ToolDefinition {
     name: TOOL_UPDATE_CONTACT,
     capability: capabilities::CONTACTS_EDIT,
     provider: "contacts",
     operation: "update_contact",
-    description: "Update an existing contact by contact_identifier with optional CNContact fields",
+    description: "Update a contact by contact_identifier. Omitted fields stay unchanged. Null clears a field. \
+                  To change one email or phone, contacts_get_contact first and send the whole list back; \
+                  phone_numbers, email_addresses, postal_addresses, url_addresses, contact_relations, \
+                  social_profiles, instant_message_addresses, and dates replace the whole list. Labels are words \
+                  (mobile, home, work, home fax); omit a label you do not know.",
   },
   ToolDefinition {
     name: TOOL_LINK_CONTACTS,
     capability: capabilities::CONTACTS_EDIT,
     provider: "contacts",
     operation: "link_contacts",
-    description: "Link a contact to another unified contact by from_contact_identifier and to_contact_identifier",
+    description: "Link a contact to another by from_contact_identifier and to_contact_identifier.",
   },
   ToolDefinition {
     name: TOOL_UNLINK_CONTACTS,
     capability: capabilities::CONTACTS_EDIT,
     provider: "contacts",
     operation: "unlink_contacts",
-    description: "Unlink a contact from its unified contact card by contact_identifier",
+    description: "Unlink a contact from its unified card by contact_identifier.",
   },
   ToolDefinition {
     name: TOOL_UPDATE_GROUP,
     capability: capabilities::CONTACTS_EDIT,
     provider: "contacts",
     operation: "update_group",
-    description: "Update an existing contact group by group_identifier with optional name",
+    description: "Update a contact group by group_identifier. Omit name to leave it unchanged. Null clears the name.",
   },
   ToolDefinition {
     name: TOOL_DELETE_CONTACT,
@@ -368,98 +505,286 @@ const ALL_TOOLS: [ToolDefinition; 56] = [
     capability: capabilities::MAPKIT_SEARCH,
     provider: "mapkit",
     operation: "search_places",
-    description: "Search for places by natural-language query with optional region bias",
+    description: "Search places with MapKit's natural-language query. For a landmark, pass region and set \
+                  region_priority to required. Omitting region biases results near this server Mac, not near the \
+                  caller. A street address belongs in mapkit_forward_geocode. Each place has name, identifier, and \
+                  coordinate for routing.",
   },
   ToolDefinition {
     name: TOOL_SEARCH_NEARBY,
     capability: capabilities::MAPKIT_SEARCH,
     provider: "mapkit",
     operation: "search_nearby",
-    description: "Search for points of interest near a coordinate or region",
+    description: "Search for points of interest near the coordinate or region you pass. It is not the caller's location. \
+                  Each place matches mapkit_search_places.",
   },
   ToolDefinition {
     name: TOOL_REVERSE_GEOCODE,
     capability: capabilities::MAPKIT_GEOCODE,
     provider: "mapkit",
     operation: "reverse_geocode",
-    description: "Resolve a coordinate to address representations",
+    description: "Get places for a coordinate. Each has name, coordinate, and address.",
   },
   ToolDefinition {
     name: TOOL_FORWARD_GEOCODE,
     capability: capabilities::MAPKIT_GEOCODE,
     provider: "mapkit",
     operation: "forward_geocode",
-    description: "Resolve an address string to place representations",
+    description: "Get places for a street address. An optional region biases results toward that region. It is not the \
+                  caller's location unless you pass coordinates. For a landmark, use mapkit_search_places with a \
+                  region bias.",
   },
   ToolDefinition {
     name: TOOL_CALCULATE_ROUTE,
     capability: capabilities::MAPKIT_ROUTING,
     provider: "mapkit",
     operation: "calculate_route",
-    description: "Calculate routes between source and destination coordinates",
+    description: "Calculate routes between source and destination. Each endpoint is a MapKit identifier from \
+                  mapkit_search_places, or a coordinate. name is a label and does not geocode. A coordinate alone is \
+                  reverse-geocoded, and the name is omitted when that fails. Polyline coordinates are omitted. Omitting \
+                  departure_date and arrival_date uses the server Mac's current time. A returned time's offset is the \
+                  place's time zone, or the server Mac's when the place has none (not the caller's).",
   },
   ToolDefinition {
     name: TOOL_ESTIMATE_TRAVEL_TIME,
     capability: capabilities::MAPKIT_ROUTING,
     provider: "mapkit",
     operation: "estimate_travel_time",
-    description: "Estimate travel time between source and destination coordinates",
+    description: "Travel time between two places. Each of source and destination is a MapKit identifier from \
+                  mapkit_search_places, or a coordinate. name is a label and does not geocode. Provide exactly one of \
+                  departure_date or arrival_date, or neither (neither uses this Mac's clock). A returned arrival or \
+                  departure is local wall time with a numeric offset from the place's time zone, or the server Mac's time \
+                  zone when the place has none (not the caller's).",
   },
   ToolDefinition {
     name: TOOL_GET_CURRENT_LOCATION,
     capability: capabilities::CORELOCATION_READ,
     provider: "corelocation",
     operation: "get_current_location",
-    description: "Fetch the device's current GPS fix via CoreLocation",
+    description: "Get this server Mac's current location, not the caller's (do not use it to answer where the user \
+                  is): coordinate, timestamp, and altitude, accuracy, course, and speed when the sensor has a \
+                  reading. Failures are location_services_off, permission_denied \
+                  (denied, restricted, or not determined), or location_unknown (no fix or timeout, including \
+                  kCLErrorDomain error 0). The message says what to change.",
   },
   ToolDefinition {
     name: TOOL_GET_PLACE,
     capability: capabilities::MAPKIT_READ,
     provider: "mapkit",
     operation: "get_place",
-    description: "Look up a place by MapKit identifier with full place metadata",
+    description: "Get a place by MapKit identifier: name, coordinate, phone, url, time zone, category, and address.",
   },
   ToolDefinition {
     name: TOOL_OPEN_NAVIGATION,
     capability: capabilities::MAPKIT_NAVIGATION,
     provider: "mapkit",
     operation: "open_navigation",
-    description: "Open Apple Maps navigation between source and destination coordinates",
+    description: "Open Apple Maps navigation between source and destination. Endpoints match mapkit_calculate_route. \
+                  opened is present when Maps opened.",
   },
   ToolDefinition {
     name: TOOL_GET_USAGE_LOG,
     capability: capabilities::DIAGNOSTICS_READ,
     provider: "diagnostics",
     operation: "get_usage_log",
-    description: "Return the local usage audit log (read-only; no bearer tokens or payloads)",
+    description: "Get the local usage audit log. Each entry has timestamp_utc, event_type, and success, plus \
+                  tool_name and duration_ms when present. success and logging_enabled stay present when false. \
+                  No tokens or payloads.",
   },
   ToolDefinition {
     name: TOOL_RECOGNIZE_TEXT,
     capability: capabilities::VISION_TEXT,
     provider: "vision",
     operation: "recognize_text",
-    description: "Recognize text in a client-provided image using Vision framework OCR",
+    description: "OCR a local image on the server Mac. Pass image_path or base64 image_data, not both. \
+                  image_path is an absolute path of a regular file on this Mac (a symlink is followed when the \
+                  final target is a regular file), at most 20 MiB. No pixel buffers or request ids.",
   },
   ToolDefinition {
     name: TOOL_RECOGNIZE_DOCUMENTS,
     capability: capabilities::VISION_DOCUMENT,
     provider: "vision",
     operation: "recognize_documents",
-    description: "Scan and recognize structured document content in a client-provided image using Vision framework",
+    description: "Recognize a document's text, tables, and lists in a local image on the server Mac. Pass \
+                  image_path or base64 image_data, not both. image_path is an absolute path of a regular file on \
+                  this Mac (a symlink is followed when the final target is a regular file), at most 20 MiB. No \
+                  segmentation masks or pixel buffers.",
   },
   ToolDefinition {
     name: TOOL_DETECT_BARCODES,
     capability: capabilities::VISION_BARCODES,
     provider: "vision",
     operation: "detect_barcodes",
-    description: "Detect barcodes and QR codes in a client-provided image using Vision framework",
+    description: "Detect barcodes and QR codes in a local image on the server Mac. Pass image_path or base64 \
+                  image_data, not both. image_path is an absolute path of a regular file on this Mac (a symlink is \
+                  followed when the final target is a regular file), at most 20 MiB. Each result has symbology, \
+                  payload_string, and a bounding region. No raw payload bytes.",
   },
   ToolDefinition {
     name: TOOL_DETECT_FACE_LANDMARKS,
     capability: capabilities::VISION_FACES,
     provider: "vision",
     operation: "detect_face_landmarks",
-    description: "Detect faces and facial landmarks in a client-provided image using Vision framework",
+    description: "Detect faces and facial landmarks in a local image on the server Mac. Pass image_path or \
+                  base64 image_data, not both. image_path is an absolute path of a regular file on this Mac (a \
+                  symlink is followed when the final target is a regular file), at most 20 MiB. No segmentation masks.",
+  },
+  ToolDefinition {
+    name: TOOL_NOTES_LIST_FOLDERS,
+    capability: capabilities::NOTES_READ,
+    provider: "notes",
+    operation: "list_folders",
+    description: "List Notes folders, sorted by path. Each has identifier, name, path (names from the account \
+                  root joined by /), account {identifier, name}, note_count, parent_identifier when nested, and \
+                  kind recently_deleted or smart. Folders not yet downloaded are left out. Pass path as \
+                  folder_path on other notes tools.",
+  },
+  ToolDefinition {
+    name: TOOL_NOTES_LIST_NOTES,
+    capability: capabilities::NOTES_READ,
+    provider: "notes",
+    operation: "list_notes",
+    description: "List notes as short summaries, pinned first, then most recently modified. To find text, call \
+                  notes_search_notes. Pass exactly one of folder_identifier or folder_path, or neither. Without a \
+                  folder, Recently Deleted and notes not yet downloaded are left out. Each summary has identifier, \
+                  title, folder {identifier, path, account}, creation_date and modification_date (UTC instants with \
+                  a Z suffix, not the caller's local time and not the server Mac's local zone), attachment_count, \
+                  snippet, and true flags. Inline tables stay in the body. limit defaults to 50 (max 200); offset \
+                  skips summaries. Get a note for its full body.",
+  },
+  ToolDefinition {
+    name: TOOL_NOTES_GET_NOTE,
+    capability: capabilities::NOTES_READ,
+    provider: "notes",
+    operation: "get_note",
+    description: "Read one note's Markdown body. Pass exactly one of note_identifier or note_title (exact, \
+                  case-insensitive; live notes only, and Recently Deleted only when the folder is that folder). \
+                  Narrow a title with folder_identifier or folder_path. Search or list returns identifiers; this \
+                  call returns the body. If a search match names an attachment, call notes_get_attachment \
+                  directly. Same fields as a list summary, without snippet, plus body and the attachments it \
+                  references, including attachment:<id> links. creation_date and modification_date (UTC instants \
+                  with a Z suffix, not the caller's local time and not the server Mac's local zone). Attachment \
+                  creation_date and modification_date are the same UTC instants. Inline tables stay in the body.",
+  },
+  ToolDefinition {
+    name: TOOL_NOTES_GET_ATTACHMENT,
+    capability: capabilities::NOTES_READ,
+    provider: "notes",
+    operation: "get_attachment",
+    description: "Read one attachment by identifier. Call it directly when a search match names the attachment; \
+                  notes_get_note is not required first. format defaults to markdown and may be image or original. \
+                  markdown pages content by Unicode characters (offset is not a page or byte offset; \
+                  max_characters default 15000, at most 100000). Documents are converted locally. Markdown does not \
+                  read a file larger than 50 MiB (error extraction_too_large, no text). Video, audio, and other \
+                  unsupported types are recognized from the UTI, the extension, and a short header and are not read \
+                  in full. Scans and photos \
+                  return OCR Notes has already stored; for a local image with no stored text, use \
+                  vision_recognize_text. image returns a viewable JPEG. original copies the file to \
+                  $TMPDIR/abridge-attachments/<attachment identifier>/<file name> and sets file_path, with no size \
+                  cap. source_path is the Notes file when it is on disk. file_size is the size on disk when the \
+                  file is present, otherwise the size Notes stored. creation_date and modification_date are the \
+                  same UTC instants (Z suffix, not the caller's local time and not the server Mac's local zone). \
+                  attachment_not_viewable, attachment_file_unavailable, attachment_locked, attachment_encrypted, \
+                  attachment_unreadable, extraction_too_large, and attachment_has_no_file name why a file was not \
+                  returned.",
+  },
+  ToolDefinition {
+    name: TOOL_NOTES_SEARCH_NOTES,
+    capability: capabilities::NOTES_SEARCH,
+    provider: "notes",
+    operation: "search_notes",
+    description: concat!(
+      "Search notes and attachment text. Attachment files larger than 50 MiB are not read or indexed. Returns \
+       identifiers and matches. Get a note for its full body. If matches[].field is `attachment: <id> <title>`, \
+       call notes_get_attachment directly. ",
+      fuzzy_query!(),
+      ". Pass exactly one of folder_identifier or folder_path to search that folder, including Recently \
+       Deleted; without either, those notes are left out. modified_after and modified_before are exclusive \
+       RFC 3339 bounds. They need a numeric offset; the server's time zone is not used. Hit creation_date and \
+       modification_date (UTC instants with a Z suffix, not the caller's local time and not the server Mac's \
+       local zone). Best matches first: the summary without body or snippet, plus score and up to 3 matches \
+       {field, excerpt}. A match on attachment text also includes attachment_identifier and attachment_title. \
+       excerpt is the matched line or table row, capped at 120 characters, with the match inside «». limit \
+       defaults to 20 (max 100); offset skips hits."
+    ),
+  },
+  ToolDefinition {
+    name: TOOL_NOTES_CREATE_NOTE,
+    capability: capabilities::NOTES_CREATE,
+    provider: "notes",
+    operation: "create_note",
+    description: concat!(
+      "Create a note in a folder and return it (same shape as notes_get_note). `- [ ]` and `- [x]` are stored \
+       as ordinary bullets, not a native Notes checklist, so a later notes_update_note can replace the text. \
+       Pass exactly one of folder_identifier or folder_path, plus body. creation_date and modification_date \
+       (UTC instants with a Z suffix, not the caller's local time and not the server Mac's local zone). ",
+      notes_markdown!()
+    ),
+  },
+  ToolDefinition {
+    name: TOOL_NOTES_UPDATE_NOTE,
+    capability: capabilities::NOTES_EDIT,
+    provider: "notes",
+    operation: "update_note",
+    description: concat!(
+      "Replaces the whole body and returns the note (same shape as notes_get_note). It is not an append or an \
+       item patch. Refuses with body_would_drop_content when the note is password protected or already has a \
+       native Notes checklist or a non-table attachment, and names each one; nothing is written. Refuses with \
+       body_unavailable when the current body is missing, not downloaded, past the inflate limit, or not a note \
+       protobuf, including a note_identifier that is still awaiting download; nothing is written. Refuses with \
+       note_changed when the live note's modification date is newer than the snapshot just read, or the live \
+       attachment count differs; nothing is written, so read the note again and retry. An identical body (the \
+       requested Markdown already matches the stored note after normalization) succeeds without waiting. Success \
+       confirms note_data changed, not modification_date alone. On write_unconfirmed, or if scripting times out, \
+       the change may have happened; read the note before retrying. Resend a Notes \
+       table as a Markdown table or it is converted to text. Pass exactly one of note_identifier or note_title, \
+       plus body. creation_date and modification_date (UTC instants with a Z suffix, not the caller's local \
+       time and not the server Mac's local zone). ",
+      notes_markdown!()
+    ),
+  },
+  ToolDefinition {
+    name: TOOL_NOTES_MOVE_NOTE,
+    capability: capabilities::NOTES_EDIT,
+    provider: "notes",
+    operation: "move_note",
+    description: "Move one note to the destination folder_path or folder_identifier. note_title or \
+                  note_identifier finds the source; duplicate titles return note_title_ambiguous and change \
+                  nothing. Returns the moved note (same shape as notes_get_note). creation_date and \
+                  modification_date (UTC instants with a Z suffix, not the caller's local time and not the server \
+                  Mac's local zone).",
+  },
+  ToolDefinition {
+    name: TOOL_NOTES_DELETE_NOTE,
+    capability: capabilities::NOTES_DELETE,
+    provider: "notes",
+    operation: "delete_note",
+    description: "Moves the note to Recently Deleted. It is not erased: deletion is recently_deleted. Restore \
+                  with notes_move_note. Returns the note there (same shape as notes_get_note) plus deletion. Pass \
+                  exactly one of note_identifier or note_title. A note already in Recently Deleted is refused; \
+                  permanent deletion is not available. creation_date and modification_date (UTC instants with a Z \
+                  suffix, not the caller's local time and not the server Mac's local zone).",
+  },
+  ToolDefinition {
+    name: TOOL_NOTES_CREATE_FOLDER,
+    capability: capabilities::NOTES_CREATE,
+    provider: "notes",
+    operation: "create_folder",
+    description: "Create a folder and return it (same shape as notes_list_folders). Pass account_identifier for a \
+                  top-level folder, or exactly one of folder_identifier or folder_path as the parent. \
+                  account_identifier may accompany folder_path. A sibling name that matches exactly and \
+                  case-sensitively fails with folder_name_taken and the existing folder's identifier.",
+  },
+  ToolDefinition {
+    name: TOOL_NOTES_DELETE_FOLDER,
+    capability: capabilities::NOTES_DELETE,
+    provider: "notes",
+    operation: "delete_folder",
+    description: "Delete an empty folder and return {folder_identifier}. Pass exactly one of folder_identifier or \
+                  folder_path. The script rechecks the live folder immediately before deleting and returns \
+                  folder_not_empty if it now holds notes or subfolders. Success is the row gone or marked for \
+                  deletion. Refuses folder_not_empty, folder_recently_deleted, folder_smart, and folder_is_default. \
+                  If Notes has not saved the delete, the code is folder_delete_unsaved.",
   },
 ];
 
@@ -494,9 +819,14 @@ fn route_endpoint_schema() -> serde_json::Value {
   serde_json::json!({
     "type": "object",
     "properties": {
-      "coordinate": coordinate_schema()
-    },
-    "required": ["coordinate"]
+      "coordinate": coordinate_schema(),
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Label on the result. It does not geocode. Pass a coordinate or a MapKit identifier from mapkit_search_places."
+      },
+      "identifier": { "type": "string", "minLength": 1 }
+    }
   })
 }
 
@@ -505,30 +835,6 @@ fn nullable_transport_type_schema() -> serde_json::Value {
   serde_json::json!({
     "type": ["string", "null"],
     "enum": ["automobile", "walking", "transit", "cycling", "any", null]
-  })
-}
-
-/// `departure_date` and `arrival_date` are optional but mutually exclusive (Swift rejects both).
-fn route_eta_date_constraints() -> serde_json::Value {
-  serde_json::json!({
-    "oneOf": [
-      {
-        "not": {
-          "anyOf": [
-            { "required": ["departure_date"] },
-            { "required": ["arrival_date"] }
-          ]
-        }
-      },
-      {
-        "required": ["departure_date"],
-        "not": { "required": ["arrival_date"] }
-      },
-      {
-        "required": ["arrival_date"],
-        "not": { "required": ["departure_date"] }
-      }
-    ]
   })
 }
 
@@ -542,6 +848,26 @@ fn non_whitespace_string() -> serde_json::Value {
 
 fn nullable_string_date_time() -> serde_json::Value {
   serde_json::json!({ "type": ["string", "null"], "format": "date-time" })
+}
+
+/// An absolute instant. The server Mac's zone is not applied.
+fn offset_date_time_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": "string",
+    "format": "date-time",
+    "description": absolute_instant!()
+  })
+}
+
+fn event_write_date_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": "string",
+    "description": concat!(
+      "Timed value, ",
+      client_resolves_relative_date!(),
+      ". All-day: 2026-10-26 with is_all_day."
+    )
+  })
 }
 
 fn nullable_integer() -> serde_json::Value {
@@ -563,27 +889,17 @@ fn alarm_entry_schema() -> serde_json::Value {
   serde_json::json!({
     "type": "object",
     "properties": {
-      "absolute_date": nullable_string_date_time(),
-      "relative_offset": nullable_number(),
+      "absolute_date": with_description(
+        nullable_string_date_time(),
+        absolute_instant!()
+      ),
+      "relative_offset": with_description(nullable_number(), "Seconds from the start. Negative is before."),
       "proximity": {
         "type": ["string", "null"],
         "enum": ["none", "enter", "leave", null]
       },
       "email_address": nullable_string(),
-      "structured_location": {
-        "type": ["object", "null"],
-        "properties": {
-          "title": nullable_string(),
-          "radius": nullable_number(),
-          "geo_location": {
-            "type": ["object", "null"],
-            "properties": {
-              "latitude": nullable_number(),
-              "longitude": nullable_number()
-            }
-          }
-        }
-      }
+      "structured_location": structured_location_schema(true)
     }
   })
 }
@@ -614,7 +930,10 @@ fn recurrence_rule_entry_schema() -> serde_json::Value {
       "recurrence_end": {
         "type": ["object", "null"],
         "properties": {
-          "end_date": nullable_string_date_time(),
+          "end_date": with_description(
+            nullable_string_date_time(),
+            absolute_instant!()
+          ),
           "occurrence_count": nullable_integer()
         }
       },
@@ -623,7 +942,11 @@ fn recurrence_rule_entry_schema() -> serde_json::Value {
         "items": {
           "type": "object",
           "properties": {
-            "day_of_the_week": { "type": "integer" },
+            "day_of_the_week": {
+              "type": "integer",
+              "enum": [1, 2, 3, 4, 5, 6, 7],
+              "description": "Sunday=1, Monday=2, Tuesday=3, Wednesday=4, Thursday=5, Friday=6, Saturday=7."
+            },
             "week_number": nullable_integer()
           },
           "required": ["day_of_the_week"]
@@ -644,9 +967,10 @@ fn structured_location_schema(nullable: bool) -> serde_json::Value {
     "type": "object",
     "properties": {
       "title": nullable_string(),
-      "radius": nullable_number(),
+      "radius": with_description(nullable_number(), "Meters."),
       "geo_location": {
         "type": ["object", "null"],
+        "description": "latitude and longitude.",
         "properties": {
           "latitude": { "type": "number" },
           "longitude": { "type": "number" }
@@ -666,6 +990,69 @@ fn structured_location_schema(nullable: bool) -> serde_json::Value {
   }
 }
 
+fn with_description(mut schema: serde_json::Value, description: &str) -> serde_json::Value {
+  if let Some(object) = schema.as_object_mut() {
+    object.insert("description".to_owned(), serde_json::json!(description));
+  }
+  schema
+}
+
+fn reminder_priority_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 9,
+    "description": "0 none (omitted on read), 1-4 high, 5 medium, 6-9 low."
+  })
+}
+
+fn reminder_date_components_schema(nullable: bool) -> serde_json::Value {
+  let type_value = if nullable {
+    serde_json::json!(["object", "null"])
+  } else {
+    serde_json::json!("object")
+  };
+  serde_json::json!({
+    "type": type_value,
+    "description": "Omit hour and minute for a date-only value. A clock time with no time_zone stays floating (wall \
+     time wherever the user is, returned with floating: true and no offset). For 09:00 in New York on \
+     2026-10-26, set year 2026, month 10, day 26, hour 9, minute 0, and time_zone America/New_York. This Mac's \
+     zone is not applied.",
+    "properties": {
+      "year": { "type": "integer" },
+      "month": { "type": "integer", "minimum": 1, "maximum": 12 },
+      "day": { "type": "integer", "minimum": 1, "maximum": 31 },
+      "hour": { "type": "integer", "minimum": 0, "maximum": 23 },
+      "minute": { "type": "integer", "minimum": 0, "maximum": 59 },
+      "second": { "type": "integer", "minimum": 0, "maximum": 60 },
+      "time_zone": {
+        "type": "string",
+        "description": "IANA zone that stamps this value, not the reminder time_zone."
+      }
+    }
+  })
+}
+
+fn cg_color_schema(nullable: bool) -> serde_json::Value {
+  let type_value = if nullable {
+    serde_json::json!(["object", "null"])
+  } else {
+    serde_json::json!("object")
+  };
+  serde_json::json!({
+    "type": type_value,
+    "properties": {
+      "components": {
+        "type": "array",
+        "items": { "type": "number" },
+        "minItems": 1
+      },
+      "alpha": { "type": "number" },
+      "color_space_model": { "type": "string" }
+    }
+  })
+}
+
 fn recurrence_rules_array_schema(nullable: bool) -> serde_json::Value {
   if nullable {
     serde_json::json!({
@@ -683,6 +1070,7 @@ fn recurrence_rules_array_schema(nullable: bool) -> serde_json::Value {
 fn contact_date_components_schema() -> serde_json::Value {
   serde_json::json!({
     "type": "object",
+    "description": "year, month, and day are enough for a birthday. time_zone is an IANA name.",
     "properties": {
       "era": nullable_integer(),
       "year": nullable_integer(),
@@ -718,7 +1106,10 @@ fn contact_labeled_value_schema(value_schema: serde_json::Value) -> serde_json::
   serde_json::json!({
     "type": "object",
     "properties": {
-      "label": nullable_string(),
+      "label": with_description(
+        nullable_string(),
+        "Word: mobile, home, work, or home fax. Omit when unknown. A custom label is kept."
+      ),
       "value": value_schema
     },
     "required": ["value"]
@@ -726,16 +1117,7 @@ fn contact_labeled_value_schema(value_schema: serde_json::Value) -> serde_json::
 }
 
 fn contact_phone_numbers_schema() -> serde_json::Value {
-  serde_json::json!({
-    "type": "array",
-    "items": contact_labeled_value_schema(serde_json::json!({
-      "type": "object",
-      "properties": {
-        "string_value": { "type": "string" }
-      },
-      "required": ["string_value"]
-    }))
-  })
+  contact_string_labeled_values_schema()
 }
 
 fn contact_postal_addresses_schema() -> serde_json::Value {
@@ -866,6 +1248,66 @@ fn contact_writable_fields_schema() -> serde_json::Map<String, serde_json::Value
   .unwrap_or_default()
 }
 
+fn note_text(description: &str) -> serde_json::Value {
+  with_description(non_whitespace_string(), description)
+}
+
+fn note_account_schema() -> serde_json::Value {
+  note_text(
+    "Account identifier from notes_list_folders. With folder_path, pass it when that path exists in more than one account.",
+  )
+}
+
+fn note_folder_path_schema() -> serde_json::Value {
+  note_text(
+    "Exact path from notes_list_folders, case-insensitive, without the account name. Example: Work or Work/Projects. Pass account_identifier when that path exists in two accounts.",
+  )
+}
+
+fn note_folder_destination_schema() -> serde_json::Value {
+  note_text(
+    "Destination path from notes_list_folders, case-insensitive. Example: Work or Work/Projects. It does not find the source note.",
+  )
+}
+
+fn note_folder_parent_schema() -> serde_json::Value {
+  note_text(
+    "Parent path from notes_list_folders, case-insensitive. Omit it and pass account_identifier for a top-level folder.",
+  )
+}
+
+fn note_title_schema() -> serde_json::Value {
+  note_text(
+    "Exact case-insensitive title. folder_path narrows the match. Several matches return note_title_ambiguous and change nothing.",
+  )
+}
+
+fn note_title_source_schema() -> serde_json::Value {
+  note_text(
+    "Finds the source note by exact case-insensitive title. Several matches return note_title_ambiguous and change nothing. folder_path is the destination, not a source filter.",
+  )
+}
+
+fn note_body_schema(description: &str) -> serde_json::Value {
+  with_description(serde_json::json!({ "type": "string" }), description)
+}
+
+fn vision_image_data_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": "string",
+    "minLength": 1,
+    "description": "Base64. Pass exactly one of image_data or image_path."
+  })
+}
+
+fn vision_image_path_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": "string",
+    "minLength": 1,
+    "description": "Absolute path of a regular file on this Mac, at most 20 MiB. A symlink is followed when the final target is a regular file."
+  })
+}
+
 pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
   match tool.name {
     TOOL_LIST_CALENDARS | TOOL_LIST_LISTS => serde_json::json!({
@@ -875,9 +1317,11 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_LIST_EVENTS => serde_json::json!({
       "type": "object",
       "properties": {
-        "start_date": { "type": "string", "format": "date-time" },
-        "end_date": { "type": "string", "format": "date-time" },
-        "calendar_identifier": { "type": "string" }
+        "start_date": offset_date_time_schema(),
+        "end_date": offset_date_time_schema(),
+        "calendar_identifier": { "type": "string" },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 200 },
+        "offset": { "type": "integer", "minimum": 0 }
       },
       "required": ["start_date", "end_date"]
     }),
@@ -891,10 +1335,12 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_SEARCH_EVENTS => serde_json::json!({
       "type": "object",
       "properties": {
-        "start_date": { "type": "string", "format": "date-time" },
-        "end_date": { "type": "string", "format": "date-time" },
+        "start_date": offset_date_time_schema(),
+        "end_date": offset_date_time_schema(),
         "calendar_identifier": { "type": "string" },
-        "query": { "type": "string" }
+        "query": non_whitespace_string(),
+        "limit": { "type": "integer", "minimum": 1, "maximum": 200 },
+        "offset": { "type": "integer", "minimum": 0 }
       },
       "required": ["query"]
     }),
@@ -907,16 +1353,16 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "location": { "type": "string" },
         "url": { "type": "string" },
         "time_zone": { "type": "string" },
-        "start_date": { "type": "string", "format": "date-time" },
-        "end_date": { "type": "string", "format": "date-time" },
+        "start_date": event_write_date_schema(),
+        "end_date": event_write_date_schema(),
         "is_all_day": { "type": "boolean" },
         "availability": {
           "type": "string",
           "enum": ["not_supported", "busy", "free", "tentative", "unavailable"]
         },
         "structured_location": structured_location_schema(true),
-        "alarms": alarms_array_schema(false),
-        "recurrence_rules": recurrence_rules_array_schema(false)
+        "alarms": with_description(alarms_array_schema(false), "Omit for none."),
+        "recurrence_rules": with_description(recurrence_rules_array_schema(false), "Omit for none.")
       },
       "required": ["calendar_identifier", "title", "start_date", "end_date"]
     }),
@@ -947,16 +1393,16 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "location": { "type": ["string", "null"] },
         "url": { "type": ["string", "null"] },
         "time_zone": { "type": ["string", "null"] },
-        "start_date": { "type": "string", "format": "date-time" },
-        "end_date": { "type": "string", "format": "date-time" },
+        "start_date": event_write_date_schema(),
+        "end_date": event_write_date_schema(),
         "is_all_day": { "type": "boolean" },
         "availability": {
           "type": ["string", "null"],
           "enum": ["not_supported", "busy", "free", "tentative", "unavailable", null]
         },
         "structured_location": structured_location_schema(true),
-        "alarms": alarms_array_schema(true),
-        "recurrence_rules": recurrence_rules_array_schema(true)
+        "alarms": with_description(alarms_array_schema(true), "Replaces the list. [] or null clears. Omit to leave unchanged."),
+        "recurrence_rules": with_description(recurrence_rules_array_schema(true), "Replaces the list. [] or null clears. Omit to leave unchanged.")
       },
       "required": ["event_identifier"]
     }),
@@ -964,7 +1410,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "type": "object",
       "properties": {
         "title": non_whitespace_string(),
-        "cg_color": { "type": "object" },
+        "cg_color": cg_color_schema(false),
         "source_identifier": { "type": "string" }
       },
       "required": ["title"]
@@ -974,7 +1420,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "properties": {
         "calendar_identifier": { "type": "string" },
         "title": { "type": "string" },
-        "cg_color": { "type": ["object", "null"] },
+        "cg_color": cg_color_schema(true),
         "source_identifier": { "type": "string" }
       },
       "required": ["calendar_identifier"]
@@ -982,7 +1428,30 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_LIST_REMINDERS => serde_json::json!({
       "type": "object",
       "properties": {
-        "calendar_identifier": { "type": "string" }
+        "calendar_identifier": { "type": "string" },
+        "completion_status": {
+          "type": "string",
+          "enum": ["incomplete", "completed", "all"],
+          "description": "incomplete, completed, or all. Omit to list every reminder. A due window without this field is treated as incomplete."
+        },
+        "due_date_starting": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Start of an incomplete due window, for example 2026-10-26T09:00:00-04:00. This Mac's zone is not applied. A due window returns only reminders that have a due date; undated reminders are included only when this window is omitted. Dropped when include_overdue is true."
+        },
+        "due_date_ending": {
+          "type": "string",
+          "format": "date-time",
+          "description": "End of an incomplete due window, for example 2026-10-26T17:00:00-04:00. This Mac's zone is not applied. A due window returns only reminders that have a due date."
+        },
+        "completion_date_starting": offset_date_time_schema(),
+        "completion_date_ending": offset_date_time_schema(),
+        "include_overdue": {
+          "type": "boolean",
+          "description": "With an incomplete due window, drop due_date_starting so reminders due before that start are included. due_date_ending still applies."
+        },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 200 },
+        "offset": { "type": "integer", "minimum": 0 }
       }
     }),
     TOOL_GET_REMINDER => serde_json::json!({
@@ -995,35 +1464,27 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_SEARCH_REMINDERS => serde_json::json!({
       "type": "object",
       "properties": {
-        "calendar_identifier": {
-          "type": "string",
-          "description": "Optional reminder calendar identifier; when omitted, all reminder calendars are passed to the EventKit predicate"
-        },
+        "calendar_identifier": { "type": "string" },
         "completion_status": {
           "type": "string",
           "enum": ["incomplete", "completed", "all"],
-          "description": "Selects which EventKit predicate API is used: incomplete, completed, or all (predicateForReminders). Defaults to all when omitted."
+          "description": "incomplete, completed, or all. Omit for all. Due dates apply only when incomplete; completion dates only when completed."
         },
         "due_date_starting": {
           "type": "string",
           "format": "date-time",
-          "description": "Maps to withDueDateStarting on predicateForIncompleteReminders; only valid when completion_status is incomplete"
+          "description": "Incomplete due-window start, for example 2026-10-26T09:00:00-04:00. This Mac's zone is not applied. A due window returns only reminders that have a due date; undated reminders are included only when this window is omitted. Dropped when include_overdue is true."
         },
-        "due_date_ending": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Maps to ending (due date) on predicateForIncompleteReminders; only valid when completion_status is incomplete"
+        "due_date_ending": offset_date_time_schema(),
+        "completion_date_starting": offset_date_time_schema(),
+        "completion_date_ending": offset_date_time_schema(),
+        "include_overdue": {
+          "type": "boolean",
+          "description": "Drop due_date_starting so earlier incomplete reminders are included. due_date_ending still applies."
         },
-        "completion_date_starting": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Maps to withCompletionDateStarting on predicateForCompletedReminders; only valid when completion_status is completed"
-        },
-        "completion_date_ending": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Maps to ending (completion date) on predicateForCompletedReminders; only valid when completion_status is completed"
-        }
+        "query": non_whitespace_string(),
+        "limit": { "type": "integer", "minimum": 1, "maximum": 200 },
+        "offset": { "type": "integer", "minimum": 0 }
       }
     }),
     TOOL_CREATE_REMINDER => serde_json::json!({
@@ -1034,14 +1495,17 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "notes": { "type": "string" },
         "location": { "type": "string" },
         "url": { "type": "string" },
-        "priority": { "type": "integer", "minimum": 0, "maximum": 9 },
-        "due_date_components": { "type": "object" },
-        "start_date_components": { "type": "object" },
-        "time_zone": { "type": "string" },
+        "priority": reminder_priority_schema(),
+        "due_date_components": reminder_date_components_schema(false),
+        "start_date_components": reminder_date_components_schema(false),
+        "time_zone": {
+          "type": "string",
+          "description": "The reminder's time zone. It does not stamp the due time; due_date_components.time_zone does."
+        },
         "is_completed": { "type": "boolean" },
-        "completion_date": { "type": "string", "format": "date-time" },
-        "alarms": alarms_array_schema(false),
-        "recurrence_rules": recurrence_rules_array_schema(false)
+        "completion_date": offset_date_time_schema(),
+        "alarms": with_description(alarms_array_schema(false), "Omit for none."),
+        "recurrence_rules": with_description(recurrence_rules_array_schema(false), "Omit for none.")
       },
       "required": ["calendar_identifier", "title"]
     }),
@@ -1054,14 +1518,20 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "notes": { "type": ["string", "null"] },
         "location": { "type": ["string", "null"] },
         "url": { "type": ["string", "null"] },
-        "priority": { "type": "integer", "minimum": 0, "maximum": 9 },
-        "due_date_components": { "type": ["object", "null"] },
-        "start_date_components": { "type": ["object", "null"] },
-        "time_zone": { "type": ["string", "null"] },
+        "priority": reminder_priority_schema(),
+        "due_date_components": reminder_date_components_schema(true),
+        "start_date_components": reminder_date_components_schema(true),
+        "time_zone": {
+          "type": ["string", "null"],
+          "description": "The reminder's time zone. It does not stamp the due time; due_date_components.time_zone does. Null clears it."
+        },
         "is_completed": { "type": "boolean" },
-        "completion_date": { "type": ["string", "null"], "format": "date-time" },
-        "alarms": alarms_array_schema(true),
-        "recurrence_rules": recurrence_rules_array_schema(true)
+        "completion_date": with_description(
+          nullable_string_date_time(),
+          absolute_instant!()
+        ),
+        "alarms": with_description(alarms_array_schema(true), "Replaces the list. [] or null clears. Omit to leave unchanged."),
+        "recurrence_rules": with_description(recurrence_rules_array_schema(true), "Replaces the list. [] or null clears. Omit to leave unchanged.")
       },
       "required": ["calendar_item_identifier"]
     }),
@@ -1094,10 +1564,16 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["calendar_item_identifier"]
     }),
+    TOOL_LIST_CONTAINERS => serde_json::json!({
+      "type": "object",
+      "additionalProperties": false
+    }),
     TOOL_LIST_CONTACTS | TOOL_LIST_GROUPS => serde_json::json!({
       "type": "object",
       "properties": {
-        "container_identifier": { "type": "string" }
+        "container_identifier": { "type": "string" },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 200 },
+        "offset": { "type": "integer", "minimum": 0 }
       }
     }),
     TOOL_GET_CONTACT | TOOL_DELETE_CONTACT => serde_json::json!({
@@ -1120,13 +1596,15 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "name": { "type": "string", "minLength": 1 },
         "email_address": { "type": "string", "minLength": 1 },
         "phone_number": { "type": "string", "minLength": 1 },
-        "container_identifier": { "type": "string" }
-      },
-      "anyOf": [
-        { "required": ["name"] },
-        { "required": ["email_address"] },
-        { "required": ["phone_number"] }
-      ]
+        "container_identifier": { "type": "string" },
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Provide at least one of query, name, email_address, or phone_number."
+        },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 200 },
+        "offset": { "type": "integer", "minimum": 0 }
+      }
     }),
     TOOL_CREATE_GROUP => serde_json::json!({
       "type": "object",
@@ -1134,7 +1612,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "container_identifier": non_whitespace_string(),
         "name": non_whitespace_string()
       },
-      "required": ["container_identifier", "name"]
+      "required": ["name"]
     }),
     TOOL_CREATE_CONTACT => serde_json::json!({
       "type": "object",
@@ -1144,13 +1622,17 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
           "type": "string",
           "enum": ["person", "organization"]
         },
-        "given_name": non_whitespace_string(),
-        "family_name": non_whitespace_string(),
+        "given_name": {
+          "type": "string",
+          "pattern": r".*\S.*",
+          "description": "Provide at least one of given_name, family_name, or organization_name."
+        },
+        "family_name": { "type": "string", "pattern": r".*\S.*" },
         "middle_name": { "type": "string" },
         "name_prefix": { "type": "string" },
         "name_suffix": { "type": "string" },
         "nickname": { "type": "string" },
-        "organization_name": non_whitespace_string(),
+        "organization_name": { "type": "string", "pattern": r".*\S.*" },
         "department_name": { "type": "string" },
         "job_title": { "type": "string" },
         "phonetic_given_name": { "type": "string" },
@@ -1170,13 +1652,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "social_profiles": contact_social_profiles_schema(),
         "instant_message_addresses": contact_instant_message_addresses_schema(),
         "dates": contact_dates_schema()
-      },
-      "required": ["container_identifier"],
-      "anyOf": [
-        { "required": ["given_name"] },
-        { "required": ["family_name"] },
-        { "required": ["organization_name"] }
-      ]
+      }
     }),
     TOOL_UPDATE_CONTACT => {
       let mut properties = contact_writable_fields_schema();
@@ -1347,8 +1823,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "required": ["address"]
     }),
     TOOL_GET_CURRENT_LOCATION => serde_json::json!({
-      "type": "object",
-      "properties": {}
+      "type": "object"
     }),
     TOOL_CALCULATE_ROUTE => serde_json::json!({
       "type": "object",
@@ -1360,8 +1835,8 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
           "enum": ["automobile", "walking", "transit", "cycling", "any"]
         },
         "requests_alternate_routes": { "type": "boolean" },
-        "departure_date": { "type": "string", "format": "date-time" },
-        "arrival_date": { "type": "string", "format": "date-time" },
+        "departure_date": offset_date_time_schema(),
+        "arrival_date": offset_date_time_schema(),
         "toll_preference": {
           "type": "string",
           "enum": ["any", "avoid"]
@@ -1382,11 +1857,18 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
           "type": "string",
           "enum": ["automobile", "walking", "transit", "cycling", "any"]
         },
-        "departure_date": { "type": "string", "format": "date-time" },
-        "arrival_date": { "type": "string", "format": "date-time" }
+        "departure_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Provide exactly one of departure_date or arrival_date, or neither."
+        },
+        "arrival_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Provide exactly one of departure_date or arrival_date, or neither."
+        }
       },
-      "required": ["source", "destination"],
-      "oneOf": route_eta_date_constraints().get("oneOf").cloned().expect("route_eta_date_constraints oneOf")
+      "required": ["source", "destination"]
     }),
     TOOL_GET_PLACE => serde_json::json!({
       "type": "object",
@@ -1413,7 +1895,8 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_RECOGNIZE_DOCUMENTS => serde_json::json!({
       "type": "object",
       "properties": {
-        "image_data": { "type": "string", "minLength": 1 },
+        "image_data": vision_image_data_schema(),
+        "image_path": vision_image_path_schema(),
         "orientation": { "type": "integer", "minimum": 1, "maximum": 8 },
         "revision": { "type": "string", "enum": ["revision1"] },
         "region_of_interest": {
@@ -1469,12 +1952,12 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         },
         "include_segmentation": { "type": "boolean" }
       },
-      "required": ["image_data"]
     }),
     TOOL_DETECT_BARCODES => serde_json::json!({
       "type": "object",
       "properties": {
-        "image_data": { "type": "string", "minLength": 1 },
+        "image_data": vision_image_data_schema(),
+        "image_path": vision_image_path_schema(),
         "orientation": { "type": "integer", "minimum": 1, "maximum": 8 },
         "revision": { "type": "string", "enum": ["revision1", "revision4"] },
         "region_of_interest": {
@@ -1505,12 +1988,12 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         },
         "coalesce_composite_symbologies": { "type": "boolean" }
       },
-      "required": ["image_data"]
     }),
     TOOL_DETECT_FACE_LANDMARKS => serde_json::json!({
       "type": "object",
       "properties": {
-        "image_data": { "type": "string", "minLength": 1 },
+        "image_data": vision_image_data_schema(),
+        "image_path": vision_image_path_schema(),
         "orientation": { "type": "integer", "minimum": 1, "maximum": 8 },
         "revision": { "type": "integer", "enum": [1, 2, 3] },
         "region_of_interest": {
@@ -1540,12 +2023,12 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
           "enum": ["not_defined", "65_points", "76_points"]
         }
       },
-      "required": ["image_data"]
     }),
     TOOL_RECOGNIZE_TEXT => serde_json::json!({
       "type": "object",
       "properties": {
-        "image_data": { "type": "string", "minLength": 1 },
+        "image_data": vision_image_data_schema(),
+        "image_path": vision_image_path_schema(),
         "orientation": { "type": "integer", "minimum": 1, "maximum": 8 },
         "recognition_languages": {
           "type": "array",
@@ -1588,13 +2071,15 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         },
         "max_candidate_count": { "type": "integer", "minimum": 1, "maximum": 10 }
       },
-      "required": ["image_data"]
     }),
     TOOL_SET_REMINDER_ALARMS => serde_json::json!({
       "type": "object",
       "properties": {
         "calendar_item_identifier": { "type": "string" },
-        "alarms": alarms_array_schema(false)
+        "alarms": with_description(
+          alarms_array_schema(false),
+          "Replaces the list. [] removes all."
+        )
       },
       "required": ["calendar_item_identifier", "alarms"]
     }),
@@ -1602,16 +2087,21 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "type": "object",
       "properties": {
         "event_identifier": { "type": "string" },
-        "alarms": alarms_array_schema(false)
+        "alarms": with_description(
+          alarms_array_schema(false),
+          "Replaces the list. [] removes all."
+        )
       },
       "required": ["event_identifier", "alarms"]
     }),
     TOOL_SET_REMINDER_RECURRENCE => serde_json::json!({
       "type": "object",
-      "description": "Sets EKReminder.recurrenceRules. Non-empty rules require dueDateComponents first (EventKit constraint); empty array clears rules. Does not invent a due date.",
       "properties": {
         "calendar_item_identifier": { "type": "string" },
-        "recurrence_rules": recurrence_rules_array_schema(false)
+        "recurrence_rules": with_description(
+          recurrence_rules_array_schema(false),
+          "Replaces the list. [] clears."
+        )
       },
       "required": ["calendar_item_identifier", "recurrence_rules"]
     }),
@@ -1619,9 +2109,134 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "type": "object",
       "properties": {
         "event_identifier": { "type": "string" },
-        "recurrence_rules": recurrence_rules_array_schema(false)
+        "recurrence_rules": with_description(
+          recurrence_rules_array_schema(false),
+          "Replaces the list. [] clears."
+        )
       },
       "required": ["event_identifier", "recurrence_rules"]
+    }),
+    TOOL_NOTES_LIST_FOLDERS => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "account_identifier": note_account_schema()
+      }
+    }),
+    TOOL_NOTES_LIST_NOTES => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "folder_identifier": non_whitespace_string(),
+        "folder_path": note_folder_path_schema(),
+        "account_identifier": note_account_schema(),
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "description": "Defaults to 50. Maximum 200."
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Skips this many summaries."
+        }
+      }
+    }),
+    TOOL_NOTES_GET_NOTE | TOOL_NOTES_DELETE_NOTE => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "note_identifier": non_whitespace_string(),
+        "note_title": note_title_schema(),
+        "folder_identifier": non_whitespace_string(),
+        "folder_path": note_folder_path_schema(),
+        "account_identifier": note_account_schema()
+      }
+    }),
+    TOOL_NOTES_GET_ATTACHMENT => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "attachment_identifier": non_whitespace_string(),
+        "format": { "type": "string", "enum": ["markdown", "image", "original"] },
+        "max_characters": { "type": "integer", "minimum": 1, "maximum": 100000 },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Unicode-character offset into markdown content, not a page or a byte offset. Continue from next_offset while content_truncated is true."
+        }
+      },
+      "required": ["attachment_identifier"]
+    }),
+    TOOL_NOTES_SEARCH_NOTES => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "query": non_whitespace_string(),
+        "folder_identifier": non_whitespace_string(),
+        "folder_path": note_folder_path_schema(),
+        "account_identifier": note_account_schema(),
+        "modified_after": { "type": "string", "format": "date-time" },
+        "modified_before": { "type": "string", "format": "date-time" },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Defaults to 20. Maximum 100."
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Skips this many hits."
+        }
+      },
+      "required": ["query"]
+    }),
+    TOOL_NOTES_CREATE_NOTE => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "folder_identifier": non_whitespace_string(),
+        "folder_path": note_folder_path_schema(),
+        "account_identifier": note_account_schema(),
+        "body": note_body_schema("Whole Markdown body. The first line `# Title` is the title. There is no separate title field. `- [ ]` and `- [x]` become ordinary bullets.")
+      },
+      "required": ["body"]
+    }),
+    TOOL_NOTES_UPDATE_NOTE => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "note_identifier": non_whitespace_string(),
+        "note_title": note_title_schema(),
+        "folder_identifier": non_whitespace_string(),
+        "folder_path": note_folder_path_schema(),
+        "account_identifier": note_account_schema(),
+        "body": note_body_schema("Replaces the whole body, including the title as the first `# Title` line. It does not append.")
+      },
+      "required": ["body"]
+    }),
+    TOOL_NOTES_MOVE_NOTE => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "note_identifier": non_whitespace_string(),
+        "note_title": note_title_source_schema(),
+        "folder_identifier": with_description(non_whitespace_string(), "Destination folder identifier. It does not find the source note."),
+        "folder_path": note_folder_destination_schema(),
+        "account_identifier": note_account_schema()
+      }
+    }),
+    TOOL_NOTES_CREATE_FOLDER => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "name": non_whitespace_string(),
+        "account_identifier": note_account_schema(),
+        "folder_identifier": non_whitespace_string(),
+        "folder_path": note_folder_parent_schema()
+      },
+      "required": ["name"]
+    }),
+    TOOL_NOTES_DELETE_FOLDER => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "folder_identifier": non_whitespace_string(),
+        "folder_path": note_folder_path_schema(),
+        "account_identifier": note_account_schema()
+      }
     }),
     _ => serde_json::json!({ "type": "object" }),
   }
@@ -1636,12 +2251,13 @@ mod tests {
     TOOL_DELETE_REMINDER, TOOL_DETECT_BARCODES, TOOL_DETECT_FACE_LANDMARKS, TOOL_ESTIMATE_TRAVEL_TIME,
     TOOL_FORWARD_GEOCODE, TOOL_GET_CONTACT, TOOL_GET_CURRENT_LOCATION, TOOL_GET_EVENT, TOOL_GET_PLACE,
     TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS, TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS,
-    TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER,
-    TOOL_OPEN_NAVIGATION, TOOL_RECOGNIZE_DOCUMENTS, TOOL_RECOGNIZE_TEXT, TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS,
-    TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS,
-    TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION,
-    TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT,
-    TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools, input_schema, resolve_tool, tools_for_capabilities,
+    TOOL_LIST_CONTAINERS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT,
+    TOOL_MOVE_REMINDER, TOOL_OPEN_NAVIGATION, TOOL_RECOGNIZE_DOCUMENTS, TOOL_RECOGNIZE_TEXT, TOOL_REVERSE_GEOCODE,
+    TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS,
+    TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE,
+    TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR,
+    TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools, input_schema,
+    resolve_tool, tools_for_capabilities,
   };
 
   /// Claude Code exposes `mcp__<server>__<tool>` and rejects names over 64; 50 leaves room for `mcp__abridge__`.
@@ -1705,7 +2321,7 @@ mod tests {
     let Some((domain, operation)) = rest.split_once('_') else {
       return false;
     };
-    !domain.is_empty() && domain.bytes().all(|b| matches!(b, b'a'..=b'z')) && operation == tool.operation
+    !domain.is_empty() && domain.bytes().all(|b| b.is_ascii_lowercase()) && operation == tool.operation
   }
 
   #[test]
@@ -1994,7 +2610,168 @@ mod tests {
   fn lists_contacts_tool_when_contacts_read_capability_enabled() {
     let tools = tools_for_capabilities(&["contacts.read".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_LIST_CONTACTS, TOOL_LIST_GROUPS, TOOL_GET_CONTACT]);
+    assert_eq!(
+      names,
+      vec![
+        TOOL_LIST_CONTACTS,
+        TOOL_LIST_GROUPS,
+        TOOL_LIST_CONTAINERS,
+        TOOL_GET_CONTACT
+      ]
+    );
+  }
+
+  #[test]
+  fn lists_notes_tools_by_capability() {
+    let names = |capability: &str| -> Vec<&str> {
+      tools_for_capabilities(&[capability.into()])
+        .iter()
+        .map(|tool| tool.name)
+        .collect()
+    };
+    assert_eq!(
+      names("notes.read"),
+      vec![
+        super::TOOL_NOTES_LIST_FOLDERS,
+        super::TOOL_NOTES_LIST_NOTES,
+        super::TOOL_NOTES_GET_NOTE,
+        super::TOOL_NOTES_GET_ATTACHMENT
+      ]
+    );
+    assert_eq!(names("notes.search"), vec![super::TOOL_NOTES_SEARCH_NOTES]);
+    assert_eq!(
+      names("notes.create"),
+      vec![super::TOOL_NOTES_CREATE_NOTE, super::TOOL_NOTES_CREATE_FOLDER]
+    );
+    assert_eq!(
+      names("notes.edit"),
+      vec![super::TOOL_NOTES_UPDATE_NOTE, super::TOOL_NOTES_MOVE_NOTE]
+    );
+    assert_eq!(
+      names("notes.delete"),
+      vec![super::TOOL_NOTES_DELETE_NOTE, super::TOOL_NOTES_DELETE_FOLDER]
+    );
+  }
+
+  #[test]
+  fn notes_schemas_reject_blank_ids_bad_paging_and_folder_xor() {
+    use crate::arg_validation::validate_tool_arguments;
+
+    let tool = |name: &str| *resolve_tool(name).expect(name);
+    let delete = tool(super::TOOL_NOTES_DELETE_NOTE);
+    assert!(validate_tool_arguments(&delete, &serde_json::json!({ "note_identifier": "   " })).is_err());
+    assert!(validate_tool_arguments(&delete, &serde_json::json!({})).is_err());
+    assert!(
+      validate_tool_arguments(
+        &delete,
+        &serde_json::json!({ "note_identifier": "abc", "note_title": "Abc" })
+      )
+      .is_err()
+    );
+    assert!(validate_tool_arguments(&delete, &serde_json::json!({ "note_identifier": "abc" })).is_ok());
+    assert!(validate_tool_arguments(&delete, &serde_json::json!({ "note_title": "Abc" })).is_ok());
+
+    let list = tool(super::TOOL_NOTES_LIST_NOTES);
+    assert!(validate_tool_arguments(&list, &serde_json::json!({ "limit": 0 })).is_err());
+    assert!(validate_tool_arguments(&list, &serde_json::json!({ "limit": 201 })).is_err());
+    assert!(validate_tool_arguments(&list, &serde_json::json!({ "offset": -1 })).is_err());
+    assert!(validate_tool_arguments(&list, &serde_json::json!({ "limit": 50, "offset": 0 })).is_ok());
+    assert!(validate_tool_arguments(&list, &serde_json::json!({ "folder_path": "Work/Clients" })).is_ok());
+    assert!(
+      validate_tool_arguments(
+        &list,
+        &serde_json::json!({ "folder_identifier": "fold-1", "folder_path": "Notes" })
+      )
+      .is_err()
+    );
+
+    let update = tool(super::TOOL_NOTES_UPDATE_NOTE);
+    assert!(validate_tool_arguments(&update, &serde_json::json!({ "note_identifier": "abc" })).is_err());
+    assert!(validate_tool_arguments(&update, &serde_json::json!({ "body": "x" })).is_err());
+    assert!(
+      validate_tool_arguments(
+        &update,
+        &serde_json::json!({ "note_identifier": "abc", "body": "<p>x</p>" })
+      )
+      .is_ok()
+    );
+    assert!(validate_tool_arguments(&update, &serde_json::json!({ "note_title": "Abc", "body": "x" })).is_ok());
+
+    let folder = tool(super::TOOL_NOTES_CREATE_FOLDER);
+    assert!(validate_tool_arguments(&folder, &serde_json::json!({ "name": "Inbox" })).is_err());
+    assert!(
+      validate_tool_arguments(
+        &folder,
+        &serde_json::json!({ "name": "Inbox", "account_identifier": "a", "folder_identifier": "b" })
+      )
+      .is_err()
+    );
+    assert!(
+      validate_tool_arguments(
+        &folder,
+        &serde_json::json!({ "name": "Inbox", "folder_identifier": "b", "folder_path": "Notes" })
+      )
+      .is_err()
+    );
+    assert!(
+      validate_tool_arguments(
+        &folder,
+        &serde_json::json!({ "name": "Inbox", "folder_path": "Work/Clients", "account_identifier": "a" })
+      )
+      .is_ok()
+    );
+    assert!(
+      validate_tool_arguments(
+        &folder,
+        &serde_json::json!({ "name": "   ", "account_identifier": "a" })
+      )
+      .is_err()
+    );
+    assert!(
+      validate_tool_arguments(
+        &folder,
+        &serde_json::json!({ "name": "Inbox", "account_identifier": "a" })
+      )
+      .is_ok()
+    );
+    assert!(
+      validate_tool_arguments(
+        &folder,
+        &serde_json::json!({ "name": "Inbox", "folder_identifier": "parent" })
+      )
+      .is_ok()
+    );
+
+    let attachment = tool(super::TOOL_NOTES_GET_ATTACHMENT);
+    assert!(validate_tool_arguments(&attachment, &serde_json::json!({ "attachment_identifier": "att" })).is_ok());
+    assert!(
+      validate_tool_arguments(
+        &attachment,
+        &serde_json::json!({ "attachment_identifier": "att", "format": "image" })
+      )
+      .is_ok()
+    );
+    assert!(
+      validate_tool_arguments(
+        &attachment,
+        &serde_json::json!({ "attachment_identifier": "att", "format": "binary" })
+      )
+      .is_err()
+    );
+    assert!(
+      validate_tool_arguments(
+        &attachment,
+        &serde_json::json!({ "attachment_identifier": "att", "max_characters": 15000, "offset": 0 })
+      )
+      .is_ok()
+    );
+    assert!(
+      validate_tool_arguments(
+        &attachment,
+        &serde_json::json!({ "attachment_identifier": "att", "max_characters": 100001 })
+      )
+      .is_err()
+    );
   }
 
   #[test]
@@ -2051,7 +2828,7 @@ mod tests {
   }
 
   #[test]
-  fn create_group_schema_requires_container_identifier_and_name() {
+  fn create_group_schema_requires_name_and_allows_optional_container() {
     let tool = all_tools()
       .iter()
       .find(|tool| tool.name == TOOL_CREATE_GROUP)
@@ -2065,7 +2842,7 @@ mod tests {
           .filter_map(|field| field.as_str().map(str::to_owned))
           .collect::<Vec<_>>()
       }),
-      Some(vec!["container_identifier".to_owned(), "name".to_owned()])
+      Some(vec!["name".to_owned()])
     );
     assert_eq!(
       string_property_pattern(&schema, "container_identifier").as_deref(),
@@ -2250,9 +3027,8 @@ mod tests {
         .expect("create_contact tool"),
     );
     for property in ["birthday", "non_gregorian_birthday"] {
-      assert_eq!(
+      assert!(
         nullable_date_component_schema_matches_create(&schema, &create_schema, property),
-        true,
         "{property} must preserve the shared date component schema and only widen type to include null"
       );
     }
@@ -2269,7 +3045,7 @@ mod tests {
   }
 
   #[test]
-  fn create_contact_schema_requires_container_identifier_and_name_field() {
+  fn create_contact_schema_allows_optional_container_and_requires_a_name_field() {
     let tool = all_tools()
       .iter()
       .find(|tool| tool.name == TOOL_CREATE_CONTACT)
@@ -2283,16 +3059,13 @@ mod tests {
           .filter_map(|field| field.as_str().map(str::to_owned))
           .collect::<Vec<_>>()
       }),
-      Some(vec!["container_identifier".to_owned()])
+      None
     );
     assert_eq!(
-      any_of_required_fields(&schema),
-      vec![
-        vec!["given_name".to_owned()],
-        vec!["family_name".to_owned()],
-        vec!["organization_name".to_owned()]
-      ]
+      property_description(&schema, "given_name"),
+      Some("Provide at least one of given_name, family_name, or organization_name.")
     );
+    assert!(schema.get("anyOf").is_none());
     assert_eq!(
       string_property_pattern(&schema, "container_identifier").as_deref(),
       Some(r".*\S.*")
@@ -2318,6 +3091,14 @@ mod tests {
       .expect("create_contact properties");
     assert!(properties.contains_key("image_data"));
     assert!(!properties.contains_key("thumbnail_image_data"));
+    assert_eq!(
+      array_item_properties(&schema, "phone_numbers")
+        .as_ref()
+        .and_then(|properties| properties.get("value"))
+        .and_then(|value| value.get("type"))
+        .and_then(|value| value.as_str()),
+      Some("string")
+    );
     for property in [
       "phone_numbers",
       "email_addresses",
@@ -2438,27 +3219,12 @@ mod tests {
       .unwrap_or_default()
   }
 
-  fn any_of_required_fields(schema: &serde_json::Value) -> Vec<Vec<String>> {
+  fn property_description<'a>(schema: &'a serde_json::Value, property: &str) -> Option<&'a str> {
     schema
-      .get("anyOf")
-      .and_then(|value| value.as_array())
-      .map(|constraints| {
-        constraints
-          .iter()
-          .filter_map(|constraint| {
-            constraint
-              .get("required")
-              .and_then(|required| required.as_array())
-              .map(|fields| {
-                fields
-                  .iter()
-                  .filter_map(|field| field.as_str().map(str::to_owned))
-                  .collect()
-              })
-          })
-          .collect()
-      })
-      .unwrap_or_default()
+      .get("properties")
+      .and_then(|properties| properties.get(property))
+      .and_then(|property_schema| property_schema.get("description"))
+      .and_then(|value| value.as_str())
   }
 
   #[test]
@@ -2473,13 +3239,53 @@ mod tests {
     assert_eq!(string_property_min_length(&schema, "email_address"), Some(1));
     assert_eq!(string_property_min_length(&schema, "phone_number"), Some(1));
     assert_eq!(
-      any_of_required_fields(&schema),
-      vec![
-        vec!["name".to_owned()],
-        vec!["email_address".to_owned()],
-        vec!["phone_number".to_owned()]
-      ]
+      property_description(&schema, "query"),
+      Some("Provide at least one of query, name, email_address, or phone_number.")
     );
+    assert!(schema.get("anyOf").is_none());
+  }
+
+  fn combinator_paths(schema: &serde_json::Value, path: &str, found: &mut Vec<String>) {
+    match schema {
+      serde_json::Value::Object(object) => {
+        for key in ["oneOf", "anyOf", "allOf", "not"] {
+          if object.contains_key(key) {
+            found.push(format!("{path}.{key}"));
+          }
+        }
+        for (key, value) in object {
+          combinator_paths(value, &format!("{path}.{key}"), found);
+        }
+      }
+      serde_json::Value::Array(items) => {
+        for (index, item) in items.iter().enumerate() {
+          combinator_paths(item, &format!("{path}[{index}]"), found);
+        }
+      }
+      _ => {}
+    }
+  }
+
+  #[test]
+  fn input_schemas_have_no_top_level_combinator() {
+    for tool in all_tools() {
+      let schema = input_schema(tool);
+      for key in ["oneOf", "anyOf", "allOf", "not"] {
+        assert!(
+          schema.get(key).is_none(),
+          "{} inputSchema has top-level {key}",
+          tool.name
+        );
+      }
+      let mut nested = Vec::new();
+      combinator_paths(&schema, "$", &mut nested);
+      assert!(
+        nested.is_empty(),
+        "{} inputSchema still has combinators: {}",
+        tool.name,
+        nested.join(", ")
+      );
+    }
   }
 
   #[test]
@@ -2558,12 +3364,11 @@ mod tests {
         .map(|items| items.iter().filter_map(|item| item.as_str()).collect::<Vec<_>>()),
       None
     );
-    assert_eq!(
+    assert!(
       schema
         .get("properties")
         .and_then(|value| value.as_object())
-        .map(|properties| properties.len()),
-      Some(0)
+        .is_none_or(|properties| properties.is_empty())
     );
   }
 
@@ -2645,29 +3450,20 @@ mod tests {
   }
 
   #[test]
-  fn estimate_travel_time_schema_rejects_both_eta_dates() {
+  fn estimate_travel_time_schema_describes_exclusive_dates() {
     let tool = all_tools()
       .iter()
       .find(|tool| tool.name == TOOL_ESTIMATE_TRAVEL_TIME)
       .expect("estimate_travel_time tool");
     let schema = input_schema(tool);
-    let one_of = schema
-      .get("oneOf")
-      .and_then(|value| value.as_array())
-      .expect("estimate_travel_time schema oneOf");
-    assert_eq!(one_of.len(), 3);
-    assert!(one_of.iter().any(|branch| {
-      branch.get("required").and_then(|value| value.as_array()) == Some(&vec![serde_json::json!("departure_date")])
-        && branch.get("not").is_some()
-    }));
-    assert!(one_of.iter().any(|branch| {
-      branch.get("required").and_then(|value| value.as_array()) == Some(&vec![serde_json::json!("arrival_date")])
-        && branch.get("not").is_some()
-    }));
-    assert!(
-      one_of
-        .iter()
-        .any(|branch| branch.get("not").and_then(|value| value.get("anyOf")).is_some())
+    assert!(schema.get("oneOf").is_none());
+    assert_eq!(
+      property_description(&schema, "departure_date"),
+      Some("Provide exactly one of departure_date or arrival_date, or neither.")
+    );
+    assert_eq!(
+      property_description(&schema, "arrival_date"),
+      Some("Provide exactly one of departure_date or arrival_date, or neither.")
     );
   }
 
@@ -2789,22 +3585,12 @@ mod tests {
   }
 
   #[test]
-  fn recognize_text_schema_requires_image_data() {
+  fn recognize_text_accepts_image_data_or_image_path() {
     let tool = all_tools()
       .iter()
       .find(|tool| tool.name == TOOL_RECOGNIZE_TEXT)
       .expect("recognize_text tool");
-    let schema = input_schema(tool);
-    assert_eq!(string_property_min_length(&schema, "image_data"), Some(1));
-    assert_eq!(
-      schema.get("required").and_then(|v| v.as_array()).map(|fields| {
-        fields
-          .iter()
-          .filter_map(|f| f.as_str().map(str::to_owned))
-          .collect::<Vec<_>>()
-      }),
-      Some(vec!["image_data".to_owned()])
-    );
+    assert_vision_image_alternative(&input_schema(tool));
   }
 
   #[test]
@@ -2815,13 +3601,12 @@ mod tests {
   }
 
   #[test]
-  fn recognize_documents_schema_requires_image_data() {
+  fn recognize_documents_accepts_image_data_or_image_path() {
     let tool = all_tools()
       .iter()
       .find(|tool| tool.name == TOOL_RECOGNIZE_DOCUMENTS)
       .expect("recognize_documents tool");
-    let schema = input_schema(tool);
-    assert_eq!(string_property_min_length(&schema, "image_data"), Some(1));
+    assert_vision_image_alternative(&input_schema(tool));
   }
 
   #[test]
@@ -2919,22 +3704,12 @@ mod tests {
   }
 
   #[test]
-  fn detect_barcodes_schema_requires_image_data() {
+  fn detect_barcodes_accepts_image_data_or_image_path() {
     let tool = all_tools()
       .iter()
       .find(|tool| tool.name == TOOL_DETECT_BARCODES)
       .expect("detect_barcodes tool");
-    let schema = input_schema(tool);
-    assert_eq!(string_property_min_length(&schema, "image_data"), Some(1));
-    assert_eq!(
-      schema.get("required").and_then(|v| v.as_array()).map(|fields| {
-        fields
-          .iter()
-          .filter_map(|f| f.as_str().map(str::to_owned))
-          .collect::<Vec<_>>()
-      }),
-      Some(vec!["image_data".to_owned()])
-    );
+    assert_vision_image_alternative(&input_schema(tool));
   }
 
   #[test]
@@ -2945,22 +3720,24 @@ mod tests {
   }
 
   #[test]
-  fn detect_face_landmarks_schema_requires_image_data() {
+  fn detect_face_landmarks_accepts_image_data_or_image_path() {
     let tool = all_tools()
       .iter()
       .find(|tool| tool.name == TOOL_DETECT_FACE_LANDMARKS)
       .expect("detect_face_landmarks tool");
-    let schema = input_schema(tool);
-    assert_eq!(string_property_min_length(&schema, "image_data"), Some(1));
-    assert_eq!(
-      schema.get("required").and_then(|v| v.as_array()).map(|fields| {
-        fields
-          .iter()
-          .filter_map(|f| f.as_str().map(str::to_owned))
-          .collect::<Vec<_>>()
-      }),
-      Some(vec!["image_data".to_owned()])
-    );
+    assert_vision_image_alternative(&input_schema(tool));
+  }
+
+  fn assert_vision_image_alternative(schema: &serde_json::Value) {
+    assert_eq!(string_property_min_length(schema, "image_data"), Some(1));
+    assert_eq!(string_property_min_length(schema, "image_path"), Some(1));
+    assert!(schema.get("oneOf").is_none());
+    let required = schema.get("required").and_then(|value| value.as_array());
+    assert!(required.is_none_or(|fields| {
+      !fields
+        .iter()
+        .any(|field| field.as_str() == Some("image_data") || field.as_str() == Some("image_path"))
+    }));
   }
 
   #[test]

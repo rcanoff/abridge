@@ -7,6 +7,28 @@ import Testing
 struct ContactsProviderListContactsTests {
     @Test
     @MainActor
+    func listContainersMarksOnlyTheDefault() throws {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        mockStore.knownContainerIdentifiers = ["container-1", "icloud"]
+        mockStore.defaultContainerIdentifierValue = "icloud"
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(operation: "list_containers", payloadJson: "{}")
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let containers = try #require(try JSONSerialization.jsonObject(with: data) as? [[String: Any]])
+        let defaultContainer = containers.first { $0["identifier"] as? String == "icloud" }
+        #expect(defaultContainer?["is_default"] as? Bool == true)
+        #expect(defaultContainer?["type"] as? String == "local")
+        #expect(defaultContainer?["name"] as? String == "icloud")
+        let other = containers.first { $0["identifier"] as? String == "container-1" }
+        #expect(other?["is_default"] == nil)
+    }
+
+    @Test
+    @MainActor
     func listContactsReturnsPermissionDeniedWhenUnauthorized() {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .denied

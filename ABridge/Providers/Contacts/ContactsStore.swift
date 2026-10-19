@@ -36,9 +36,19 @@ enum ContactsKeyDescriptors {
     ]
 }
 
+struct ContactsContainerRecord: Equatable, Sendable {
+    var identifier: String
+    var name: String
+    var type: String
+    var isDefault: Bool
+}
+
 @MainActor
 protocol ContactsStoreing {
     func contactsAuthorizationStatus() -> CNAuthorizationStatus
+    func defaultContainerIdentifier() -> String
+    func listContainers() throws -> [ContactsContainerRecord]
+    func containerIdentifiers(forContact identifier: String) -> [String]
     func fetchContacts(containerIdentifier: String?) throws -> [CNContact]
     func fetchGroups(containerIdentifier: String?) throws -> [CNGroup]
     func fetchContact(identifier: String) throws -> CNContact?

@@ -5,4 +5,6 @@ struct ApplePermissionAuthorization: Equatable {
     var eventsAuthorized: Bool
     var contactsAuthorized: Bool
     var locationAuthorized: Bool
+    var notesFullDiskAccessGranted: Bool = false
+    var notesAutomationDenied: Bool = false
 }

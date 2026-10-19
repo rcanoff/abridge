@@ -56,6 +56,8 @@ MCP client
           → Apple framework
 ```
 
+In ABridge, responses flow from the Swift payload through Rust `agent_shape` in `mcp/mod.rs` to the client. Swift adapters serialize framework objects; Rust selects summaries/details, omits internals, ranks local text, and separates binary content. Rust-native Notes bypasses Swift and shapes responses directly in `notes/shape.rs`; diagnostics also stays in Rust. See `docs/conventions.md` § JSON and payloads.
+
 ### Responsibility split
 
 | Layer | Owns | Does not own |
@@ -180,7 +182,7 @@ ABridge/
 - macOS 26+
 - Xcode 26+
 - Swift 6.0+ (project `SWIFT_VERSION` in `project.yml`)
-- Rust 1.85+ (edition 2024)
+- Rust 1.89+ (edition 2024)
 - `just` (recommended task runner)
 
 ```sh
@@ -200,7 +202,7 @@ resolver = "2"
 
 [workspace.package]
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.89"
 ```
 
 `rust/abridge_core/Cargo.toml`:
@@ -210,7 +212,7 @@ rust-version = "1.85"
 name = "abridge_core"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.89"
 
 [lib]
 crate-type = ["lib", "staticlib"]
@@ -737,6 +739,14 @@ Rules:
 - Providers should not own routing, auth, or config validation.
 - Unknown providers should return structured errors, not crash.
 
+#### Rust-native providers without a public framework
+
+The Swift-provider flow and framework-only boundaries in this guide apply to framework-backed providers. Only providers for Apple apps without a public framework may bypass `ProviderBridge`; Notes is the only such provider.
+
+Notes routes directly from the Rust server to `rust/abridge_core/src/notes/`. Rust reads the app-owned SQLite store read-only, decodes note bodies and tables, and runs fixed JXA through `/usr/bin/osascript` for writes, with user input only in a JSON argv argument. Notes owns all mutations and iCloud sync. Rust may also run `/usr/bin/sips` for attachment image renditions; both tools have timeouts.
+
+Swift only registers Notes, gates it on Full Disk Access and Automation, and presents the Permissions card. Notes uses temporary fixture stores/files instead of the bridge test seam. Root `AGENTS.md` and `docs/conventions.md` define its write-safety guards, permissions, agent-facing shapes, and attachment limits. Framework-backed providers keep their thin Swift adapters and Rust response shaping.
+
 ### Step 11 — Provider module pattern for Apple APIs
 
 Each Apple framework gets its own small module with one clear purpose.
@@ -1014,7 +1024,7 @@ Never discard the Rust error class at the Swift boundary. Translate it once, cen
 | Rule | Value |
 |------|-------|
 | Edition | 2024 |
-| MSRV | 1.85 |
+| MSRV | 1.89 |
 | UniFFI | 0.31 |
 | Formatting | `rustfmt.toml`: 120 cols, 2-space indent |
 | Lint | `cargo clippy -- -D warnings` |

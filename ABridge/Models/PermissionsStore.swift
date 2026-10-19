@@ -35,6 +35,20 @@ final class PermissionsStore {
         }
     }
 
+    var requiresAppleNotesAccess: Bool {
+        checkedCapabilityIDs.contains { id in
+            CapabilityCatalog.notesCapabilities.contains { $0.id == id && $0.shipped }
+        }
+    }
+
+    var requiresAppleNotesWriteAccess: Bool {
+        checkedCapabilityIDs.contains { id in
+            CapabilityCatalog.notesCapabilities.contains { capability in
+                capability.id == id && capability.shipped && NotesCapabilityGate.isWrite(capability.capabilityID)
+            }
+        }
+    }
+
     func setChecked(_ checked: Bool, for capabilityID: String) {
         if checked {
             checkedCapabilityIDs.insert(capabilityID)
@@ -83,6 +97,14 @@ final class PermissionsStore {
             return true
         }
 
+        if let notes = CapabilityCatalog.notesCapabilities.first(where: { $0.id == capabilityID && $0.shipped }) {
+            return NotesCapabilityGate.shouldSend(
+                capabilityID: notes.capabilityID,
+                fullDiskAccessGranted: authorization.notesFullDiskAccessGranted,
+                automationDenied: authorization.notesAutomationDenied
+            )
+        }
+
         return authorization.remindersAuthorized
     }
 
@@ -106,6 +128,8 @@ final class PermissionsStore {
             .map(\.id)
         case .contacts:
             CapabilityCatalog.contactsCapabilities.filter(\.shipped).map(\.id)
+        case .notes:
+            CapabilityCatalog.notesCapabilities.filter(\.shipped).map(\.id)
         case .mapkit:
             CapabilityCatalog.mapkitCapabilities.filter(\.shipped).map(\.id)
         case .corelocation:
@@ -144,5 +168,32 @@ final class PermissionsStore {
         } else {
             disableAllShipped(for: kind)
         }
+    }
+}
+
+/// Previous OS grant flags for external System Settings reconciliation after refresh.
+@MainActor
+struct OSAccessGrantSnapshot: Equatable {
+    var reminders: Bool
+    var events: Bool
+    var contacts: Bool
+    var location: Bool
+    var notesFullDiskAccess: Bool
+    var notesAutomationAllowsWrite: Bool
+
+    init(from appStore: AppStore) {
+        reminders = appStore.permissionStatus.grantsReadAccess
+        events = appStore.calendarPermissionStatus.grantsReadAccess
+        contacts = appStore.contactsPermissionStatus.grantsReadAccess
+        location = appStore.locationPermissionStatus.grantsReadAccess
+        notesFullDiskAccess = appStore.notesFullDiskAccessStatus.grantsAccess
+        notesAutomationAllowsWrite = !appStore.notesAutomationStatus.isDenied
+    }
+
+    var notesGrant: NotesAccessGrant {
+        NotesAccessGrant(
+            fullDiskAccessGranted: notesFullDiskAccess,
+            automationAllowsWrite: notesAutomationAllowsWrite
+        )
     }
 }

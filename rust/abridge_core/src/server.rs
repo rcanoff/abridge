@@ -201,13 +201,13 @@ async fn start_http_server(
 
     if let Err(error) = result {
       tracing::error!(%error, "http server exited with error");
-      if let Ok(mut guard) = task_inner.lock() {
-        if matches!(guard.phase, ServerPhase::Running | ServerPhase::Starting) {
-          guard.phase = ServerPhase::Stopped;
-          guard.status = stopped_status_with_error(&guard.config, error.to_string());
-          guard.shutdown_tx = None;
-          guard.server_task = None;
-        }
+      if let Ok(mut guard) = task_inner.lock()
+        && matches!(guard.phase, ServerPhase::Running | ServerPhase::Starting)
+      {
+        guard.phase = ServerPhase::Stopped;
+        guard.status = stopped_status_with_error(&guard.config, error.to_string());
+        guard.shutdown_tx = None;
+        guard.server_task = None;
       }
     }
   });

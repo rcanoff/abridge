@@ -140,6 +140,7 @@ enum EventKitDeserialization {
         components.yearForWeekOfYear = try optionalInt(dictionary["year_for_week_of_year"])
         components.isLeapMonth = try optionalBool(dictionary["is_leap_month"])
 
+        // Absent time_zone stays nil: a clock time with no zone is floating, not the server zone.
         if let timeZoneValue = dictionary["time_zone"] {
             if timeZoneValue is NSNull {
                 components.timeZone = nil
@@ -164,6 +165,25 @@ enum EventKitDeserialization {
         }
 
         return components
+    }
+
+    /// EventKit may stamp the server zone onto a due or start time. Put a nil zone back so the time stays floating.
+    static func assignReminderDate(_ components: DateComponents?, due: Bool, on reminder: EKReminder) {
+        if due {
+            reminder.dueDateComponents = components
+        } else {
+            reminder.startDateComponents = components
+        }
+        guard let components, components.timeZone == nil else { return }
+        if due {
+            guard var stored = reminder.dueDateComponents, stored.timeZone != nil else { return }
+            stored.timeZone = nil
+            reminder.dueDateComponents = stored
+        } else {
+            guard var stored = reminder.startDateComponents, stored.timeZone != nil else { return }
+            stored.timeZone = nil
+            reminder.startDateComponents = stored
+        }
     }
 
     static func foundationCalendar(from dictionary: [String: Any]) throws -> Calendar {

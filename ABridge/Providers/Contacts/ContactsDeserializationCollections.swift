@@ -38,12 +38,33 @@ extension ContactsDeserialization {
     }
 
     static func phoneNumbers(from value: Any?) throws -> [CNLabeledValue<CNPhoneNumber>] {
-        try labeledValues(from: value, field: "phone_numbers") { valueDictionary in
-            guard let stringValue = valueDictionary["string_value"] as? String else {
-                throw ContactsProviderError.invalidArguments("phone_numbers value requires string_value")
+        guard let value else { return [] }
+        if value is NSNull {
+            return []
+        }
+        guard let array = value as? [[String: Any]] else {
+            throw ContactsProviderError.invalidArguments("phone_numbers must be an array")
+        }
+
+        return try array.map { entry in
+            guard entry.keys.contains("value") else {
+                throw ContactsProviderError.invalidArguments("phone_numbers entries require value")
             }
+            let number = try phoneNumber(from: entry["value"])
+            let label = try optionalString(entry["label"])
+            return CNLabeledValue(label: label, value: number)
+        }
+    }
+
+    /// Read returns a plain string. `{string_value}` is the framework phone object and still maps.
+    static func phoneNumber(from value: Any?) throws -> CNPhoneNumber {
+        if let string = value as? String {
+            return CNPhoneNumber(stringValue: string)
+        }
+        if let valueDictionary = value as? [String: Any], let stringValue = valueDictionary["string_value"] as? String {
             return CNPhoneNumber(stringValue: stringValue)
         }
+        throw ContactsProviderError.invalidArguments("phone_numbers values must be strings")
     }
 
     static func postalAddresses(from value: Any?) throws -> [CNLabeledValue<CNPostalAddress>] {

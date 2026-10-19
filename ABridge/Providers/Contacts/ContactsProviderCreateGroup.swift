@@ -33,10 +33,9 @@ extension ContactsProvider {
 
         let dictionary = try parseJSONObject(from: data)
 
-        let trimmedContainer = SchemaTrustedPayload.requiredString(dictionary, "container_identifier")
-
+        let containerIdentifier = resolvedContainerIdentifier(in: dictionary)
         let trimmedName = SchemaTrustedPayload.requiredString(dictionary, "name")
 
-        return CreateGroupArguments(containerIdentifier: trimmedContainer, name: trimmedName)
+        return CreateGroupArguments(containerIdentifier: containerIdentifier, name: trimmedName)
     }
 }

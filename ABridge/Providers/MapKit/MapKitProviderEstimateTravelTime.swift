@@ -7,7 +7,16 @@ extension MapKitProvider {
         do {
             let arguments = try parseEstimateTravelTimeArguments(payloadJson)
             let result = try store.estimateTravelTime(request: arguments)
-            let payloadObject = MapKitSerialization.estimateTravelTimeResponseJSONObject(result: result)
+            let labeled = MapKitEstimateTravelTimeResult(
+                source: MapKitPlaceNames.labeled(result.source, endpoint: arguments.source),
+                destination: MapKitPlaceNames.labeled(result.destination, endpoint: arguments.destination),
+                expectedTravelTime: result.expectedTravelTime,
+                distance: result.distance,
+                expectedArrivalDate: result.expectedArrivalDate,
+                expectedDepartureDate: result.expectedDepartureDate,
+                transportType: result.transportType
+            )
+            let payloadObject = MapKitSerialization.estimateTravelTimeResponseJSONObject(result: labeled)
             let payload = try MapKitSerialization.jsonString(from: payloadObject)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as MapKitProviderError {
@@ -23,8 +32,8 @@ extension MapKitProvider {
         }
 
         let dictionary = try parseJSONObject(from: data)
-        let source = try requiredRouteEndpointArgument(named: "source", in: dictionary)
-        let destination = try requiredRouteEndpointArgument(named: "destination", in: dictionary)
+        let source = try routeEndpoint(named: "source", in: dictionary)
+        let destination = try routeEndpoint(named: "destination", in: dictionary)
         let transportType = try optionalTransportTypeArgument(in: dictionary)
         let departureDate = try optionalISO8601DateArgument(named: "departure_date", in: dictionary)
         let arrivalDate = try optionalISO8601DateArgument(named: "arrival_date", in: dictionary)
@@ -40,44 +49,6 @@ extension MapKitProvider {
             departureDate: departureDate,
             arrivalDate: arrivalDate
         )
-    }
-
-    private func requiredRouteEndpointArgument(
-        named key: String,
-        in dictionary: [String: Any]
-    ) throws -> MapKitRouteEndpoint {
-        let endpointDictionary = SchemaTrustedPayload.requiredObject(dictionary, key)
-        let coordinate = try requiredNestedCoordinateArgument(
-            in: endpointDictionary,
-            prefix: "\(key).coordinate"
-        )
-        return MapKitRouteEndpoint(coordinate: coordinate)
-    }
-
-    private func requiredNestedCoordinateArgument(
-        in dictionary: [String: Any],
-        prefix: String
-    ) throws -> CLLocationCoordinate2D {
-        guard let coordinateDictionary = dictionary["coordinate"] as? [String: Any] else {
-            throw MapKitProviderError.invalidArguments("\(prefix) must be an object")
-        }
-
-        let latitude = try requiredCoordinateComponent(
-            named: "latitude",
-            in: coordinateDictionary,
-            minimum: -90,
-            maximum: 90,
-            prefix: prefix
-        )
-        let longitude = try requiredCoordinateComponent(
-            named: "longitude",
-            in: coordinateDictionary,
-            minimum: -180,
-            maximum: 180,
-            prefix: prefix
-        )
-
-        return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
 
     private func optionalTransportTypeArgument(in dictionary: [String: Any]) throws -> MKDirectionsTransportType {

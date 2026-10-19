@@ -9,6 +9,13 @@ enum ContactsProviderError: Error, Equatable {
     case unlinkingUnavailable
     case unknownOperation(String)
     case invalidArguments(String)
+
+    static func unknownContainerIdentifier(_ identifier: String) -> ContactsProviderError {
+        .invalidArguments(
+            "Unknown container_identifier: \(identifier). Valid identifiers come from contacts_list_containers. "
+                + "Omit container_identifier to use the default container."
+        )
+    }
 }
 
 @MainActor
@@ -78,5 +85,22 @@ final class ContactsProvider {
 
     func providerError(from error: Error) -> ProviderResponse {
         errorResponse(code: "contacts_error", message: error.localizedDescription)
+    }
+
+    /// Omitted or blank `container_identifier` uses the system default container.
+    func resolvedContainerIdentifier(in dictionary: [String: Any]) -> String {
+        if let identifier = SchemaTrustedPayload.optionalString(dictionary, "container_identifier") {
+            return identifier
+        }
+        return store.defaultContainerIdentifier()
+    }
+
+    func contactJSONObject(from contact: CNContact, containerIdentifier: String? = nil) -> [String: Any] {
+        var object = ContactsSerialization.contactJSONObject(from: contact)
+        let resolved = store.containerIdentifiers(forContact: contact.identifier).first ?? containerIdentifier
+        if let resolved {
+            object["container_identifier"] = resolved
+        }
+        return object
     }
 }

@@ -72,6 +72,12 @@ struct PermissionsSettingsView: View {
             previousOSGrants.location = true
             applyAfterMutation()
         }
+        .onChange(of: appStore.notesFullDiskAccessStatus.grantsAccess) { _, _ in
+            reapplyIfNotesGrantChanged()
+        }
+        .onChange(of: appStore.notesAutomationStatus.isDenied) { _, _ in
+            reapplyIfNotesGrantChanged()
+        }
         .safeAreaInset(edge: .bottom) {
             if let lastError = appStore.lastError {
                 Text(lastError)
@@ -107,6 +113,9 @@ struct PermissionsSettingsView: View {
             onDisableAll: { disableAll(for: kind) },
             onRequestAccess: os.onRequest,
             onOpenSystemSettings: os.onOpenSettings,
+            requestsAccess: os.requestsAccess,
+            accessRowGranted: os.accessRowGranted,
+            secondaryOSAccess: secondaryOSAccess(for: kind),
             calendarSharingStore: calendarSharingStore
         )
     }
@@ -124,6 +133,8 @@ struct PermissionsSettingsView: View {
             ]
         case .contacts:
             [(header: nil, items: CapabilityCatalog.contactsCapabilities.filter(\.shipped))]
+        case .notes:
+            [(header: nil, items: CapabilityCatalog.notesCapabilities.filter(\.shipped))]
         case .mapkit:
             [(header: nil, items: CapabilityCatalog.mapkitCapabilities.filter(\.shipped))]
         case .corelocation:
@@ -138,86 +149,11 @@ struct PermissionsSettingsView: View {
         case .reminders: remindersOSWiring
         case .calendarsAndEvents: calendarsOSWiring
         case .contacts: contactsOSWiring
+        case .notes: notesFullDiskAccessOSWiring
         case .mapkit: mapkitOSWiring
         case .corelocation: corelocationOSWiring
         case .vision: visionOSWiring
         }
-    }
-
-    private var remindersOSWiring: ProviderOSWiring {
-        let granted = appStore.permissionStatus.grantsReadAccess
-        return ProviderOSWiring(
-            title: "Reminders Full Access",
-            statusLabel: osAccessLabel(granted: granted, displayName: appStore.permissionStatus.displayName),
-            grantsReadAccess: granted,
-            isDeniedOrRestricted: isDeniedOrRestricted(appStore.permissionStatus),
-            isRequesting: appStore.isRequestingPermission,
-            onRequest: { Task { await appStore.requestAccess() } },
-            onOpenSettings: { appStore.openRemindersPrivacySettings() }
-        )
-    }
-
-    private var calendarsOSWiring: ProviderOSWiring {
-        let granted = appStore.calendarPermissionStatus.grantsReadAccess
-        return ProviderOSWiring(
-            title: "Calendars Full Access",
-            statusLabel: osAccessLabel(granted: granted, displayName: appStore.calendarPermissionStatus.displayName),
-            grantsReadAccess: granted,
-            isDeniedOrRestricted: isDeniedOrRestricted(appStore.calendarPermissionStatus),
-            isRequesting: appStore.isRequestingCalendarPermission,
-            onRequest: { Task { await appStore.requestCalendarAccess() } },
-            onOpenSettings: { appStore.openCalendarPrivacySettings() }
-        )
-    }
-
-    private var contactsOSWiring: ProviderOSWiring {
-        let granted = appStore.contactsPermissionStatus.grantsReadAccess
-        return ProviderOSWiring(
-            title: "Contacts Access",
-            statusLabel: osAccessLabel(granted: granted, displayName: appStore.contactsPermissionStatus.displayName),
-            grantsReadAccess: granted,
-            isDeniedOrRestricted: isDeniedOrRestricted(appStore.contactsPermissionStatus),
-            isRequesting: appStore.isRequestingContactsPermission,
-            onRequest: { Task { await appStore.requestContactsAccess() } },
-            onOpenSettings: { appStore.openContactsPrivacySettings() }
-        )
-    }
-
-    private var mapkitOSWiring: ProviderOSWiring {
-        ProviderOSWiring(
-            title: nil,
-            statusLabel: "Looks up places, routes, and Maps — no macOS privacy permission required.",
-            grantsReadAccess: true,
-            isDeniedOrRestricted: false,
-            isRequesting: false,
-            onRequest: {},
-            onOpenSettings: {}
-        )
-    }
-
-    private var corelocationOSWiring: ProviderOSWiring {
-        let granted = appStore.locationPermissionStatus.grantsReadAccess
-        return ProviderOSWiring(
-            title: "Location Access",
-            statusLabel: osAccessLabel(granted: granted, displayName: appStore.locationPermissionStatus.displayName),
-            grantsReadAccess: granted,
-            isDeniedOrRestricted: isDeniedOrRestricted(appStore.locationPermissionStatus),
-            isRequesting: appStore.isRequestingLocationPermission,
-            onRequest: { Task { await appStore.requestLocationAccess() } },
-            onOpenSettings: { appStore.openLocationPrivacySettings() }
-        )
-    }
-
-    private var visionOSWiring: ProviderOSWiring {
-        ProviderOSWiring(
-            title: nil,
-            statusLabel: "Analyzes image data from MCP clients — no macOS privacy permission required.",
-            grantsReadAccess: true,
-            isDeniedOrRestricted: false,
-            isRequesting: false,
-            onRequest: {},
-            onOpenSettings: {}
-        )
     }
 
     private func osAccessLabel(granted: Bool, displayName: String) -> String {
@@ -271,13 +207,35 @@ struct PermissionsSettingsView: View {
                 remindersAuthorized: appStore.permissionStatus.grantsReadAccess,
                 eventsAuthorized: appStore.calendarPermissionStatus.grantsReadAccess,
                 contactsAuthorized: appStore.contactsPermissionStatus.grantsReadAccess,
-                locationAuthorized: appStore.locationPermissionStatus.grantsReadAccess
+                locationAuthorized: appStore.locationPermissionStatus.grantsReadAccess,
+                notesFullDiskAccessGranted: appStore.notesFullDiskAccessStatus.grantsAccess,
+                notesAutomationDenied: appStore.notesAutomationStatus.isDenied
             )
         }
     }
 
+    /// Re-send saved caps when Full Disk Access or Automation changes in either direction.
+    private func reapplyIfNotesGrantChanged() {
+        let current = OSAccessGrantSnapshot(from: appStore)
+        let notesGrantChanged = notesGrantChanged(from: previousOSGrants, to: current)
+        previousOSGrants.notesFullDiskAccess = current.notesFullDiskAccess
+        previousOSGrants.notesAutomationAllowsWrite = current.notesAutomationAllowsWrite
+        guard notesGrantChanged else { return }
+        applyAfterMutation()
+    }
+
+    private func notesGrantChanged(from previous: OSAccessGrantSnapshot, to current: OSAccessGrantSnapshot) -> Bool {
+        NotesAccessGrantReconciliation.shouldReapply(
+            previous: previous.notesGrant,
+            current: current.notesGrant,
+            requiresNotesAccess: permissionsStore.requiresAppleNotesAccess,
+            requiresNotesWriteAccess: permissionsStore.requiresAppleNotesWriteAccess
+        )
+    }
+
     /// Refresh TCC status, then apply saved MCP caps when any required OS access newly became granted
-    /// (e.g. user returned from System Settings). Covers cases where SwiftUI `.onChange` may not fire.
+    /// (e.g. user returned from System Settings), and whenever the effective Notes grant changes in
+    /// either direction. Covers cases where SwiftUI `.onChange` may not fire.
     private func refreshStatusAndReapplyIfAccessGranted() {
         appStore.refreshStatus()
         let current = OSAccessGrantSnapshot(from: appStore)
@@ -286,24 +244,10 @@ struct PermissionsSettingsView: View {
                 || (!previousOSGrants.events && current.events && permissionsStore.requiresCalendarAccess)
                 || (!previousOSGrants.contacts && current.contacts && permissionsStore.requiresAppleContactsAccess)
                 || (!previousOSGrants.location && current.location && permissionsStore.requiresAppleLocationAccess)
+        let notesGrantChanged = notesGrantChanged(from: previousOSGrants, to: current)
         previousOSGrants = current
-        guard becameAuthorized else { return }
+        guard becameAuthorized || notesGrantChanged else { return }
         applyAfterMutation()
-    }
-}
-
-@MainActor
-private struct OSAccessGrantSnapshot: Equatable {
-    var reminders: Bool
-    var events: Bool
-    var contacts: Bool
-    var location: Bool
-
-    init(from appStore: AppStore) {
-        reminders = appStore.permissionStatus.grantsReadAccess
-        events = appStore.calendarPermissionStatus.grantsReadAccess
-        contacts = appStore.contactsPermissionStatus.grantsReadAccess
-        location = appStore.locationPermissionStatus.grantsReadAccess
     }
 }
 
@@ -315,4 +259,124 @@ private struct ProviderOSWiring {
     let isRequesting: Bool
     let onRequest: () -> Void
     let onOpenSettings: () -> Void
+    var requestsAccess: Bool = true
+    var accessRowGranted: Bool?
+}
+
+private extension PermissionsSettingsView {
+    var remindersOSWiring: ProviderOSWiring {
+        let granted = appStore.permissionStatus.grantsReadAccess
+        return ProviderOSWiring(
+            title: "Reminders Full Access",
+            statusLabel: osAccessLabel(granted: granted, displayName: appStore.permissionStatus.displayName),
+            grantsReadAccess: granted,
+            isDeniedOrRestricted: isDeniedOrRestricted(appStore.permissionStatus),
+            isRequesting: appStore.isRequestingPermission,
+            onRequest: { Task { await appStore.requestAccess() } },
+            onOpenSettings: { appStore.openRemindersPrivacySettings() }
+        )
+    }
+
+    var calendarsOSWiring: ProviderOSWiring {
+        let granted = appStore.calendarPermissionStatus.grantsReadAccess
+        return ProviderOSWiring(
+            title: "Calendars Full Access",
+            statusLabel: osAccessLabel(granted: granted, displayName: appStore.calendarPermissionStatus.displayName),
+            grantsReadAccess: granted,
+            isDeniedOrRestricted: isDeniedOrRestricted(appStore.calendarPermissionStatus),
+            isRequesting: appStore.isRequestingCalendarPermission,
+            onRequest: { Task { await appStore.requestCalendarAccess() } },
+            onOpenSettings: { appStore.openCalendarPrivacySettings() }
+        )
+    }
+
+    var contactsOSWiring: ProviderOSWiring {
+        let granted = appStore.contactsPermissionStatus.grantsReadAccess
+        return ProviderOSWiring(
+            title: "Contacts Access",
+            statusLabel: osAccessLabel(granted: granted, displayName: appStore.contactsPermissionStatus.displayName),
+            grantsReadAccess: granted,
+            isDeniedOrRestricted: isDeniedOrRestricted(appStore.contactsPermissionStatus),
+            isRequesting: appStore.isRequestingContactsPermission,
+            onRequest: { Task { await appStore.requestContactsAccess() } },
+            onOpenSettings: { appStore.openContactsPrivacySettings() }
+        )
+    }
+
+    var mapkitOSWiring: ProviderOSWiring {
+        ProviderOSWiring(
+            title: nil,
+            statusLabel: "Looks up places, routes, and Maps — no macOS privacy permission required.",
+            grantsReadAccess: true,
+            isDeniedOrRestricted: false,
+            isRequesting: false,
+            onRequest: {},
+            onOpenSettings: {}
+        )
+    }
+
+    var corelocationOSWiring: ProviderOSWiring {
+        let granted = appStore.locationPermissionStatus.grantsReadAccess
+        return ProviderOSWiring(
+            title: "Location Access",
+            statusLabel: osAccessLabel(granted: granted, displayName: appStore.locationPermissionStatus.displayName),
+            grantsReadAccess: granted,
+            isDeniedOrRestricted: isDeniedOrRestricted(appStore.locationPermissionStatus),
+            isRequesting: appStore.isRequestingLocationPermission,
+            onRequest: { Task { await appStore.requestLocationAccess() } },
+            onOpenSettings: { appStore.openLocationPrivacySettings() }
+        )
+    }
+
+    var visionOSWiring: ProviderOSWiring {
+        ProviderOSWiring(
+            title: nil,
+            statusLabel: "Analyzes image data from MCP clients — no macOS privacy permission required.",
+            grantsReadAccess: true,
+            isDeniedOrRestricted: false,
+            isRequesting: false,
+            onRequest: {},
+            onOpenSettings: {}
+        )
+    }
+
+    func secondaryOSAccess(for kind: ProviderPermissionKind) -> ProviderSecondaryOSAccess? {
+        guard kind == .notes else { return nil }
+        let status = appStore.notesAutomationStatus
+        return ProviderSecondaryOSAccess(
+            title: "Automation",
+            statusLabel: osAccessLabel(granted: status == .granted, displayName: status.displayName),
+            granted: status == .granted,
+            isDeniedOrRestricted: status.isDenied,
+            isRequesting: appStore.isRequestingNotesAutomation,
+            onRequest: { Task { await appStore.requestNotesAutomationAccess() } },
+            onOpenSystemSettings: { appStore.openAutomationPrivacySettings() }
+        )
+    }
+
+    var notesFullDiskAccessOSWiring: ProviderOSWiring {
+        let status = appStore.notesFullDiskAccessStatus
+        let access = NotesCapabilityGate.access(
+            for: notesCheckedCapabilityIDs,
+            fullDiskAccessGranted: status.grantsAccess,
+            automationDenied: appStore.notesAutomationStatus.isDenied
+        )
+        return ProviderOSWiring(
+            title: "Full Disk Access",
+            statusLabel: osAccessLabel(granted: status.grantsAccess, displayName: status.displayName),
+            grantsReadAccess: access.sendsAll,
+            isDeniedOrRestricted: access.blocksWrites,
+            isRequesting: false,
+            onRequest: {},
+            onOpenSettings: { appStore.openFullDiskAccessSettings() },
+            requestsAccess: false,
+            accessRowGranted: status.grantsAccess
+        )
+    }
+
+    var notesCheckedCapabilityIDs: [String] {
+        CapabilityCatalog.notesCapabilities
+            .filter { $0.shipped && permissionsStore.checkedCapabilityIDs.contains($0.id) }
+            .map(\.capabilityID)
+    }
 }

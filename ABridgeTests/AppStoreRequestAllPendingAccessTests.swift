@@ -20,11 +20,17 @@ struct AppStoreRequestAllPendingAccessTests {
         contacts.requestResult = .success(.authorized)
         location.requestResult = .success(.authorized)
 
+        let notesFullDisk = MockNotesFullDiskAccessService()
+        let notesAutomation = MockNotesAutomationService()
+        notesAutomation.requestResult = .success(.granted)
+        notesAutomation.status = .notDetermined
         let store = AppStore(
             permissionService: reminders,
             eventsPermissionService: events,
             contactsPermissionService: contacts,
-            locationPermissionService: location
+            locationPermissionService: location,
+            notesFullDiskAccessService: notesFullDisk,
+            notesAutomationService: notesAutomation
         )
         store.refreshStatus()
 
@@ -36,6 +42,8 @@ struct AppStoreRequestAllPendingAccessTests {
         #expect(events.requestCallCount == 1)
         #expect(contacts.requestCallCount == 1)
         #expect(location.requestCallCount == 1)
+        #expect(notesAutomation.requestCallCount == 1)
+        #expect(store.notesAutomationStatus == .granted)
         #expect(store.permissionStatus == .authorized)
         #expect(store.calendarPermissionStatus == .authorized)
         #expect(store.contactsPermissionStatus == .authorized)
@@ -58,11 +66,16 @@ struct AppStoreRequestAllPendingAccessTests {
         location.status = .restricted
         contacts.requestResult = .success(.authorized)
 
+        let notesFullDisk = MockNotesFullDiskAccessService()
+        let notesAutomation = MockNotesAutomationService()
+        notesAutomation.requestResult = .success(.granted)
         let store = AppStore(
             permissionService: reminders,
             eventsPermissionService: events,
             contactsPermissionService: contacts,
-            locationPermissionService: location
+            locationPermissionService: location,
+            notesFullDiskAccessService: notesFullDisk,
+            notesAutomationService: notesAutomation
         )
         store.refreshStatus()
 
@@ -72,6 +85,7 @@ struct AppStoreRequestAllPendingAccessTests {
         #expect(events.requestCallCount == 0)
         #expect(contacts.requestCallCount == 1)
         #expect(location.requestCallCount == 0)
+        #expect(notesAutomation.requestCallCount == 0)
         #expect(store.contactsPermissionStatus == .authorized)
     }
 
@@ -91,11 +105,16 @@ struct AppStoreRequestAllPendingAccessTests {
         contacts.requestResult = .success(.authorized)
         location.requestResult = .success(.authorized)
 
+        let notesFullDisk = MockNotesFullDiskAccessService()
+        let notesAutomation = MockNotesAutomationService()
+        notesAutomation.requestResult = .success(.granted)
         let store = AppStore(
             permissionService: reminders,
             eventsPermissionService: events,
             contactsPermissionService: contacts,
-            locationPermissionService: location
+            locationPermissionService: location,
+            notesFullDiskAccessService: notesFullDisk,
+            notesAutomationService: notesAutomation
         )
         store.refreshStatus()
 
@@ -105,6 +124,7 @@ struct AppStoreRequestAllPendingAccessTests {
         #expect(events.requestCallCount == 1)
         #expect(contacts.requestCallCount == 0)
         #expect(location.requestCallCount == 0)
+        #expect(notesAutomation.requestCallCount == 0)
         #expect(store.lastError == "calendar blocked")
     }
 
@@ -120,11 +140,16 @@ struct AppStoreRequestAllPendingAccessTests {
         contacts.status = .restricted
         location.status = .authorized
 
+        let notesFullDisk = MockNotesFullDiskAccessService()
+        let notesAutomation = MockNotesAutomationService()
+        notesAutomation.requestResult = .success(.granted)
         let store = AppStore(
             permissionService: reminders,
             eventsPermissionService: events,
             contactsPermissionService: contacts,
-            locationPermissionService: location
+            locationPermissionService: location,
+            notesFullDiskAccessService: notesFullDisk,
+            notesAutomationService: notesAutomation
         )
         store.refreshStatus()
 
@@ -136,6 +161,7 @@ struct AppStoreRequestAllPendingAccessTests {
         #expect(events.requestCallCount == 0)
         #expect(contacts.requestCallCount == 0)
         #expect(location.requestCallCount == 0)
+        #expect(notesAutomation.requestCallCount == 0)
     }
 
     @Test
@@ -156,13 +182,18 @@ struct AppStoreRequestAllPendingAccessTests {
         contacts.requestResult = .success(.authorized)
         location.requestResult = .success(.authorized)
 
+        let notesFullDisk = MockNotesFullDiskAccessService()
+        let notesAutomation = MockNotesAutomationService()
+        notesAutomation.requestResult = .success(.granted)
         let store = AppStore(
             permissionService: reminders,
             eventsPermissionService: events,
             contactsPermissionService: contacts,
-            locationPermissionService: location
+            locationPermissionService: location,
+            notesFullDiskAccessService: notesFullDisk,
+            notesAutomationService: notesAutomation
         )
-        // Do not refresh — store remains .unknown for all four
+        // Do not refresh — store remains .unknown, including Notes automation.
         #expect(store.hasPendingOSAccessRequest)
 
         await store.requestAllPendingAccess()
@@ -171,5 +202,6 @@ struct AppStoreRequestAllPendingAccessTests {
         #expect(events.requestCallCount == 1)
         #expect(contacts.requestCallCount == 1)
         #expect(location.requestCallCount == 1)
+        #expect(notesAutomation.requestCallCount == 1)
     }
 }

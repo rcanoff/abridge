@@ -42,8 +42,8 @@ final class MockMapKitStore: MapKitStoreing, @unchecked Sendable {
             return first
         }
         return MapKitCalculateRouteResult(
-            source: MapKitTestFixtures.mapItem(coordinate: request.source.coordinate),
-            destination: MapKitTestFixtures.mapItem(coordinate: request.destination.coordinate),
+            source: MapKitTestFixtures.mapItem(coordinate: coordinate(of: request.source)),
+            destination: MapKitTestFixtures.mapItem(coordinate: coordinate(of: request.destination)),
             routes: []
         )
     }
@@ -56,8 +56,8 @@ final class MockMapKitStore: MapKitStoreing, @unchecked Sendable {
 
         let now = Date(timeIntervalSince1970: 1_718_000_000)
         return MapKitEstimateTravelTimeResult(
-            source: MapKitTestFixtures.mapItem(coordinate: request.source.coordinate),
-            destination: MapKitTestFixtures.mapItem(coordinate: request.destination.coordinate),
+            source: MapKitTestFixtures.mapItem(coordinate: coordinate(of: request.source)),
+            destination: MapKitTestFixtures.mapItem(coordinate: coordinate(of: request.destination)),
             expectedTravelTime: 0,
             distance: 0,
             expectedArrivalDate: now,
@@ -82,11 +82,15 @@ final class MockMapKitStore: MapKitStoreing, @unchecked Sendable {
         }
 
         return MapKitOpenNavigationResult(
-            source: MapKitTestFixtures.mapItem(coordinate: request.source.coordinate),
-            destination: MapKitTestFixtures.mapItem(coordinate: request.destination.coordinate),
+            source: MapKitTestFixtures.mapItem(coordinate: coordinate(of: request.source)),
+            destination: MapKitTestFixtures.mapItem(coordinate: coordinate(of: request.destination)),
             transportType: request.transportType,
             directionsMode: nil,
             opened: true
         )
+    }
+
+    private func coordinate(of endpoint: MapKitRouteEndpoint) -> CLLocationCoordinate2D {
+        endpoint.coordinate ?? CLLocationCoordinate2D(latitude: 0, longitude: 0)
     }
 }

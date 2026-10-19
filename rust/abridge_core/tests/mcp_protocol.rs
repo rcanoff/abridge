@@ -133,6 +133,39 @@ fn mcp_initialize_reports_app_version() {
 }
 
 #[test]
+fn mcp_initialize_returns_instructions() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = format!(
+    r#"{{"jsonrpc":"2.0","id":1,"method":"initialize","params":{{"protocolVersion":"{PROTOCOL_VERSION}","capabilities":{{}},"clientInfo":{{"name":"t","version":"0"}}}}}}"#
+  );
+  let (status, resp) = mcp_post(&body, port, &mock);
+  assert_eq!(status, 200);
+  let envelope: Value = serde_json::from_str(&resp).expect("json");
+  let instructions = envelope["result"]["instructions"].as_str().expect("instructions");
+  for entry in [
+    "eventkit_events_search_events",
+    "eventkit_events_list_events",
+    "eventkit_reminders_search_reminders",
+    "contacts_search_contacts",
+    "notes_search_notes",
+    "notes_get_note",
+    "notes_get_attachment",
+    "mapkit_search_places",
+    "mapkit_estimate_travel_time",
+    "vision_recognize_text",
+    "image_path",
+    "notes_list_folders",
+    "corelocation_get_current_location",
+  ] {
+    assert!(instructions.contains(entry), "{entry} missing from {instructions}");
+  }
+  assert!(instructions.contains("Absent keys mean null, false, or empty"));
+  assert!(instructions.contains("0 is kept"));
+  assert!(instructions.contains("not the caller's"));
+}
+
+#[test]
 fn mcp_initialize_returns_server_protocol_not_client_echo() {
   let port = allocate_test_port();
   let mock = MockProviderBridge::new();

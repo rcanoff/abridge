@@ -18,9 +18,7 @@ extension ContactsProvider {
                 identifier: arguments.contactIdentifier,
                 fields: arguments.fields
             )
-            let payload = try ContactsSerialization.jsonString(
-                from: ContactsSerialization.contactJSONObject(from: updated)
-            )
+            let payload = try ContactsSerialization.jsonString(from: contactJSONObject(from: updated))
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as ContactsProviderError {
             return providerErrorResponse(from: error)

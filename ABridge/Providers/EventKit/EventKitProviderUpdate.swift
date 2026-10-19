@@ -133,14 +133,14 @@ extension EventKitProvider {
         case .absent:
             break
         case let .present(dueDateComponents):
-            reminder.dueDateComponents = dueDateComponents
+            EventKitDeserialization.assignReminderDate(dueDateComponents, due: true, on: reminder)
         }
 
         switch arguments.startDateComponents {
         case .absent:
             break
         case let .present(startDateComponents):
-            reminder.startDateComponents = startDateComponents
+            EventKitDeserialization.assignReminderDate(startDateComponents, due: false, on: reminder)
         }
 
         switch arguments.isCompleted {

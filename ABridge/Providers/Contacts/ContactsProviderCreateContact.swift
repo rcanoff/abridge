@@ -16,7 +16,7 @@ extension ContactsProvider {
             let arguments = try parseCreateContactArguments(payloadJson)
             let saved = try store.createContact(in: arguments.containerIdentifier, contact: arguments.contact)
             let payload = try ContactsSerialization.jsonString(
-                from: ContactsSerialization.contactJSONObject(from: saved)
+                from: contactJSONObject(from: saved, containerIdentifier: arguments.containerIdentifier)
             )
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as ContactsProviderError {
@@ -31,20 +31,15 @@ extension ContactsProvider {
     }
 
     func parseCreateContactArguments(_ payloadJson: String) throws -> CreateContactArguments {
-        guard !payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw ContactsProviderError.invalidArguments(
-                "container_identifier and at least one of given_name, family_name, or organization_name are required"
-            )
+        let dictionary: [String: Any]
+        if payloadJson.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            dictionary = [:]
+        } else {
+            guard let data = payloadJson.data(using: .utf8) else {
+                throw ContactsProviderError.invalidArguments("Arguments must be valid UTF-8")
+            }
+            dictionary = try parseJSONObject(from: data)
         }
-
-        guard let data = payloadJson.data(using: .utf8) else {
-            throw ContactsProviderError.invalidArguments("Arguments must be valid UTF-8")
-        }
-
-        let dictionary = try parseJSONObject(from: data)
-
-        // Required non-empty container_identifier is schema-owned (Rust).
-        let trimmedContainer = SchemaTrustedPayload.requiredString(dictionary, "container_identifier")
 
         // Apple Contacts policy: at least one name field (not pure JSON Schema required-key).
         guard hasNonEmptyTrimmedName(in: dictionary) else {
@@ -53,8 +48,9 @@ extension ContactsProvider {
             )
         }
 
+        let containerIdentifier = resolvedContainerIdentifier(in: dictionary)
         let contact = try ContactsDeserialization.mutableContact(from: dictionary)
-        return CreateContactArguments(containerIdentifier: trimmedContainer, contact: contact)
+        return CreateContactArguments(containerIdentifier: containerIdentifier, contact: contact)
     }
 
     private func hasNonEmptyTrimmedName(in dictionary: [String: Any]) -> Bool {

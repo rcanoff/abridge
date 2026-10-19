@@ -13,7 +13,7 @@ enum MapKitSerialization {
 
     static func mapItemJSONObject(from item: MKMapItem) -> [String: Any] {
         [
-            "name": jsonValue(item.name),
+            "name": MapKitPlaceNames.jsonValue(item.name),
             "phone_number": jsonValue(item.phoneNumber),
             "url": jsonValueURL(item.url),
             "time_zone": jsonValueTimeZone(item.timeZone),
@@ -67,8 +67,14 @@ enum MapKitSerialization {
             "destination": mapItemJSONObject(from: result.destination),
             "expected_travel_time": result.expectedTravelTime,
             "distance": result.distance,
-            "expected_arrival_date": iso8601String(from: result.expectedArrivalDate),
-            "expected_departure_date": iso8601String(from: result.expectedDepartureDate),
+            "expected_arrival_date": iso8601String(
+                from: result.expectedArrivalDate,
+                timeZone: result.destination.timeZone
+            ),
+            "expected_departure_date": iso8601String(
+                from: result.expectedDepartureDate,
+                timeZone: result.source.timeZone
+            ),
             "transport_type": transportTypeJSONArray(from: result.transportType),
         ]
     }
@@ -197,6 +203,14 @@ enum MapKitSerialization {
         return [
             "level": floor.level,
         ]
+    }
+
+    /// Local wall time with a numeric offset. A nil zone uses this server Mac's zone, not the caller's.
+    static func iso8601String(from date: Date, timeZone: TimeZone?) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        formatter.timeZone = timeZone ?? .current
+        return formatter.string(from: date)
     }
 
     private static func iso8601String(from date: Date) -> String {

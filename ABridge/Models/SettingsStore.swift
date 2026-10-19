@@ -40,6 +40,8 @@ final class SettingsStore {
     private let eventsPermissionService: any EventsPermissionChecking
     private let contactsPermissionService: any ContactsPermissionChecking
     private let locationPermissionService: any LocationPermissionChecking
+    private let notesFullDiskAccessService: any NotesFullDiskAccessChecking
+    private let notesAutomationService: any NotesAutomationChecking
     private let launchAtLoginService: any LaunchAtLoginManaging
     private let migrateTokenStorage: @Sendable (Bool, Bool) throws -> Void
     private var didPerformLaunchRestore = false
@@ -52,6 +54,8 @@ final class SettingsStore {
         eventsPermissionService: any EventsPermissionChecking = EventsPermissionService(),
         contactsPermissionService: any ContactsPermissionChecking = ContactsPermissionService(),
         locationPermissionService: any LocationPermissionChecking = LocationPermissionService(),
+        notesFullDiskAccessService: any NotesFullDiskAccessChecking = NotesFullDiskAccessService(),
+        notesAutomationService: any NotesAutomationChecking = NotesAutomationService(),
         launchAtLoginService: any LaunchAtLoginManaging = SMAppLaunchAtLoginService(),
         migrateTokenStorage: @escaping @Sendable (Bool, Bool) throws -> Void = { useKeychain, fromKeychainEnabled in
             try BearerTokenMigrator.migrate(useKeychain: useKeychain, fromKeychainEnabled: fromKeychainEnabled)
@@ -63,6 +67,8 @@ final class SettingsStore {
         self.eventsPermissionService = eventsPermissionService
         self.contactsPermissionService = contactsPermissionService
         self.locationPermissionService = locationPermissionService
+        self.notesFullDiskAccessService = notesFullDiskAccessService
+        self.notesAutomationService = notesAutomationService
         self.launchAtLoginService = launchAtLoginService
         self.migrateTokenStorage = migrateTokenStorage
     }
@@ -169,7 +175,9 @@ final class SettingsStore {
         remindersAuthorized: Bool,
         eventsAuthorized: Bool,
         contactsAuthorized: Bool,
-        locationAuthorized: Bool
+        locationAuthorized: Bool,
+        notesFullDiskAccessGranted: Bool = false,
+        notesAutomationDenied: Bool = false
     ) async {
         tokenResetNotice = nil
         guard appSettings.mcpEnabled else { return }
@@ -180,7 +188,9 @@ final class SettingsStore {
                 remindersAuthorized: remindersAuthorized,
                 eventsAuthorized: eventsAuthorized,
                 contactsAuthorized: contactsAuthorized,
-                locationAuthorized: locationAuthorized
+                locationAuthorized: locationAuthorized,
+                notesFullDiskAccessGranted: notesFullDiskAccessGranted,
+                notesAutomationDenied: notesAutomationDenied
             ),
             usageLoggingEnabled: appSettings.usageLoggingEnabled
         )
@@ -191,7 +201,9 @@ final class SettingsStore {
             remindersAuthorized: permissionService.currentStatus().grantsReadAccess,
             eventsAuthorized: eventsPermissionService.currentStatus().grantsReadAccess,
             contactsAuthorized: contactsPermissionService.currentStatus().grantsReadAccess,
-            locationAuthorized: locationPermissionService.currentStatus().grantsReadAccess
+            locationAuthorized: locationPermissionService.currentStatus().grantsReadAccess,
+            notesFullDiskAccessGranted: notesFullDiskAccessService.currentStatus().grantsAccess,
+            notesAutomationDenied: notesAutomationService.currentStatus().isDenied
         )
     }
 

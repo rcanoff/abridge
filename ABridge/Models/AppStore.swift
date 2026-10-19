@@ -13,6 +13,9 @@ final class AppStore {
     private(set) var isRequestingContactsPermission = false
     private(set) var locationPermissionStatus: LocationPermissionStatus = .unknown
     private(set) var isRequestingLocationPermission = false
+    private(set) var notesFullDiskAccessStatus: NotesFullDiskAccessStatus = .unknown
+    private(set) var notesAutomationStatus: NotesAutomationStatus = .unknown
+    private(set) var isRequestingNotesAutomation = false
     private(set) var isRequestingAllPendingAccess = false
     private(set) var lastError: String?
 
@@ -20,6 +23,8 @@ final class AppStore {
     private let eventsPermissionService: any EventsPermissionChecking
     private let contactsPermissionService: any ContactsPermissionChecking
     private let locationPermissionService: any LocationPermissionChecking
+    private let notesFullDiskAccessService: any NotesFullDiskAccessChecking
+    private let notesAutomationService: any NotesAutomationChecking
     private let urlOpener: any URLOpening
 
     /// True when any OS-backed permission can still show a system prompt (`notDetermined` / `unknown`).
@@ -28,6 +33,7 @@ final class AppStore {
             || Self.isStillRequestable(calendarPermissionStatus)
             || Self.isStillRequestable(contactsPermissionStatus)
             || Self.isStillRequestable(locationPermissionStatus)
+            || Self.isStillRequestable(notesAutomationStatus)
     }
 
     /// True while any single or batch OS access request is in flight.
@@ -37,6 +43,7 @@ final class AppStore {
             || isRequestingCalendarPermission
             || isRequestingContactsPermission
             || isRequestingLocationPermission
+            || isRequestingNotesAutomation
     }
 
     init(
@@ -44,12 +51,16 @@ final class AppStore {
         eventsPermissionService: any EventsPermissionChecking = EventsPermissionService(),
         contactsPermissionService: any ContactsPermissionChecking = ContactsPermissionService(),
         locationPermissionService: any LocationPermissionChecking = LocationPermissionService(),
+        notesFullDiskAccessService: any NotesFullDiskAccessChecking = NotesFullDiskAccessService(),
+        notesAutomationService: any NotesAutomationChecking = NotesAutomationService(),
         urlOpener: any URLOpening = NSWorkspace.shared
     ) {
         self.permissionService = permissionService
         self.eventsPermissionService = eventsPermissionService
         self.contactsPermissionService = contactsPermissionService
         self.locationPermissionService = locationPermissionService
+        self.notesFullDiskAccessService = notesFullDiskAccessService
+        self.notesAutomationService = notesAutomationService
         self.urlOpener = urlOpener
     }
 
@@ -59,6 +70,8 @@ final class AppStore {
         calendarPermissionStatus = eventsPermissionService.currentStatus()
         contactsPermissionStatus = contactsPermissionService.currentStatus()
         locationPermissionStatus = locationPermissionService.currentStatus()
+        notesFullDiskAccessStatus = notesFullDiskAccessService.currentStatus()
+        notesAutomationStatus = notesAutomationService.currentStatus()
     }
 
     func refreshCalendarStatus() {
@@ -140,7 +153,8 @@ final class AppStore {
         }
     }
 
-    /// Sequentially requests remaining OS privacy prompts: Reminders → Calendars → Contacts → Location.
+    /// Sequentially requests remaining OS privacy prompts:
+    /// Reminders → Calendars → Contacts → Location → Notes automation.
     /// Skips already decided statuses; stops on first error (`lastError`). Does not change MCP capability toggles.
     func requestAllPendingAccess() async {
         guard !isRequestingAllPendingAccess else { return }
@@ -149,29 +163,20 @@ final class AppStore {
         isRequestingAllPendingAccess = true
         defer { isRequestingAllPendingAccess = false }
 
-        if Self.isStillRequestable(permissionStatus) {
-            await requestAccess()
-            if lastError != nil {
-                return
-            }
+        if await failedPendingRequest(Self.isStillRequestable(permissionStatus), requestAccess) {
+            return
         }
-        if Self.isStillRequestable(calendarPermissionStatus) {
-            await requestCalendarAccess()
-            if lastError != nil {
-                return
-            }
+        if await failedPendingRequest(Self.isStillRequestable(calendarPermissionStatus), requestCalendarAccess) {
+            return
         }
-        if Self.isStillRequestable(contactsPermissionStatus) {
-            await requestContactsAccess()
-            if lastError != nil {
-                return
-            }
+        if await failedPendingRequest(Self.isStillRequestable(contactsPermissionStatus), requestContactsAccess) {
+            return
         }
-        if Self.isStillRequestable(locationPermissionStatus) {
-            await requestLocationAccess()
-            if lastError != nil {
-                return
-            }
+        if await failedPendingRequest(Self.isStillRequestable(locationPermissionStatus), requestLocationAccess) {
+            return
+        }
+        if await failedPendingRequest(Self.isStillRequestable(notesAutomationStatus), requestNotesAutomationAccess) {
+            return
         }
     }
 
@@ -200,6 +205,13 @@ final class AppStore {
         switch status {
         case .unknown, .notDetermined: true
         case .authorized, .authorizedAlways, .denied, .restricted: false
+        }
+    }
+
+    static func isStillRequestable(_ status: NotesAutomationStatus) -> Bool {
+        switch status {
+        case .unknown, .notDetermined: true
+        case .granted, .denied: false
         }
     }
 
@@ -264,6 +276,58 @@ final class AppStore {
             return
         }
 
+        lastError = nil
+    }
+}
+
+extension AppStore {
+    private func failedPendingRequest(_ pending: Bool, _ request: () async -> Void) async -> Bool {
+        guard pending else { return false }
+        await request()
+        return lastError != nil
+    }
+
+    func refreshNotesStatus() {
+        lastError = nil
+        notesFullDiskAccessStatus = notesFullDiskAccessService.currentStatus()
+        notesAutomationStatus = notesAutomationService.currentStatus()
+    }
+
+    func requestNotesAutomationAccess() async {
+        guard !isRequestingNotesAutomation else { return }
+
+        isRequestingNotesAutomation = true
+        lastError = nil
+
+        defer { isRequestingNotesAutomation = false }
+
+        do {
+            notesAutomationStatus = try await notesAutomationService.requestAccess()
+        } catch {
+            refreshNotesStatus()
+            lastError = error.localizedDescription
+        }
+    }
+
+    func openFullDiskAccessSettings() {
+        openPrivacySettings(
+            urlString: NotesPrivacySettings.fullDiskAccessURL,
+            failureMessage: "Unable to open Full Disk Access settings."
+        )
+    }
+
+    func openAutomationPrivacySettings() {
+        openPrivacySettings(
+            urlString: NotesPrivacySettings.automationURL,
+            failureMessage: "Unable to open Automation settings."
+        )
+    }
+
+    private func openPrivacySettings(urlString: String, failureMessage: String) {
+        guard let url = URL(string: urlString), urlOpener.open(url) else {
+            lastError = failureMessage
+            return
+        }
         lastError = nil
     }
 }

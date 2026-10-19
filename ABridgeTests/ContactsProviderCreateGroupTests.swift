@@ -48,6 +48,26 @@ struct ContactsProviderCreateGroupTests {
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("invalid_arguments") == true)
         #expect(response.errorJson?.contains("Unknown container_identifier") == true)
+        #expect(response.errorJson?.contains("contacts_list_containers") == true)
+    }
+
+    @Test
+    @MainActor
+    func createGroupUsesDefaultContainerWhenOmitted() {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        mockStore.knownContainerIdentifiers = ["container-1", "icloud"]
+        mockStore.defaultContainerIdentifierValue = "icloud"
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "create_group",
+            payloadJson: #"{"name":"Family"}"#
+        )
+
+        #expect(response.ok == true)
+        #expect(mockStore.groups.first?.name == "Family")
+        #expect(mockStore.lastCreatedGroupContainerIdentifier == "icloud")
     }
 
     @Test

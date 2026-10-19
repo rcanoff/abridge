@@ -2,8 +2,8 @@ import Foundation
 
 extension CoreLocationProvider {
     func getCurrentLocation(payloadJson: String) -> ProviderResponse {
-        guard isLocationAuthorized else {
-            return errorResponse(code: "permission_denied", message: "Location access not granted")
+        if let blocked = locationAccessError() {
+            return blocked
         }
         do {
             _ = try parseGetCurrentLocationArguments(payloadJson)
@@ -11,10 +11,8 @@ extension CoreLocationProvider {
             let payloadObject = CoreLocationSerialization.getCurrentLocationResponseJSONObject(location: location)
             let payload = try CoreLocationSerialization.jsonString(from: payloadObject)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
-        } catch let error as CoreLocationProviderError {
-            return providerErrorResponse(from: error)
         } catch {
-            return errorResponse(code: "corelocation_error", message: error.localizedDescription)
+            return locationFailureResponse(for: error)
         }
     }
 

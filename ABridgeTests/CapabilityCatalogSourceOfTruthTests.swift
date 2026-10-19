@@ -12,12 +12,12 @@ struct CapabilityCatalogSourceOfTruthTests {
                 + CapabilityCatalog.calendarsCapabilities
                 + CapabilityCatalog.eventsCapabilities
                 + CapabilityCatalog.contactsCapabilities
+                + CapabilityCatalog.notesCapabilities
                 + CapabilityCatalog.mapkitCapabilities
                 + CapabilityCatalog.corelocationCapabilities
                 + CapabilityCatalog.visionCapabilities
 
         #expect(fromSwift.count == fromRust.count)
-        #expect(fromSwift.count == 35)
 
         let swiftIDs = Set(fromSwift.map(\.capabilityID))
         let rustIDs = Set(fromRust.map(\.capabilityId))

@@ -5,13 +5,19 @@ struct AppleOSAccessActionsRow: View {
     let granted: Bool
     let isDeniedOrRestricted: Bool
     let isRequesting: Bool
+    var requestsAccess: Bool = true
     let onRequest: () -> Void
     let onOpenSystemSettings: () -> Void
 
     var body: some View {
         HStack(spacing: 8) {
-            Button(granted ? "Access granted" : "Request access", action: onRequest)
-                .disabled(granted || isDeniedOrRestricted || isRequesting)
+            if requestsAccess {
+                Button(granted ? "Access granted" : "Request access", action: onRequest)
+                    .disabled(granted || isDeniedOrRestricted || isRequesting)
+            } else {
+                Button(granted ? "Access granted" : "Open System Settings", action: onOpenSystemSettings)
+                    .disabled(granted)
+            }
 
             Button("Open \(title) System Settings", systemImage: "gearshape.circle", action: onOpenSystemSettings)
                 .labelStyle(.iconOnly)
@@ -19,6 +25,16 @@ struct AppleOSAccessActionsRow: View {
                 .help("Open System Settings")
         }
     }
+}
+
+struct ProviderSecondaryOSAccess {
+    let title: String
+    let statusLabel: String
+    let granted: Bool
+    let isDeniedOrRestricted: Bool
+    let isRequesting: Bool
+    let onRequest: () -> Void
+    let onOpenSystemSettings: () -> Void
 }
 
 struct ProviderCapabilityAdvancedSection: View {
@@ -91,6 +107,9 @@ struct ProviderPermissionsCard: View {
     let onDisableAll: () -> Void
     let onRequestAccess: () -> Void
     let onOpenSystemSettings: () -> Void
+    var requestsAccess: Bool = true
+    var accessRowGranted: Bool?
+    var secondaryOSAccess: ProviderSecondaryOSAccess?
     let calendarSharingStore: CalendarSharingStore
 
     var body: some View {
@@ -102,9 +121,7 @@ struct ProviderPermissionsCard: View {
 
                     statusLine
 
-                    Text(osSummaryText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    osSummary
                 }
 
                 Spacer(minLength: 8)
@@ -124,11 +141,23 @@ struct ProviderPermissionsCard: View {
 
                             AppleOSAccessActionsRow(
                                 title: osAccessTitle,
-                                granted: osGrantsReadAccess,
+                                granted: accessRowGranted ?? osGrantsReadAccess,
                                 isDeniedOrRestricted: osIsDeniedOrRestricted,
                                 isRequesting: isRequesting,
+                                requestsAccess: requestsAccess,
                                 onRequest: onRequestAccess,
                                 onOpenSystemSettings: onOpenSystemSettings
+                            )
+                        }
+
+                        if let secondaryOSAccess {
+                            AppleOSAccessActionsRow(
+                                title: secondaryOSAccess.title,
+                                granted: secondaryOSAccess.granted,
+                                isDeniedOrRestricted: secondaryOSAccess.isDeniedOrRestricted,
+                                isRequesting: secondaryOSAccess.isRequesting,
+                                onRequest: secondaryOSAccess.onRequest,
+                                onOpenSystemSettings: secondaryOSAccess.onOpenSystemSettings
                             )
                         }
                     }
@@ -203,11 +232,23 @@ struct ProviderPermissionsCard: View {
         checkedShippedCount > 0 && kind.needsOSAccess && !osGrantsReadAccess
     }
 
-    private var osSummaryText: String {
-        if kind.needsOSAccess, let osAccessTitle {
-            return "Apple: \(osAccessTitle) — \(osAccessStatusLabel)"
+    private var osSummary: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(primaryOSSummary)
+            if let secondaryOSAccess {
+                Text("Apple: \(secondaryOSAccess.title) — \(secondaryOSAccess.statusLabel)")
+            }
         }
-        return osAccessStatusLabel
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
+
+    private var primaryOSSummary: String {
+        if kind.needsOSAccess, let osAccessTitle {
+            "Apple: \(osAccessTitle) — \(osAccessStatusLabel)"
+        } else {
+            osAccessStatusLabel
+        }
     }
 
     private var statusDetail: String {
@@ -241,6 +282,7 @@ struct ProviderPermissionsCard: View {
         case .reminders: "checklist"
         case .calendarsAndEvents: "calendar"
         case .contacts: "person.crop.circle"
+        case .notes: "note.text"
         case .mapkit: "mappin.and.ellipse"
         case .corelocation: "location"
         case .vision: "eye"

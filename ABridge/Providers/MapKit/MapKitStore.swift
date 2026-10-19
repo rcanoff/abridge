@@ -29,7 +29,53 @@ struct MapKitForwardGeocodeRequest {
 }
 
 struct MapKitRouteEndpoint {
-    let coordinate: CLLocationCoordinate2D
+    var coordinate: CLLocationCoordinate2D?
+    var name: String?
+    var identifier: String?
+}
+
+enum MapKitPlaceNames {
+    static func isPlaceholder(_ name: String?) -> Bool {
+        guard let name else { return true }
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ||
+            trimmed.compare("Unknown Location", options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+    }
+
+    /// Request name wins. A coordinate-only item keeps a real (including reverse-geocoded) name.
+    /// Apple's "Unknown Location" sentinel is cleared so serialization can omit it.
+    static func labeled(_ item: MKMapItem, endpoint: MapKitRouteEndpoint) -> MKMapItem {
+        if let name = endpoint.name, !isPlaceholder(name) {
+            item.name = name
+        } else if isPlaceholder(item.name) {
+            item.name = nil
+        }
+        return item
+    }
+
+    /// MapKit's response item may drop the name set on the request item.
+    static func carryingName(
+        from requested: MKMapItem,
+        onto response: MKMapItem,
+        endpoint: MapKitRouteEndpoint
+    ) -> MKMapItem {
+        if let name = endpoint.name, !isPlaceholder(name) {
+            response.name = name
+        } else if isPlaceholder(response.name), let name = requested.name, !isPlaceholder(name) {
+            response.name = name
+        } else if isPlaceholder(response.name) {
+            response.name = nil
+        }
+        if response.timeZone == nil {
+            response.timeZone = requested.timeZone
+        }
+        return response
+    }
+
+    static func jsonValue(_ name: String?) -> Any {
+        guard let name, !isPlaceholder(name) else { return NSNull() }
+        return name
+    }
 }
 
 struct MapKitCalculateRouteRequest {

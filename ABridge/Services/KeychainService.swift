@@ -16,12 +16,25 @@ protocol BearerTokenPersisting: BearerTokenStoring {
     func deleteBearerToken() throws
 }
 
+enum BearerTokenServiceName {
+    /// Release bundle `io.github.rcanoff.ABridge` keeps this exact item name.
+    static let release = "io.github.rcanoff.ABridge.mcp-bearer-token"
+
+    static func serviceName(bundleIdentifier: String) -> String {
+        "\(bundleIdentifier).mcp-bearer-token"
+    }
+
+    static func current(bundle: Bundle = .main) -> String {
+        serviceName(bundleIdentifier: bundle.bundleIdentifier ?? "io.github.rcanoff.ABridge")
+    }
+}
+
 struct KeychainService: BearerTokenPersisting {
     private let service: String
     private let account: String
 
     init(
-        service: String = "io.github.rcanoff.ABridge.mcp-bearer-token",
+        service: String = BearerTokenServiceName.current(),
         account: String = "default"
     ) {
         self.service = service

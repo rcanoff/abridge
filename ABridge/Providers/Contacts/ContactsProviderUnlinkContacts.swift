@@ -10,9 +10,7 @@ extension ContactsProvider {
         do {
             let contactIdentifier = try parseContactIdentifierArguments(payloadJson)
             let unlinked = try store.unlinkContact(identifier: contactIdentifier)
-            let payload = try ContactsSerialization.jsonString(
-                from: ContactsSerialization.contactJSONObject(from: unlinked)
-            )
+            let payload = try ContactsSerialization.jsonString(from: contactJSONObject(from: unlinked))
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as ContactsProviderError {
             return providerErrorResponse(from: error)

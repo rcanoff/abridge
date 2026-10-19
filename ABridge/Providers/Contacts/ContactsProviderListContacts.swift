@@ -10,7 +10,7 @@ extension ContactsProvider {
         do {
             let containerIdentifier = try parseContainerIdentifierArguments(payloadJson)
             let contacts = try store.fetchContacts(containerIdentifier: containerIdentifier)
-            let payloadObjects = contacts.map(ContactsSerialization.contactJSONObject)
+            let payloadObjects = contacts.map { self.contactJSONObject(from: $0) }
             let payload = try ContactsSerialization.jsonString(from: payloadObjects)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as ContactsProviderError {
@@ -44,5 +44,32 @@ extension ContactsProvider {
         }
 
         throw ContactsProviderError.invalidArguments("container_identifier must be a string or null")
+    }
+
+    func listContainers(payloadJson _: String) -> ProviderResponse {
+        guard isAuthorized else {
+            return errorResponse(code: "permission_denied", message: "Contacts access not granted")
+        }
+
+        do {
+            let containers = try store.listContainers()
+            let payloadObjects: [[String: Any]] = containers.map { container in
+                var object: [String: Any] = [
+                    "identifier": container.identifier,
+                    "name": container.name,
+                    "type": container.type,
+                ]
+                if container.isDefault {
+                    object["is_default"] = true
+                }
+                return object
+            }
+            let payload = try ContactsSerialization.jsonString(from: payloadObjects)
+            return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
+        } catch let error as ContactsProviderError {
+            return providerErrorResponse(from: error)
+        } catch {
+            return providerError(from: error)
+        }
     }
 }
