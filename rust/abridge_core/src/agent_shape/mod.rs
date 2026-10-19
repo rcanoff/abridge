@@ -194,7 +194,7 @@ fn provider_payload(tool_name: &str, arguments: &Value) -> String {
       object.remove("limit");
       object.remove("offset");
     }
-    if tool_name == TOOL_SEARCH_EVENTS {
+    if tool_name == TOOL_SEARCH_EVENTS || (tool_name == TOOL_DELETE_EVENT && object.contains_key("event_title")) {
       fill_event_search_window(object);
     }
     if tool_name == TOOL_LIST_REMINDERS || tool_name == TOOL_SEARCH_REMINDERS {
@@ -1154,6 +1154,39 @@ mod tests {
     );
     assert!(kept.payload_json.contains("2026-01-01T00:00:00Z"));
     assert!(kept.payload_json.contains("2026-02-01T00:00:00Z"));
+  }
+
+  #[test]
+  fn delete_event_by_title_uses_the_search_window() {
+    let definition = tool(tools::TOOL_DELETE_EVENT);
+    let prepared = prepare(&definition, &json!({"event_title": "Standup"}));
+    let payload: serde_json::Value = serde_json::from_str(&prepared.payload_json).unwrap();
+    assert!(payload.get("start_date").and_then(|value| value.as_str()).is_some());
+    assert!(payload.get("end_date").and_then(|value| value.as_str()).is_some());
+    let kept = prepare(&definition, &json!({"event_identifier": "evt-1"}));
+    let by_id: serde_json::Value = serde_json::from_str(&kept.payload_json).unwrap();
+    assert!(by_id.get("start_date").is_none());
+    assert!(by_id.get("end_date").is_none());
+  }
+
+  #[test]
+  fn event_detail_keeps_weekday_names() {
+    let detail = shaped(
+      tools::TOOL_GET_EVENT,
+      json!({
+        "event_identifier": "evt-1",
+        "title": "Standup",
+        "recurrence_rules": [{
+          "frequency": "weekly",
+          "days_of_the_week": [{ "day_of_the_week": "monday", "week_number": 2 }]
+        }]
+      }),
+    );
+    assert_eq!(
+      detail["recurrence_rules"][0]["days_of_the_week"][0]["day_of_the_week"],
+      "monday"
+    );
+    assert_eq!(detail["recurrence_rules"][0]["days_of_the_week"][0]["week_number"], 2);
   }
 
   #[test]

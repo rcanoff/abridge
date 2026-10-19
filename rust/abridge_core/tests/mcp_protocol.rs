@@ -144,6 +144,7 @@ fn mcp_initialize_returns_instructions() {
   let envelope: Value = serde_json::from_str(&resp).expect("json");
   let instructions = envelope["result"]["instructions"].as_str().expect("instructions");
   for entry in [
+    "abridge_search_items",
     "eventkit_events_search_events",
     "eventkit_events_list_events",
     "eventkit_reminders_search_reminders",
@@ -314,6 +315,7 @@ fn mcp_tools_list_includes_search_events_when_events_search_enabled() {
 
   assert_eq!(status, 200);
   assert!(resp.contains("eventkit_events_search_events"));
+  assert!(resp.contains("abridge_search_items"));
   assert!(!resp.contains("eventkit_events_list_events"));
 }
 
@@ -338,6 +340,27 @@ fn tools_call_dispatches_search_events() {
   assert_eq!(recorded.provider, "eventkit");
   assert_eq!(recorded.operation, "search_events");
   assert!(recorded.payload_json.contains("standup"));
+}
+
+#[test]
+fn search_items_keeps_a_provider_failure_instead_of_failing_the_call() {
+  let port = allocate_test_port();
+  let mock = MockProviderBridge::new();
+  let body = r#"{"jsonrpc":"2.0","id":21,"method":"tools/call","params":{"name":"abridge_search_items","arguments":{"query":"standup","stores":["events"]}}}"#;
+  let handle = create_server(
+    config_on_port(port, vec!["eventkit.events.search".into()]),
+    Box::new(mock.clone_for_server()),
+  )
+  .expect("create_server");
+  start_server(handle.clone()).expect("start");
+  let (status, resp) = http_post_json("/mcp", "127.0.0.1", port, body, TEST_TOKEN);
+  stop_server(handle).expect("stop");
+
+  assert_eq!(status, 200);
+  assert!(resp.contains(r#""isError":false"#), "{resp}");
+  assert!(resp.contains("store_errors"), "{resp}");
+  let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
+  assert_eq!(recorded.operation, "search_events");
 }
 
 #[test]

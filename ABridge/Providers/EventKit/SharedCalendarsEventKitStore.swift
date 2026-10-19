@@ -144,12 +144,12 @@ final class SharedCalendarsEventKitStore: EventKitStoreing {
         base.makeEvent()
     }
 
-    func saveEvent(_ event: EKEvent, commit: Bool) throws {
-        try base.saveEvent(event, commit: commit)
+    func saveEvent(_ event: EKEvent, span: EKSpan, commit: Bool) throws {
+        try base.saveEvent(event, span: span, commit: commit)
     }
 
-    func removeEvent(_ event: EKEvent, commit: Bool) throws {
-        try base.removeEvent(event, commit: commit)
+    func removeEvent(_ event: EKEvent, span: EKSpan, commit: Bool) throws {
+        try base.removeEvent(event, span: span, commit: commit)
     }
 
     func canRespondToInvitation(for event: EKEvent) -> Bool {

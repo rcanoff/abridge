@@ -124,4 +124,63 @@ struct EventKitProviderRecurrenceTests {
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("permission_denied") == true)
     }
+
+    @Test
+    @MainActor
+    func setReminderRecurrenceRoundTripsWeekdayNames() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-days")]
+        let reminder = EventKitTestSupport.makeReminder(
+            calendarItemIdentifier: "rem-days",
+            calendarIdentifier: "list-days",
+            title: "Weekly"
+        )
+        reminder.dueDateComponents = DateComponents(year: 2026, month: 10, day: 26, hour: 9, minute: 0)
+        mockStore.reminders = [reminder]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "set_reminder_recurrence",
+            payloadJson: """
+            {"calendar_item_identifier":"rem-days","recurrence_rules":[{"frequency":"weekly",\
+            "days_of_the_week":[{"day_of_the_week":"monday","week_number":2}]}]}
+            """
+        )
+
+        #expect(response.ok == true, "\(response.errorJson ?? "")")
+        #expect(response.payloadJson.contains("\"day_of_the_week\":\"monday\""))
+        #expect(response.payloadJson.contains("\"week_number\":2"))
+        let day = mockStore.reminders[0].recurrenceRules?.first?.daysOfTheWeek?.first
+        #expect(day?.dayOfTheWeek == .monday)
+        #expect(day?.weekNumber == 2)
+    }
+
+    @Test
+    @MainActor
+    func setReminderRecurrenceRejectsIntegerWeekday() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-days")]
+        let reminder = EventKitTestSupport.makeReminder(
+            calendarItemIdentifier: "rem-days",
+            calendarIdentifier: "list-days",
+            title: "Weekly"
+        )
+        reminder.dueDateComponents = DateComponents(year: 2026, month: 10, day: 26)
+        mockStore.reminders = [reminder]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "set_reminder_recurrence",
+            payloadJson: """
+            {"calendar_item_identifier":"rem-days","recurrence_rules":[{"frequency":"weekly",\
+            "days_of_the_week":[{"day_of_the_week":2}]}]}
+            """
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("sunday through saturday") == true)
+        #expect(mockStore.reminders[0].recurrenceRules?.first == nil)
+    }
 }

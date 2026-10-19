@@ -23,7 +23,7 @@ const NOTE: i64 = 3;
 const ATTACHMENT: i64 = 4;
 const MEDIA: i64 = 5;
 
-pub(super) struct TmpDb(PathBuf);
+pub(crate) struct TmpDb(PathBuf);
 
 impl Drop for TmpDb {
   fn drop(&mut self) {
@@ -37,7 +37,7 @@ impl TmpDb {
   }
 }
 
-pub(super) fn sample_store() -> (TmpDb, PathBuf) {
+pub(crate) fn sample_store() -> (TmpDb, PathBuf) {
   let db = temp_db();
   let conn = Connection::open(db.path()).expect("fixture db");
   conn

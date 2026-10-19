@@ -17,7 +17,7 @@ extension EventKitProvider {
             }
 
             try store.acceptEventInvitation(event)
-            try store.saveEvent(event, commit: true)
+            try store.saveEvent(event, span: .thisEvent, commit: true)
 
             let payload = try EventKitSerialization.jsonString(
                 from: serializedEventJSONObject(from: event)

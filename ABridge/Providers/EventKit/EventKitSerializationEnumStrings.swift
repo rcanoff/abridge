@@ -95,6 +95,32 @@ extension EventKitSerialization {
         }
     }
 
+    static func weekdayName(_ day: EKWeekday) -> String {
+        switch day {
+        case .sunday: "sunday"
+        case .monday: "monday"
+        case .tuesday: "tuesday"
+        case .wednesday: "wednesday"
+        case .thursday: "thursday"
+        case .friday: "friday"
+        case .saturday: "saturday"
+        @unknown default: "unknown"
+        }
+    }
+
+    static func weekday(from name: String) -> EKWeekday? {
+        switch name {
+        case "sunday": .sunday
+        case "monday": .monday
+        case "tuesday": .tuesday
+        case "wednesday": .wednesday
+        case "thursday": .thursday
+        case "friday": .friday
+        case "saturday": .saturday
+        default: nil
+        }
+    }
+
     static func recurrenceFrequencyString(_ frequency: EKRecurrenceFrequency) -> String {
         switch frequency {
         case .daily: "daily"

@@ -8,12 +8,25 @@ extension EventKitProvider {
         }
 
         do {
-            let eventIdentifier = try parseEventIdentifierArguments(payloadJson)
-            guard let event = try store.fetchEvent(withIdentifier: eventIdentifier) else {
+            let data = try eventPayloadData(payloadJson)
+            let dictionary = try parseJSONObject(from: data)
+            let eventIdentifier = SchemaTrustedPayload.requiredString(dictionary, "event_identifier")
+            guard let fetched = try store.fetchEvent(withIdentifier: eventIdentifier) else {
                 return errorResponse(
                     code: "invalid_arguments",
                     message: "Unknown event_identifier: \(eventIdentifier)"
                 )
+            }
+            let event: EKEvent
+            if let occurrenceDate = try optionalOccurrenceDate(dictionary) {
+                let calendars = try eventCalendars(calendarIdentifier: nil)
+                event = try resolveOccurrence(
+                    identifier: self.eventIdentifier(of: fetched),
+                    occurrenceDate: occurrenceDate,
+                    calendars: calendars
+                )
+            } else {
+                event = fetched
             }
             let payload = try EventKitSerialization.jsonString(
                 from: serializedEventJSONObject(from: event)
@@ -27,12 +40,15 @@ extension EventKitProvider {
     }
 
     func parseEventIdentifierArguments(_ payloadJson: String) throws -> String {
+        let dictionary = try parseJSONObject(from: eventPayloadData(payloadJson))
+        // Required non-empty event_identifier is schema-owned (Rust).
+        return SchemaTrustedPayload.requiredString(dictionary, "event_identifier")
+    }
+
+    private func eventPayloadData(_ payloadJson: String) throws -> Data {
         guard let data = payloadJson.data(using: .utf8) else {
             throw EventKitProviderError.invalidArguments("Arguments must be valid UTF-8")
         }
-
-        let dictionary = try parseJSONObject(from: data)
-        // Required non-empty event_identifier is schema-owned (Rust).
-        return SchemaTrustedPayload.requiredString(dictionary, "event_identifier")
+        return data
     }
 }

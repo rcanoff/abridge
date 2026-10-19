@@ -70,6 +70,7 @@ pub const TOOL_NOTES_MOVE_NOTE: &str = "notes_move_note";
 pub const TOOL_NOTES_DELETE_NOTE: &str = "notes_delete_note";
 pub const TOOL_NOTES_CREATE_FOLDER: &str = "notes_create_folder";
 pub const TOOL_NOTES_DELETE_FOLDER: &str = "notes_delete_folder";
+pub const TOOL_SEARCH_ITEMS: &str = "abridge_search_items";
 
 macro_rules! notes_markdown {
   () => {
@@ -125,7 +126,7 @@ macro_rules! reminder_dates {
   };
 }
 
-const ALL_TOOLS: [ToolDefinition; 68] = [
+const ALL_TOOLS: [ToolDefinition; 69] = [
   ToolDefinition {
     name: TOOL_LIST_CALENDARS,
     capability: capabilities::EVENTKIT_CALENDARS_READ,
@@ -163,8 +164,8 @@ const ALL_TOOLS: [ToolDefinition; 68] = [
     description: concat!(
       "List events in a date window. To find one title, call eventkit_events_search_events. ",
       event_time_offset!(),
-      " Rows of a series share event_identifier; get, update, and delete change the occurrence EventKit \
-       returns for that id. limit defaults to 50 (max 200); offset pages."
+      " Rows of a series share event_identifier. Pass that row's start_date as occurrence_date to get, update, \
+       or delete that occurrence. limit defaults to 50 (max 200); offset pages."
     ),
   },
   ToolDefinition {
@@ -173,9 +174,9 @@ const ALL_TOOLS: [ToolDefinition; 68] = [
     provider: "eventkit",
     operation: "get_event",
     description: concat!(
-      "Get one event by event_identifier. ",
+      "Get one event by event_identifier. Pass occurrence_date, that row's start_date, to read one occurrence. ",
       event_time_offset!(),
-      " notes is plain text or Markdown. For a series this is the occurrence EventKit returns for that id."
+      " notes is plain text or Markdown."
     ),
   },
   ToolDefinition {
@@ -189,7 +190,8 @@ const ALL_TOOLS: [ToolDefinition; 68] = [
       fuzzy_query!(),
       ". Dates and calendar_identifier still filter. Each row is one occurrence. ",
       event_time_offset!(),
-      " Rows of a series share event_identifier. limit defaults to 50 (max 200)."
+      " Rows of a series share event_identifier. Pass a row's start_date as occurrence_date to change that \
+       occurrence. limit defaults to 50 (max 200)."
     ),
   },
   ToolDefinition {
@@ -205,8 +207,10 @@ const ALL_TOOLS: [ToolDefinition; 68] = [
     capability: capabilities::EVENTKIT_EVENTS_EDIT,
     provider: "eventkit",
     operation: "update_event",
-    description: "Update an event by event_identifier. Omitted fields stay unchanged. alarms, recurrence_rules, and \
-                  structured_location replace the whole value when sent; [] clears alarms or recurrence.",
+    description: "Update an event by event_identifier. A recurring event needs occurrence_date and span \
+                  this_event (default) or future_events; otherwise the call returns occurrence_required and changes \
+                  nothing. Omitted fields stay unchanged. alarms, recurrence_rules, and structured_location replace \
+                  the whole value when sent; [] clears alarms or recurrence.",
   },
   ToolDefinition {
     name: TOOL_MOVE_EVENT,
@@ -221,7 +225,12 @@ const ALL_TOOLS: [ToolDefinition; 68] = [
     capability: capabilities::EVENTKIT_EVENTS_DELETE,
     provider: "eventkit",
     operation: "delete_event",
-    description: "Delete an event by event_identifier",
+    description: "Delete an event permanently. Pass exactly one of event_identifier or event_title (exact, \
+                  case-insensitive). calendar_identifier limits a title to one calendar. A title uses the same date \
+                  window as eventkit_events_search_events. Occurrences of one series count as one event. Several \
+                  events return event_title_ambiguous and delete nothing. A recurring event needs occurrence_date \
+                  and span this_event (default) or future_events; otherwise the call returns occurrence_required \
+                  and deletes nothing.",
   },
   ToolDefinition {
     name: TOOL_LIST_LISTS,
@@ -310,7 +319,9 @@ const ALL_TOOLS: [ToolDefinition; 68] = [
     capability: capabilities::EVENTKIT_REMINDERS_DELETE,
     provider: "eventkit",
     operation: "delete_reminder",
-    description: "Delete a reminder by calendar_item_identifier",
+    description: "Delete a reminder permanently. Pass exactly one of calendar_item_identifier or reminder_title \
+                  (exact, case-insensitive). calendar_identifier limits a title to one list. Several matches return \
+                  reminder_title_ambiguous and delete nothing.",
   },
   ToolDefinition {
     name: TOOL_DELETE_LIST,
@@ -356,7 +367,8 @@ const ALL_TOOLS: [ToolDefinition; 68] = [
     provider: "eventkit",
     operation: "set_reminder_recurrence",
     description: "Set a reminder's recurrence rules by calendar_item_identifier. recurrence_rules replaces the \
-                  list; [] clears it. A repeating reminder must already have a due date. Other fields stay unchanged.",
+                  list; [] clears it. day_of_the_week is sunday through saturday. A repeating reminder must already \
+                  have a due date. Other fields stay unchanged.",
   },
   ToolDefinition {
     name: TOOL_SET_EVENT_RECURRENCE,
@@ -364,7 +376,7 @@ const ALL_TOOLS: [ToolDefinition; 68] = [
     provider: "eventkit",
     operation: "set_event_recurrence",
     description: "Set recurrence on one event by event_identifier. recurrence_rules replaces the list; [] \
-                  clears it. Does not return later occurrences.",
+                  clears it. day_of_the_week is sunday through saturday. Does not return later occurrences.",
   },
   ToolDefinition {
     name: TOOL_ACCEPT_INVITATION,
@@ -786,16 +798,58 @@ const ALL_TOOLS: [ToolDefinition; 68] = [
                   deletion. Refuses folder_not_empty, folder_recently_deleted, folder_smart, and folder_is_default. \
                   If Notes has not saved the delete, the code is folder_delete_unsaved.",
   },
+  ToolDefinition {
+    name: TOOL_SEARCH_ITEMS,
+    // Not a Settings capability. Listing is any of SEARCH_ITEM_CAPABILITIES; the call searches only those.
+    capability: "",
+    provider: "abridge",
+    operation: "search_items",
+    description: concat!(
+      "Search notes, reminders, and events together. Only stores whose search capability is enabled are queried. \
+       ",
+      fuzzy_query!(),
+      ". stores limits the search to notes, reminders, and/or events. With no event dates, the event range is the \
+       same 1 year before through 2 years after the server Mac's current time that eventkit_events_search_events \
+       uses, not the caller's. Items are best match first, each with store, the identifier that store's get or \
+       delete tool takes (note_identifier, calendar_item_identifier, or event_identifier), title, folder path or \
+       list title or calendar, score, and one excerpt. An event item's start_date is the occurrence_date to pass \
+       to get, update, and delete. It is local wall time with a numeric offset in the event's time zone, or this \
+       Mac's when the event has none, not the caller's. All-day start_date is YYYY-MM-DD and is_all_day is true. \
+       limit defaults to 20 \
+       (max 100). A store that fails or is denied is listed in store_errors; the other stores are still returned. \
+       Absent keys mean null, false, or empty."
+    ),
+  },
 ];
 
 pub fn all_tools() -> &'static [ToolDefinition] {
   &ALL_TOOLS
 }
 
+/// Capabilities that list and run `abridge_search_items`. Any one is enough to list it.
+pub const SEARCH_ITEM_CAPABILITIES: [&str; 3] = [
+  capabilities::NOTES_SEARCH,
+  capabilities::EVENTKIT_REMINDERS_SEARCH,
+  capabilities::EVENTKIT_EVENTS_SEARCH,
+];
+
+pub fn search_items_enabled(enabled: &[String]) -> bool {
+  enabled
+    .iter()
+    .any(|capability| SEARCH_ITEM_CAPABILITIES.contains(&capability.as_str()))
+}
+
 pub fn tools_for_capabilities(enabled: &[String]) -> Vec<&'static ToolDefinition> {
+  let cross = search_items_enabled(enabled);
   all_tools()
     .iter()
-    .filter(|tool| enabled.iter().any(|capability| capability == tool.capability))
+    .filter(|tool| {
+      if tool.name == TOOL_SEARCH_ITEMS {
+        cross
+      } else {
+        enabled.iter().any(|capability| capability == tool.capability)
+      }
+    })
     .collect()
 }
 
@@ -856,6 +910,21 @@ fn offset_date_time_schema() -> serde_json::Value {
     "type": "string",
     "format": "date-time",
     "description": absolute_instant!()
+  })
+}
+
+fn occurrence_date_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": "string",
+    "description": "start_date of one occurrence. Offset form, or YYYY-MM-DD when all-day."
+  })
+}
+
+fn event_span_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": "string",
+    "enum": ["this_event", "future_events"],
+    "description": "this_event changes that occurrence. future_events also changes later ones. Omit for this_event."
   })
 }
 
@@ -943,9 +1012,8 @@ fn recurrence_rule_entry_schema() -> serde_json::Value {
           "type": "object",
           "properties": {
             "day_of_the_week": {
-              "type": "integer",
-              "enum": [1, 2, 3, 4, 5, 6, 7],
-              "description": "Sunday=1, Monday=2, Tuesday=3, Wednesday=4, Thursday=5, Friday=6, Saturday=7."
+              "type": "string",
+              "enum": ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
             },
             "week_number": nullable_integer()
           },
@@ -1328,7 +1396,8 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_GET_EVENT => serde_json::json!({
       "type": "object",
       "properties": {
-        "event_identifier": non_whitespace_string()
+        "event_identifier": non_whitespace_string(),
+        "occurrence_date": occurrence_date_schema()
       },
       "required": ["event_identifier"]
     }),
@@ -1366,7 +1435,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       },
       "required": ["calendar_identifier", "title", "start_date", "end_date"]
     }),
-    TOOL_DELETE_EVENT | TOOL_ACCEPT_INVITATION | TOOL_DECLINE_INVITATION | TOOL_TENTATIVE_INVITATION => {
+    TOOL_ACCEPT_INVITATION | TOOL_DECLINE_INVITATION | TOOL_TENTATIVE_INVITATION => {
       serde_json::json!({
         "type": "object",
         "properties": {
@@ -1375,6 +1444,18 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "required": ["event_identifier"]
       })
     }
+    TOOL_DELETE_EVENT => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "event_identifier": non_whitespace_string(),
+        "event_title": non_whitespace_string(),
+        "calendar_identifier": { "type": "string" },
+        "start_date": offset_date_time_schema(),
+        "end_date": offset_date_time_schema(),
+        "occurrence_date": occurrence_date_schema(),
+        "span": event_span_schema()
+      }
+    }),
     TOOL_MOVE_EVENT => serde_json::json!({
       "type": "object",
       "properties": {
@@ -1402,7 +1483,9 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         },
         "structured_location": structured_location_schema(true),
         "alarms": with_description(alarms_array_schema(true), "Replaces the list. [] or null clears. Omit to leave unchanged."),
-        "recurrence_rules": with_description(recurrence_rules_array_schema(true), "Replaces the list. [] or null clears. Omit to leave unchanged.")
+        "recurrence_rules": with_description(recurrence_rules_array_schema(true), "Replaces the list. [] or null clears. Omit to leave unchanged."),
+        "occurrence_date": occurrence_date_schema(),
+        "span": event_span_schema()
       },
       "required": ["event_identifier"]
     }),
@@ -1546,9 +1629,10 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_DELETE_REMINDER => serde_json::json!({
       "type": "object",
       "properties": {
-        "calendar_item_identifier": { "type": "string" }
-      },
-      "required": ["calendar_item_identifier"]
+        "calendar_item_identifier": non_whitespace_string(),
+        "reminder_title": non_whitespace_string(),
+        "calendar_identifier": { "type": "string" }
+      }
     }),
     TOOL_DELETE_LIST | TOOL_DELETE_CALENDAR => serde_json::json!({
       "type": "object",
@@ -2238,6 +2322,23 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "account_identifier": note_account_schema()
       }
     }),
+    TOOL_SEARCH_ITEMS => serde_json::json!({
+      "type": "object",
+      "properties": {
+        "query": with_description(non_whitespace_string(), fuzzy_query!()),
+        "stores": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "enum": ["notes", "reminders", "events"] },
+          "description": "Omit to search every enabled store. notes, reminders, and/or events."
+        },
+        "start_date": offset_date_time_schema(),
+        "end_date": offset_date_time_schema(),
+        "limit": { "type": "integer", "minimum": 1, "maximum": 100 }
+      },
+      "required": ["query"]
+    }),
     _ => serde_json::json!({ "type": "object" }),
   }
 }
@@ -2253,11 +2354,11 @@ mod tests {
     TOOL_GET_REMINDER, TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS, TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS,
     TOOL_LIST_CONTAINERS, TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT,
     TOOL_MOVE_REMINDER, TOOL_OPEN_NAVIGATION, TOOL_RECOGNIZE_DOCUMENTS, TOOL_RECOGNIZE_TEXT, TOOL_REVERSE_GEOCODE,
-    TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS,
-    TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE,
-    TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR,
-    TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools, input_schema,
-    resolve_tool, tools_for_capabilities,
+    TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS, TOOL_SEARCH_ITEMS, TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES,
+    TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS,
+    TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS,
+    TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, all_tools,
+    input_schema, resolve_tool, tools_for_capabilities,
   };
 
   /// Claude Code exposes `mcp__<server>__<tool>` and rejects names over 64; 50 leaves room for `mcp__abridge__`.
@@ -2339,15 +2440,23 @@ mod tests {
         "{} is not {{provider}}_{{operation}} or {{provider}}_{{domain}}_{{operation}}",
         tool.name
       );
-      let capability = tool.capability.as_bytes();
-      let provider = tool.provider.as_bytes();
-      assert!(
-        capability.starts_with(provider) && capability.get(provider.len()) == Some(&b'.'),
-        "{} capability {} is not namespaced by {}",
-        tool.name,
-        tool.capability,
-        tool.provider
-      );
+      if tool.provider == "abridge" {
+        assert!(
+          tool.capability.is_empty(),
+          "{} is a cross-provider tool and must not claim one capability",
+          tool.name
+        );
+      } else {
+        let capability = tool.capability.as_bytes();
+        let provider = tool.provider.as_bytes();
+        assert!(
+          capability.starts_with(provider) && capability.get(provider.len()) == Some(&b'.'),
+          "{} capability {} is not namespaced by {}",
+          tool.name,
+          tool.capability,
+          tool.provider
+        );
+      }
       assert!(names.insert(tool.name), "duplicate tool name {}", tool.name);
       assert!(
         pairs.insert((tool.provider, tool.operation)),
@@ -2462,7 +2571,7 @@ mod tests {
   fn lists_search_events_tool_when_events_search_capability_enabled() {
     let tools = tools_for_capabilities(&["eventkit.events.search".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_SEARCH_EVENTS]);
+    assert_eq!(names, vec![TOOL_SEARCH_EVENTS, TOOL_SEARCH_ITEMS]);
   }
 
   #[test]
@@ -2533,7 +2642,7 @@ mod tests {
   fn lists_search_tool_when_search_capability_enabled() {
     let tools = tools_for_capabilities(&["eventkit.reminders.search".into()]);
     let names: Vec<_> = tools.iter().map(|tool| tool.name).collect();
-    assert_eq!(names, vec![TOOL_SEARCH_REMINDERS]);
+    assert_eq!(names, vec![TOOL_SEARCH_REMINDERS, TOOL_SEARCH_ITEMS]);
   }
 
   #[test]
@@ -2638,7 +2747,10 @@ mod tests {
         super::TOOL_NOTES_GET_ATTACHMENT
       ]
     );
-    assert_eq!(names("notes.search"), vec![super::TOOL_NOTES_SEARCH_NOTES]);
+    assert_eq!(
+      names("notes.search"),
+      vec![super::TOOL_NOTES_SEARCH_NOTES, super::TOOL_SEARCH_ITEMS]
+    );
     assert_eq!(
       names("notes.create"),
       vec![super::TOOL_NOTES_CREATE_NOTE, super::TOOL_NOTES_CREATE_FOLDER]

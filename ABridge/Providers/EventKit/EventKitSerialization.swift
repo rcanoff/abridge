@@ -300,7 +300,7 @@ enum EventKitSerialization {
         guard let days else { return NSNull() }
         return days.map { day in
             [
-                "day_of_the_week": day.dayOfTheWeek.rawValue,
+                "day_of_the_week": weekdayName(day.dayOfTheWeek),
                 "week_number": day.weekNumber,
             ]
         }

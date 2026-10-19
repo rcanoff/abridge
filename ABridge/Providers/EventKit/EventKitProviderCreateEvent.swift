@@ -34,7 +34,7 @@ extension EventKitProvider {
 
             let event = store.makeEvent()
             try applyCreateEventArguments(arguments, to: event, calendar: calendar)
-            try store.saveEvent(event, commit: true)
+            try store.saveEvent(event, span: .thisEvent, commit: true)
 
             let payload = try EventKitSerialization.jsonString(
                 from: serializedEventJSONObject(from: event)

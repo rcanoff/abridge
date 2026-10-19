@@ -108,4 +108,45 @@ struct EventKitProviderGetEventTests {
         #expect(response.errorJson?.contains("invalid_arguments") == true)
         #expect(response.errorJson?.contains("Unknown event_identifier") == true)
     }
+
+    @Test
+    @MainActor
+    func getEventOccurrenceDateReturnsThatOccurrence() {
+        let mockStore = MockEventKitStore()
+        mockStore.eventAuthorizationStatusValue = .fullAccess
+        mockStore.eventCalendarsList = [
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+        ]
+        let soon = Date(timeIntervalSinceNow: 2 * 86400)
+        let later = Date(timeIntervalSinceNow: 9 * 86400)
+        let first = mockStore.makeTestEvent(
+            calendarItemIdentifier: "occ-1",
+            calendarIdentifier: "cal-work",
+            title: "First",
+            startDate: soon,
+            endDate: soon.addingTimeInterval(1800)
+        )
+        let second = mockStore.makeTestEvent(
+            calendarItemIdentifier: "occ-2",
+            calendarIdentifier: "cal-work",
+            title: "Second",
+            startDate: later,
+            endDate: later.addingTimeInterval(1800)
+        )
+        mockStore.eventIdentifierByItem = ["occ-1": "series", "occ-2": "series"]
+        mockStore.events = [first, second]
+        let provider = EventKitProvider(store: mockStore)
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        formatter.timeZone = .current
+
+        let response = provider.handle(
+            operation: "get_event",
+            payloadJson: #"{"event_identifier":"series","occurrence_date":"\#(formatter.string(from: later))"}"#
+        )
+
+        #expect(response.ok == true, "\(response.errorJson ?? "")")
+        #expect(response.payloadJson.contains("Second"))
+        #expect(!response.payloadJson.contains("\"title\":\"First\""))
+    }
 }

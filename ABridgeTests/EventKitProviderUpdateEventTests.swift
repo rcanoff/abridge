@@ -1,4 +1,5 @@
 @testable import ABridge
+import EventKit
 import Foundation
 import Testing
 
@@ -183,5 +184,111 @@ struct EventKitProviderUpdateEventTests {
 
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("permission_denied") == true)
+    }
+
+    @Test
+    @MainActor
+    func updateOneOccurrenceLeavesLaterOccurrences() {
+        let series = weeklyStandupSeries()
+        let mockStore = series.store
+        let soon = series.soon
+        let later = series.later
+        let provider = EventKitProvider(store: mockStore)
+        let thisOne = provider.handle(
+            operation: "update_event",
+            payloadJson: occurrenceUpdate("Moved", date: soon, span: "this_event")
+        )
+        #expect(thisOne.ok == true, "\(thisOne.errorJson ?? "")")
+        #expect(mockStore.lastEventSpan == .thisEvent)
+        #expect(mockStore.events[0].title == "Moved")
+        #expect(mockStore.events[1].title == "Standup")
+
+        let future = provider.handle(
+            operation: "update_event",
+            payloadJson: occurrenceUpdate("Rest", date: later, span: "future_events")
+        )
+        #expect(future.ok == true, "\(future.errorJson ?? "")")
+        #expect(mockStore.lastEventSpan == .futureEvents)
+        #expect(mockStore.events[1].title == "Rest")
+        #expect(mockStore.events[0].title == "Moved")
+    }
+
+    private struct WeeklyStandup {
+        let store: MockEventKitStore
+        let soon: Date
+        let later: Date
+    }
+
+    @MainActor
+    private func weeklyStandupSeries() -> WeeklyStandup {
+        let mockStore = MockEventKitStore()
+        mockStore.eventAuthorizationStatusValue = .fullAccess
+        mockStore.eventCalendarsList = [
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+        ]
+        let soon = Date(timeIntervalSinceNow: 2 * 86400)
+        let later = Date(timeIntervalSinceNow: 9 * 86400)
+        let rule = EKRecurrenceRule(recurrenceWith: .weekly, interval: 1, end: nil)
+        let first = mockStore.makeTestEvent(
+            calendarItemIdentifier: "occ-1",
+            calendarIdentifier: "cal-work",
+            title: "Standup",
+            startDate: soon,
+            endDate: soon.addingTimeInterval(1800)
+        )
+        let second = mockStore.makeTestEvent(
+            calendarItemIdentifier: "occ-2",
+            calendarIdentifier: "cal-work",
+            title: "Standup",
+            startDate: later,
+            endDate: later.addingTimeInterval(1800)
+        )
+        first.recurrenceRules = [rule]
+        second.recurrenceRules = [rule]
+        mockStore.eventIdentifierByItem = ["occ-1": "series-standup", "occ-2": "series-standup"]
+        mockStore.events = [first, second]
+        return WeeklyStandup(store: mockStore, soon: soon, later: later)
+    }
+
+    private func occurrenceUpdate(_ title: String, date: Date, span: String) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        formatter.timeZone = .current
+        let start = formatter.string(from: date)
+        return """
+        {"event_identifier":"series-standup","title":"\(title)",\
+        "occurrence_date":"\(start)","span":"\(span)"}
+        """
+    }
+
+    @Test
+    @MainActor
+    func updateRecurringEventWithoutOccurrenceDateChangesNothing() {
+        let mockStore = MockEventKitStore()
+        mockStore.eventAuthorizationStatusValue = .fullAccess
+        mockStore.eventCalendarsList = [
+            mockStore.makeTestEventCalendar(calendarIdentifier: "cal-work", title: "Work"),
+        ]
+        let start = Date(timeIntervalSinceNow: 3 * 86400)
+        let event = mockStore.makeTestEvent(
+            calendarItemIdentifier: "weekly",
+            calendarIdentifier: "cal-work",
+            title: "Standup",
+            startDate: start,
+            endDate: start.addingTimeInterval(1800)
+        )
+        event.recurrenceRules = [EKRecurrenceRule(recurrenceWith: .weekly, interval: 1, end: nil)]
+        mockStore.events = [event]
+        let provider = EventKitProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "update_event",
+            payloadJson: #"{"event_identifier":"evt-weekly","title":"Nope"}"#
+        )
+
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("occurrence_required") == true)
+        #expect(mockStore.events[0].title == "Standup")
+        #expect(mockStore.lastEventSpan == nil)
     }
 }

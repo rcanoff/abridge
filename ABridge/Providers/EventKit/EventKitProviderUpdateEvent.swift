@@ -17,6 +17,8 @@ extension EventKitProvider {
         let structuredLocation: OptionalField<EKStructuredLocation>
         let alarms: OptionalField<[EKAlarm]>
         let recurrenceRules: OptionalField<[EKRecurrenceRule]>
+        let occurrenceDate: String?
+        let span: EKSpan
     }
 
     func updateEvent(payloadJson: String) -> ProviderResponse {
@@ -26,15 +28,16 @@ extension EventKitProvider {
 
         do {
             let arguments = try parseUpdateEventArguments(payloadJson)
-            guard let event = try store.fetchEvent(withIdentifier: arguments.eventIdentifier) else {
+            guard let fetched = try store.fetchEvent(withIdentifier: arguments.eventIdentifier) else {
                 return errorResponse(
                     code: "invalid_arguments",
                     message: "Unknown event_identifier: \(arguments.eventIdentifier)"
                 )
             }
+            let event = try eventReadyToMutate(fetched, occurrenceDate: arguments.occurrenceDate)
 
             try applyUpdateEventArguments(arguments, to: event)
-            try store.saveEvent(event, commit: true)
+            try store.saveEvent(event, span: arguments.span, commit: true)
 
             let payload = try EventKitSerialization.jsonString(
                 from: serializedEventJSONObject(from: event)
@@ -239,7 +242,9 @@ extension EventKitProvider {
             recurrenceRules: EventKitDeserialization.optionalPresentRecurrenceRules(
                 dictionary,
                 key: "recurrence_rules"
-            )
+            ),
+            occurrenceDate: optionalOccurrenceDate(dictionary),
+            span: eventMutationSpan(in: dictionary)
         )
     }
 }

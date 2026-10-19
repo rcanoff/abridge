@@ -8,6 +8,7 @@ enum EventKitProviderError: Error, Equatable {
     case unknownOperation(String)
     case invalidArguments(String)
     case reminderFetchTimedOut
+    case coded(code: String, message: String)
 }
 
 @MainActor
@@ -43,8 +44,8 @@ protocol EventKitStoreing {
     func fetchEvents(matching predicate: NSPredicate) throws -> [EKEvent]
     func fetchEvent(withIdentifier id: String) throws -> EKEvent?
     func makeEvent() -> EKEvent
-    func saveEvent(_ event: EKEvent, commit: Bool) throws
-    func removeEvent(_ event: EKEvent, commit: Bool) throws
+    func saveEvent(_ event: EKEvent, span: EKSpan, commit: Bool) throws
+    func removeEvent(_ event: EKEvent, span: EKSpan, commit: Bool) throws
     func canRespondToInvitation(for event: EKEvent) -> Bool
     func acceptEventInvitation(_ event: EKEvent) throws
     func declineEventInvitation(_ event: EKEvent) throws
@@ -226,6 +227,8 @@ final class EventKitProvider {
             errorResponse(code: "unknown_operation", message: message)
         case .reminderFetchTimedOut:
             errorResponse(code: "eventkit_error", message: "Reminder fetch timed out")
+        case let .coded(code, message):
+            errorResponse(code: code, message: message)
         }
     }
 

@@ -91,4 +91,8 @@ mod attachment_tests;
 #[cfg(test)]
 mod fixture;
 #[cfg(test)]
+pub(crate) fn test_sample_store() -> (fixture::TmpDb, std::path::PathBuf) {
+  fixture::sample_store()
+}
+#[cfg(test)]
 mod tests;
