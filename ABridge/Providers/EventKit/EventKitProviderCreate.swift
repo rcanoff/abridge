@@ -93,10 +93,10 @@ extension EventKitProvider {
         to reminder: EKReminder
     ) {
         if let dueDateComponents = arguments.dueDateComponents {
-            reminder.dueDateComponents = dueDateComponents
+            EventKitDeserialization.assignReminderDate(dueDateComponents, due: true, on: reminder)
         }
         if let startDateComponents = arguments.startDateComponents {
-            reminder.startDateComponents = startDateComponents
+            EventKitDeserialization.assignReminderDate(startDateComponents, due: false, on: reminder)
         }
         if let isCompleted = arguments.isCompleted {
             reminder.isCompleted = isCompleted

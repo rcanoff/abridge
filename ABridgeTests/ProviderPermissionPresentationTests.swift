@@ -59,6 +59,14 @@ struct ProviderPermissionPresentationTests {
     }
 
     @Test
+    func notesProviderIsTitledNotesAndNeedsOSAccess() {
+        #expect(ProviderPermissionKind.notes.title == "Notes")
+        #expect(ProviderPermissionKind.notes.id == "notes")
+        #expect(ProviderPermissionKind.notes.needsOSAccess)
+        #expect(ProviderPermissionKind.notes.calendarSharingKind == nil)
+    }
+
+    @Test
     func enableStateOffOnMixed() {
         #expect(ProviderEnableState.compute(checked: 0, totalShipped: 5) == .off)
         #expect(ProviderEnableState.compute(checked: 5, totalShipped: 5) == .on)

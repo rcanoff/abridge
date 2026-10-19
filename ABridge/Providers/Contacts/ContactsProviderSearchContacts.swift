@@ -22,7 +22,7 @@ extension ContactsProvider {
                 phoneNumber: arguments.phoneNumber,
                 containerIdentifier: arguments.containerIdentifier
             )
-            let payloadObjects = contacts.map(ContactsSerialization.contactJSONObject)
+            let payloadObjects = contacts.map { self.contactJSONObject(from: $0) }
             let payload = try ContactsSerialization.jsonString(from: payloadObjects)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as ContactsProviderError {

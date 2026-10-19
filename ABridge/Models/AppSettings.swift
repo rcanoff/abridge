@@ -129,6 +129,12 @@ final class AppSettings {
             .map(\.capabilityID)
     }
 
+    var enabledNotesCapabilityIDs: [String] {
+        CapabilityCatalog.notesCapabilities
+            .filter { $0.shipped && savedCapabilityIDs.contains($0.id) }
+            .map(\.capabilityID)
+    }
+
     var enabledMapKitCapabilityIDs: [String] {
         CapabilityCatalog.mapkitCapabilities
             .filter { $0.shipped && savedCapabilityIDs.contains($0.id) }
@@ -151,7 +157,9 @@ final class AppSettings {
         remindersAuthorized: Bool,
         eventsAuthorized: Bool,
         contactsAuthorized: Bool,
-        locationAuthorized: Bool
+        locationAuthorized: Bool,
+        notesFullDiskAccessGranted: Bool = false,
+        notesAutomationDenied: Bool = false
     ) -> [String] {
         var capabilities = ["diagnostics.read"]
         if remindersAuthorized {
@@ -164,6 +172,13 @@ final class AppSettings {
         if contactsAuthorized {
             capabilities.append(contentsOf: enabledContactsCapabilityIDs)
         }
+        capabilities.append(
+            contentsOf: NotesCapabilityGate.serverCapabilityIDs(
+                enabled: enabledNotesCapabilityIDs,
+                fullDiskAccessGranted: notesFullDiskAccessGranted,
+                automationDenied: notesAutomationDenied
+            )
+        )
         capabilities.append(contentsOf: enabledMapKitCapabilityIDs)
         if locationAuthorized {
             capabilities.append(contentsOf: enabledCoreLocationCapabilityIDs)

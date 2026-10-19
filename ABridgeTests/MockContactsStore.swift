@@ -8,6 +8,9 @@ final class MockContactsStore: ContactsStoreing {
     var contacts: [CNContact] = []
     var groups: [CNGroup] = []
     var knownContainerIdentifiers: Set<String> = ["container-1"]
+    var defaultContainerIdentifierValue = "container-1"
+    var contactContainers: [String: String] = [:]
+    var lastCreatedGroupContainerIdentifier: String?
     var fetchError: ContactsProviderError?
     var linkingUnavailable = false
     var unlinkingUnavailable = false
@@ -17,6 +20,29 @@ final class MockContactsStore: ContactsStoreing {
         authorizationStatus
     }
 
+    func defaultContainerIdentifier() -> String {
+        defaultContainerIdentifierValue
+    }
+
+    func listContainers() throws -> [ContactsContainerRecord] {
+        if let fetchError {
+            throw fetchError
+        }
+
+        return knownContainerIdentifiers.sorted().map { identifier in
+            ContactsContainerRecord(
+                identifier: identifier,
+                name: identifier,
+                type: "local",
+                isDefault: identifier == defaultContainerIdentifierValue
+            )
+        }
+    }
+
+    func containerIdentifiers(forContact identifier: String) -> [String] {
+        contactContainers[identifier].map { [$0] } ?? []
+    }
+
     func fetchContacts(containerIdentifier: String?) throws -> [CNContact] {
         if let fetchError {
             throw fetchError
@@ -24,9 +50,7 @@ final class MockContactsStore: ContactsStoreing {
 
         if let containerIdentifier {
             guard knownContainerIdentifiers.contains(containerIdentifier) else {
-                throw ContactsProviderError.invalidArguments(
-                    "Unknown container_identifier: \(containerIdentifier)"
-                )
+                throw ContactsProviderError.unknownContainerIdentifier(containerIdentifier)
             }
         }
 
@@ -42,9 +66,7 @@ final class MockContactsStore: ContactsStoreing {
 
         if let containerIdentifier {
             guard knownContainerIdentifiers.contains(containerIdentifier) else {
-                throw ContactsProviderError.invalidArguments(
-                    "Unknown container_identifier: \(containerIdentifier)"
-                )
+                throw ContactsProviderError.unknownContainerIdentifier(containerIdentifier)
             }
         }
 
@@ -71,9 +93,7 @@ final class MockContactsStore: ContactsStoreing {
 
         if let containerIdentifier {
             guard knownContainerIdentifiers.contains(containerIdentifier) else {
-                throw ContactsProviderError.invalidArguments(
-                    "Unknown container_identifier: \(containerIdentifier)"
-                )
+                throw ContactsProviderError.unknownContainerIdentifier(containerIdentifier)
             }
         }
 
@@ -139,14 +159,13 @@ final class MockContactsStore: ContactsStoreing {
         }
 
         guard knownContainerIdentifiers.contains(containerIdentifier) else {
-            throw ContactsProviderError.invalidArguments(
-                "Unknown container_identifier: \(containerIdentifier)"
-            )
+            throw ContactsProviderError.unknownContainerIdentifier(containerIdentifier)
         }
 
         let group = CNMutableGroup()
         group.name = name
         groups.append(group)
+        lastCreatedGroupContainerIdentifier = containerIdentifier
         return group
     }
 
@@ -156,9 +175,7 @@ final class MockContactsStore: ContactsStoreing {
         }
 
         guard knownContainerIdentifiers.contains(containerIdentifier) else {
-            throw ContactsProviderError.invalidArguments(
-                "Unknown container_identifier: \(containerIdentifier)"
-            )
+            throw ContactsProviderError.unknownContainerIdentifier(containerIdentifier)
         }
 
         guard let saved = contact.mutableCopy() as? CNMutableContact else {
@@ -166,6 +183,7 @@ final class MockContactsStore: ContactsStoreing {
         }
 
         contacts.append(saved)
+        contactContainers[saved.identifier] = containerIdentifier
         return saved
     }
 

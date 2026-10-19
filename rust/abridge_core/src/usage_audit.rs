@@ -120,24 +120,16 @@ fn format_unix_timestamp_utc(secs: u64, millis: u32) -> String {
   let minutes = (day_secs % 3_600) / 60;
   let seconds = day_secs % 60;
 
-  let (year, month, day) = civil_from_days(days as i64);
+  let Some(date) = crate::datetime::date_from_unix_days(days as i64) else {
+    return "1970-01-01T00:00:00.000Z".to_string();
+  };
 
-  format!("{year:04}-{month:02}-{day:02}T{hours:02}:{minutes:02}:{seconds:02}.{millis:03}Z")
-}
-
-/// Converts days since Unix epoch (1970-01-01) to a civil date.
-fn civil_from_days(days: i64) -> (i32, u32, u32) {
-  let z = days + 719_468;
-  let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
-  let doe = z - era * 146_097;
-  let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
-  let y = (yoe as i32) + era as i32 * 400;
-  let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-  let mp = (5 * doy + 2) / 153;
-  let day = (doy - (153 * mp + 2) / 5 + 1) as u32;
-  let month = (mp + if mp < 10 { 3 } else { -9 }) as u32;
-  let year = y + if month <= 2 { 1 } else { 0 };
-  (year, month, day)
+  format!(
+    "{:04}-{:02}-{:02}T{hours:02}:{minutes:02}:{seconds:02}.{millis:03}Z",
+    date.year(),
+    date.month(),
+    date.day()
+  )
 }
 
 #[cfg(test)]

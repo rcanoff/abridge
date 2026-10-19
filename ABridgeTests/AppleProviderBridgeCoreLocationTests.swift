@@ -18,12 +18,14 @@ struct AppleProviderBridgeCoreLocationTests {
         let store = MockCoreLocationStore()
         store.authorizationStatus = .authorized
         store.getCurrentLocationResult = location
-        let response = AppleProviderBridge(coreLocationProvider: CoreLocationProvider(store: store))
-            .callProvider(request: ProviderRequest(
-                provider: "corelocation",
-                operation: "get_current_location",
-                payloadJson: "{}"
-            ))
+        let response = AppleProviderBridge(
+            coreLocationProvider: CoreLocationProvider(store: store, locationServicesEnabled: { true })
+        )
+        .callProvider(request: ProviderRequest(
+            provider: "corelocation",
+            operation: "get_current_location",
+            payloadJson: "{}"
+        ))
         #expect(response.ok == true)
         let decoded = try JSONSerialization
             .jsonObject(with: #require(response.payloadJson.data(using: .utf8))) as? [String: Any]

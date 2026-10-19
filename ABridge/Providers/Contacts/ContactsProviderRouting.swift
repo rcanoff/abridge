@@ -3,7 +3,7 @@ import Foundation
 extension ContactsProvider {
     func handle(operation: String, payloadJson: String) -> ProviderResponse {
         switch operation {
-        case "list_contacts", "list_groups", "search_contacts", "get_contact":
+        case "list_contacts", "list_groups", "list_containers", "search_contacts", "get_contact":
             handleReadOperation(operation: operation, payloadJson: payloadJson)
         case "create_contact", "create_group":
             handleCreateOperation(operation: operation, payloadJson: payloadJson)
@@ -22,6 +22,8 @@ extension ContactsProvider {
             listContacts(payloadJson: payloadJson)
         case "list_groups":
             listGroups(payloadJson: payloadJson)
+        case "list_containers":
+            listContainers(payloadJson: payloadJson)
         case "search_contacts":
             searchContacts(payloadJson: payloadJson)
         case "get_contact":

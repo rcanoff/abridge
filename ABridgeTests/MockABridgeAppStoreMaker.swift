@@ -21,11 +21,16 @@ final class MockABridgeAppStoreMaker: ABridgeAppStoreMaking, @unchecked Sendable
         let eventsPermissionService = EventsPermissionService()
         let contactsPermissionService = ContactsPermissionService()
         let locationPermissionService = LocationPermissionService()
+        let notesFullDiskAccessService = MockNotesFullDiskAccessService()
+        let notesAutomationService = MockNotesAutomationService()
+        notesAutomationService.status = .granted
         let store = AppStore(
             permissionService: permissionService,
             eventsPermissionService: eventsPermissionService,
             contactsPermissionService: contactsPermissionService,
-            locationPermissionService: locationPermissionService
+            locationPermissionService: locationPermissionService,
+            notesFullDiskAccessService: notesFullDiskAccessService,
+            notesAutomationService: notesAutomationService
         )
         let settingsStore = SettingsStore(
             appSettings: appSettings,
@@ -33,7 +38,9 @@ final class MockABridgeAppStoreMaker: ABridgeAppStoreMaking, @unchecked Sendable
             permissionService: permissionService,
             eventsPermissionService: eventsPermissionService,
             contactsPermissionService: contactsPermissionService,
-            locationPermissionService: locationPermissionService
+            locationPermissionService: locationPermissionService,
+            notesFullDiskAccessService: notesFullDiskAccessService,
+            notesAutomationService: notesAutomationService
         )
         let permissionsStore = PermissionsStore(appSettings: appSettings)
         return ABridgeAppBootstrap.Stores(

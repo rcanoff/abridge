@@ -25,9 +25,7 @@ final class LiveContactsStore: ContactsStoreing {
         if let containerIdentifier {
             let containers = try contactStore.containers(matching: nil)
             guard containers.contains(where: { $0.identifier == containerIdentifier }) else {
-                throw ContactsProviderError.invalidArguments(
-                    "Unknown container_identifier: \(containerIdentifier)"
-                )
+                throw ContactsProviderError.unknownContainerIdentifier(containerIdentifier)
             }
         }
 
@@ -52,9 +50,7 @@ final class LiveContactsStore: ContactsStoreing {
         if let containerIdentifier {
             let containers = try contactStore.containers(matching: nil)
             guard containers.contains(where: { $0.identifier == containerIdentifier }) else {
-                throw ContactsProviderError.invalidArguments(
-                    "Unknown container_identifier: \(containerIdentifier)"
-                )
+                throw ContactsProviderError.unknownContainerIdentifier(containerIdentifier)
             }
         }
 
@@ -93,9 +89,7 @@ final class LiveContactsStore: ContactsStoreing {
         if let containerIdentifier {
             let containers = try contactStore.containers(matching: nil)
             guard containers.contains(where: { $0.identifier == containerIdentifier }) else {
-                throw ContactsProviderError.invalidArguments(
-                    "Unknown container_identifier: \(containerIdentifier)"
-                )
+                throw ContactsProviderError.unknownContainerIdentifier(containerIdentifier)
             }
         }
 
@@ -154,9 +148,7 @@ final class LiveContactsStore: ContactsStoreing {
     func createGroup(in containerIdentifier: String, name: String) throws -> CNGroup {
         let containers = try contactStore.containers(matching: nil)
         guard containers.contains(where: { $0.identifier == containerIdentifier }) else {
-            throw ContactsProviderError.invalidArguments(
-                "Unknown container_identifier: \(containerIdentifier)"
-            )
+            throw ContactsProviderError.unknownContainerIdentifier(containerIdentifier)
         }
 
         let group = CNMutableGroup()
@@ -179,9 +171,7 @@ final class LiveContactsStore: ContactsStoreing {
     func createContact(in containerIdentifier: String, contact: CNMutableContact) throws -> CNContact {
         let containers = try contactStore.containers(matching: nil)
         guard containers.contains(where: { $0.identifier == containerIdentifier }) else {
-            throw ContactsProviderError.invalidArguments(
-                "Unknown container_identifier: \(containerIdentifier)"
-            )
+            throw ContactsProviderError.unknownContainerIdentifier(containerIdentifier)
         }
 
         let saveRequest = CNSaveRequest()

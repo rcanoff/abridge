@@ -42,7 +42,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: "1.85"
+          toolchain: "1.89"
           targets: aarch64-apple-darwin
 
       - uses: extractions/setup-just@v2

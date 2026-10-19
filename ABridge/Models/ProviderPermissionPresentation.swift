@@ -4,6 +4,7 @@ enum ProviderPermissionKind: String, CaseIterable, Identifiable {
     case reminders
     case calendarsAndEvents
     case contacts
+    case notes
     case mapkit
     case corelocation
     case vision
@@ -17,6 +18,7 @@ enum ProviderPermissionKind: String, CaseIterable, Identifiable {
         case .reminders: "Reminders"
         case .calendarsAndEvents: "Calendars & Events"
         case .contacts: "Contacts"
+        case .notes: "Notes"
         case .mapkit: "MapKit"
         case .corelocation: "Core Location"
         case .vision: "Vision"
@@ -26,7 +28,7 @@ enum ProviderPermissionKind: String, CaseIterable, Identifiable {
     var needsOSAccess: Bool {
         switch self {
         case .mapkit, .vision: false
-        case .reminders, .calendarsAndEvents, .contacts, .corelocation: true
+        case .reminders, .calendarsAndEvents, .contacts, .notes, .corelocation: true
         }
     }
 
@@ -35,7 +37,7 @@ enum ProviderPermissionKind: String, CaseIterable, Identifiable {
         switch self {
         case .reminders: .reminderLists
         case .calendarsAndEvents: .eventCalendars
-        case .contacts, .mapkit, .corelocation, .vision: nil
+        case .contacts, .notes, .mapkit, .corelocation, .vision: nil
         }
     }
 }

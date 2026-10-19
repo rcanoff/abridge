@@ -4,7 +4,7 @@
 
 ABridge is a native macOS application that exposes Apple platform capabilities through a local, authenticated MCP server.
 
-Its purpose is to act as a generic bridge between Apple frameworks and external applications.
+Its purpose is to act as a generic bridge between Apple frameworks or Apple apps without a public framework and external applications.
 
 ABridge contains no application-specific logic. It does not know who is consuming it, why requests are made, or what higher-level workflows exist. It simply exposes native Apple functionality in a secure, modular, and predictable way.
 
@@ -49,7 +49,7 @@ The project follows several core principles.
 
 ## Generic
 
-ABridge should never make assumptions about the software consuming it.
+ABridge bridges Apple data in the shape agents read, link, and act on, without assuming a client-specific workflow.
 
 It should be equally usable by:
 
@@ -61,15 +61,17 @@ It should be equally usable by:
 
 ## Thin wrapper
 
-Whenever practical, ABridge should expose Apple APIs with minimal abstraction.
+Swift adapters call Apple frameworks and serialize their objects. Rust shapes the MCP response for agents: compact list/search summaries, useful get/write details, Markdown rich text, ranked local text search, and files as MCP content items. Framework/store internals and empty values stay out of the response.
 
-The bridge should not invent alternative domain models unless required by the MCP protocol.
+For Apple apps without a public framework, a provider may read the app's own store read-only and write through its scripting interface. Notes uses this path and follows the same response principles.
+
+ABridge contains no business logic beyond write-safety guards; client workflows remain in the MCP client. Rust serializes scripting writes, confirms each specific outcome in the store, and returns `write_unconfirmed` if it does not appear. Notes refuses permanent deletion by checking Recently Deleted live in the script, and prechecks the app's sibling-folder-name rule, returning `folder_name_taken` with the existing folder's identifier.
 
 ## Apple is the source of truth
 
 ABridge owns no user data.
 
-Apple frameworks remain the system of record.
+Apple frameworks, or the Apple app when it has no public framework, remain the system of record. Notes' store is never written directly: Notes performs every mutation through its scripting interface and owns iCloud sync.
 
 The application stores only:
 
@@ -80,7 +82,7 @@ The application stores only:
 
 ## Modular
 
-Every Apple framework is implemented as an independent provider.
+Every Apple framework is implemented as an independent provider. An Apple app without a public framework may instead have a Rust-native provider named for the app. Notes bypasses `ProviderBridge`; Swift only registers it, gates access on Full Disk Access and Automation, and presents its Permissions card.
 
 Adding a provider should not require modifying existing providers.
 
@@ -113,17 +115,11 @@ This document intentionally does not duplicate architectural or coding-conventio
 
 ---
 
-# Version 1 Scope
+# Provider Scope
 
-Version 1 implements a single provider:
+ABridge includes EventKit, Contacts, MapKit, Core Location, Vision, and Notes. Notes is the only provider for an Apple app without a public framework.
 
-**EventKit**
-
-The objective is to expose the complete EventKit framework through MCP with minimal abstraction.
-
-Version 1 includes complete support for the EventKit APIs available on macOS.
-
-This includes both EventKit domains:
+The EventKit objective is to bridge the APIs available on macOS in both domains, with responses shaped for agents:
 
 - Reminders
 - Calendar
@@ -136,7 +132,7 @@ The bridge should expose Apple functionality rather than implementing custom rem
 
 The EventKit provider should expose the capabilities supported by Apple's EventKit framework.
 
-The provider should expose the framework as faithfully as practical instead of creating a custom abstraction layer.
+The provider keeps Apple's operations and filtering semantics while returning compact, actionable responses.
 
 ## Reminders
 
@@ -188,13 +184,10 @@ The architecture is intentionally provider-based.
 
 Future providers include:
 
-- MapKit / CoreLocation
-- Contacts
 - HealthKit
 - PhotoKit
-- Vision
 
-Additional Apple frameworks may be added over time.
+Additional Apple frameworks or Apple apps without a public framework may be added as independent providers.
 
 Each provider should be self-contained and follow the architecture defined in `architecture-bootstrap-guide.md`.
 
@@ -234,7 +227,7 @@ Its responsibilities include:
 | Tab | Purpose |
 |-----|---------|
 | **MCP** | Server on/off, host, port, endpoint, API key |
-| **Permissions** | EventKit capability tree with Apple vs MCP enforcement |
+| **Permissions** | Provider capability trees with Apple vs MCP enforcement, including Notes Full Disk Access and Automation |
 | **Diagnostics** | Usage log viewer, logging toggle, export |
 
 The application is not intended to browse, edit, or manage Apple data directly.
@@ -334,9 +327,9 @@ ABridge stores only:
 - operational state
 - local usage audit logs (metadata only)
 
-All user data remains owned by Apple frameworks.
+All user data remains owned by Apple frameworks or, for providers without a public framework, the Apple app.
 
-The project should not introduce an application database unless a future provider explicitly requires one.
+The project should not introduce an application database unless a future provider explicitly requires one. Read-only access to an Apple app's store and an in-memory search index do not transfer data ownership to ABridge.
 
 ---
 
@@ -348,10 +341,10 @@ ABridge is successful when:
 - Swift remains limited to UI and Apple platform integration
 - Rust owns all application behavior
 - providers remain completely independent
-- Apple frameworks remain the system of record
+- Apple frameworks or apps without a public framework remain the system of record
 - new providers can be added without architectural changes
-- the bridge remains completely unaware of the software consuming it
-- Apple APIs are exposed with minimal abstraction
+- the bridge stays independent of client-specific workflows
+- Apple data is exposed in the shape agents read, link, and act on
 - users control launch-at-login and MCP server state independently
 - usage can be inspected locally and via a read-only MCP diagnostics tool
 - API keys are strong, masked in the UI, and never logged

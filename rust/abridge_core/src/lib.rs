@@ -1,15 +1,21 @@
 use std::sync::Arc;
 
+mod agent_shape;
 mod arg_validation;
 mod auth;
 mod capabilities;
 mod config;
+mod datetime;
 mod diagnostics;
 mod error;
+pub(crate) mod fuzzy;
 mod http;
 mod logging;
 mod mcp;
+mod notes;
+mod private_dir;
 mod providers;
+mod rendition;
 mod server;
 mod tools;
 mod typed_args;

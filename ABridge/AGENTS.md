@@ -4,14 +4,14 @@ Scoped rules for the macOS app target. Root `AGENTS.md` still applies.
 
 ## Providers (`Providers/`)
 
-- **Framework fidelity is mandatory** — root `AGENTS.md` § Framework fidelity.
-- `EventKitProvider` and mappers serialize **full** `EKReminder` / `EKCalendar` (and related) objects; no field subsetting or semantic renames in production paths.
-- Reviews must reject partial read models (see `local/review/AGENTS.md` § Framework fidelity).
+- Swift providers stay thin: call Apple frameworks and serialize their objects for the Rust boundary.
+- Rust `agent_shape` owns the agent-facing summary/detail shapes, omission, search ranking, and binary content separation.
+- Follow root `AGENTS.md` § Agent-shaped responses and `docs/conventions.md` § JSON and payloads.
 
 ## Required skills
 
-All Swift and SwiftUI work in this directory requires **swiftui-pro** before writing or reviewing code.
+Read **swiftui-pro** before writing or reviewing SwiftUI in this directory.
 
 - **Views, stores, app structure** → swiftui-pro
-- **Concurrency changes** → also swift-concurrency-pro
+- **Concurrency changes** → when **swift-concurrency-pro** is installed, read it too
 - Follow `docs/conventions.md` for naming, errors, and formatting

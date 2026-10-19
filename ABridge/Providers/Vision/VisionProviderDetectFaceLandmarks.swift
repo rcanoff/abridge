@@ -23,7 +23,7 @@ extension VisionProvider {
         }
 
         let dictionary = try parseJSONObject(from: data)
-        let imageData = try requiredImageDataArgument(in: dictionary)
+        let imageData = try imageDataArgument(in: dictionary)
         let orientation = try optionalOrientationArgument(in: dictionary)
         let revision = try optionalFaceLandmarksRevisionArgument(in: dictionary)
         let regionOfInterest = try optionalNormalizedRegionOfInterestArgument(in: dictionary)
@@ -36,15 +36,6 @@ extension VisionProvider {
             regionOfInterest: regionOfInterest,
             constellation: constellation
         )
-    }
-
-    private func requiredImageDataArgument(in dictionary: [String: Any]) throws -> Data {
-        // Required non-empty image_data string is schema-owned; base64 decode is runtime.
-        let trimmed = SchemaTrustedPayload.requiredString(dictionary, "image_data")
-        guard let data = Data(base64Encoded: trimmed) else {
-            throw VisionProviderError.invalidArguments("image_data must be valid base64")
-        }
-        return data
     }
 
     private func optionalOrientationArgument(in dictionary: [String: Any]) throws -> CGImagePropertyOrientation? {

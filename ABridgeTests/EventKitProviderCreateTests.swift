@@ -1,4 +1,5 @@
 @testable import ABridge
+import EventKit
 import Foundation
 import Testing
 
@@ -43,6 +44,28 @@ struct EventKitProviderCreateTests {
         #expect(response.payloadJson.contains("\"priority\":5"))
         #expect(response.payloadJson.contains("due_date_components"))
         #expect(response.payloadJson.contains("2026"))
+    }
+
+    @Test
+    @MainActor
+    func createReminderTimedDueWithoutTimeZoneStaysFloating() {
+        let mockStore = MockEventKitStore()
+        mockStore.authorizationStatus = .fullAccess
+        mockStore.calendars = [mockStore.makeTestCalendar(calendarIdentifier: "list-float")]
+        let provider = EventKitProvider(store: mockStore)
+
+        let payloadJson = """
+        {"calendar_identifier":"list-float","title":"Floating","time_zone":"America/New_York",\
+        "due_date_components":{"year":2026,"month":10,"day":19,"hour":9,"minute":0}}
+        """
+        let response = provider.handle(operation: "create_reminder", payloadJson: payloadJson)
+
+        #expect(response.ok == true)
+        let due = mockStore.reminders[0].dueDateComponents
+        #expect(due?.year == 2026)
+        #expect(due?.hour == 9)
+        #expect(due?.minute == 0)
+        #expect(due?.timeZone == nil)
     }
 
     @Test

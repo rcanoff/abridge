@@ -130,9 +130,11 @@ struct LiveMapKitStore: MapKitStoreing, @unchecked Sendable {
     }
 
     func calculateRoute(request: MapKitCalculateRouteRequest) throws -> MapKitCalculateRouteResult {
+        let source = try mapItem(for: request.source)
+        let destination = try mapItem(for: request.destination)
         let mkRequest = MKDirections.Request()
-        mkRequest.source = mapItem(for: request.source.coordinate)
-        mkRequest.destination = mapItem(for: request.destination.coordinate)
+        mkRequest.source = source
+        mkRequest.destination = destination
         mkRequest.transportType = request.transportType
         mkRequest.requestsAlternateRoutes = request.requestsAlternateRoutes
         mkRequest.departureDate = request.departureDate
@@ -158,16 +160,22 @@ struct LiveMapKitStore: MapKitStoreing, @unchecked Sendable {
 
         let response = try result.get()
         return MapKitCalculateRouteResult(
-            source: response.source,
-            destination: response.destination,
+            source: MapKitPlaceNames.carryingName(from: source, onto: response.source, endpoint: request.source),
+            destination: MapKitPlaceNames.carryingName(
+                from: destination,
+                onto: response.destination,
+                endpoint: request.destination
+            ),
             routes: response.routes.map(Self.routeData(from:))
         )
     }
 
     func estimateTravelTime(request: MapKitEstimateTravelTimeRequest) throws -> MapKitEstimateTravelTimeResult {
+        let source = try mapItem(for: request.source)
+        let destination = try mapItem(for: request.destination)
         let mkRequest = MKDirections.Request()
-        mkRequest.source = mapItem(for: request.source.coordinate)
-        mkRequest.destination = mapItem(for: request.destination.coordinate)
+        mkRequest.source = source
+        mkRequest.destination = destination
         mkRequest.transportType = request.transportType
         mkRequest.departureDate = request.departureDate
         mkRequest.arrivalDate = request.arrivalDate
@@ -190,8 +198,12 @@ struct LiveMapKitStore: MapKitStoreing, @unchecked Sendable {
 
         let response = try result.get()
         return MapKitEstimateTravelTimeResult(
-            source: response.source,
-            destination: response.destination,
+            source: MapKitPlaceNames.carryingName(from: source, onto: response.source, endpoint: request.source),
+            destination: MapKitPlaceNames.carryingName(
+                from: destination,
+                onto: response.destination,
+                endpoint: request.destination
+            ),
             expectedTravelTime: response.expectedTravelTime,
             distance: response.distance,
             expectedArrivalDate: response.expectedArrivalDate,
@@ -224,8 +236,8 @@ struct LiveMapKitStore: MapKitStoreing, @unchecked Sendable {
     }
 
     func openNavigation(request: MapKitOpenNavigationRequest) throws -> MapKitOpenNavigationResult {
-        let source = mapItem(for: request.source.coordinate)
-        let destination = mapItem(for: request.destination.coordinate)
+        let source = try mapItem(for: request.source)
+        let destination = try mapItem(for: request.destination)
         let launchOptions = Self.launchOptions(for: request.transportType)
         let opened = MKMapItem.openMaps(
             with: [source, destination],
@@ -244,10 +256,38 @@ struct LiveMapKitStore: MapKitStoreing, @unchecked Sendable {
         )
     }
 
-    private func mapItem(for coordinate: CLLocationCoordinate2D) -> MKMapItem {
-        MKMapItem(
+    private func mapItem(for endpoint: MapKitRouteEndpoint) throws -> MKMapItem {
+        if let identifier = endpoint.identifier {
+            do {
+                let item = try getPlace(request: MapKitGetPlaceRequest(identifier: identifier))
+                return MapKitPlaceNames.labeled(item, endpoint: endpoint)
+            } catch {
+                guard endpoint.coordinate != nil else { throw error }
+            }
+        }
+
+        guard let coordinate = endpoint.coordinate else {
+            throw MapKitProviderError.invalidArguments(
+                "route endpoint needs a coordinate or a MapKit place identifier"
+            )
+        }
+
+        let item = MKMapItem(
             location: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude),
             address: nil
         )
+        if let name = endpoint.name, !MapKitPlaceNames.isPlaceholder(name) {
+            item.name = name
+            return item
+        }
+        if let geocoded = try? reverseGeocode(request: MapKitReverseGeocodeRequest(coordinate: coordinate)).first {
+            if let name = geocoded.name, !MapKitPlaceNames.isPlaceholder(name) {
+                item.name = name
+            }
+            if item.timeZone == nil {
+                item.timeZone = geocoded.timeZone
+            }
+        }
+        return item
     }
 }

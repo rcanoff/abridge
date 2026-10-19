@@ -15,9 +15,7 @@ extension ContactsProvider {
                     message: "Unknown contact_identifier: \(contactIdentifier)"
                 )
             }
-            let payload = try ContactsSerialization.jsonString(
-                from: ContactsSerialization.contactJSONObject(from: contact)
-            )
+            let payload = try ContactsSerialization.jsonString(from: contactJSONObject(from: contact))
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as ContactsProviderError {
             return providerErrorResponse(from: error)

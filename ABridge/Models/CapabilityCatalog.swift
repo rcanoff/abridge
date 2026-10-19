@@ -46,6 +46,10 @@ enum CapabilityCatalog {
         definitions(in: "contacts")
     }
 
+    static var notesCapabilities: [CapabilityDefinition] {
+        definitions(in: "notes")
+    }
+
     static var mapkitCapabilities: [CapabilityDefinition] {
         definitions(in: "mapkit")
     }

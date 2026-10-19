@@ -53,9 +53,17 @@ targets:
         INFOPLIST_KEY_NSCalendarsUsageDescription: "ABridge needs access to your calendars and events to expose them through the local MCP bridge."
         INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription: "ABridge needs full access to your calendars and events to expose them through the local MCP bridge."
         INFOPLIST_KEY_NSLocationUsageDescription: "ABridge shares your Mac's current location with local MCP clients when you enable Core Location in Settings."
+        INFOPLIST_KEY_NSAppleEventsUsageDescription: "ABridge controls Notes to create, edit, move, and delete notes when you enable Notes write capabilities in Settings."
         INFOPLIST_KEY_CFBundleDisplayName: ABridge
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_OBJC_BRIDGING_HEADER: ABridge/ABridge-Bridging-Header.h
+      configs:
+        # Debug builds and the test host are signed differently from the installed app. A
+        # separate identifier keeps their privacy grants (Full Disk Access, Automation,
+        # Calendars) apart, so running tests never invalidates the installed app's grants.
+        Debug:
+          PRODUCT_BUNDLE_IDENTIFIER: io.github.rcanoff.ABridge.debug
+          INFOPLIST_KEY_CFBundleDisplayName: ABridge Debug
   ABridgeTests:
     type: bundle.unit-test
     platform: macOS

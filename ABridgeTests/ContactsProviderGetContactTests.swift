@@ -72,6 +72,27 @@ struct ContactsProviderGetContactTests {
 
     @Test
     @MainActor
+    func getContactIncludesContainerIdentifier() throws {
+        let mockStore = MockContactsStore()
+        mockStore.authorizationStatus = .authorized
+        let contact = ContactsTestSupport.makeRichContact()
+        mockStore.contacts = [contact]
+        mockStore.contactContainers[contact.identifier] = "icloud"
+        let provider = ContactsProvider(store: mockStore)
+
+        let response = provider.handle(
+            operation: "get_contact",
+            payloadJson: #"{"contact_identifier":"\#(contact.identifier)"}"#
+        )
+
+        #expect(response.ok == true)
+        let data = try #require(response.payloadJson.data(using: .utf8))
+        let decoded = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        #expect(decoded["container_identifier"] as? String == "icloud")
+    }
+
+    @Test
+    @MainActor
     func getContactReturnsPermissionDeniedWhenUnauthorized() {
         let mockStore = MockContactsStore()
         mockStore.authorizationStatus = .denied

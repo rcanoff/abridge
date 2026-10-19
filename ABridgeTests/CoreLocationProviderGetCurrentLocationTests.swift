@@ -7,9 +7,57 @@ struct CoreLocationProviderLocationTests {
     @Test @MainActor func getCurrentLocationReturnsPermissionDeniedWhenUnauthorized() {
         let store = MockCoreLocationStore()
         store.authorizationStatus = .denied
-        let response = CoreLocationProvider(store: store).handle(operation: "get_current_location", payloadJson: "{}")
+        let response = CoreLocationProvider(store: store, locationServicesEnabled: { true })
+            .handle(operation: "get_current_location", payloadJson: "{}")
         #expect(response.ok == false)
         #expect(response.errorJson?.contains("permission_denied") == true)
+        #expect(response.errorJson?.contains("System Settings") == true)
+        #expect(store.getCurrentLocationCallCount == 0)
+    }
+
+    @Test @MainActor func getCurrentLocationSaysWhenPermissionIsNotDetermined() {
+        let store = MockCoreLocationStore()
+        store.authorizationStatus = .notDetermined
+        let response = CoreLocationProvider(store: store, locationServicesEnabled: { true })
+            .handle(operation: "get_current_location", payloadJson: "{}")
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("permission_denied") == true)
+        #expect(response.errorJson?.contains("not determined") == true)
+        #expect(store.getCurrentLocationCallCount == 0)
+    }
+
+    @Test @MainActor func getCurrentLocationSaysWhenLocationServicesAreOff() {
+        let store = MockCoreLocationStore()
+        store.authorizationStatus = .authorized
+        let response = CoreLocationProvider(store: store, locationServicesEnabled: { false })
+            .handle(operation: "get_current_location", payloadJson: "{}")
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("location_services_off") == true)
+        #expect(response.errorJson?.contains("System Settings") == true)
+        #expect(store.getCurrentLocationCallCount == 0)
+    }
+
+    @Test @MainActor func getCurrentLocationMapsLocationUnknownToNoFix() {
+        let store = MockCoreLocationStore()
+        store.authorizationStatus = .authorized
+        store.getCurrentLocationError = NSError(domain: kCLErrorDomain, code: CLError.Code.locationUnknown.rawValue)
+        let response = CoreLocationProvider(store: store, locationServicesEnabled: { true })
+            .handle(operation: "get_current_location", payloadJson: "{}")
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("location_unknown") == true)
+        #expect(response.errorJson?.contains("kCLErrorDomain") == true)
+        #expect(store.getCurrentLocationCallCount == 1)
+    }
+
+    @Test @MainActor func getCurrentLocationMapsTimeoutToNoFix() {
+        let store = MockCoreLocationStore()
+        store.authorizationStatus = .authorized
+        store.getCurrentLocationError = CoreLocationProviderError.corelocationError("CoreLocation request timed out")
+        let response = CoreLocationProvider(store: store, locationServicesEnabled: { true })
+            .handle(operation: "get_current_location", payloadJson: "{}")
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("location_unknown") == true)
+        #expect(response.errorJson?.contains("timed out") == true)
     }
 
     @Test @MainActor func getCurrentLocationReturnsSerializedResponse() throws {
@@ -24,7 +72,8 @@ struct CoreLocationProviderLocationTests {
         )
         let store = MockCoreLocationStore()
         store.getCurrentLocationResult = location
-        let response = CoreLocationProvider(store: store).handle(operation: "get_current_location", payloadJson: "{}")
+        let response = CoreLocationProvider(store: store, locationServicesEnabled: { true })
+            .handle(operation: "get_current_location", payloadJson: "{}")
         #expect(response.ok == true)
         #expect(store.getCurrentLocationCallCount == 1)
         let decoded = try JSONSerialization
@@ -37,7 +86,8 @@ struct CoreLocationProviderLocationTests {
     @Test @MainActor func getCurrentLocationAcceptsEmptyPayload() {
         let store = MockCoreLocationStore()
         store.getCurrentLocationResult = CLLocation(latitude: 1.0, longitude: 2.0)
-        let response = CoreLocationProvider(store: store).handle(operation: "get_current_location", payloadJson: "")
+        let response = CoreLocationProvider(store: store, locationServicesEnabled: { true })
+            .handle(operation: "get_current_location", payloadJson: "")
         #expect(response.ok == true)
     }
 }

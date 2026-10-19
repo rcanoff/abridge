@@ -52,6 +52,75 @@ struct MapKitProviderEstimateTravelTimeTests {
         try expectSerializedEstimateTravelTimeResponse(response, store: store)
     }
 
+    @Test
+    @MainActor
+    func estimateTravelTimeLabelsEndpointsFromTheRequest() throws {
+        let store = MockMapKitStore()
+        let unknown = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(latitude: 38.77, longitude: -9.13))
+        unknown.name = "Unknown Location"
+        let alsoUnknown = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
+            latitude: 38.69,
+            longitude: -9.22
+        ))
+        alsoUnknown.name = "Unknown Location"
+        store.estimateTravelTimeResults = [
+            MapKitEstimateTravelTimeResult(
+                source: unknown,
+                destination: alsoUnknown,
+                expectedTravelTime: 1080,
+                distance: 9000,
+                expectedArrivalDate: Date(timeIntervalSince1970: 1_718_000_000),
+                expectedDepartureDate: Date(timeIntervalSince1970: 1_718_000_000),
+                transportType: .automobile
+            ),
+        ]
+        let provider = MapKitProvider(store: store)
+        let response = provider.handle(
+            operation: "estimate_travel_time",
+            payloadJson: """
+            {"source":{"coordinate":{"latitude":38.77,"longitude":-9.13},"name":"Humberto Delgado Airport"},\
+            "destination":{"identifier":"place-tower","coordinate":{"latitude":38.69,"longitude":-9.22}}}
+            """
+        )
+        #expect(response.ok == true)
+        #expect(store.lastEstimateTravelTimeRequest?.source.name == "Humberto Delgado Airport")
+        #expect(store.lastEstimateTravelTimeRequest?.destination.identifier == "place-tower")
+        let decoded = try JSONSerialization
+            .jsonObject(with: #require(response.payloadJson.data(using: .utf8))) as? [String: Any]
+        #expect((decoded?["source"] as? [String: Any])?["name"] as? String == "Humberto Delgado Airport")
+        #expect((decoded?["destination"] as? [String: Any])?["name"] is NSNull)
+    }
+
+    @Test
+    @MainActor
+    func estimateTravelTimeOmitsUnknownLocationWhenNoNameIsGiven() throws {
+        let store = MockMapKitStore()
+        let unknown = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(latitude: 1, longitude: 2))
+        unknown.name = "Unknown Location"
+        store.estimateTravelTimeResults = [
+            MapKitEstimateTravelTimeResult(
+                source: unknown,
+                destination: unknown,
+                expectedTravelTime: 1,
+                distance: 1,
+                expectedArrivalDate: Date(timeIntervalSince1970: 1_718_000_000),
+                expectedDepartureDate: Date(timeIntervalSince1970: 1_718_000_000),
+                transportType: .automobile
+            ),
+        ]
+        let response = MapKitProvider(store: store).handle(
+            operation: "estimate_travel_time",
+            payloadJson: """
+            {"source":{"coordinate":{"latitude":1,"longitude":2}},\
+            "destination":{"coordinate":{"latitude":3,"longitude":4}}}
+            """
+        )
+        #expect(response.ok == true)
+        let decoded = try JSONSerialization
+            .jsonObject(with: #require(response.payloadJson.data(using: .utf8))) as? [String: Any]
+        #expect((decoded?["source"] as? [String: Any])?["name"] is NSNull)
+    }
+
     @MainActor
     private func makeSerializedETAStore() -> MockMapKitStore {
         let sourceItem = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
@@ -64,6 +133,8 @@ struct MapKitProviderEstimateTravelTimeTests {
             longitude: -122.4194
         ))
         destinationItem.name = "San Francisco"
+        destinationItem.timeZone = TimeZone(secondsFromGMT: -4 * 60 * 60)
+        sourceItem.timeZone = TimeZone(secondsFromGMT: 0)
 
         let departureDate = Date(timeIntervalSince1970: 1_718_000_000)
         let arrivalDate = departureDate.addingTimeInterval(3600)
@@ -95,8 +166,10 @@ struct MapKitProviderEstimateTravelTimeTests {
         #expect(source?["name"] as? String == "Apple Park")
         #expect(decoded?["expected_travel_time"] as? Double == 3600)
         #expect(decoded?["distance"] as? Double == 77000)
-        #expect(decoded?["expected_arrival_date"] as? String == "2024-06-10T07:13:20Z")
+        #expect(decoded?["expected_arrival_date"] as? String == "2024-06-10T03:13:20-04:00")
         #expect(decoded?["expected_departure_date"] as? String == "2024-06-10T06:13:20Z")
+        let destination = decoded?["destination"] as? [String: Any]
+        #expect(destination?["time_zone"] is String)
         let transportType = decoded?["transport_type"] as? [String]
         #expect(transportType == ["automobile"])
         #expect(store.lastEstimateTravelTimeRequest?.transportType == .walking)
