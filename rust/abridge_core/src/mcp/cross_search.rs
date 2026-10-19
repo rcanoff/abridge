@@ -2,7 +2,8 @@
 //!
 //! Notes runs in Rust. Reminders and events use the provider bridge, sequentially, because
 //! EventKit is a single main-actor store. Notes runs beside that work. A store that fails or is
-//! denied is reported in `store_errors`; the other stores are still returned.
+//! denied is reported in `store_errors`; the other stores are still returned. `offset` skips
+//! merged hits after every store has supplied its top `offset + limit` candidates.
 
 use std::path::Path;
 use std::thread;
@@ -17,6 +18,10 @@ use crate::tools::{self, TOOL_SEARCH_EVENTS, TOOL_SEARCH_REMINDERS};
 
 const DEFAULT_LIMIT: u64 = 20;
 const MAX_LIMIT: u64 = 100;
+/// Notes search rejects a limit above this.
+const NOTES_CANDIDATE_PAGE: usize = 100;
+/// Event and reminder ranking clamps `limit` here.
+const EVENTKIT_CANDIDATE_PAGE: usize = 200;
 const STORES: [&str; 3] = ["notes", "reminders", "events"];
 
 /// Search the enabled stores. `Err` is an invalid argument, not a store failure.
@@ -37,6 +42,10 @@ pub(super) fn search(
     .and_then(Value::as_u64)
     .unwrap_or(DEFAULT_LIMIT)
     .clamp(1, MAX_LIMIT) as usize;
+  let offset = offset_argument(arguments)?;
+  // The global page is a slice of one ranking. A hit inside that slice can be as far as
+  // `offset + limit` down a single store, so each store must contribute that many candidates.
+  let window = offset.saturating_add(limit);
   let (requested, explicit) = requested_stores(arguments)?;
 
   let mut selected = Vec::new();
@@ -70,34 +79,33 @@ pub(super) fn search(
     .unwrap_or_else(crate::notes::default_store_path);
   let notes_selected = selected.contains(&"notes");
   let eventkit: Vec<&str> = selected.into_iter().filter(|store| *store != "notes").collect();
-  let notes_arguments = json!({ "query": query, "limit": limit });
 
   let (notes, eventkit_hits) = if notes_selected {
     thread::scope(|scope| {
-      let notes = scope.spawn(|| search_notes(&notes_path, &notes_arguments));
-      let eventkit_hits = search_eventkit(&eventkit, query, limit, arguments, provider);
+      let notes = scope.spawn(|| search_notes_window(&notes_path, query, window));
+      let eventkit_hits = search_eventkit(&eventkit, query, window, arguments, provider);
       let notes = notes
         .join()
         .unwrap_or_else(|_| Err(store_error("notes", "notes_error", "notes search failed")));
       (Some(notes), eventkit_hits)
     })
   } else {
-    (None, search_eventkit(&eventkit, query, limit, arguments, provider))
+    (None, search_eventkit(&eventkit, query, window, arguments, provider))
   };
 
   let mut hits = Vec::new();
   collect(notes, 0, &mut hits, &mut errors);
-  for (offset, outcome) in eventkit_hits.into_iter().enumerate() {
-    collect(Some(outcome), (offset + 1) as u8, &mut hits, &mut errors);
+  for (index, outcome) in eventkit_hits.into_iter().enumerate() {
+    collect(Some(outcome), (index + 1) as u8, &mut hits, &mut errors);
   }
   hits.sort_by(|left, right| right.score.cmp(&left.score).then(left.order.cmp(&right.order)));
-  hits.truncate(limit);
+  let page: Vec<Hit> = hits.into_iter().skip(offset).take(limit).collect();
 
   let mut object = Map::new();
-  if !hits.is_empty() {
+  if !page.is_empty() {
     object.insert(
       "items".into(),
-      Value::Array(hits.into_iter().map(|hit| hit.item).collect()),
+      Value::Array(page.into_iter().map(|hit| hit.item).collect()),
     );
   }
   if !errors.is_empty() {
@@ -166,6 +174,42 @@ fn store_provider(store: &str) -> &'static str {
   if store == "notes" { "notes" } else { "eventkit" }
 }
 
+fn offset_argument(arguments: &Value) -> Result<usize, String> {
+  let Some(value) = arguments.get("offset").filter(|value| !value.is_null()) else {
+    return Ok(0);
+  };
+  let Some(number) = value.as_u64() else {
+    return Err("offset must be an integer >= 0".to_string());
+  };
+  usize::try_from(number).map_err(|_| "offset must be an integer >= 0".to_string())
+}
+
+/// Ranked hits from the start of a store, paging where that store caps one response.
+fn collect_window(
+  window: usize,
+  page_max: usize,
+  mut fetch: impl FnMut(usize, usize) -> Result<Vec<Value>, Value>,
+) -> Result<Vec<Value>, Value> {
+  let mut items = Vec::new();
+  while items.len() < window {
+    let page_limit = (window - items.len()).min(page_max);
+    let batch = fetch(items.len(), page_limit)?;
+    let count = batch.len();
+    let room = window - items.len();
+    items.extend(batch.into_iter().take(room));
+    if count < page_limit {
+      break;
+    }
+  }
+  Ok(items)
+}
+
+fn search_notes_window(path: &Path, query: &str, window: usize) -> Result<Vec<Value>, Value> {
+  collect_window(window, NOTES_CANDIDATE_PAGE, |offset, limit| {
+    search_notes(path, &json!({ "query": query, "limit": limit, "offset": offset }))
+  })
+}
+
 fn search_notes(path: &Path, arguments: &Value) -> Result<Vec<Value>, Value> {
   match crate::notes::call_with_store(path, "search_notes", arguments) {
     Ok(Value::Array(items)) => Ok(items.iter().filter_map(|item| compact("notes", item)).collect()),
@@ -181,19 +225,32 @@ fn search_notes(path: &Path, arguments: &Value) -> Result<Vec<Value>, Value> {
 fn search_eventkit(
   stores: &[&str],
   query: &str,
-  limit: usize,
+  window: usize,
   arguments: &Value,
   provider: &dyn ProviderBridge,
 ) -> Vec<Result<Vec<Value>, Value>> {
   stores
     .iter()
-    .map(|store| search_provider_store(store, query, limit, arguments, provider))
+    .map(|store| search_provider_store(store, query, window, arguments, provider))
     .collect()
 }
 
 fn search_provider_store(
   store: &str,
   query: &str,
+  window: usize,
+  arguments: &Value,
+  provider: &dyn ProviderBridge,
+) -> Result<Vec<Value>, Value> {
+  collect_window(window, EVENTKIT_CANDIDATE_PAGE, |offset, limit| {
+    search_provider_page(store, query, offset, limit, arguments, provider)
+  })
+}
+
+fn search_provider_page(
+  store: &str,
+  query: &str,
+  offset: usize,
   limit: usize,
   arguments: &Value,
   provider: &dyn ProviderBridge,
@@ -209,6 +266,7 @@ fn search_provider_store(
   let mut payload = Map::new();
   payload.insert("query".into(), Value::String(query.to_string()));
   payload.insert("limit".into(), Value::from(limit));
+  payload.insert("offset".into(), Value::from(offset));
   if store == "events" {
     if let Some(start) = arguments.get("start_date") {
       payload.insert("start_date".into(), start.clone());
@@ -635,6 +693,123 @@ mod tests {
     )
     .expect_err("empty stores");
     assert!(err.contains("stores"), "{err}");
+    assert!(provider.calls().is_empty());
+  }
+
+  fn alpha_reminder(index: usize) -> Value {
+    json!({
+      "calendar_item_identifier": format!("rem-{index}"),
+      "title": "Alpha",
+      "calendar": { "calendar_identifier": "list-1", "title": "Errands" }
+    })
+  }
+
+  fn alpha_event(index: usize) -> Value {
+    json!({
+      "event_identifier": format!("evt-{index}"),
+      "title": "Alpha",
+      "time_zone": "America/New_York",
+      "start_date": "2026-10-20T15:00:00Z",
+      "calendar": { "calendar_identifier": "cal-1", "title": "Work" }
+    })
+  }
+
+  fn item_key(item: &Value) -> String {
+    let store = item["store"].as_str().unwrap_or("");
+    let id = ["note_identifier", "calendar_item_identifier", "event_identifier"]
+      .iter()
+      .find_map(|key| item.get(*key).and_then(Value::as_str))
+      .unwrap_or("");
+    format!("{store}:{id}")
+  }
+
+  #[test]
+  fn pages_concatenate_across_stores() {
+    let (_db, path) = crate::notes::test_sample_store();
+    let reminders: Vec<_> = (0..5).map(alpha_reminder).collect();
+    let events: Vec<_> = (0..5).map(alpha_event).collect();
+    let provider = Scripted::ok(Value::Array(reminders), Value::Array(events));
+    let run = |offset: usize, limit: u64| {
+      let found = search(
+        &json!({ "query": "alpha", "limit": limit, "offset": offset }),
+        &enabled_all(),
+        providers_on,
+        &provider,
+        Some(&path),
+      )
+      .expect("search");
+      assert!(found.get("store_errors").is_none(), "{found}");
+      found
+        .get("items")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default()
+    };
+
+    let big = run(0, 20);
+    assert!(big.len() > 2, "need more than one page, got {}", big.len());
+    let stores: Vec<_> = big.iter().filter_map(|item| item["store"].as_str()).collect();
+    assert!(stores.contains(&"reminders"), "{stores:?}");
+    assert!(stores.contains(&"events"), "{stores:?}");
+
+    let mut concatenated = Vec::new();
+    let mut offset = 0usize;
+    while concatenated.len() < big.len() {
+      let page = run(offset, 2);
+      assert!(!page.is_empty(), "gap at offset {offset}");
+      concatenated.extend(page);
+      offset += 2;
+    }
+    assert_eq!(concatenated, big);
+    let mut keys: Vec<_> = concatenated.iter().map(item_key).collect();
+    keys.sort();
+    keys.dedup();
+    assert_eq!(keys.len(), concatenated.len());
+  }
+
+  #[test]
+  fn offset_past_the_end_returns_no_items() {
+    let provider = Scripted::ok(json!([reminder("Alpha")]), json!([]));
+    let found = search(
+      &json!({ "query": "alpha", "stores": ["reminders"], "offset": 5 }),
+      &["eventkit.reminders.search".into()],
+      providers_on,
+      &provider,
+      None,
+    )
+    .expect("search");
+    assert!(found.get("items").is_none(), "{found}");
+    assert!(found.get("store_errors").is_none());
+  }
+
+  #[test]
+  fn rejects_an_offset_that_is_not_a_non_negative_integer() {
+    let tool = crate::tools::resolve_tool(crate::tools::TOOL_SEARCH_ITEMS).expect("tool");
+    let negative = crate::arg_validation::validate_tool_arguments(tool, &json!({ "query": "alpha", "offset": -1 }))
+      .expect_err("negative");
+    assert!(
+      negative.contains("offset") && negative.contains("minimum"),
+      "{negative}"
+    );
+    let fraction = crate::arg_validation::validate_tool_arguments(tool, &json!({ "query": "alpha", "offset": 1.5 }))
+      .expect_err("fraction");
+    assert!(
+      fraction.contains("offset") && fraction.contains("integer"),
+      "{fraction}"
+    );
+    crate::arg_validation::validate_tool_arguments(tool, &json!({ "query": "alpha", "offset": 0 })).expect("zero");
+    crate::arg_validation::validate_tool_arguments(tool, &json!({ "query": "alpha", "offset": 1000 })).expect("large");
+
+    let provider = Scripted::ok(json!([]), json!([]));
+    let err = search(
+      &json!({ "query": "alpha", "offset": -1 }),
+      &enabled_all(),
+      providers_on,
+      &provider,
+      None,
+    )
+    .expect_err("negative offset");
+    assert!(err.contains("offset"), "{err}");
     assert!(provider.calls().is_empty());
   }
 }

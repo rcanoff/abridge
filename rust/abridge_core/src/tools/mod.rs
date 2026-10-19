@@ -610,7 +610,10 @@ const ALL_TOOLS: [ToolDefinition; 69] = [
     operation: "recognize_text",
     description: "OCR a local image on the server Mac. Pass image_path or base64 image_data, not both. \
                   image_path is an absolute path of a regular file on this Mac (a symlink is followed when the \
-                  final target is a regular file), at most 20 MiB. No pixel buffers or request ids.",
+                  final target is a regular file), at most 20 MiB. A PDF is accepted by content, not \
+                  extension. page selects one page (default 1); a PDF result includes page and page_count. \
+                  A page past the end is page_out_of_range. page greater than 1 on an image is \
+                  invalid_arguments. An encrypted or unreadable PDF is an error. No pixel buffers or request ids.",
   },
   ToolDefinition {
     name: TOOL_RECOGNIZE_DOCUMENTS,
@@ -619,8 +622,11 @@ const ALL_TOOLS: [ToolDefinition; 69] = [
     operation: "recognize_documents",
     description: "Recognize a document's text, tables, and lists in a local image on the server Mac. Pass \
                   image_path or base64 image_data, not both. image_path is an absolute path of a regular file on \
-                  this Mac (a symlink is followed when the final target is a regular file), at most 20 MiB. No \
-                  segmentation masks or pixel buffers.",
+                  this Mac (a symlink is followed when the final target is a regular file), at most 20 MiB. A PDF is \
+                  accepted by content, not extension. page selects one page (default 1); a PDF result includes \
+                  page and page_count. A page past the end is page_out_of_range. page greater than 1 on an image \
+                  is invalid_arguments. An encrypted or unreadable PDF is an error. No segmentation masks or \
+                  pixel buffers.",
   },
   ToolDefinition {
     name: TOOL_DETECT_BARCODES,
@@ -629,8 +635,11 @@ const ALL_TOOLS: [ToolDefinition; 69] = [
     operation: "detect_barcodes",
     description: "Detect barcodes and QR codes in a local image on the server Mac. Pass image_path or base64 \
                   image_data, not both. image_path is an absolute path of a regular file on this Mac (a symlink is \
-                  followed when the final target is a regular file), at most 20 MiB. Each result has symbology, \
-                  payload_string, and a bounding region. No raw payload bytes.",
+                  followed when the final target is a regular file), at most 20 MiB. A PDF is accepted by content, \
+                  not extension. page selects one page (default 1); a PDF result includes page and page_count. \
+                  A page past the end is page_out_of_range. page greater than 1 on an image is invalid_arguments. \
+                  An encrypted or unreadable PDF is an error. Each result has symbology, payload_string, and a \
+                  bounding region. No raw payload bytes.",
   },
   ToolDefinition {
     name: TOOL_DETECT_FACE_LANDMARKS,
@@ -639,7 +648,10 @@ const ALL_TOOLS: [ToolDefinition; 69] = [
     operation: "detect_face_landmarks",
     description: "Detect faces and facial landmarks in a local image on the server Mac. Pass image_path or \
                   base64 image_data, not both. image_path is an absolute path of a regular file on this Mac (a \
-                  symlink is followed when the final target is a regular file), at most 20 MiB. No segmentation masks.",
+                  symlink is followed when the final target is a regular file), at most 20 MiB. A PDF is accepted \
+                  by content, not extension. page selects one page (default 1); a PDF result includes page and \
+                  page_count. A page past the end is page_out_of_range. page greater than 1 on an image is \
+                  invalid_arguments. An encrypted or unreadable PDF is an error. No segmentation masks.",
   },
   ToolDefinition {
     name: TOOL_NOTES_LIST_FOLDERS,
@@ -691,13 +703,16 @@ const ALL_TOOLS: [ToolDefinition; 69] = [
                   unsupported types are recognized from the UTI, the extension, and a short header and are not read \
                   in full. Scans and photos \
                   return OCR Notes has already stored; for a local image with no stored text, use \
-                  vision_recognize_text. image returns a viewable JPEG. original copies the file to \
+                  vision_recognize_text. image returns a viewable JPEG; for a PDF or scan it renders one page \
+                  (page, default 1) and sets page and page_count, so ask for the next page while page < page_count \
+                  (page_out_of_range past the end). original copies the file to \
                   $TMPDIR/abridge-attachments/<attachment identifier>/<file name> and sets file_path, with no size \
                   cap. source_path is the Notes file when it is on disk. file_size is the size on disk when the \
                   file is present, otherwise the size Notes stored. creation_date and modification_date are the \
                   same UTC instants (Z suffix, not the caller's local time and not the server Mac's local zone). \
                   attachment_not_viewable, attachment_file_unavailable, attachment_locked, attachment_encrypted, \
-                  attachment_unreadable, extraction_too_large, and attachment_has_no_file name why a file was not \
+                  attachment_unreadable, extraction_too_large, page_out_of_range, page_unrendered, and \
+                  attachment_has_no_file name why a file was not \
                   returned.",
   },
   ToolDefinition {
@@ -815,8 +830,8 @@ const ALL_TOOLS: [ToolDefinition; 69] = [
        list title or calendar, score, and one excerpt. An event item's start_date is the occurrence_date to pass \
        to get, update, and delete. It is local wall time with a numeric offset in the event's time zone, or this \
        Mac's when the event has none, not the caller's. All-day start_date is YYYY-MM-DD and is_all_day is true. \
-       limit defaults to 20 \
-       (max 100). A store that fails or is denied is listed in store_errors; the other stores are still returned. \
+       limit defaults to 20 (max 100); offset skips merged hits (default 0). A store that fails or is denied is \
+       listed in store_errors; the other stores are still returned. \
        Absent keys mean null, false, or empty."
     ),
   },
@@ -1364,7 +1379,7 @@ fn vision_image_data_schema() -> serde_json::Value {
   serde_json::json!({
     "type": "string",
     "minLength": 1,
-    "description": "Base64. Pass exactly one of image_data or image_path."
+    "description": "Base64 image or PDF. Pass exactly one of image_data or image_path."
   })
 }
 
@@ -1372,7 +1387,15 @@ fn vision_image_path_schema() -> serde_json::Value {
   serde_json::json!({
     "type": "string",
     "minLength": 1,
-    "description": "Absolute path of a regular file on this Mac, at most 20 MiB. A symlink is followed when the final target is a regular file."
+    "description": "Absolute path of a regular image or PDF file on this Mac, at most 20 MiB. A symlink is followed when the final target is a regular file."
+  })
+}
+
+fn vision_page_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": "integer",
+    "minimum": 1,
+    "description": "1-based PDF page. Defaults to 1. A page past the end is page_out_of_range. Greater than 1 on an image is invalid_arguments."
   })
 }
 
@@ -1981,6 +2004,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "properties": {
         "image_data": vision_image_data_schema(),
         "image_path": vision_image_path_schema(),
+        "page": vision_page_schema(),
         "orientation": { "type": "integer", "minimum": 1, "maximum": 8 },
         "revision": { "type": "string", "enum": ["revision1"] },
         "region_of_interest": {
@@ -2042,6 +2066,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "properties": {
         "image_data": vision_image_data_schema(),
         "image_path": vision_image_path_schema(),
+        "page": vision_page_schema(),
         "orientation": { "type": "integer", "minimum": 1, "maximum": 8 },
         "revision": { "type": "string", "enum": ["revision1", "revision4"] },
         "region_of_interest": {
@@ -2078,6 +2103,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "properties": {
         "image_data": vision_image_data_schema(),
         "image_path": vision_image_path_schema(),
+        "page": vision_page_schema(),
         "orientation": { "type": "integer", "minimum": 1, "maximum": 8 },
         "revision": { "type": "integer", "enum": [1, 2, 3] },
         "region_of_interest": {
@@ -2113,6 +2139,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "properties": {
         "image_data": vision_image_data_schema(),
         "image_path": vision_image_path_schema(),
+        "page": vision_page_schema(),
         "orientation": { "type": "integer", "minimum": 1, "maximum": 8 },
         "recognition_languages": {
           "type": "array",
@@ -2241,6 +2268,11 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         "attachment_identifier": non_whitespace_string(),
         "format": { "type": "string", "enum": ["markdown", "image", "original"] },
         "max_characters": { "type": "integer", "minimum": 1, "maximum": 100000 },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "1-based page of a PDF or scan for format image; default 1."
+        },
         "offset": {
           "type": "integer",
           "minimum": 0,
@@ -2335,7 +2367,12 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
         },
         "start_date": offset_date_time_schema(),
         "end_date": offset_date_time_schema(),
-        "limit": { "type": "integer", "minimum": 1, "maximum": 100 }
+        "limit": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Skips this many merged hits."
+        }
       },
       "required": ["query"]
     }),
@@ -3838,6 +3875,32 @@ mod tests {
       .find(|tool| tool.name == TOOL_DETECT_FACE_LANDMARKS)
       .expect("detect_face_landmarks tool");
     assert_vision_image_alternative(&input_schema(tool));
+  }
+
+  #[test]
+  fn vision_page_schema_starts_at_one() {
+    for name in [
+      TOOL_RECOGNIZE_TEXT,
+      TOOL_RECOGNIZE_DOCUMENTS,
+      TOOL_DETECT_BARCODES,
+      TOOL_DETECT_FACE_LANDMARKS,
+    ] {
+      let tool = all_tools().iter().find(|tool| tool.name == name).expect(name);
+      let schema = input_schema(tool);
+      assert_eq!(
+        schema.pointer("/properties/page/type").and_then(|value| value.as_str()),
+        Some("integer")
+      );
+      assert_eq!(
+        schema
+          .pointer("/properties/page/minimum")
+          .and_then(|value| value.as_i64()),
+        Some(1)
+      );
+      assert!(tool.description.contains("PDF"), "{name}");
+      assert!(tool.description.contains("page"), "{name}");
+      assert!(tool.description.contains("page_out_of_range"), "{name}");
+    }
   }
 
   fn assert_vision_image_alternative(schema: &serde_json::Value) {

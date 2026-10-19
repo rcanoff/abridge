@@ -6,9 +6,11 @@ extension VisionProvider {
     func detectBarcodes(payloadJson: String) async -> ProviderResponse {
         do {
             let arguments = try parseDetectBarcodesArguments(payloadJson)
-            let observations = try await store.detectBarcodes(request: arguments)
-            let payloadObject = try VisionBarcodeSerialization
-                .detectBarcodesResponseJSONObject(observations: observations)
+            let outcome = try await store.detectBarcodes(request: arguments)
+            let payloadObject = try attachingPdfPage(
+                VisionBarcodeSerialization.detectBarcodesResponseJSONObject(observations: outcome.value),
+                pdf: outcome.pdf
+            )
             let payload = try VisionSerialization.jsonString(from: payloadObject)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as VisionProviderError {
@@ -25,6 +27,7 @@ extension VisionProvider {
 
         let dictionary = try parseJSONObject(from: data)
         let imageData = try imageDataArgument(in: dictionary)
+        let page = try pageArgument(in: dictionary)
         let orientation = try optionalOrientationArgument(in: dictionary)
         let revision = try optionalBarcodeRevisionArgument(in: dictionary)
         let regionOfInterest = try optionalNormalizedRegionOfInterestArgument(in: dictionary)
@@ -36,6 +39,7 @@ extension VisionProvider {
 
         return VisionDetectBarcodesRequest(
             imageData: imageData,
+            page: page,
             orientation: orientation,
             revision: revision,
             regionOfInterest: regionOfInterest,

@@ -6,8 +6,11 @@ extension VisionProvider {
     func detectFaceLandmarks(payloadJson: String) async -> ProviderResponse {
         do {
             let arguments = try parseDetectFaceLandmarksArguments(payloadJson)
-            let observations = try await store.detectFaceLandmarks(request: arguments)
-            let payloadObject = VisionSerialization.detectFaceLandmarksResponseJSONObject(observations: observations)
+            let outcome = try await store.detectFaceLandmarks(request: arguments)
+            let payloadObject = attachingPdfPage(
+                VisionSerialization.detectFaceLandmarksResponseJSONObject(observations: outcome.value),
+                pdf: outcome.pdf
+            )
             let payload = try VisionSerialization.jsonString(from: payloadObject)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
         } catch let error as VisionProviderError {
@@ -24,6 +27,7 @@ extension VisionProvider {
 
         let dictionary = try parseJSONObject(from: data)
         let imageData = try imageDataArgument(in: dictionary)
+        let page = try pageArgument(in: dictionary)
         let orientation = try optionalOrientationArgument(in: dictionary)
         let revision = try optionalFaceLandmarksRevisionArgument(in: dictionary)
         let regionOfInterest = try optionalNormalizedRegionOfInterestArgument(in: dictionary)
@@ -31,6 +35,7 @@ extension VisionProvider {
 
         return VisionDetectFaceLandmarksRequest(
             imageData: imageData,
+            page: page,
             orientation: orientation,
             revision: revision,
             regionOfInterest: regionOfInterest,

@@ -6,10 +6,13 @@ extension VisionProvider {
     func recognizeText(payloadJson: String) async -> ProviderResponse {
         do {
             let arguments = try parseRecognizeTextArguments(payloadJson)
-            let observations = try await store.recognizeText(request: arguments)
-            let payloadObject = VisionSerialization.recognizeTextResponseJSONObject(
-                observations: observations,
-                maxCandidateCount: arguments.maxCandidateCount
+            let outcome = try await store.recognizeText(request: arguments)
+            let payloadObject = attachingPdfPage(
+                VisionSerialization.recognizeTextResponseJSONObject(
+                    observations: outcome.value,
+                    maxCandidateCount: arguments.maxCandidateCount
+                ),
+                pdf: outcome.pdf
             )
             let payload = try VisionSerialization.jsonString(from: payloadObject)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)
@@ -27,6 +30,7 @@ extension VisionProvider {
 
         let dictionary = try parseJSONObject(from: data)
         let imageData = try imageDataArgument(in: dictionary)
+        let page = try pageArgument(in: dictionary)
         let orientation = try optionalOrientationArgument(in: dictionary)
         let recognitionLanguages = try optionalStringArrayArgument(in: dictionary, key: "recognition_languages")
         let customWords = try optionalStringArrayArgument(in: dictionary, key: "custom_words")
@@ -47,6 +51,7 @@ extension VisionProvider {
 
         return VisionRecognizeTextRequest(
             imageData: imageData,
+            page: page,
             orientation: orientation,
             recognitionLanguages: recognitionLanguages,
             customWords: customWords,

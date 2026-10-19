@@ -393,9 +393,10 @@ mod tests {
   use super::*;
   use crate::tools::{
     TOOL_CALCULATE_ROUTE, TOOL_CREATE_CONTACT, TOOL_CREATE_EVENT, TOOL_CREATE_REMINDER, TOOL_DELETE_EVENT,
-    TOOL_DELETE_REMINDER, TOOL_ESTIMATE_TRAVEL_TIME, TOOL_GET_EVENT, TOOL_LIST_EVENTS, TOOL_LIST_LISTS,
-    TOOL_NOTES_CREATE_FOLDER, TOOL_NOTES_DELETE_NOTE, TOOL_NOTES_GET_NOTE, TOOL_NOTES_LIST_NOTES, TOOL_NOTES_MOVE_NOTE,
-    TOOL_RECOGNIZE_TEXT, TOOL_SEARCH_CONTACTS, TOOL_UPDATE_EVENT, resolve_tool,
+    TOOL_DELETE_REMINDER, TOOL_DETECT_BARCODES, TOOL_DETECT_FACE_LANDMARKS, TOOL_ESTIMATE_TRAVEL_TIME, TOOL_GET_EVENT,
+    TOOL_LIST_EVENTS, TOOL_LIST_LISTS, TOOL_NOTES_CREATE_FOLDER, TOOL_NOTES_DELETE_NOTE, TOOL_NOTES_GET_NOTE,
+    TOOL_NOTES_LIST_NOTES, TOOL_NOTES_MOVE_NOTE, TOOL_RECOGNIZE_DOCUMENTS, TOOL_RECOGNIZE_TEXT, TOOL_SEARCH_CONTACTS,
+    TOOL_UPDATE_EVENT, resolve_tool,
   };
   use serde_json::json;
 
@@ -604,6 +605,28 @@ mod tests {
     assert!(both.contains("exactly one"), "{both}");
     let relative = validate_tool_arguments(tool, &json!({ "image_path": "receipt.png" })).expect_err("relative");
     assert!(relative.contains("absolute path"), "{relative}");
+  }
+
+  #[test]
+  fn vision_page_is_an_integer_at_least_one() {
+    for name in [
+      TOOL_RECOGNIZE_TEXT,
+      TOOL_RECOGNIZE_DOCUMENTS,
+      TOOL_DETECT_BARCODES,
+      TOOL_DETECT_FACE_LANDMARKS,
+    ] {
+      let tool = resolve_tool(name).expect(name);
+      validate_tool_arguments(tool, &json!({ "image_data": "aGVsbG8=" })).expect("omitted page");
+      validate_tool_arguments(tool, &json!({ "image_data": "aGVsbG8=", "page": 1 })).expect("page 1");
+      validate_tool_arguments(tool, &json!({ "image_path": "/tmp/scan.pdf", "page": 2 })).expect("page 2");
+      let zero = validate_tool_arguments(tool, &json!({ "image_data": "aGVsbG8=", "page": 0 })).expect_err("zero");
+      assert!(zero.contains("page") && zero.contains("minimum"), "{name}: {zero}");
+      let fraction =
+        validate_tool_arguments(tool, &json!({ "image_data": "aGVsbG8=", "page": 1.5 })).expect_err("fraction");
+      assert!(fraction.contains("integer"), "{name}: {fraction}");
+      let text = validate_tool_arguments(tool, &json!({ "image_data": "aGVsbG8=", "page": "2" })).expect_err("text");
+      assert!(text.contains("integer"), "{name}: {text}");
+    }
   }
 
   #[test]

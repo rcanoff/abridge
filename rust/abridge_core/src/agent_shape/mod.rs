@@ -759,6 +759,20 @@ mod tests {
     assert!(text["results"][0].get("uuid").is_none());
     assert!(text["results"][0].get("global_segmentation_mask").is_none());
     assert!(text["results"][0].get("top_left").is_none());
+    assert!(text.get("page").is_none());
+    assert!(text.get("page_count").is_none());
+
+    let pdf = shaped(
+      tools::TOOL_RECOGNIZE_TEXT,
+      json!({
+        "results": [{ "candidates": [{ "string": "PAGETWO", "confidence": 0.9 }] }],
+        "page": 2,
+        "page_count": 2
+      }),
+    );
+    assert_eq!(pdf["page"], 2);
+    assert_eq!(pdf["page_count"], 2);
+    assert_eq!(pdf["results"][0]["candidates"][0]["string"], "PAGETWO");
 
     let location = shaped(
       tools::TOOL_GET_CURRENT_LOCATION,

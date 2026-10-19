@@ -5,11 +5,14 @@ extension VisionProvider {
     func recognizeDocuments(payloadJson: String) async -> ProviderResponse {
         do {
             let arguments = try parseRecognizeDocumentsArguments(payloadJson)
-            let result = try await store.recognizeDocuments(request: arguments)
-            let payloadObject = try VisionSerialization.recognizeDocumentsResponseJSONObject(
-                observations: result.observations,
-                segmentation: result.segmentation,
-                maximumCandidateCount: arguments.maximumCandidateCount
+            let outcome = try await store.recognizeDocuments(request: arguments)
+            let payloadObject = try attachingPdfPage(
+                VisionSerialization.recognizeDocumentsResponseJSONObject(
+                    observations: outcome.value.observations,
+                    segmentation: outcome.value.segmentation,
+                    maximumCandidateCount: arguments.maximumCandidateCount
+                ),
+                pdf: outcome.pdf
             )
             let payload = try VisionSerialization.jsonString(from: payloadObject)
             return ProviderResponse(ok: true, payloadJson: payload, errorJson: nil)

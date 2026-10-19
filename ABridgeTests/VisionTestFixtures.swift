@@ -139,6 +139,7 @@ enum VisionTestFixtures {
             let store = LiveVisionStore()
             let request = VisionDetectFaceLandmarksRequest(
                 imageData: imageData,
+                page: 1,
                 orientation: .up,
                 revision: nil,
                 regionOfInterest: nil,
@@ -147,8 +148,8 @@ enum VisionTestFixtures {
             let observations = try VisionAsyncBridge.perform(operation: "Vision fixture faces") {
                 try await store.detectFaceLandmarks(request: request)
             }
-            if observations.isEmpty == false {
-                return observations
+            if observations.value.isEmpty == false {
+                return observations.value
             }
         } catch {
             // Fall back to a synthetic observation when live detection is unavailable.
