@@ -329,6 +329,48 @@ fn scripting_attachment_count(snap: &Snapshot, note: &EntityRow) -> i64 {
 /// Notes replaces the whole HTML body. Checklists and every attachment except a table are lost,
 /// and neither `body` concatenation nor a paragraph element keeps them. Scripting cannot add or
 /// replace a file without inserting it twice, so this refusal leaves the note unchanged.
+pub(super) struct BodyUpdateBlock {
+  pub(super) reason: String,
+  pub(super) attachments: Vec<String>,
+  pub(super) message: &'static str,
+}
+
+/// Why `notes_update_note` would refuse this note, or `None` when a body update is allowed.
+/// Password protection is `locked` and hides the other reasons. A checklist and a non-table
+/// attachment can both apply. `attachments` lists file names only when files block the edit.
+pub(super) fn body_update_block(snap: &Snapshot, note: &EntityRow) -> Option<BodyUpdateBlock> {
+  if store::flag(note, "isPasswordProtected") {
+    return Some(BodyUpdateBlock {
+      reason: "locked".to_string(),
+      attachments: Vec::new(),
+      message: "The note is password protected, so notes_update_note cannot change it.",
+    });
+  }
+  let checklist = store::flag(note, "hasChecklist") || store::flag(note, "hasChecklistInProgress");
+  let attachments = blocking_attachment_names(snap, note);
+  let files = !attachments.is_empty();
+  let (reason, message) = match (checklist, files) {
+    (false, false) => return None,
+    (true, false) => (
+      "checklist",
+      "notes_update_note replaces the whole body and cannot keep the checklist; there is no partial edit.",
+    ),
+    (false, true) => (
+      "non_table_attachments",
+      "notes_update_note replaces the whole body and cannot keep these files; there is no partial edit.",
+    ),
+    (true, true) => (
+      "checklist, non_table_attachments",
+      "notes_update_note replaces the whole body and cannot keep the checklist or these files; there is no partial edit.",
+    ),
+  };
+  Some(BodyUpdateBlock {
+    reason: reason.to_string(),
+    attachments: if files { attachments } else { Vec::new() },
+    message,
+  })
+}
+
 fn replacement_refusal(snap: &Snapshot, note: &EntityRow) -> Option<NotesError> {
   if store::flag(note, "isPasswordProtected") {
     return Some(NotesError::new(
@@ -354,10 +396,28 @@ fn replacement_refusal(snap: &Snapshot, note: &EntityRow) -> Option<NotesError> 
 }
 
 fn blocking_attachment_labels(snap: &Snapshot, note: &EntityRow) -> Vec<String> {
+  blocking_rows(snap, note)
+    .into_iter()
+    .map(|row| attachment_loss_label(snap, row))
+    .collect()
+}
+
+fn blocking_attachment_names(snap: &Snapshot, note: &EntityRow) -> Vec<String> {
+  blocking_rows(snap, note)
+    .into_iter()
+    .map(|row| {
+      media_filename(snap, row)
+        .or_else(|| store::text(row, "title").filter(|title| !title.is_empty()))
+        .unwrap_or("attachment")
+        .to_string()
+    })
+    .collect()
+}
+
+fn blocking_rows<'a>(snap: &'a Snapshot, note: &EntityRow) -> Vec<&'a EntityRow> {
   shape::visible_attachments(snap, note)
     .into_iter()
     .filter(|row| store::text(row, "typeUTI") != Some(TABLE_UTI))
-    .map(|row| attachment_loss_label(snap, row))
     .collect()
 }
 

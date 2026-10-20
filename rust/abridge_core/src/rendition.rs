@@ -53,29 +53,59 @@ pub(crate) enum PdfPage {
   },
 }
 
-/// JPEG of one 1-based `page` of `pdf` within the model image limit. `sips` renders only a PDF's
-/// first page, so the requested page is copied into a one-page PDF first.
-pub(crate) fn jpeg_pdf_page(pdf: &[u8], page: u32) -> PdfPage {
+/// One page of a PDF, split out with `lopdf` and not rendered.
+pub(crate) enum PdfSinglePage {
+  /// PDF bytes of the requested page. `page_count` is the source document.
+  Page {
+    bytes: Vec<u8>,
+    page_count: u32,
+  },
+  OutOfRange {
+    page_count: u32,
+  },
+  /// `lopdf` could not read the PDF (`page_count` is `None`) or could not write the page.
+  Unrendered {
+    page_count: Option<u32>,
+  },
+}
+
+/// Copies 1-based `page` into its own PDF. Callers that need pixels render the result; Vision text
+/// sends these bytes so Swift can rasterize the page at full resolution.
+pub(crate) fn pdf_single_page(pdf: &[u8], page: u32) -> PdfSinglePage {
   let Ok(mut document) = lopdf::Document::load_mem(pdf) else {
-    return PdfPage::Unrendered { page_count: None };
+    return PdfSinglePage::Unrendered { page_count: None };
   };
   let page_count = u32::try_from(document.get_pages().len()).unwrap_or(u32::MAX);
   if page == 0 || page > page_count {
-    return PdfPage::OutOfRange { page_count };
+    return PdfSinglePage::OutOfRange { page_count };
   }
   let others: Vec<u32> = (1..=page_count).filter(|number| *number != page).collect();
   document.delete_pages(&others);
   document.prune_objects();
   let mut single = Vec::new();
-  let jpeg = document
-    .save_to(&mut single)
-    .ok()
-    .and_then(|()| render_bytes("in.pdf", &single));
-  match jpeg {
-    Some(jpeg) => PdfPage::Rendered { jpeg, page_count },
-    None => PdfPage::Unrendered {
+  match document.save_to(&mut single) {
+    Ok(()) => PdfSinglePage::Page {
+      bytes: single,
+      page_count,
+    },
+    Err(_) => PdfSinglePage::Unrendered {
       page_count: Some(page_count),
     },
+  }
+}
+
+/// JPEG of one 1-based `page` of `pdf` within the model image limit. `sips` renders only a PDF's
+/// first page, so the requested page is copied into a one-page PDF first.
+pub(crate) fn jpeg_pdf_page(pdf: &[u8], page: u32) -> PdfPage {
+  match pdf_single_page(pdf, page) {
+    PdfSinglePage::Page { bytes, page_count } => match render_bytes("in.pdf", &bytes) {
+      Some(jpeg) => PdfPage::Rendered { jpeg, page_count },
+      None => PdfPage::Unrendered {
+        page_count: Some(page_count),
+      },
+    },
+    PdfSinglePage::OutOfRange { page_count } => PdfPage::OutOfRange { page_count },
+    PdfSinglePage::Unrendered { page_count } => PdfPage::Unrendered { page_count },
   }
 }
 

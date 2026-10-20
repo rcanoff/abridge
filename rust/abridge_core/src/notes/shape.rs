@@ -2,7 +2,7 @@
 //! stay out. Null, false, and empty values are left out, so an absent key means null or false.
 
 use serde_json::{Map, Number, Value, json};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 use super::markdown;
@@ -10,16 +10,16 @@ use super::store::{self, EntityRow, Snapshot, SqlValue};
 use super::timefmt;
 use super::write::TRASH_FOLDER_TYPE;
 
-/// How much recognized text an attachment shape keeps.
+/// Which attachment fields a response keeps.
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub(crate) enum OcrScope {
-  /// Note detail: one copy, capped.
-  Note,
-  /// Attachment get: one copy, uncapped.
-  Full,
+pub(crate) enum AttachmentView {
+  /// Note card: capped saved text, in body order.
+  Card,
+  /// Attachment get: metadata only. `content` carries the read.
+  File,
 }
 
-const OCR_NOTE_CHARS: usize = 2000;
+const CARD_TEXT_CHARS: usize = 1_500;
 
 /// A note in list and search results: enough to pick it, without its body.
 pub(crate) fn note_summary(snap: &Snapshot, note: &EntityRow) -> Map<String, Value> {
@@ -65,44 +65,110 @@ pub(crate) fn note_detail(store_path: &Path, snap: &Snapshot, note: &EntityRow) 
   if !attachments.is_empty() {
     object.insert("attachments".into(), Value::Array(attachments));
   }
+  if let Some(block) = super::write::body_update_block(snap, note) {
+    let mut update = json!({
+      "status": "blocked",
+      "reason": block.reason,
+      "message": block.message,
+    });
+    if !block.attachments.is_empty() {
+      update["attachments"] = Value::Array(block.attachments.into_iter().map(Value::String).collect());
+    }
+    object.insert("body_update".into(), update);
+  }
   Value::Object(object)
 }
 
 fn attachment_details(store_path: &Path, snap: &Snapshot, note: &EntityRow) -> Vec<Value> {
-  visible_attachments(snap, note)
-    .into_iter()
-    .filter_map(|row| {
-      let mut value = attachment_detail(snap, row, OcrScope::Note)?;
-      if let Some(size) = super::attachment_file::on_disk_len(store_path, snap, row)
-        && let Some(object) = value.as_object_mut()
+  let order = markdown::referenced_attachment_order(snap, note);
+  let visible = visible_attachments(snap, note);
+  let mut by_id: HashMap<&str, &EntityRow> = HashMap::new();
+  for row in &visible {
+    if let Some(identifier) = store::text(row, "identifier") {
+      by_id.insert(identifier, *row);
+    }
+  }
+  let mut cards = Vec::new();
+  for identifier in order {
+    let Some(row) = by_id.get(identifier.as_str()).copied() else {
+      continue;
+    };
+    if let Some(parent) = store::foreign_key(row, "parentAttachment")
+      && store::row_by_pk(&snap.attachments, parent)
+        .is_some_and(|parent| store::text(parent, "identifier").is_some_and(|id| by_id.contains_key(id)))
+    {
+      continue;
+    }
+    let Some(mut card) = attachment_card(store_path, snap, row) else {
+      continue;
+    };
+    if store::text(row, "typeUTI") == Some("com.apple.notes.gallery") {
+      let pages: Vec<Value> = gallery_pages(snap, row)
+        .into_iter()
+        .filter_map(|page| attachment_card(store_path, snap, page))
+        .collect();
+      if !pages.is_empty()
+        && let Some(object) = card.as_object_mut()
       {
-        object.insert("file_size".into(), Value::from(size));
+        object.insert("pages".into(), Value::Array(pages));
       }
-      Some(value)
-    })
-    .collect()
+    }
+    cards.push(card);
+  }
+  cards
 }
 
-pub(crate) fn attachment_detail(snap: &Snapshot, row: &EntityRow, ocr: OcrScope) -> Option<Value> {
+fn attachment_card(store_path: &Path, snap: &Snapshot, row: &EntityRow) -> Option<Value> {
+  let mut value = attachment_detail(store_path, snap, row, AttachmentView::Card)?;
+  if let Some(size) = super::attachment_file::on_disk_len(store_path, snap, row)
+    && let Some(object) = value.as_object_mut()
+  {
+    object.insert("file_size".into(), Value::from(size));
+  }
+  if let Some(count) = super::attachment_file::page_count(store_path, snap, row)
+    && let Some(object) = value.as_object_mut()
+  {
+    object.insert("page_count".into(), Value::from(count));
+  }
+  Some(value)
+}
+
+/// Gallery pages in section order, then store order. Pages whose section is missing stay in
+/// primary-key order, which is the order `notes_get_attachment` lists them.
+pub(super) fn gallery_pages<'a>(snap: &'a Snapshot, gallery: &EntityRow) -> Vec<&'a EntityRow> {
+  let mut pages: Vec<&EntityRow> = snap
+    .attachments
+    .iter()
+    .filter(|row| store::foreign_key(row, "parentAttachment") == Some(gallery.pk))
+    .collect();
+  pages.sort_by_key(|row| (store::integer(row, "section").unwrap_or(i64::MAX), row.pk));
+  pages
+}
+
+pub(crate) fn attachment_detail(
+  store_path: &Path,
+  snap: &Snapshot,
+  row: &EntityRow,
+  view: AttachmentView,
+) -> Option<Value> {
   let mut object = Map::new();
   put_text(&mut object, "identifier", store::text(row, "identifier"));
+  object.insert(
+    "kind".into(),
+    Value::String(super::attachment_file::attachment_kind(store_path, snap, row).to_string()),
+  );
   put_text(&mut object, "type_uti", store::text(row, "typeUTI"));
   put_text(&mut object, "title", store::text(row, "title"));
   put_text(&mut object, "file_name", media_filename(snap, row));
   put_positive(&mut object, "file_size", number_of(row, "fileSize"));
   put_text(&mut object, "url", store::text(row, "urlString"));
-  put_recognized_text(&mut object, row, ocr);
-  put_text(
-    &mut object,
-    "handwriting_summary",
-    store::text(row, "handwritingSummary"),
-  );
-  put_positive(&mut object, "duration", number_of(row, "duration"));
-  if let Some(parent) =
-    store::foreign_key(row, "parentAttachment").and_then(|pk| store::row_by_pk(&snap.attachments, pk))
-  {
-    put_text(&mut object, "parent_identifier", store::text(parent, "identifier"));
+  if view == AttachmentView::Card {
+    put_card_text(&mut object, row);
   }
+  let classification = image_classification(row);
+  put_text(&mut object, "description", Some(&classification));
+  put_text(&mut object, "handwriting", store::text(row, "handwritingSummary"));
+  put_positive(&mut object, "duration", number_of(row, "duration"));
   put_date(&mut object, "creation_date", row, "creationDate");
   put_date(&mut object, "modification_date", row, "modificationDate");
   if object.is_empty() {
@@ -239,6 +305,8 @@ pub(super) fn visible_attachments<'a>(snap: &'a Snapshot, note: &EntityRow) -> V
 
 pub(crate) struct Recognized {
   pub text: String,
+  /// Read by the dedupe tests. Library code returns it and does not branch on it.
+  #[allow(dead_code)]
   pub summary: Option<String>,
   pub classification: Option<String>,
 }
@@ -385,11 +453,6 @@ fn alnum_key(text: &str) -> String {
     .collect()
 }
 
-fn repeats_ocr(candidate: &str, kept: &str) -> bool {
-  let key = alnum_key(candidate);
-  !key.is_empty() && key == alnum_key(kept)
-}
-
 fn cap_chars(text: &str, max_chars: usize) -> (String, bool) {
   if text.chars().count() <= max_chars {
     return (text.to_string(), false);
@@ -402,30 +465,17 @@ fn cap_chars(text: &str, max_chars: usize) -> (String, bool) {
   (text[..end].to_string(), true)
 }
 
-fn put_recognized_text(object: &mut Map<String, Value>, row: &EntityRow, scope: OcrScope) {
-  let recognized = recognized(row);
-  if !recognized.text.is_empty() {
-    let (shown, truncated) = if scope == OcrScope::Note {
-      cap_chars(&recognized.text, OCR_NOTE_CHARS)
-    } else {
-      (recognized.text.clone(), false)
-    };
-    put_text(object, "ocr_summary", Some(&shown));
-    if truncated {
-      object.insert("ocr_truncated".into(), Value::Bool(true));
-    }
+fn put_card_text(object: &mut Map<String, Value>, row: &EntityRow) {
+  let text = recognized_text(row);
+  if text.is_empty() {
+    return;
   }
-  if let Some(summary) = recognized.summary.as_deref() {
-    put_text(object, "summary", Some(summary));
+  let (shown, truncated) = cap_chars(&text, CARD_TEXT_CHARS);
+  put_text(object, "text", Some(&shown));
+  if truncated {
+    object.insert("text_truncated".into(), Value::Bool(true));
   }
-  if let Some(classification) = recognized.classification.as_deref() {
-    put_text(object, "image_classification_summary", Some(classification));
-  }
-  if let Some(extra) = store::text(row, "additionalIndexableText")
-    && !repeats_ocr(extra, &recognized.text)
-  {
-    put_text(object, "additional_indexable_text", Some(extra));
-  }
+  object.insert("text_source".into(), Value::String("saved".to_string()));
 }
 
 fn parent_of<'a>(snap: &'a Snapshot, folder: &EntityRow) -> Option<&'a EntityRow> {

@@ -16,11 +16,42 @@ struct VisionPreparedImage: Equatable, Sendable {
 
 /// Rasterizes one PDF page for Vision. Recognition is by a `%PDF-` header, not the file extension.
 enum VisionPdf {
-    /// Long edge of the rendered page. Inside the 2048...4096 range used for OCR.
-    static let longEdgePixels = 3072
+    /// Points to pixels. About 2× was the best or near-best scale on real scans.
+    static let renderScale: CGFloat = 2
 
-    /// Caps the bitmap at a square of `longEdgePixels`, about 36 MiB of RGBA.
-    static let maxBitmapPixels = longEdgePixels * longEdgePixels
+    /// RGBA memory bound, about 40 million pixels (roughly 160 MiB).
+    static let maxBitmapPixels = 40_000_000
+
+    struct BitmapSize: Equatable {
+        let width: Int
+        let height: Int
+        let scale: CGFloat
+    }
+
+    /// Pixel size of a page with `displayed` point size, at `renderScale` until the pixel cap.
+    static func bitmapSize(for displayed: CGSize) -> BitmapSize? {
+        guard displayed.width > 0, displayed.height > 0,
+              displayed.width.isFinite, displayed.height.isFinite
+        else {
+            return nil
+        }
+        let area = displayed.width * displayed.height
+        var scale = renderScale
+        if area * scale * scale > CGFloat(maxBitmapPixels) {
+            scale = (CGFloat(maxBitmapPixels) / area).squareRoot()
+        }
+        var width = max(1, Int((displayed.width * scale).rounded(.down)))
+        var height = max(1, Int((displayed.height * scale).rounded(.down)))
+        var guardCount = 0
+        while width * height > maxBitmapPixels, width > 1, height > 1, guardCount < 8 {
+            scale *= 0.99
+            width = max(1, Int((displayed.width * scale).rounded(.down)))
+            height = max(1, Int((displayed.height * scale).rounded(.down)))
+            guardCount += 1
+        }
+        let fitted = min(CGFloat(width) / displayed.width, CGFloat(height) / displayed.height)
+        return BitmapSize(width: width, height: height, scale: fitted)
+    }
 
     static func prepare(data: Data, page: Int) throws -> VisionPreparedImage {
         guard page >= 1 else {
@@ -83,10 +114,13 @@ enum VisionPdf {
         return try (pngData(from: image), pageCount)
     }
 
+    /// `getDrawingTransform` only scales down, so a page smaller than the destination is drawn at
+    /// 1× inside a white canvas. Scale explicitly instead.
     private static func rasterize(_ page: CGPDFPage) throws -> CGImage {
         let box = displayBox(for: page)
+        let pageRect = page.getBoxRect(box)
         let displayed = displayedSize(of: page, box: box)
-        guard let pixels = pixelSize(for: displayed) else {
+        guard let pixels = bitmapSize(for: displayed) else {
             throw VisionProviderError.invalidArguments("PDF page could not be rendered")
         }
         let colorSpace = CGColorSpaceCreateDeviceRGB()
@@ -104,14 +138,35 @@ enum VisionPdf {
         context.interpolationQuality = .high
         context.setFillColor(red: 1, green: 1, blue: 1, alpha: 1)
         context.fill(CGRect(x: 0, y: 0, width: pixels.width, height: pixels.height))
-        let destination = CGRect(x: 0, y: 0, width: pixels.width, height: pixels.height)
-        let transform = page.getDrawingTransform(box, rect: destination, rotate: 0, preserveAspectRatio: true)
-        context.concatenate(transform)
+        context.clip(to: CGRect(x: 0, y: 0, width: pixels.width, height: pixels.height))
+        context.concatenate(drawingTransform(pageRect: pageRect, rotation: page.rotationAngle, scale: pixels.scale))
         context.drawPDFPage(page)
         guard let image = context.makeImage() else {
             throw VisionProviderError.invalidArguments("PDF page could not be rendered")
         }
         return image
+    }
+
+    /// Maps the page box into the bitmap. Each new step is applied after the ones above it,
+    /// so the origin shift happens first and the rotation shift happens last.
+    private static func drawingTransform(pageRect: CGRect, rotation: Int32, scale: CGFloat) -> CGAffineTransform {
+        let angle = ((Int(rotation) % 360) + 360) % 360
+        var transform = CGAffineTransform(translationX: -pageRect.origin.x, y: -pageRect.origin.y)
+        transform = transform.scaledBy(x: scale, y: scale)
+        switch angle {
+        case 90:
+            transform = transform.rotated(by: -.pi / 2)
+            transform = transform.translatedBy(x: 0, y: pageRect.width * scale)
+        case 180:
+            transform = transform.rotated(by: .pi)
+            transform = transform.translatedBy(x: pageRect.width * scale, y: pageRect.height * scale)
+        case 270:
+            transform = transform.rotated(by: .pi / 2)
+            transform = transform.translatedBy(x: pageRect.height * scale, y: 0)
+        default:
+            break
+        }
+        return transform
     }
 
     private static func displayBox(for page: CGPDFPage) -> CGPDFBox {
@@ -129,25 +184,6 @@ enum VisionPdf {
             return CGSize(width: rect.height, height: rect.width)
         }
         return rect.size
-    }
-
-    private static func pixelSize(for displayed: CGSize) -> (width: Int, height: Int)? {
-        guard displayed.width > 0, displayed.height > 0 else { return nil }
-        let scale = CGFloat(longEdgePixels) / max(displayed.width, displayed.height)
-        var width = max(1, Int((displayed.width * scale).rounded()))
-        var height = max(1, Int((displayed.height * scale).rounded()))
-        while true {
-            let product = width.multipliedReportingOverflow(by: height)
-            if !product.overflow, product.partialValue <= maxBitmapPixels {
-                break
-            }
-            if width == 1, height == 1 {
-                break
-            }
-            width = max(1, width / 2)
-            height = max(1, height / 2)
-        }
-        return (width, height)
     }
 
     private static func pngData(from image: CGImage) throws -> Data {

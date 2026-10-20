@@ -6,19 +6,47 @@ import Vision
 
 enum VisionSerialization {
     static func jsonString(from object: Any) throws -> String {
-        let data = try JSONSerialization.data(withJSONObject: object)
+        // NaN and infinity raise NSInvalidArgumentException from JSONSerialization, which is not a
+        // Swift error. Vision time ranges and confidences are non-finite when a model does not run.
+        let data = try JSONSerialization.data(withJSONObject: jsonSafe(object))
         guard let string = String(data: data, encoding: .utf8) else {
             throw VisionProviderError.serializationFailed
         }
         return string
     }
 
+    /// Replaces non-finite numbers with null. Booleans stay booleans (`NSNumber` bridges both).
+    private static func jsonSafe(_ value: Any) -> Any {
+        if let dictionary = value as? [String: Any] {
+            return dictionary.mapValues { jsonSafe($0) }
+        }
+        if let array = value as? [Any] {
+            return array.map { jsonSafe($0) }
+        }
+        if let number = value as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+           number.doubleValue.isFinite == false
+        {
+            return NSNull()
+        }
+        return value
+    }
+
     static func recognizeTextResponseJSONObject(
         observations: [VNRecognizedTextObservation],
         maxCandidateCount: Int
     ) -> [String: Any] {
+        recognizeTextResponseJSONObject(
+            lines: observations.map(VisionRecognizedText.init),
+            maxCandidateCount: maxCandidateCount
+        )
+    }
+
+    static func recognizeTextResponseJSONObject(
+        lines: [VisionRecognizedText],
+        maxCandidateCount: Int
+    ) -> [String: Any] {
         [
-            "results": observations.map {
+            "results": lines.map {
                 recognizedTextObservationJSONObject(from: $0, maxCandidateCount: maxCandidateCount)
             },
         ]
@@ -28,17 +56,28 @@ enum VisionSerialization {
         from observation: VNRecognizedTextObservation,
         maxCandidateCount: Int
     ) -> [String: Any] {
-        [
+        recognizedTextObservationJSONObject(
+            from: VisionRecognizedText(observation: observation),
+            maxCandidateCount: maxCandidateCount
+        )
+    }
+
+    static func recognizedTextObservationJSONObject(
+        from line: VisionRecognizedText,
+        maxCandidateCount: Int
+    ) -> [String: Any] {
+        let observation = line.observation
+        return [
             "uuid": observation.uuid.uuidString,
             "confidence": observation.confidence,
             "time_range": cmTimeRangeJSONObject(from: observation.timeRange),
             "request_revision": observation.requestRevision,
-            "bounding_box": cgRectJSONObject(from: observation.boundingBox),
+            "bounding_box": cgRectJSONObject(from: line.boundingBox),
             "global_segmentation_mask": pixelBufferObservationJSONObject(from: observation.globalSegmentationMask),
-            "top_left": cgPointJSONObject(from: observation.topLeft),
-            "top_right": cgPointJSONObject(from: observation.topRight),
-            "bottom_left": cgPointJSONObject(from: observation.bottomLeft),
-            "bottom_right": cgPointJSONObject(from: observation.bottomRight),
+            "top_left": cgPointJSONObject(from: line.topLeft),
+            "top_right": cgPointJSONObject(from: line.topRight),
+            "bottom_left": cgPointJSONObject(from: line.bottomLeft),
+            "bottom_right": cgPointJSONObject(from: line.bottomRight),
             "candidates": observation.topCandidates(maxCandidateCount).map(recognizedTextJSONObject(from:)),
         ]
     }

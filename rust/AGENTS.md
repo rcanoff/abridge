@@ -38,7 +38,7 @@ These supersede **rust-best-practices** when that skill is installed, and they s
 ### Testing
 
 - `#[cfg(test)]` modules and `tests/` integration tests only — no snapshot testing (`insta`).
-- Primary test seam for bridge-backed calls: **`MockProviderBridge`** implementing `ProviderBridge`. Rust-native providers for Apple apps without a public framework bypass it; Notes uses SQLite fixture stores and attachment files in temporary directories (`notes/fixture.rs`, `notes/attachment_fixture.rs`). Never use the real Notes store or `osascript`; only the macOS-only rendition test may run `sips` on a fixture image.
+- Primary test seam for bridge-backed calls: **`MockProviderBridge`** implementing `ProviderBridge`. Rust-native providers for Apple apps without a public framework bypass it; Notes uses SQLite fixture stores and attachment files in temporary directories (`notes/fixture.rs`, `notes/attachment_fixture.rs`). `notes_get_attachment` Vision tests mock `ProviderBridge` for that call. Never use the real Notes store or `osascript`; only the macOS-only rendition test may run `sips` on a fixture image.
 - Cover `agent_shape` summary/detail consistency, omission, meaningful false outcomes, request rewrites, and binary content separation with framework JSON fixtures and the bridge seam. Cover shared `fuzzy` ranking/query semantics and Notes Markdown, filtering, and cache invalidation with fixture data.
 - Test names: short and descriptive (`rejects_empty_token`) — not long Apollo-style sentences.
 - Prefer seam-level tests for routing, auth, lifecycle, and callback behavior over end-to-end runtime coupling.
@@ -55,7 +55,7 @@ These supersede **rust-best-practices** when that skill is installed, and they s
 
 ### Rust-native app providers
 
-- Only providers for Apple apps without a public framework (currently Notes) may bypass `ProviderBridge`. Framework-backed providers keep their Swift adapters.
+- Only providers for Apple apps without a public framework (currently Notes) may bypass `ProviderBridge` for their own store. Framework-backed providers keep their Swift adapters. `notes_get_attachment` markdown may call the Vision provider through `ProviderBridge` when `text_source` is `vision`, when `page` is set (that implies vision), or when nothing is saved and that provider is enabled.
 - Notes may perform blocking read-only SQLite and attachment-file I/O in Rust. Use `SQLITE_OPEN_READ_ONLY` and one read transaction per snapshot; never mutate the real store.
 - Notes may spawn `/usr/bin/osascript` for fixed JXA writes and `/usr/bin/sips` for image renditions, each with a timeout. Pass user input only as JSON on the script's stdin (`osascript -e` holds the fixed script; the payload is not an argument). Keep blocking provider work off Tokio's async workers.
 - Rust owns serialized writes, outcome polling, and the Notes write-safety guards in root `AGENTS.md`. Agent-facing shapes, renditions, size limits, and approved crates follow `docs/conventions.md`.

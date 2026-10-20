@@ -28,6 +28,9 @@ const ATTACHMENT_WEIGHT: u32 = 3;
 const MAX_MATCHES: usize = 3;
 const DEFAULT_LIMIT: u64 = 20;
 const MAX_LIMIT: u64 = 100;
+/// Matched line plus at most one line before it and one line after it.
+const SURROUNDING_LINES: usize = 1;
+const EXCERPT_CAP: usize = 600;
 /// Seconds between the Unix epoch and the Core Data epoch (2001-01-01T00:00:00Z).
 const CORE_DATA_EPOCH_OFFSET: f64 = 978_307_200.0;
 
@@ -97,7 +100,7 @@ pub(crate) fn search_notes(path: &Path, arguments: &Value) -> Result<Value, Note
   let hits = fuzzy::search(&docs, &query_text, offset, limit);
   let payload = hits
     .iter()
-    .map(|hit| hit_json(&index.snap, selected[hit.index], hit))
+    .map(|hit| hit_json(path, &index.snap, selected[hit.index], hit))
     .collect();
   Ok(Value::Array(payload))
 }
@@ -111,32 +114,339 @@ fn borrow_field(field: &OwnedField) -> Field<'_> {
   }
 }
 
-fn hit_json(snap: &Snapshot, note: &NoteDoc, hit: &fuzzy::Hit) -> Value {
+fn hit_json(path: &Path, snap: &Snapshot, note: &NoteDoc, hit: &fuzzy::Hit) -> Value {
   let row = &snap.notes[note.index];
   let mut object = shape::note_summary(snap, row);
   object.remove("snippet");
   object.insert("score".into(), json!(hit.score));
-  if !hit.matches.is_empty() {
-    let matches = hit
-      .matches
-      .iter()
-      .take(MAX_MATCHES)
-      .map(|matched| {
-        let mut value = json!({ "field": matched.field, "excerpt": matched.excerpt });
-        if let Some(field) = note.fields.iter().find(|field| field.label == matched.field) {
-          if let Some(identifier) = &field.attachment_identifier {
-            value["attachment_identifier"] = json!(identifier);
-          }
-          if let Some(title) = &field.attachment_title {
-            value["attachment_title"] = json!(title);
-          }
-        }
-        value
-      })
-      .collect();
+  let matches = merged_matches(path, snap, note, hit);
+  if !matches.is_empty() {
     object.insert("matches".into(), Value::Array(matches));
   }
+  let attachments = compact_attachments(path, snap, row);
+  if !attachments.is_empty() {
+    object.insert("attachments".into(), Value::Array(attachments));
+  }
   Value::Object(object)
+}
+
+/// One match per attachment, and one per other field. Terms on the same line share an excerpt.
+/// Terms on different lines are joined while the result stays within the excerpt cap; otherwise
+/// the higher-scoring excerpt is kept. `hit.matches` is already best-first.
+fn merged_matches(path: &Path, snap: &Snapshot, note: &NoteDoc, hit: &fuzzy::Hit) -> Vec<Value> {
+  let mut groups: Vec<(&OwnedField, Vec<&fuzzy::Match>)> = Vec::new();
+  for matched in &hit.matches {
+    let Some(field) = note.fields.iter().find(|field| field.label == matched.field) else {
+      continue;
+    };
+    if let Some(group) = groups.iter_mut().find(|(grouped, _)| same_match(grouped, field)) {
+      group.1.push(matched);
+    } else {
+      groups.push((field, vec![matched]));
+    }
+  }
+  groups
+    .into_iter()
+    .take(MAX_MATCHES)
+    .map(|(field, matches)| {
+      let excerpts: Vec<&str> = matches.iter().map(|matched| matched.excerpt.as_str()).collect();
+      let mut value = json!({
+        "field": field.label,
+        "excerpt": merged_excerpt(&field.text, &excerpts),
+      });
+      if let Some(identifier) = &field.attachment_identifier {
+        value["attachment_identifier"] = json!(identifier);
+        if let Some(row) = snap
+          .attachments
+          .iter()
+          .find(|row| store::text(row, "identifier") == Some(identifier.as_str()))
+        {
+          value["kind"] = json!(attachment_file::attachment_kind(path, snap, row));
+          if let Some(count) = attachment_file::page_count(path, snap, row) {
+            value["page_count"] = json!(count);
+          }
+        }
+      }
+      if let Some(title) = &field.attachment_title {
+        value["attachment_title"] = json!(title);
+      }
+      value
+    })
+    .collect()
+}
+
+fn same_match(left: &OwnedField, right: &OwnedField) -> bool {
+  match (&left.attachment_identifier, &right.attachment_identifier) {
+    (Some(left_id), Some(right_id)) => left_id == right_id,
+    (None, None) => left.label == right.label,
+    _ => false,
+  }
+}
+
+fn merged_excerpt(text: &str, excerpts: &[&str]) -> String {
+  let Some(first) = excerpts.first() else {
+    return String::new();
+  };
+  if excerpts.len() == 1 {
+    return context_excerpt(text, first);
+  }
+  let chars: Vec<char> = text.chars().collect();
+  let lines = non_empty_line_spans(&chars);
+  let mut placements = Vec::new();
+  for excerpt in excerpts {
+    let (needle, marks) = split_marks(excerpt);
+    let needle_chars: Vec<char> = needle.chars().collect();
+    let Some(start) = find_chars(&chars, &needle_chars) else {
+      continue;
+    };
+    let end = start + marks.len();
+    let line = lines
+      .iter()
+      .position(|(line_start, line_end)| start < *line_end && end > *line_start);
+    placements.push((start, marks, line));
+  }
+  if placements.is_empty() {
+    return cap_marked(&first.chars().collect::<Vec<_>>());
+  }
+  let same_line = placements.iter().all(|(_, _, line)| line == &placements[0].2);
+  if same_line {
+    let (window_start, window_end) = line_window(&chars, &lines, placements[0].2);
+    let rendered = render_marks(&chars, &placements, window_start, window_end);
+    return cap_marked(&rendered.chars().collect::<Vec<_>>());
+  }
+  let mut joined = String::new();
+  for excerpt in excerpts {
+    let piece = context_excerpt(text, excerpt);
+    let next = if joined.is_empty() {
+      piece
+    } else {
+      format!("{joined}\n{piece}")
+    };
+    if next.chars().count() > EXCERPT_CAP {
+      break;
+    }
+    joined = next;
+  }
+  if joined.is_empty() {
+    context_excerpt(text, first)
+  } else {
+    joined
+  }
+}
+
+fn line_window(chars: &[char], lines: &[(usize, usize)], line: Option<usize>) -> (usize, usize) {
+  let Some(index) = line else {
+    return (0, chars.len());
+  };
+  if lines.is_empty() {
+    return (0, chars.len());
+  }
+  let from = index.saturating_sub(SURROUNDING_LINES);
+  let to = (index + SURROUNDING_LINES).min(lines.len() - 1);
+  (lines[from].0, lines[to].1)
+}
+
+fn render_marks(chars: &[char], placements: &[(usize, Vec<bool>, Option<usize>)], start: usize, end: usize) -> String {
+  let mut flags = vec![false; chars.len()];
+  for (at, marks, _) in placements {
+    for (offset, marked) in marks.iter().enumerate() {
+      if *marked && let Some(slot) = flags.get_mut(at + offset) {
+        *slot = true;
+      }
+    }
+  }
+  let mut out = String::new();
+  let mut index = start.min(chars.len());
+  let end = end.min(chars.len());
+  while index < end {
+    if flags[index] {
+      out.push('«');
+      while index < end && flags[index] {
+        out.push(chars[index]);
+        index += 1;
+      }
+      out.push('»');
+    } else {
+      out.push(chars[index]);
+      index += 1;
+    }
+  }
+  out
+}
+
+/// Top-level body attachments, in body order, with no saved text. Gallery pages stay off this list.
+fn compact_attachments(path: &Path, snap: &Snapshot, note: &EntityRow) -> Vec<Value> {
+  let order = markdown::referenced_attachment_order(snap, note);
+  let mut cards = Vec::new();
+  for identifier in &order {
+    let Some(row) = snap
+      .attachments
+      .iter()
+      .find(|row| store::text(row, "identifier") == Some(identifier.as_str()))
+    else {
+      continue;
+    };
+    if store::foreign_key(row, "note") != Some(note.pk) {
+      continue;
+    }
+    if store::text(row, "typeUTI") == Some("com.apple.notes.table") && markdown::table_markdown(row).is_some() {
+      continue;
+    }
+    if let Some(parent) = store::foreign_key(row, "parentAttachment")
+      && let Some(parent) = store::row_by_pk(&snap.attachments, parent)
+      && let Some(parent_id) = store::text(parent, "identifier")
+      && order.iter().any(|item| item == parent_id)
+    {
+      continue;
+    }
+    let mut card = json!({ "identifier": identifier });
+    if let Some(title) = store::text(row, "title").filter(|title| !title.is_empty()) {
+      card["title"] = json!(title);
+    } else if let Some(title) = media_filename(snap, row).filter(|title| !title.is_empty()) {
+      card["title"] = json!(title);
+    }
+    card["kind"] = json!(attachment_file::attachment_kind(path, snap, row));
+    if let Some(count) = attachment_file::page_count(path, snap, row) {
+      card["page_count"] = json!(count);
+    }
+    cards.push(card);
+  }
+  cards
+}
+
+/// The matched line plus up to two surrounding lines (one before and one after), capped at 600
+/// characters. `excerpt` is the fuzzy window of that line, with the match already inside `«»`.
+fn context_excerpt(text: &str, excerpt: &str) -> String {
+  let (needle, marks) = split_marks(excerpt);
+  let chars: Vec<char> = text.chars().collect();
+  let needle_chars: Vec<char> = needle.chars().collect();
+  let Some(start) = find_chars(&chars, &needle_chars) else {
+    return cap_marked(&excerpt.chars().collect::<Vec<_>>());
+  };
+  let end = start + needle_chars.len();
+  let lines = non_empty_line_spans(&chars);
+  let (window_start, window_end) = if lines.is_empty() {
+    (0, chars.len())
+  } else {
+    let first = lines
+      .iter()
+      .position(|(line_start, line_end)| start < *line_end && end > *line_start)
+      .unwrap_or(0);
+    let last = lines
+      .iter()
+      .rposition(|(line_start, line_end)| start < *line_end && end > *line_start)
+      .unwrap_or(first);
+    let from = first.saturating_sub(SURROUNDING_LINES);
+    let to = (last + SURROUNDING_LINES).min(lines.len() - 1);
+    (lines[from].0, lines[to].1)
+  };
+  let mut out = Vec::new();
+  let mut index = window_start;
+  while index < window_end {
+    let marked = index >= start && index < end && marks.get(index - start).copied().unwrap_or(false);
+    if marked {
+      out.push('«');
+      while index < window_end && index < end && marks.get(index - start).copied().unwrap_or(false) {
+        out.push(chars[index]);
+        index += 1;
+      }
+      out.push('»');
+    } else {
+      out.push(chars[index]);
+      index += 1;
+    }
+  }
+  cap_marked(&out)
+}
+
+fn split_marks(excerpt: &str) -> (String, Vec<bool>) {
+  let mut needle = String::new();
+  let mut marks = Vec::new();
+  let mut on = false;
+  for character in excerpt.chars() {
+    match character {
+      '«' => on = true,
+      '»' => on = false,
+      _ => {
+        needle.push(character);
+        marks.push(on);
+      }
+    }
+  }
+  (needle, marks)
+}
+
+fn find_chars(haystack: &[char], needle: &[char]) -> Option<usize> {
+  if needle.is_empty() || needle.len() > haystack.len() {
+    return None;
+  }
+  haystack.windows(needle.len()).position(|window| window == needle)
+}
+
+fn non_empty_line_spans(chars: &[char]) -> Vec<(usize, usize)> {
+  let mut spans = Vec::new();
+  let mut start = 0;
+  let mut index = 0;
+  while index <= chars.len() {
+    if index == chars.len() || chars[index] == '\n' {
+      let mut end = index;
+      if end > start && chars[end - 1] == '\r' {
+        end -= 1;
+      }
+      if end > start {
+        spans.push((start, end));
+      }
+      start = index + 1;
+    }
+    if index == chars.len() {
+      break;
+    }
+    index += 1;
+  }
+  spans
+}
+
+fn cap_marked(chars: &[char]) -> String {
+  if chars.len() <= EXCERPT_CAP {
+    return chars.iter().collect();
+  }
+  let Some(open) = chars.iter().position(|character| *character == '«') else {
+    return chars.iter().take(EXCERPT_CAP).collect();
+  };
+  let close = chars.iter().rposition(|character| *character == '»').unwrap_or(open);
+  let span = close + 1 - open;
+  if span >= EXCERPT_CAP {
+    let mut kept = Vec::with_capacity(EXCERPT_CAP);
+    kept.push('«');
+    let room = EXCERPT_CAP.saturating_sub(2);
+    let content_start = open + 1;
+    let content_len = close.saturating_sub(content_start);
+    let take = room.min(content_len);
+    kept.extend_from_slice(&chars[content_start..content_start + take]);
+    if kept.len() < EXCERPT_CAP {
+      kept.push('»');
+    }
+    return kept.into_iter().take(EXCERPT_CAP).collect();
+  }
+  let spare = EXCERPT_CAP - span;
+  let mut start = open.saturating_sub(spare / 2);
+  let mut end = (close + 1 + (spare - spare / 2)).min(chars.len());
+  if end.saturating_sub(start) < EXCERPT_CAP.min(chars.len()) {
+    if start == 0 {
+      end = (start + EXCERPT_CAP).min(chars.len());
+    } else {
+      start = end.saturating_sub(EXCERPT_CAP);
+    }
+  }
+  if start > open {
+    start = open;
+    end = (start + EXCERPT_CAP).min(chars.len());
+  }
+  if end < close + 1 {
+    end = (close + 1).min(chars.len());
+    start = end.saturating_sub(EXCERPT_CAP);
+  }
+  chars[start..end].iter().collect()
 }
 
 /// `None` means no folder filter. `Some(None)` means the folder identifier is unknown.
@@ -659,15 +969,27 @@ mod tests {
     assert!(body[0].get("snippet").is_none());
     assert!(body[0].get("score").is_some());
     assert!(body[0]["matches"][0]["excerpt"].as_str().unwrap().contains('«'));
+    assert!(body[0].get("attachments").is_none());
 
     let ocr = search(&path, json!({ "query": "'ocr hit" }));
     assert_eq!(ocr[0]["identifier"], "note-i");
     assert_eq!(ocr[0]["matches"][0]["field"], "attachment: att-1 Beta Unique");
-    assert_eq!(ocr[0]["matches"][0]["excerpt"], "«ocr» hit");
+    assert_eq!(ocr[0]["matches"][0]["excerpt"], "sum\n«ocr» «hit»\nink hit");
+    assert_eq!(ocr[0]["matches"].as_array().unwrap().len(), 1);
     assert_eq!(ocr[0]["matches"][0]["attachment_identifier"], "att-1");
     assert_eq!(ocr[0]["matches"][0]["attachment_title"], "Beta Unique");
+    assert_eq!(ocr[0]["matches"][0]["kind"], "photo");
+    assert!(ocr[0]["matches"][0].get("page_count").is_none());
+    assert_eq!(ocr[0]["attachments"].as_array().unwrap().len(), 1);
+    assert_eq!(ocr[0]["attachments"][0]["identifier"], "att-1");
+    assert_eq!(ocr[0]["attachments"][0]["title"], "Beta Unique");
+    assert_eq!(ocr[0]["attachments"][0]["kind"], "photo");
+    assert!(ocr[0]["attachments"][0].get("page_count").is_none());
+    assert!(ocr[0]["attachments"][0].get("text").is_none());
     assert!(body[0]["matches"][0].get("attachment_identifier").is_none());
     assert!(body[0]["matches"][0].get("attachment_title").is_none());
+    assert!(body[0]["matches"][0].get("kind").is_none());
+    assert!(body[0]["matches"][0].get("page_count").is_none());
 
     let table = search(&path, json!({ "query": "right" }));
     assert_eq!(table[0]["identifier"], "note-j");
@@ -815,5 +1137,208 @@ mod tests {
     assert_eq!(super::cached_generation(&path), Some(u64::MAX));
     let cached = search(&path, json!({ "query": "'from suffix" }));
     assert!(cached.as_array().unwrap().is_empty());
+  }
+
+  #[test]
+  fn excerpt_keeps_two_surrounding_lines_the_mark_and_a_600_character_cap() {
+    let text = "one\ntwo\nthree target\nfour\nfive";
+    assert_eq!(
+      super::context_excerpt(text, "three «target»"),
+      "two\nthree «target»\nfour"
+    );
+    assert_eq!(super::context_excerpt("only\nnext\nthird", "«only»"), "«only»\nnext");
+    assert_eq!(super::context_excerpt("first\nprior\nend", "«end»"), "prior\n«end»");
+
+    let long = "x".repeat(500);
+    let wide = format!("{long}\nplease pay the deposit\n{long}");
+    let capped = super::context_excerpt(&wide, "please pay the «deposit»");
+    assert!(capped.chars().count() <= 600, "{}", capped.chars().count());
+    assert!(capped.contains("«deposit»"));
+    assert!(capped.contains('\n'));
+    assert!(!capped.contains(&"x".repeat(400)));
+
+    let (_db, path) = sample_store();
+    let line = format!("{}uniquetoken{}", "p".repeat(80), "p".repeat(80));
+    let ocr = format!("above the match\n{line}\nbelow the match\nout of the window");
+    clear_attachment_text(&path, &ocr);
+    let hits = search(&path, json!({ "query": "'uniquetoken" }));
+    let excerpt = hits[0]["matches"][0]["excerpt"].as_str().unwrap();
+    assert!(excerpt.starts_with("above the match\n"));
+    assert!(excerpt.contains("«uniquetoken»"));
+    assert!(excerpt.contains(&"p".repeat(80)));
+    assert!(excerpt.ends_with("\nbelow the match"));
+    assert!(!excerpt.contains("out of the window"));
+    assert!(excerpt.chars().count() > 120);
+    assert!(excerpt.contains('«') && excerpt.contains('»'));
+  }
+
+  #[test]
+  fn attachment_match_carries_kind_and_page_count() {
+    let (_dir, path) = attachment_store();
+    let photo = search(&path, json!({ "query": "'ocr hit" }));
+    let matched = &photo[0]["matches"][0];
+    assert_eq!(matched["kind"], "photo");
+    assert_eq!(matched["attachment_identifier"], "att-1");
+    assert!(matched.get("page_count").is_none());
+    assert!(matched["excerpt"].as_str().unwrap().contains('«'));
+
+    let body = search(&path, json!({ "query": "alpha unique" }));
+    assert!(body[0]["matches"][0].get("kind").is_none());
+    assert!(body[0]["matches"][0].get("page_count").is_none());
+
+    let conn = rusqlite::Connection::open(&path).unwrap();
+    conn
+      .execute(
+        "UPDATE ZICCLOUDSYNCINGOBJECT
+         SET ZTYPEUTI = 'com.apple.paper.doc.scan', ZMEDIA = NULL, ZFALLBACKPDFGENERATION = '226_GEN',
+             ZTITLE = NULL, ZSUMMARY = NULL, ZHANDWRITINGSUMMARY = NULL, ZURLSTRING = NULL,
+             ZOCRSUMMARY = 'deposit due on page two'
+         WHERE ZIDENTIFIER = 'att-1'",
+        [],
+      )
+      .unwrap();
+    drop(conn);
+    let pdf = path
+      .parent()
+      .unwrap()
+      .join("Accounts/acct-1/FallbackPDFs/att-1/226_GEN/FallbackPDF.pdf");
+    std::fs::create_dir_all(pdf.parent().unwrap()).unwrap();
+    std::fs::write(&pdf, two_page_pdf()).unwrap();
+    touch_store(&path);
+
+    let scan = search(&path, json!({ "query": "'deposit" }));
+    let matched = &scan[0]["matches"][0];
+    assert_eq!(matched["kind"], "scan");
+    assert_eq!(matched["page_count"], 2);
+    assert_eq!(matched["attachment_identifier"], "att-1");
+    assert_eq!(matched["excerpt"], "«deposit» due on page two");
+
+    std::fs::write(&pdf, b"%PDF-1.4\nno page tree\n").unwrap();
+    let omitted = search(&path, json!({ "query": "'deposit" }));
+    assert_eq!(omitted[0]["matches"][0]["kind"], "scan");
+    assert!(omitted[0]["matches"][0].get("page_count").is_none());
+  }
+
+  #[test]
+  fn one_match_per_attachment_and_body_joins_different_lines() {
+    let (_db, path) = sample_store();
+    let conn = rusqlite::Connection::open(&path).unwrap();
+    let body = gzip_plain("insurance policy lives here\nclaim number is separate");
+    conn
+      .execute("UPDATE ZICNOTEDATA SET ZDATA = ?1 WHERE Z_PK = 1017", [body])
+      .unwrap();
+    conn
+      .execute(
+        "UPDATE ZICCLOUDSYNCINGOBJECT
+         SET ZTITLE = NULL, ZSUMMARY = NULL, ZHANDWRITINGSUMMARY = NULL, ZURLSTRING = NULL,
+             ZOCRSUMMARY = 'insurance form line\nclaim id 42'
+         WHERE ZIDENTIFIER = 'att-1'",
+        [],
+      )
+      .unwrap();
+    conn
+      .execute(
+        "UPDATE ZICCLOUDSYNCINGOBJECT SET ZFILENAME = NULL WHERE ZIDENTIFIER = 'media-1'",
+        [],
+      )
+      .unwrap();
+    drop(conn);
+
+    let notes = search(&path, json!({ "query": "insurance claim" }));
+    let body_hit = notes
+      .as_array()
+      .unwrap()
+      .iter()
+      .find(|hit| hit["identifier"] == "note-h")
+      .expect("body");
+    assert_eq!(body_hit["matches"].as_array().unwrap().len(), 1);
+    assert_eq!(body_hit["matches"][0]["field"], "body");
+    let body_excerpt = body_hit["matches"][0]["excerpt"].as_str().unwrap();
+    assert!(body_excerpt.contains("«insurance»"));
+    assert!(body_excerpt.contains("«claim»"));
+    assert!(body_excerpt.contains('\n'));
+
+    let attachment_hit = notes
+      .as_array()
+      .unwrap()
+      .iter()
+      .find(|hit| hit["identifier"] == "note-i")
+      .expect("attachment");
+    assert_eq!(attachment_hit["matches"].as_array().unwrap().len(), 1);
+    let excerpt = attachment_hit["matches"][0]["excerpt"].as_str().unwrap();
+    assert!(excerpt.contains("«insurance»"));
+    assert!(excerpt.contains("«claim»"));
+    assert_eq!(attachment_hit["matches"][0]["attachment_identifier"], "att-1");
+  }
+
+  #[test]
+  fn note_hits_list_top_level_attachments_in_body_order() {
+    let (_dir, path) = attachment_store();
+    let hits = search(&path, json!({ "query": "'ocr hit" }));
+    let attachments = hits[0]["attachments"].as_array().unwrap();
+    let identifiers: Vec<&str> = attachments
+      .iter()
+      .map(|card| card["identifier"].as_str().unwrap())
+      .collect();
+    assert_eq!(identifiers, vec!["att-1", "att-gallery"]);
+    assert_eq!(attachments[0]["kind"], "photo");
+    assert_eq!(attachments[0]["title"], "Beta Unique");
+    assert!(attachments[0].get("text").is_none());
+    assert!(attachments[0].get("page_count").is_none());
+    assert_eq!(attachments[1]["kind"], "gallery");
+    assert!(attachments[1].get("title").is_none());
+  }
+
+  fn gzip_plain(text: &str) -> Vec<u8> {
+    use std::io::Write;
+
+    use flate2::Compression;
+    use flate2::write::GzEncoder;
+    use prost::Message;
+
+    let document = super::super::proto_note::NoteDocument {
+      version: Some(super::super::proto_note::NoteVersion {
+        serialization_version: Some(0),
+        minimum_supported_version: Some(0),
+        data: Some(super::super::proto_note::TopotextString {
+          string: Some(text.to_string()),
+          attribute_run: Vec::new(),
+        }),
+      }),
+    };
+    let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+    encoder.write_all(&document.encode_to_vec()).unwrap();
+    encoder.finish().unwrap()
+  }
+
+  fn touch_store(path: &std::path::Path) {
+    let file = std::fs::File::options().write(true).open(path).unwrap();
+    file.set_modified(SystemTime::now() + Duration::from_secs(3)).unwrap();
+  }
+
+  fn two_page_pdf() -> Vec<u8> {
+    let mut pdf = Vec::from(&b"%PDF-1.4\n"[..]);
+    pdf.extend_from_slice(b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+    pdf.extend_from_slice(b"2 0 obj\n<< /Type /Pages /Count 2 /Kids [3 0 R 4 0 R] >>\nendobj\n");
+    pdf.extend_from_slice(b"trailer\n<< /Root 1 0 R >>\n%%EOF\n");
+    pdf
+  }
+
+  fn clear_attachment_text(path: &std::path::Path, ocr: &str) {
+    let conn = rusqlite::Connection::open(path).unwrap();
+    conn
+      .execute(
+        "UPDATE ZICCLOUDSYNCINGOBJECT
+         SET ZTITLE = NULL, ZSUMMARY = NULL, ZHANDWRITINGSUMMARY = NULL, ZURLSTRING = NULL, ZOCRSUMMARY = ?1
+         WHERE ZIDENTIFIER = 'att-1'",
+        [ocr],
+      )
+      .unwrap();
+    conn
+      .execute(
+        "UPDATE ZICCLOUDSYNCINGOBJECT SET ZFILENAME = NULL WHERE ZIDENTIFIER = 'media-1'",
+        [],
+      )
+      .unwrap();
   }
 }

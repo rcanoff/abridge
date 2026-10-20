@@ -29,6 +29,8 @@ mod write_folder;
 use serde_json::Value;
 use std::path::Path;
 
+use crate::providers::ProviderBridge;
+
 pub use error::NotesError;
 pub(crate) use resolve::{ACCOUNT_ONLY_WITH_PATH, CREATE_FOLDER_PARENT, FOLDER_EXACTLY_ONE, NOTE_EXACTLY_ONE};
 
@@ -50,9 +52,18 @@ pub fn call(operation: &str, arguments: &Value) -> Result<NotesOutput, NotesErro
   call_output(&default_store_path(), operation, arguments)
 }
 
+/// `notes_get_attachment` with the Vision provider. Other notes tools stay on `call`.
+pub fn get_attachment(
+  arguments: &Value,
+  provider: &dyn ProviderBridge,
+  vision_enabled: bool,
+) -> Result<NotesOutput, NotesError> {
+  attachment_file::get_attachment(&default_store_path(), arguments, Some(provider), vision_enabled)
+}
+
 pub(crate) fn call_output(path: &Path, operation: &str, arguments: &Value) -> Result<NotesOutput, NotesError> {
   if operation == "get_attachment" {
-    return attachment_file::get_attachment(path, arguments);
+    return attachment_file::get_attachment(path, arguments, None, false);
   }
   call_with_store(path, operation, arguments).map(|payload| NotesOutput { payload, file: None })
 }

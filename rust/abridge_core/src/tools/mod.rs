@@ -613,7 +613,12 @@ const ALL_TOOLS: [ToolDefinition; 69] = [
                   final target is a regular file), at most 20 MiB. A PDF is accepted by content, not \
                   extension. page selects one page (default 1); a PDF result includes page and page_count. \
                   A page past the end is page_out_of_range. page greater than 1 on an image is \
-                  invalid_arguments. An encrypted or unreadable PDF is an error. No pixel buffers or request ids.",
+                  invalid_arguments. An encrypted or unreadable PDF is an error. Returns text: lines in \
+                  reading order, top to bottom and left to right, with lines on the same row joined by a \
+                  space. include_geometry defaults to false; true adds per-line boxes, confidences, and \
+                  alternate candidates. automatically_detects_language defaults to true, and to false when \
+                  recognition_languages is set and automatically_detects_language is omitted. \
+                  uses_language_correction defaults to true. No pixel buffers or request ids.",
   },
   ToolDefinition {
     name: TOOL_RECOGNIZE_DOCUMENTS,
@@ -625,8 +630,13 @@ const ALL_TOOLS: [ToolDefinition; 69] = [
                   this Mac (a symlink is followed when the final target is a regular file), at most 20 MiB. A PDF is \
                   accepted by content, not extension. page selects one page (default 1); a PDF result includes \
                   page and page_count. A page past the end is page_out_of_range. page greater than 1 on an image \
-                  is invalid_arguments. An encrypted or unreadable PDF is an error. No segmentation masks or \
-                  pixel buffers.",
+                  is invalid_arguments. An encrypted or unreadable PDF is an error. Returns markdown: paragraphs \
+                  separated by blank lines, lists as - or 1. items, and GitHub-flavored tables, in document order. \
+                  Detected dates, phone numbers, links, and barcodes follow as detected when Vision returns them. \
+                  include_geometry defaults to false; true adds the document structure and geometry. \
+                  text_recognition_options.automatically_detect_language defaults to true, and to false when \
+                  recognition_languages is set and automatically_detect_language is omitted. \
+                  use_language_correction defaults to true. No segmentation masks or pixel buffers.",
   },
   ToolDefinition {
     name: TOOL_DETECT_BARCODES,
@@ -681,39 +691,41 @@ const ALL_TOOLS: [ToolDefinition; 69] = [
     capability: capabilities::NOTES_READ,
     provider: "notes",
     operation: "get_note",
-    description: "Read one note's Markdown body. Pass exactly one of note_identifier or note_title (exact, \
-                  case-insensitive; live notes only, and Recently Deleted only when the folder is that folder). \
-                  Narrow a title with folder_identifier or folder_path. Search or list returns identifiers; this \
-                  call returns the body. If a search match names an attachment, call notes_get_attachment \
-                  directly. Same fields as a list summary, without snippet, plus body and the attachments it \
-                  references, including attachment:<id> links. creation_date and modification_date (UTC instants \
-                  with a Z suffix, not the caller's local time and not the server Mac's local zone). Attachment \
-                  creation_date and modification_date are the same UTC instants. Inline tables stay in the body.",
+    description: "Read one note. Pass exactly one of note_identifier or note_title (exact, case-insensitive; live \
+                  notes only, and Recently Deleted only when the folder is that folder); narrow a title with \
+                  folder_identifier or folder_path. body is the note's own Markdown, including tables and \
+                  checklists. A file in the note appears in body as [title](attachment:<id>) and once in \
+                  attachments, in body order, with the same identifier. Each attachment has kind (scan, pdf, \
+                  photo, drawing, document, audio, video, file, gallery, link), page_count for a scan or pdf, \
+                  and text: the text Notes saved when it indexed the file (no page breaks, first 1,500 \
+                  characters; text_truncated when cut). A document has no text here. Gallery pages are nested \
+                  under the gallery. For the full text, one page, the image, or the file, call \
+                  notes_get_attachment with the identifier. body_update is {status: blocked, reason, message} \
+                  when notes_update_note would refuse (checklist, non-table attachment, or locked). File names \
+                  are attachments when files block the edit. It is omitted when an update is allowed. Dates \
+                  are UTC instants with a Z suffix.",
   },
   ToolDefinition {
     name: TOOL_NOTES_GET_ATTACHMENT,
     capability: capabilities::NOTES_READ,
     provider: "notes",
     operation: "get_attachment",
-    description: "Read one attachment by identifier. Call it directly when a search match names the attachment; \
-                  notes_get_note is not required first. format defaults to markdown and may be image or original. \
-                  markdown pages content by Unicode characters (offset is not a page or byte offset; \
-                  max_characters default 15000, at most 100000). Documents are converted locally. Markdown does not \
-                  read a file larger than 50 MiB (error extraction_too_large, no text). Video, audio, and other \
-                  unsupported types are recognized from the UTI, the extension, and a short header and are not read \
-                  in full. Scans and photos \
-                  return OCR Notes has already stored; for a local image with no stored text, use \
-                  vision_recognize_text. image returns a viewable JPEG; for a PDF or scan it renders one page \
-                  (page, default 1) and sets page and page_count, so ask for the next page while page < page_count \
-                  (page_out_of_range past the end). original copies the file to \
-                  $TMPDIR/abridge-attachments/<attachment identifier>/<file name> and sets file_path, with no size \
-                  cap. source_path is the Notes file when it is on disk. file_size is the size on disk when the \
-                  file is present, otherwise the size Notes stored. creation_date and modification_date are the \
-                  same UTC instants (Z suffix, not the caller's local time and not the server Mac's local zone). \
-                  attachment_not_viewable, attachment_file_unavailable, attachment_locked, attachment_encrypted, \
-                  attachment_unreadable, extraction_too_large, page_out_of_range, page_unrendered, and \
-                  attachment_has_no_file name why a file was not \
-                  returned.",
+    description: "Read one attachment by identifier, from notes_get_note or a search match. format: markdown \
+                  (default) returns content; image returns a viewable JPEG (page selects a PDF page, default 1); \
+                  original copies the file to a temp path and sets file_path. text_source for markdown: saved \
+                  (default when Notes has saved text; instant; no page breaks, line order may be mixed) or vision \
+                  (reads each page fresh with Apple Vision; the first call after launch can take up to a minute; \
+                  ## Page N sections; at most 20 pages, then next_page). When nothing is saved, vision runs by \
+                  itself. page: N reads only that page with vision. The response names text_source (saved, vision, \
+                  document, table, gallery), kind, and page_count for a scan or pdf, and pages content by Unicode \
+                  characters (offset, max_characters default 15000, max 100000; content_truncated and next_offset). \
+                  A document (Word, PDF with text, Excel, and the other anydoc types) is converted locally; files \
+                  over 50 MiB are not read (extraction_too_large). Explicit vision does not fall back to saved \
+                  text: Vision disabled is vision_unavailable, and a Vision failure is vision_failed. \
+                  text_source saved with page is invalid_arguments. Errors: attachment_not_viewable, \
+                  attachment_file_unavailable, attachment_locked, attachment_encrypted, attachment_unreadable, \
+                  extraction_too_large, page_out_of_range, page_unrendered, attachment_has_no_file, \
+                  vision_unavailable, vision_failed.",
   },
   ToolDefinition {
     name: TOOL_NOTES_SEARCH_NOTES,
@@ -722,16 +734,19 @@ const ALL_TOOLS: [ToolDefinition; 69] = [
     operation: "search_notes",
     description: concat!(
       "Search notes and attachment text. Attachment files larger than 50 MiB are not read or indexed. Returns \
-       identifiers and matches. Get a note for its full body. If matches[].field is `attachment: <id> <title>`, \
-       call notes_get_attachment directly. ",
+       identifiers and matches. Each hit lists attachments in body order (identifier, title, kind, and \
+       page_count for a scan or pdf when known; no text), so a file can be opened without notes_get_note. \
+       An attachment match includes attachment_identifier, attachment_title, and kind, plus page_count when \
+       known; call notes_get_attachment with that identifier directly (page for a later page). One match per \
+       attachment and per body field. field `attachment: <id> <title>` is the same match, for display. ",
       fuzzy_query!(),
       ". Pass exactly one of folder_identifier or folder_path to search that folder, including Recently \
        Deleted; without either, those notes are left out. modified_after and modified_before are exclusive \
        RFC 3339 bounds. They need a numeric offset; the server's time zone is not used. Hit creation_date and \
        modification_date (UTC instants with a Z suffix, not the caller's local time and not the server Mac's \
        local zone). Best matches first: the summary without body or snippet, plus score and up to 3 matches \
-       {field, excerpt}. A match on attachment text also includes attachment_identifier and attachment_title. \
-       excerpt is the matched line or table row, capped at 120 characters, with the match inside «». limit \
+       {field, excerpt}. excerpt is the matched line plus up to two surrounding lines, capped at 600 characters, \
+       with the match inside «». Terms on different lines of the same field are joined inside that cap. limit \
        defaults to 20 (max 100); offset skips hits."
     ),
   },
@@ -2058,7 +2073,11 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
             "coalesce_composite_symbologies": { "type": "boolean" }
           }
         },
-        "include_segmentation": { "type": "boolean" }
+        "include_segmentation": { "type": "boolean" },
+        "include_geometry": {
+          "type": "boolean",
+          "description": "Default false. True includes the document structure and geometry."
+        }
       },
     }),
     TOOL_DETECT_BARCODES => serde_json::json!({
@@ -2180,7 +2199,11 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
           },
           "required": ["origin", "size"]
         },
-        "max_candidate_count": { "type": "integer", "minimum": 1, "maximum": 10 }
+        "max_candidate_count": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "include_geometry": {
+          "type": "boolean",
+          "description": "Default false. True includes per-line boxes, confidences, and alternate candidates."
+        }
       },
     }),
     TOOL_SET_REMINDER_ALARMS => serde_json::json!({
@@ -2267,11 +2290,16 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "properties": {
         "attachment_identifier": non_whitespace_string(),
         "format": { "type": "string", "enum": ["markdown", "image", "original"] },
+        "text_source": {
+          "type": "string",
+          "enum": ["saved", "vision"],
+          "description": "Markdown text for a scan, image-only PDF, photo, or drawing. Omit it to use saved text when Notes has it, or Vision when nothing is saved and Vision is enabled. saved never runs Vision. vision never falls back to saved text. page implies vision. Not valid with format image or original."
+        },
         "max_characters": { "type": "integer", "minimum": 1, "maximum": 100000 },
         "page": {
           "type": "integer",
           "minimum": 1,
-          "description": "1-based page of a PDF or scan for format image; default 1."
+          "description": "1-based page. On markdown it reads that page with Vision. Image renders that page of a PDF or scan (default 1)."
         },
         "offset": {
           "type": "integer",
@@ -2918,6 +2946,27 @@ mod tests {
       validate_tool_arguments(
         &attachment,
         &serde_json::json!({ "attachment_identifier": "att", "max_characters": 100001 })
+      )
+      .is_err()
+    );
+    assert!(
+      validate_tool_arguments(
+        &attachment,
+        &serde_json::json!({ "attachment_identifier": "att", "text_source": "saved" })
+      )
+      .is_ok()
+    );
+    assert!(
+      validate_tool_arguments(
+        &attachment,
+        &serde_json::json!({ "attachment_identifier": "att", "text_source": "vision" })
+      )
+      .is_ok()
+    );
+    assert!(
+      validate_tool_arguments(
+        &attachment,
+        &serde_json::json!({ "attachment_identifier": "att", "text_source": "both" })
       )
       .is_err()
     );

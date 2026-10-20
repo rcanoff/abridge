@@ -251,7 +251,7 @@ mod tests {
     let hits = call_with_store(&store, "search_notes", &json!({"query": "'128.40"})).expect("search");
     assert_eq!(hits[0]["identifier"], "note-i");
     assert_eq!(hits[0]["matches"][0]["field"], "attachment: att-1 invoice.pdf");
-    assert_eq!(hits[0]["matches"][0]["excerpt"], "Total due: $«128.40»");
+    assert_eq!(hits[0]["matches"][0]["excerpt"], "invoice.pdf\nTotal due: $«128.40»");
   }
 
   #[cfg(target_os = "macos")]

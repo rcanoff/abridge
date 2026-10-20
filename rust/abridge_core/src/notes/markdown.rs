@@ -32,21 +32,30 @@ pub(crate) fn body_is_available(snap: &Snapshot, note: &EntityRow) -> bool {
 /// Attachment identifiers named by the body's attribute runs. Empty when the body is absent,
 /// encrypted, or undecodable, so a note lists no attachments it does not still reference.
 pub(crate) fn referenced_attachment_identifiers(snap: &Snapshot, note: &EntityRow) -> HashSet<String> {
+  referenced_attachment_order(snap, note).into_iter().collect()
+}
+
+/// Attachment identifiers in the order they first appear in the body.
+pub(crate) fn referenced_attachment_order(snap: &Snapshot, note: &EntityRow) -> Vec<String> {
   let Some(text) = decode_body(snap, note) else {
-    return HashSet::new();
+    return Vec::new();
   };
-  text
-    .attribute_run
-    .iter()
-    .filter_map(|run| {
-      run
-        .attachment_info
-        .as_ref()
-        .and_then(|info| info.attachment_identifier.as_ref())
-        .filter(|identifier| !identifier.is_empty())
-        .cloned()
-    })
-    .collect()
+  let mut order = Vec::new();
+  let mut seen = HashSet::new();
+  for run in &text.attribute_run {
+    let Some(identifier) = run
+      .attachment_info
+      .as_ref()
+      .and_then(|info| info.attachment_identifier.as_ref())
+      .filter(|identifier| !identifier.is_empty())
+    else {
+      continue;
+    };
+    if seen.insert(identifier.clone()) {
+      order.push(identifier.clone());
+    }
+  }
+  order
 }
 
 /// The note body as Markdown. `None` when the body is absent, encrypted, or undecodable.
