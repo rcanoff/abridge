@@ -270,7 +270,9 @@ just lint-swift       # SwiftLint strict
 just ci-rust          # Rust CI subset
 just ci-macos         # macOS CI subset
 just ci               # Full local CI parity
-just release-build X.Y.Z  # Signed + notarized DMG and Sparkle appcast (env: scripts/release.sh header)
+just release-build X.Y.Z  # Signed + notarized DMG and Sparkle appcast (env: scripts/release.sh header; --skip-notarization checks signing only)
+just gen-icon-svg         # Trace icon/previews/mark.jpg to SVG (needs ImageMagick + potrace)
+just gen-menubar-icons    # Rasterize the mark SVG into the menu bar template
 ```
 
 Regenerate Xcode project after `project.yml` changes:
@@ -296,6 +298,15 @@ Always run with `TZ=UTC`. EventKit permission dialogs and live framework calls a
 ## Commit gate
 
 Do **not** commit unless the user explicitly says the work is ready to commit.
+
+## Releasing
+
+Push a `vX.Y.Z` tag from `main` (`git tag v1.0.0 && git push origin v1.0.0`). The `release` workflow (`.github/workflows/release.yml`) builds the Rust core, archives and notarizes a Developer ID signed app and DMG, publishes them with the Sparkle `appcast.xml` to a GitHub release, and updates the cask in `rcanoff/homebrew-tap`. It runs in the `release` environment; its secrets (listed in the workflow header) reach only `v*` tag runs approved by a required reviewer.
+
+- The tag sets `CFBundleShortVersionString` and `serverInfo.version`. `CFBundleVersion` is the tagged commit's commit count, so Sparkle sees every release as newer.
+- Local builds stamp `git describe --tags` (`0.3.0-4-gabc1234-dirty`) via `scripts/stamp-build-version.sh`, or keep `0.0.0` from `project.yml` with no reachable tag.
+- The app reads `releases/latest/download/appcast.xml`, so the repository must stay public for updates and Homebrew downloads.
+- The Sparkle EdDSA private key signs every update. Losing it strands installed copies on their current version; a backup lives outside CI.
 
 ## Reference
 
