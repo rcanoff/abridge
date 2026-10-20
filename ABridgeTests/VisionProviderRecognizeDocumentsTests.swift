@@ -203,4 +203,41 @@ struct VisionProviderRecognizeDocumentsTests {
             #expect(response.errorJson?.contains("region_of_interest") == true)
         }
     }
+
+    @Test
+    @MainActor
+    func recognizeDocumentsDefaultsLanguageDetectionAndCorrectionOn() throws {
+        let store = MockVisionStore()
+        store.recognizeDocumentsResult = VisionRecognizeDocumentsResult(observations: [], segmentation: nil)
+        let encoded = try VisionTestFixtures.sampleTextImageData().base64EncodedString()
+        let response = VisionProvider(store: store).handle(
+            operation: "recognize_documents",
+            payloadJson: #"{"image_data":"\#(encoded)"}"#
+        )
+        #expect(response.ok == true, "Expected success, got: \(response.errorJson ?? "nil")")
+        let options = try #require(store.lastRecognizeDocumentsRequest?.textRecognitionOptions)
+        #expect(options.automaticallyDetectLanguage == true)
+        #expect(options.useLanguageCorrection == true)
+    }
+
+    @Test
+    @MainActor
+    func recognizeDocumentsTurnsOffAutoDetectWhenLanguagesAreNamed() throws {
+        let observations = try VisionTestFixtures.sampleDocumentObservations()
+        let store = MockVisionStore()
+        store.recognizeDocumentsResult = VisionRecognizeDocumentsResult(observations: observations, segmentation: nil)
+        let encoded = try VisionTestFixtures.sampleTextImageData().base64EncodedString()
+        let payloadJson = """
+        {"image_data":"\(encoded)","text_recognition_options":{"recognition_languages":["pt-BR"]}}
+        """
+        let response = VisionProvider(store: store).handle(
+            operation: "recognize_documents",
+            payloadJson: payloadJson
+        )
+        #expect(response.ok == true, "Expected success, got: \(response.errorJson ?? "nil")")
+        let options = try #require(store.lastRecognizeDocumentsRequest?.textRecognitionOptions)
+        #expect(options.recognitionLanguages.count == 1)
+        #expect(options.automaticallyDetectLanguage == false)
+        #expect(options.useLanguageCorrection == true)
+    }
 }

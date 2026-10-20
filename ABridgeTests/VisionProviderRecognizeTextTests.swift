@@ -160,4 +160,57 @@ struct VisionProviderRecognizeTextTests {
         #expect(response.ok == true)
         #expect(store.lastRequest?.imageData == imageData)
     }
+
+    @Test
+    @MainActor
+    func recognizeTextDefaultsLanguageDetectionAndCorrectionOn() throws {
+        let store = MockVisionStore()
+        let encoded = try VisionTestFixtures.sampleTextImageData().base64EncodedString()
+        let response = VisionProvider(store: store).handle(
+            operation: "recognize_text",
+            payloadJson: #"{"image_data":"\#(encoded)"}"#
+        )
+        #expect(response.ok == true)
+        let request = try #require(store.lastRequest)
+        #expect(request.automaticallyDetectsLanguage == true)
+        #expect(request.usesLanguageCorrection == true)
+        #expect(request.recognitionLanguages == nil)
+    }
+
+    @Test
+    @MainActor
+    func recognizeTextTurnsOffAutoDetectWhenLanguagesAreNamed() throws {
+        let store = MockVisionStore()
+        let encoded = try VisionTestFixtures.sampleTextImageData().base64EncodedString()
+        let payloadJson = """
+        {"image_data":"\(encoded)","recognition_languages":["pt-BR"],"uses_language_correction":false}
+        """
+        let response = VisionProvider(store: store).handle(
+            operation: "recognize_text",
+            payloadJson: payloadJson
+        )
+        #expect(response.ok == true)
+        let request = try #require(store.lastRequest)
+        #expect(request.recognitionLanguages == ["pt-BR"])
+        #expect(request.automaticallyDetectsLanguage == false)
+        #expect(request.usesLanguageCorrection == false)
+    }
+
+    @Test
+    @MainActor
+    func recognizeTextHonorsExplicitLanguageDetection() throws {
+        let store = MockVisionStore()
+        let encoded = try VisionTestFixtures.sampleTextImageData().base64EncodedString()
+        let payloadJson = """
+        {"image_data":"\(encoded)","recognition_languages":["pt-BR"],"automatically_detects_language":true}
+        """
+        let response = VisionProvider(store: store).handle(
+            operation: "recognize_text",
+            payloadJson: payloadJson
+        )
+        #expect(response.ok == true)
+        let request = try #require(store.lastRequest)
+        #expect(request.automaticallyDetectsLanguage == true)
+        #expect(request.usesLanguageCorrection == true)
+    }
 }

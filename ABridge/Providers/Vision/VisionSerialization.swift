@@ -17,8 +17,18 @@ enum VisionSerialization {
         observations: [VNRecognizedTextObservation],
         maxCandidateCount: Int
     ) -> [String: Any] {
+        recognizeTextResponseJSONObject(
+            lines: observations.map(VisionRecognizedText.init),
+            maxCandidateCount: maxCandidateCount
+        )
+    }
+
+    static func recognizeTextResponseJSONObject(
+        lines: [VisionRecognizedText],
+        maxCandidateCount: Int
+    ) -> [String: Any] {
         [
-            "results": observations.map {
+            "results": lines.map {
                 recognizedTextObservationJSONObject(from: $0, maxCandidateCount: maxCandidateCount)
             },
         ]
@@ -28,17 +38,28 @@ enum VisionSerialization {
         from observation: VNRecognizedTextObservation,
         maxCandidateCount: Int
     ) -> [String: Any] {
-        [
+        recognizedTextObservationJSONObject(
+            from: VisionRecognizedText(observation: observation),
+            maxCandidateCount: maxCandidateCount
+        )
+    }
+
+    static func recognizedTextObservationJSONObject(
+        from line: VisionRecognizedText,
+        maxCandidateCount: Int
+    ) -> [String: Any] {
+        let observation = line.observation
+        return [
             "uuid": observation.uuid.uuidString,
             "confidence": observation.confidence,
             "time_range": cmTimeRangeJSONObject(from: observation.timeRange),
             "request_revision": observation.requestRevision,
-            "bounding_box": cgRectJSONObject(from: observation.boundingBox),
+            "bounding_box": cgRectJSONObject(from: line.boundingBox),
             "global_segmentation_mask": pixelBufferObservationJSONObject(from: observation.globalSegmentationMask),
-            "top_left": cgPointJSONObject(from: observation.topLeft),
-            "top_right": cgPointJSONObject(from: observation.topRight),
-            "bottom_left": cgPointJSONObject(from: observation.bottomLeft),
-            "bottom_right": cgPointJSONObject(from: observation.bottomRight),
+            "top_left": cgPointJSONObject(from: line.topLeft),
+            "top_right": cgPointJSONObject(from: line.topRight),
+            "bottom_left": cgPointJSONObject(from: line.bottomLeft),
+            "bottom_right": cgPointJSONObject(from: line.bottomRight),
             "candidates": observation.topCandidates(maxCandidateCount).map(recognizedTextJSONObject(from:)),
         ]
     }

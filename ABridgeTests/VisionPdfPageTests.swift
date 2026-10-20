@@ -27,7 +27,8 @@ struct VisionPdfPageTests {
             #expect(object["page_count"] as? Int == 2)
             let size = try pixelSize(#require(store.lastPreparedImageData))
             #expect(size.width > size.height, "\(operation) should render the wide second page")
-            #expect(size.width == VisionPdf.longEdgePixels)
+            #expect(size.width == 1200)
+            #expect(size.height == 400)
         }
     }
 
@@ -46,7 +47,8 @@ struct VisionPdfPageTests {
         #expect(object["page_count"] as? Int == 2)
         let size = try pixelSize(#require(store.lastPreparedImageData))
         #expect(size.height > size.width)
-        #expect(size.height == VisionPdf.longEdgePixels)
+        #expect(size.width == 400)
+        #expect(size.height == 800)
 
         let explicit = VisionProvider(store: store).handle(
             operation: "recognize_text",
@@ -174,6 +176,30 @@ struct VisionPdfPageTests {
     }
 
     @Test
+    func bitmapSizeIsTwiceThePointSizeUntilThePixelCap() {
+        let page = VisionPdf.bitmapSize(for: CGSize(width: 200, height: 400))
+        #expect(page?.width == 400)
+        #expect(page?.height == 800)
+
+        let huge = VisionPdf.bitmapSize(for: CGSize(width: 10000, height: 10000))
+        let pixels = (huge?.width ?? 0) * (huge?.height ?? 0)
+        #expect(pixels > 0)
+        #expect(pixels <= VisionPdf.maxBitmapPixels)
+        #expect((huge?.width ?? 0) < 20000)
+    }
+
+    @Test
+    func renderedPageFillsTheBitmapAtTwicePointSize() throws {
+        let pdf = try VisionPdfSamples.markedPage(size: CGSize(width: 180, height: 360))
+        let prepared = try VisionPdf.prepare(data: pdf, page: 1)
+        let image = try cgImage(prepared.imageData)
+        #expect(image.width == 360)
+        #expect(image.height == 720)
+        #expect(darkSamples(in: image, fromTop: 0 ..< 0.08) > 0, "top bar was not scaled into the bitmap")
+        #expect(darkSamples(in: image, fromTop: 0.92 ..< 1) > 0, "bottom bar was not scaled into the bitmap")
+    }
+
+    @Test
     @MainActor
     func liveRecognizeTextReadsPageTwoWhenVisionIsAvailable() throws {
         let pdf = try VisionPdfSamples.twoPageDocument()
@@ -201,9 +227,45 @@ struct VisionPdfPageTests {
     }
 
     private func pixelSize(_ data: Data) throws -> (width: Int, height: Int) {
-        let source = try #require(CGImageSourceCreateWithData(data as CFData, nil))
-        let image = try #require(CGImageSourceCreateImageAtIndex(source, 0, nil))
+        let image = try cgImage(data)
         return (image.width, image.height)
+    }
+
+    private func cgImage(_ data: Data) throws -> CGImage {
+        let source = try #require(CGImageSourceCreateWithData(data as CFData, nil))
+        return try #require(CGImageSourceCreateImageAtIndex(source, 0, nil))
+    }
+
+    /// Dark samples in a fraction of the bitmap measured from the top. CGImage rows are top-left origin.
+    private func darkSamples(in image: CGImage, fromTop: Range<CGFloat>) -> Int {
+        let width = image.width
+        let height = image.height
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else {
+            return 0
+        }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        let start = max(0, Int((fromTop.lowerBound * CGFloat(height)).rounded(.down)))
+        let end = min(height, Int((fromTop.upperBound * CGFloat(height)).rounded(.up)))
+        var dark = 0
+        for yFromTop in start ..< end {
+            let row = height - 1 - yFromTop
+            for column in stride(from: 0, to: width, by: 3) {
+                let offset = (row * width + column) * 4
+                if pixels[offset] < 128 {
+                    dark += 1
+                }
+            }
+        }
+        return dark
     }
 
     private func recognizedText(in object: [String: Any]) -> String {
@@ -224,6 +286,25 @@ enum VisionPdfSamples {
         let page = try #require(second.page(at: 0))
         document.insert(page, at: 1)
         return try #require(document.dataRepresentation())
+    }
+
+    static func markedPage(size: CGSize) throws -> Data {
+        let data = NSMutableData()
+        var media = CGRect(origin: .zero, size: size)
+        guard let consumer = CGDataConsumer(data: data as CFMutableData),
+              let context = CGContext(consumer: consumer, mediaBox: &media, nil)
+        else {
+            throw VisionProviderError.visionError("Failed to create a sample PDF")
+        }
+        context.beginPDFPage(nil)
+        context.setFillColor(gray: 1, alpha: 1)
+        context.fill(media)
+        context.setFillColor(gray: 0, alpha: 1)
+        context.fill(CGRect(x: 0, y: size.height - 20, width: size.width, height: 20))
+        context.fill(CGRect(x: 0, y: 0, width: size.width, height: 20))
+        context.endPDFPage()
+        context.closePDF()
+        return data as Data
     }
 
     static func encryptedDocument() throws -> Data {

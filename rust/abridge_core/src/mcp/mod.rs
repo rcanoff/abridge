@@ -226,7 +226,11 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
   }
 
   if tool.provider == "notes" {
-    let outcome = crate::notes::call(tool.operation, &arguments);
+    let outcome = if tool.operation == "get_attachment" {
+      crate::notes::get_attachment(&arguments, state.provider.as_ref(), provider_enabled(state, "vision"))
+    } else {
+      crate::notes::call(tool.operation, &arguments)
+    };
     record_tool_call(tool.name, outcome.is_ok());
     let (is_error, content) = notes_content::content(outcome);
     return json_response(

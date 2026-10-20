@@ -14,7 +14,7 @@ extension VisionProvider {
         let orientation = try optionalOrientationArgument(in: dictionary)
         let revision = try optionalDocumentRevisionArgument(in: dictionary)
         let regionOfInterest = try optionalNormalizedRegionOfInterestArgument(in: dictionary)
-        let textRecognitionOptions = try optionalTextRecognitionOptionsArgument(in: dictionary)
+        let textRecognitionOptions = try textRecognitionOptionsArgument(in: dictionary)
         let barcodeDetectionOptions = try optionalBarcodeDetectionOptionsArgument(in: dictionary)
         let includeSegmentation = try optionalBoolArgument(in: dictionary, key: "include_segmentation") ?? false
         let maximumCandidateCount = try optionalMaximumCandidateCountArgument(in: dictionary)
@@ -128,20 +128,14 @@ extension VisionProvider {
         return NormalizedRect(x: originX, y: originY, width: width, height: height)
     }
 
-    private func optionalTextRecognitionOptionsArgument(
+    private func textRecognitionOptionsArgument(
         in dictionary: [String: Any]
-    ) throws -> RecognizeDocumentsRequest.TextRecognitionOptions? {
-        guard dictionary.keys.contains("text_recognition_options") else { return nil }
-        if dictionary["text_recognition_options"] is NSNull {
-            return nil
-        }
-
-        guard let options = dictionary["text_recognition_options"] as? [String: Any] else {
-            throw VisionProviderError.invalidArguments("text_recognition_options must be an object or null")
-        }
-
-        var payload = try defaultTextRecognitionOptionsPayload()
-        var hasOverride = false
+    ) throws -> RecognizeDocumentsRequest.TextRecognitionOptions {
+        let options = try textRecognitionOptionsObject(in: dictionary)
+        var payload = try applyingTextRecognitionLanguageDefaults(
+            to: defaultTextRecognitionOptionsPayload(),
+            options: options
+        )
 
         if let minimumTextHeightFraction = try optionalNonNegativeDoubleArgument(
             in: options,
@@ -149,34 +143,62 @@ extension VisionProvider {
             label: "text_recognition_options.minimum_text_height_fraction"
         ) {
             payload["minimumTextHeightFraction"] = minimumTextHeightFraction
-            hasOverride = true
         }
         if let automaticallyDetectLanguage = try optionalBoolArgument(
             in: options,
             key: "automatically_detect_language"
         ) {
             payload["automaticallyDetectLanguage"] = automaticallyDetectLanguage
-            hasOverride = true
         }
         if let recognitionLanguages = try optionalRecognitionLanguagesPayload(in: options) {
             payload["recognitionLanguages"] = recognitionLanguages
-            hasOverride = true
         }
         if let useLanguageCorrection = try optionalBoolArgument(in: options, key: "use_language_correction") {
             payload["useLanguageCorrection"] = useLanguageCorrection
-            hasOverride = true
         }
         if let customWords = try optionalStringArrayArgument(in: options, key: "custom_words") {
             payload["customWords"] = customWords
-            hasOverride = true
         }
 
-        guard hasOverride else { return nil }
         return try decodeVisionRequestOptions(
             RecognizeDocumentsRequest.TextRecognitionOptions.self,
             from: payload,
             label: "text_recognition_options"
         )
+    }
+
+    /// Missing or null options still get language detection and correction.
+    private func textRecognitionOptionsObject(in dictionary: [String: Any]) throws -> [String: Any] {
+        guard dictionary.keys.contains("text_recognition_options") else { return [:] }
+        if dictionary["text_recognition_options"] is NSNull {
+            return [:]
+        }
+        guard let options = dictionary["text_recognition_options"] as? [String: Any] else {
+            throw VisionProviderError.invalidArguments("text_recognition_options must be an object or null")
+        }
+        return options
+    }
+
+    /// Named languages opt out of auto-detect unless the caller sets that flag.
+    private func applyingTextRecognitionLanguageDefaults(
+        to payload: [String: Any],
+        options: [String: Any]
+    ) -> [String: Any] {
+        var payload = payload
+        let passedLanguages = argumentPresent(options, key: "recognition_languages")
+        let passedAuto = argumentPresent(options, key: "automatically_detect_language")
+        let passedCorrection = argumentPresent(options, key: "use_language_correction")
+        if !passedAuto {
+            payload["automaticallyDetectLanguage"] = !passedLanguages
+        }
+        if !passedCorrection {
+            payload["useLanguageCorrection"] = true
+        }
+        return payload
+    }
+
+    private func argumentPresent(_ dictionary: [String: Any], key: String) -> Bool {
+        dictionary.keys.contains(key) && !(dictionary[key] is NSNull)
     }
 
     private func optionalBarcodeDetectionOptionsArgument(

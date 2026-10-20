@@ -16,14 +16,17 @@ final class MockVisionStore: VisionStoreing, @unchecked Sendable {
 
     func recognizeText(
         request: VisionRecognizeTextRequest
-    ) async throws -> VisionStoreResult<[VNRecognizedTextObservation]> {
+    ) async throws -> VisionStoreResult<[VisionRecognizedText]> {
         let prepared = try VisionPdf.prepare(data: request.imageData, page: request.page)
         lastRequest = request
         lastPreparedImageData = prepared.imageData
         if let error {
             throw error
         }
-        return VisionStoreResult(value: observations, pdf: prepared.pdf)
+        return VisionStoreResult(
+            value: observations.map(VisionRecognizedText.init),
+            pdf: prepared.pdf
+        )
     }
 
     func recognizeDocuments(

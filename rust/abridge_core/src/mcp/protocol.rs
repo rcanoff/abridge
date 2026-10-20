@@ -8,10 +8,11 @@ pub const SERVER_NAME: &str = "abridge";
 pub const SERVER_INSTRUCTIONS: &str = "Across notes, reminders, and events: abridge_search_items. \
 Events: eventkit_events_search_events for a title, or \
 eventkit_events_list_events for a date window. Reminders: eventkit_reminders_search_reminders. \
-Contacts: contacts_search_contacts. Notes: notes_search_notes, then notes_get_note for the body; \
-notes_get_attachment directly when a search match names an attachment. Places: \
+Contacts: contacts_search_contacts. Notes: notes_search_notes, then notes_get_note for the body and \
+its attachments; notes_get_attachment with an attachment identifier for a file's full text, one page \
+(page), its image, or the file. Places: \
 mapkit_search_places, then mapkit_estimate_travel_time. A local image or PDF page: \
-vision_recognize_text with image_path and page. Folder paths: notes_list_folders. Absent keys mean null, false, or empty; 0 is kept. \
+vision_recognize_text with image_path and page; the result is the page text. Folder paths: notes_list_folders. Absent keys mean null, false, or empty; 0 is kept. \
 Diagnostics keeps false success and logging_enabled. corelocation_get_current_location, paths, and \
 an unspecified clock are this server Mac's, not the caller's.";
 

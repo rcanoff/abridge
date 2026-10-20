@@ -9,7 +9,7 @@ extension VisionProvider {
             let outcome = try await store.recognizeText(request: arguments)
             let payloadObject = attachingPdfPage(
                 VisionSerialization.recognizeTextResponseJSONObject(
-                    observations: outcome.value,
+                    lines: outcome.value,
                     maxCandidateCount: arguments.maxCandidateCount
                 ),
                 pdf: outcome.pdf
@@ -35,11 +35,13 @@ extension VisionProvider {
         let recognitionLanguages = try optionalStringArrayArgument(in: dictionary, key: "recognition_languages")
         let customWords = try optionalStringArrayArgument(in: dictionary, key: "custom_words")
         let recognitionLevel = try optionalRecognitionLevelArgument(in: dictionary)
-        let usesLanguageCorrection = try optionalBoolArgument(in: dictionary, key: "uses_language_correction")
+        let usesLanguageCorrection = try optionalBoolArgument(in: dictionary, key: "uses_language_correction") ?? true
+        // A caller who names languages has already chosen the models, so auto-detect stays off
+        // unless they pass automatically_detects_language themselves.
         let automaticallyDetectsLanguage = try optionalBoolArgument(
             in: dictionary,
             key: "automatically_detects_language"
-        )
+        ) ?? (recognitionLanguages == nil)
         let minimumTextHeight = try optionalFloatArgument(in: dictionary, key: "minimum_text_height")
         let revision = try optionalIntArgument(in: dictionary, key: "revision")
         let preferBackgroundProcessing = try optionalBoolArgument(

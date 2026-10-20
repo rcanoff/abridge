@@ -67,9 +67,21 @@ fn resolves_suffixed_columns_and_projects_bool_date_and_null() {
   assert_eq!(attachment["title"], "Beta Unique");
   assert_eq!(attachment["file_name"], "pic.jpg");
   assert_eq!(attachment["type_uti"], "public.image");
-  assert_eq!(attachment["ocr_summary"], "ocr hit");
-  assert_eq!(attachment["handwriting_summary"], "ink hit");
+  assert_eq!(attachment["kind"], "photo");
+  assert_eq!(attachment["text"], "ocr hit");
+  assert_eq!(attachment["text_source"], "saved");
+  assert_eq!(attachment["handwriting"], "ink hit");
   assert!(attachment.get("summary").is_none());
+  assert!(attachment.get("ocr_summary").is_none());
+  assert!(attachment.get("handwriting_summary").is_none());
+  assert!(attachment.get("additional_indexable_text").is_none());
+  assert_eq!(carrier["body_update"]["status"], "blocked");
+  assert_eq!(carrier["body_update"]["reason"], "non_table_attachments");
+  assert_eq!(carrier["body_update"]["attachments"], serde_json::json!(["pic.jpg"]));
+  assert_eq!(
+    carrier["body_update"]["message"],
+    "notes_update_note replaces the whole body and cannot keep these files; there is no partial edit."
+  );
   assert_eq!(attachment["url"], "https://example.com/hidden");
   assert!(attachment.get("media").is_none());
   assert!(attachment.get("mergeable_data").is_none());
@@ -314,6 +326,45 @@ fn note_detail_lists_only_attachments_the_body_references() {
 }
 
 #[test]
+fn body_update_is_omitted_when_a_replacement_is_allowed() {
+  let (_db, path) = sample_store();
+  assert!(fetch_note(&path, "note-a").get("body_update").is_none());
+  let conn = rusqlite::Connection::open(&path).expect("fixture db");
+  conn
+    .execute_batch(
+      "ALTER TABLE ZICCLOUDSYNCINGOBJECT ADD COLUMN ZHASCHECKLIST INTEGER;
+       ALTER TABLE ZICCLOUDSYNCINGOBJECT ADD COLUMN ZISPASSWORDPROTECTED INTEGER;
+       UPDATE ZICCLOUDSYNCINGOBJECT SET ZHASCHECKLIST = 1 WHERE ZIDENTIFIER = 'note-a';
+       UPDATE ZICCLOUDSYNCINGOBJECT SET ZISPASSWORDPROTECTED = 1 WHERE ZIDENTIFIER = 'note-b';
+       UPDATE ZICCLOUDSYNCINGOBJECT SET ZHASCHECKLIST = 1 WHERE ZIDENTIFIER = 'note-i';",
+    )
+    .expect("flags");
+  drop(conn);
+  let checklist = fetch_note(&path, "note-a");
+  assert_eq!(checklist["body_update"]["status"], "blocked");
+  assert_eq!(checklist["body_update"]["reason"], "checklist");
+  assert!(checklist["body_update"].get("attachments").is_none());
+  assert_eq!(
+    checklist["body_update"]["message"],
+    "notes_update_note replaces the whole body and cannot keep the checklist; there is no partial edit."
+  );
+  let locked = fetch_note(&path, "note-b");
+  assert_eq!(locked["body_update"]["reason"], "locked");
+  assert!(locked["body_update"].get("attachments").is_none());
+  assert_eq!(
+    locked["body_update"]["message"],
+    "The note is password protected, so notes_update_note cannot change it."
+  );
+  let both = fetch_note(&path, "note-i");
+  assert_eq!(both["body_update"]["reason"], "checklist, non_table_attachments");
+  assert_eq!(both["body_update"]["attachments"], serde_json::json!(["pic.jpg"]));
+  assert_eq!(
+    both["body_update"]["message"],
+    "notes_update_note replaces the whole body and cannot keep the checklist or these files; there is no partial edit."
+  );
+}
+
+#[test]
 fn ocr_keeps_one_copy_caps_note_detail_and_stays_searchable() {
   let (_db, path) = sample_store();
   let conn = rusqlite::Connection::open(&path).expect("fixture db");
@@ -333,12 +384,16 @@ fn ocr_keeps_one_copy_caps_note_detail_and_stays_searchable() {
 
   let note = fetch_note(&path, "note-i");
   let attachment = &note["attachments"][0];
-  let summary = attachment["ocr_summary"].as_str().unwrap();
-  assert_eq!(summary.chars().count(), 2000);
+  let summary = attachment["text"].as_str().unwrap();
+  assert_eq!(summary.chars().count(), 1500);
   assert!(!summary.contains("zzocrendtoken"));
-  assert_eq!(attachment["ocr_truncated"], true);
+  assert_eq!(attachment["text_truncated"], true);
+  assert_eq!(attachment["text_source"], "saved");
   assert!(attachment.get("summary").is_none());
+  assert!(attachment.get("ocr_summary").is_none());
+  assert!(attachment.get("ocr_truncated").is_none());
   assert!(attachment.get("additional_indexable_text").is_none());
+  assert!(attachment.get("image_classification_summary").is_none());
 
   let found = call_with_store(&path, "search_notes", &serde_json::json!({ "query": "'zzocrendtoken" })).unwrap();
   assert_eq!(found[0]["identifier"], "note-i");

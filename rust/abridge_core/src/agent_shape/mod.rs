@@ -9,6 +9,10 @@ mod rank;
 mod util;
 mod vision;
 
+// Notes calls these. Nothing else in this crate does until that wiring lands.
+#[allow(unused_imports)]
+pub use vision::{vision_markdown, vision_text};
+
 use serde_json::{Map, Value, json};
 
 use crate::tools::{
@@ -34,6 +38,8 @@ pub struct Prepared {
   pub query: Option<String>,
   pub limit: Option<usize>,
   pub offset: usize,
+  /// Agent-facing flag for the two Vision text tools. Stripped before the provider call.
+  pub include_geometry: bool,
 }
 
 pub struct Shaped {
@@ -76,6 +82,7 @@ pub fn prepare(tool: &ToolDefinition, arguments: &Value) -> Prepared {
       query,
       limit,
       offset,
+      include_geometry: include_geometry(arguments),
     };
   }
 
@@ -87,6 +94,7 @@ pub fn prepare(tool: &ToolDefinition, arguments: &Value) -> Prepared {
       query: None,
       limit,
       offset,
+      include_geometry: include_geometry(arguments),
     };
   }
 
@@ -96,7 +104,12 @@ pub fn prepare(tool: &ToolDefinition, arguments: &Value) -> Prepared {
     query,
     limit,
     offset,
+    include_geometry: include_geometry(arguments),
   }
+}
+
+fn include_geometry(arguments: &Value) -> bool {
+  arguments.get("include_geometry").and_then(Value::as_bool) == Some(true)
 }
 
 pub fn shape(tool_name: &str, prepared: &Prepared, payload_json: &str) -> Shaped {
@@ -158,9 +171,9 @@ fn dispatch(tool_name: &str, prepared: &Prepared, value: &Value) -> (Value, Vec<
     TOOL_ESTIMATE_TRAVEL_TIME => mapkit::travel_time(value, &request_arguments(prepared)),
     TOOL_OPEN_NAVIGATION => mapkit::navigation(value, &request_arguments(prepared)),
     TOOL_GET_CURRENT_LOCATION => location::current_location(value),
-    TOOL_RECOGNIZE_TEXT | TOOL_RECOGNIZE_DOCUMENTS | TOOL_DETECT_BARCODES | TOOL_DETECT_FACE_LANDMARKS => {
-      vision::shape(value)
-    }
+    TOOL_RECOGNIZE_TEXT => vision::shape_text(value, prepared.include_geometry),
+    TOOL_RECOGNIZE_DOCUMENTS => vision::shape_documents(value, prepared.include_geometry),
+    TOOL_DETECT_BARCODES | TOOL_DETECT_FACE_LANDMARKS => vision::shape(value),
     TOOL_GET_USAGE_LOG => shape_usage_log(value),
     TOOL_DELETE_CALENDAR | TOOL_DELETE_EVENT | TOOL_DELETE_LIST | TOOL_DELETE_REMINDER | TOOL_DELETE_CONTACT
     | TOOL_DELETE_GROUP => slim(value).unwrap_or_else(|| json!({})),
@@ -199,6 +212,9 @@ fn provider_payload(tool_name: &str, arguments: &Value) -> String {
     }
     if tool_name == TOOL_LIST_REMINDERS || tool_name == TOOL_SEARCH_REMINDERS {
       normalize_reminder_window(object);
+    }
+    if tool_name == TOOL_RECOGNIZE_TEXT || tool_name == TOOL_RECOGNIZE_DOCUMENTS {
+      object.remove("include_geometry");
     }
   }
   serde_json::to_string(&payload).unwrap_or_else(|_| "{}".into())
@@ -749,18 +765,32 @@ mod tests {
       }]
     });
     let raw_len = vision.to_string().len();
-    let text = shaped(tools::TOOL_RECOGNIZE_TEXT, vision);
+    assert_eq!(super::vision_text(&vision), "Hello");
+    assert_eq!(super::vision_markdown(&json!({ "results": [] })), "");
+    let text = shaped(tools::TOOL_RECOGNIZE_TEXT, vision.clone());
     assert!(
       text.to_string().len() * 2 < raw_len,
       "vision {} raw {raw_len}",
       text.to_string().len()
     );
-    assert_eq!(text["results"][0]["candidates"][0]["string"], "Hello");
-    assert!(text["results"][0].get("uuid").is_none());
-    assert!(text["results"][0].get("global_segmentation_mask").is_none());
-    assert!(text["results"][0].get("top_left").is_none());
+    assert_eq!(text["text"], "Hello");
+    assert!(text.get("results").is_none());
     assert!(text.get("page").is_none());
     assert!(text.get("page_count").is_none());
+
+    let prepared = prepare(
+      &tool(tools::TOOL_RECOGNIZE_TEXT),
+      &json!({ "image_path": "/tmp/page.png", "include_geometry": true }),
+    );
+    assert!(prepared.include_geometry);
+    assert!(!prepared.payload_json.contains("include_geometry"));
+    let detailed = shape(tools::TOOL_RECOGNIZE_TEXT, &prepared, &vision.to_string());
+    let detailed: serde_json::Value = serde_json::from_str(&detailed.text).expect("json");
+    assert_eq!(detailed["text"], "Hello");
+    assert_eq!(detailed["results"][0]["candidates"][0]["string"], "Hello");
+    assert!(detailed["results"][0].get("uuid").is_none());
+    assert!(detailed["results"][0].get("global_segmentation_mask").is_none());
+    assert!(detailed["results"][0].get("top_left").is_none());
 
     let pdf = shaped(
       tools::TOOL_RECOGNIZE_TEXT,
@@ -770,9 +800,10 @@ mod tests {
         "page_count": 2
       }),
     );
+    assert_eq!(pdf["text"], "PAGETWO");
     assert_eq!(pdf["page"], 2);
     assert_eq!(pdf["page_count"], 2);
-    assert_eq!(pdf["results"][0]["candidates"][0]["string"], "PAGETWO");
+    assert!(pdf.get("results").is_none());
 
     let location = shaped(
       tools::TOOL_GET_CURRENT_LOCATION,
