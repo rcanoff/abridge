@@ -119,8 +119,9 @@ struct LiveVisionStore: VisionStoreing {
         return VisionStoreResult(value: lines, pdf: prepared.pdf)
     }
 
-    /// Tall or wide images are recognized per tile. Boxes are mapped back to the whole image, and a
-    /// line is kept only from the tile whose core contains its center.
+    /// A tall image is recognized per tile. A wide image stays one tile, because a horizontal split
+    /// cuts every line. Boxes are mapped back to the whole image, and a line is kept only from the
+    /// tile whose core contains its center.
     private func recognizeTextLines(
         in image: CGImage,
         request: VisionRecognizeTextRequest

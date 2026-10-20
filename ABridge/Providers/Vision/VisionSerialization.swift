@@ -6,11 +6,29 @@ import Vision
 
 enum VisionSerialization {
     static func jsonString(from object: Any) throws -> String {
-        let data = try JSONSerialization.data(withJSONObject: object)
+        // NaN and infinity raise NSInvalidArgumentException from JSONSerialization, which is not a
+        // Swift error. Vision time ranges and confidences are non-finite when a model does not run.
+        let data = try JSONSerialization.data(withJSONObject: jsonSafe(object))
         guard let string = String(data: data, encoding: .utf8) else {
             throw VisionProviderError.serializationFailed
         }
         return string
+    }
+
+    /// Replaces non-finite numbers with null. Booleans stay booleans (`NSNumber` bridges both).
+    private static func jsonSafe(_ value: Any) -> Any {
+        if let dictionary = value as? [String: Any] {
+            return dictionary.mapValues { jsonSafe($0) }
+        }
+        if let array = value as? [Any] {
+            return array.map { jsonSafe($0) }
+        }
+        if let number = value as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+           number.doubleValue.isFinite == false
+        {
+            return NSNull()
+        }
+        return value
     }
 
     static func recognizeTextResponseJSONObject(

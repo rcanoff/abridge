@@ -62,6 +62,22 @@ struct VisionSerializationTests {
     }
 
     @Test
+    func nonFiniteNumbersSerializeAsNull() throws {
+        let json = try VisionSerialization.jsonString(from: [
+            "ok": true,
+            "nan": Double.nan,
+            "inf": Double.infinity,
+            "value": 2,
+        ])
+        let data = try #require(json.data(using: .utf8))
+        let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        #expect(object["ok"] as? Bool == true)
+        #expect(object["nan"] is NSNull)
+        #expect(object["inf"] is NSNull)
+        #expect(object["value"] as? Int == 2)
+    }
+
+    @Test
     func optionalTimeRangeSerializesAsNull() {
         let value = VisionSerialization.cmTimeRangeJSONObject(from: nil as CMTimeRange?)
         #expect(value is NSNull)

@@ -40,12 +40,19 @@ struct VisionTextTilesTests {
     }
 
     @Test
-    func wideTilesPartitionTheHorizontalAxis() {
-        let tiles = VisionTextTiles.tiles(width: 1200, height: 200)
-        #expect(tiles.count >= 3)
-        for axis in stride(from: 0.01, to: 0.99, by: 0.07) {
-            let owners = tiles.filter { $0.contains(center: CGPoint(x: axis, y: 0.5)) }
-            #expect(owners.count == 1)
+    func aWideImageIsNotTiledAndATallImageIs() {
+        let wide = VisionTextTiles.tiles(width: 1200, height: 200)
+        #expect(wide.count == 1)
+        #expect(wide[0].crop == CGRect(x: 0, y: 0, width: 1200, height: 200))
+
+        let boundary = VisionTextTiles.tiles(width: 200, height: 300)
+        #expect(boundary.count == 1)
+
+        let tall = VisionTextTiles.tiles(width: 200, height: 1200)
+        #expect(tall.count > 1)
+        for tile in tall {
+            #expect(tile.vertical)
+            #expect(Int(tile.crop.width) == 200)
         }
     }
 

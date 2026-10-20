@@ -161,7 +161,7 @@ Invitation RSVP is not supported. The registry includes `eventkit_events_accept_
 - `vision_detect_barcodes`
 - `vision_detect_face_landmarks`
 
-Each accepts an image or a PDF. `page` selects one PDF page (default 1). A PDF result includes `page` and `page_count`. A page is rasterized at twice its point size, capped at 40 million pixels. `vision_recognize_text` returns `text` (lines in reading order). An image longer than about 1.5:1 is read in overlapping tiles and returned as one list. `vision_recognize_documents` returns `markdown` (paragraphs, lists, and tables) and `detected` when Vision finds dates, phone numbers, links, or barcodes, and is not tiled. `include_geometry` adds boxes and structure; it defaults to false. Language detection and correction are on unless the call sets the language fields.
+Each accepts an image or a PDF. `page` selects one PDF page (default 1). A PDF result includes `page` and `page_count`. A page is rasterized at twice its point size, capped at 40 million pixels. `vision_recognize_text` returns `text` (lines in reading order). An image whose height is more than about 1.5 times its width is read in overlapping tiles and returned as one list. A wide image is not tiled. `vision_recognize_documents` returns `markdown` (paragraphs, lists, and tables) and `detected` when Vision finds dates, phone numbers, links, or barcodes, and is not tiled. `include_geometry` adds boxes and structure; it defaults to false. Language detection and correction are on unless the call sets the language fields.
 
 ### Notes
 

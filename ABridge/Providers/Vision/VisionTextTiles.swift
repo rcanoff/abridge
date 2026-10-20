@@ -1,12 +1,13 @@
 import CoreGraphics
 import Foundation
 
-/// Splits a long image into overlapping tiles for `vision_recognize_text`.
+/// Splits a tall image into overlapping tiles for `vision_recognize_text`.
 ///
 /// A tile is kept only when the observation center falls in that tile's core. Cores partition
 /// the page, meeting at the midpoint of each overlap, so a line in the overlap is kept once.
+/// A wide image stays one tile: splitting along the width cuts every text line.
 enum VisionTextTiles {
-    /// Tile when the long side is more than this multiple of the short side.
+    /// Tile when the oriented height is more than this multiple of the width.
     static let aspectLimit: CGFloat = 1.5
 
     /// Each tile's long side is at most this multiple of the image's short side.
@@ -29,6 +30,7 @@ enum VisionTextTiles {
         }
     }
 
+    /// `width` and `height` are pixels after orientation has been drawn out.
     static func tiles(width: Int, height: Int) -> [Tile] {
         guard width > 0, height > 0 else { return [] }
         let vertical = height >= width
@@ -40,7 +42,8 @@ enum VisionTextTiles {
             coreMax: .infinity,
             vertical: vertical
         )
-        guard CGFloat(longSide) > CGFloat(shortSide) * aspectLimit else {
+        // Wide and nearly square images stay whole. A side-by-side split cuts every line.
+        guard CGFloat(height) > CGFloat(width) * aspectLimit else {
             return [full]
         }
 
