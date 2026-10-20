@@ -30,7 +30,7 @@ fn validate_cross_field_rules(tool: &ToolDefinition, arguments: &Value) -> Resul
       &["given_name", "family_name", "organization_name"],
       "Provide at least one of given_name, family_name, or organization_name.",
     ),
-    tools::TOOL_ESTIMATE_TRAVEL_TIME => {
+    tools::TOOL_ESTIMATE_TRAVEL_TIME | tools::TOOL_CALCULATE_ROUTE => {
       reject_both_present(
         arguments,
         "departure_date",
@@ -38,12 +38,20 @@ fn validate_cross_field_rules(tool: &ToolDefinition, arguments: &Value) -> Resul
         "Provide exactly one of departure_date or arrival_date, or neither.",
       )?;
       require_route_endpoint(arguments, "source")?;
-      require_route_endpoint(arguments, "destination")
+      require_route_endpoint(arguments, "destination")?;
+      require_waypoints(arguments)
     }
-    tools::TOOL_CALCULATE_ROUTE | tools::TOOL_OPEN_NAVIGATION => {
+    tools::TOOL_OPEN_NAVIGATION => {
       require_route_endpoint(arguments, "source")?;
-      require_route_endpoint(arguments, "destination")
+      require_route_endpoint(arguments, "destination")?;
+      require_waypoints(arguments)
     }
+    tools::TOOL_SEARCH_NEARBY => require_exactly_one(
+      arguments,
+      "coordinate",
+      "region",
+      "Provide exactly one of coordinate (with optional radius_meters) or region.",
+    ),
     tools::TOOL_RECOGNIZE_TEXT
     | tools::TOOL_RECOGNIZE_DOCUMENTS
     | tools::TOOL_DETECT_BARCODES
@@ -158,19 +166,37 @@ fn reject_both_present(arguments: &Value, left: &str, right: &str, message: &str
 }
 
 fn require_route_endpoint(arguments: &Value, key: &str) -> Result<(), String> {
-  let Some(endpoint) = arguments.get(key).and_then(Value::as_object) else {
+  let Some(endpoint) = arguments.get(key).filter(|endpoint| endpoint.is_object()) else {
     return Ok(());
   };
+  if endpoint_has_location(endpoint) {
+    Ok(())
+  } else {
+    Err(format!("$: {key} needs a coordinate or a MapKit place identifier"))
+  }
+}
+
+fn require_waypoints(arguments: &Value) -> Result<(), String> {
+  let Some(waypoints) = arguments.get("waypoints").and_then(Value::as_array) else {
+    return Ok(());
+  };
+  for (index, waypoint) in waypoints.iter().enumerate() {
+    if !endpoint_has_location(waypoint) {
+      return Err(format!(
+        "$: waypoints[{index}] needs a coordinate or a MapKit place identifier"
+      ));
+    }
+  }
+  Ok(())
+}
+
+fn endpoint_has_location(endpoint: &Value) -> bool {
   let has_coordinate = endpoint.get("coordinate").and_then(Value::as_object).is_some();
   let has_identifier = endpoint
     .get("identifier")
     .and_then(Value::as_str)
     .is_some_and(|identifier| !identifier.trim().is_empty());
-  if has_coordinate || has_identifier {
-    Ok(())
-  } else {
-    Err(format!("$: {key} needs a coordinate or a MapKit place identifier"))
-  }
+  has_coordinate || has_identifier
 }
 
 fn require_vision_image(arguments: &Value) -> Result<(), String> {
@@ -261,6 +287,13 @@ fn validate_against_schema(schema: &Value, instance: &Value, path: &str) -> Resu
     return Err(format!("{path}: {number} is below minimum {minimum}"));
   }
 
+  if let Some(minimum) = schema.get("exclusiveMinimum").and_then(Value::as_f64)
+    && let Some(number) = instance.as_f64()
+    && number <= minimum
+  {
+    return Err(format!("{path}: {number} must be greater than {minimum}"));
+  }
+
   if let Some(maximum) = schema.get("maximum").and_then(Value::as_f64)
     && let Some(number) = instance.as_f64()
     && number > maximum
@@ -289,6 +322,13 @@ fn validate_against_schema(schema: &Value, instance: &Value, path: &str) -> Resu
     return Err(format!(
       "{path}: expected a date-time with a numeric offset (Z or ±HH:MM); the server's time zone is not used"
     ));
+  }
+
+  if let Some(max_items) = schema.get("maxItems").and_then(Value::as_u64)
+    && let Some(array) = instance.as_array()
+    && array.len() as u64 > max_items
+  {
+    return Err(format!("{path}: at most {max_items} items"));
   }
 
   if let Some(required) = schema.get("required").and_then(Value::as_array) {
@@ -973,5 +1013,94 @@ mod tests {
       later.contains("gap") && later.contains("2027-03-14T02:30:00"),
       "{later}"
     );
+  }
+
+  #[test]
+  fn exclusive_minimum_rejects_the_bound_and_accepts_above_it() {
+    let tool = resolve_tool(TOOL_RECOGNIZE_DOCUMENTS).expect("tool");
+    let with_width = |width: f64| {
+      json!({
+        "image_path": "/tmp/scan.png",
+        "region_of_interest": {
+          "origin": { "x": 0.0, "y": 0.0 },
+          "size": { "width": width, "height": 0.5 }
+        }
+      })
+    };
+    let zero = validate_tool_arguments(tool, &with_width(0.0)).expect_err("zero width");
+    assert!(
+      zero.contains("region_of_interest.size.width") && zero.contains("greater than 0"),
+      "{zero}"
+    );
+    validate_tool_arguments(tool, &with_width(0.25)).expect("positive width");
+  }
+
+  #[test]
+  fn calculate_route_waypoints_need_a_location_and_at_most_eight() {
+    let tool = resolve_tool(TOOL_CALCULATE_ROUTE).expect("tool");
+    let stop = json!({ "coordinate": { "latitude": 28.8, "longitude": -82.0 } });
+    let with_waypoints = |waypoints: serde_json::Value| {
+      json!({
+        "source": { "coordinate": { "latitude": 28.8, "longitude": -81.6 } },
+        "destination": { "identifier": "I-TAMPA" },
+        "waypoints": waypoints
+      })
+    };
+    validate_tool_arguments(tool, &with_waypoints(json!([stop, { "identifier": "I-STOP" }]))).expect("valid");
+    let named_only =
+      validate_tool_arguments(tool, &with_waypoints(json!([stop, { "name": "Wildwood" }]))).expect_err("name only");
+    assert!(named_only.contains("waypoints[1]"), "{named_only}");
+    let too_many = validate_tool_arguments(tool, &with_waypoints(json!(vec![stop; 9]))).expect_err("nine");
+    assert!(too_many.contains("waypoints") && too_many.contains("8"), "{too_many}");
+  }
+
+  #[test]
+  fn search_nearby_needs_exactly_one_anchor() {
+    let tool = resolve_tool(crate::tools::TOOL_SEARCH_NEARBY).expect("tool");
+    let coordinate = json!({ "latitude": 28.8, "longitude": -81.6 });
+    let neither = validate_tool_arguments(tool, &json!({ "radius_meters": 500 })).expect_err("neither");
+    assert!(
+      neither.contains("coordinate") && neither.contains("region"),
+      "{neither}"
+    );
+    let both = validate_tool_arguments(
+      tool,
+      &json!({ "coordinate": coordinate, "region": { "center": coordinate } }),
+    )
+    .expect_err("both");
+    assert!(both.contains("exactly one"), "{both}");
+    validate_tool_arguments(tool, &json!({ "coordinate": coordinate })).expect("coordinate");
+    validate_tool_arguments(tool, &json!({ "region": { "center": coordinate } })).expect("region");
+  }
+
+  #[test]
+  fn calculate_route_rejects_both_dates_like_travel_time() {
+    let tool = resolve_tool(TOOL_CALCULATE_ROUTE).expect("tool");
+    let endpoint = json!({ "coordinate": { "latitude": 28.8, "longitude": -81.6 } });
+    let both = validate_tool_arguments(
+      tool,
+      &json!({
+        "source": endpoint,
+        "destination": endpoint,
+        "departure_date": "2026-10-21T08:00:00-04:00",
+        "arrival_date": "2026-10-21T10:00:00-04:00"
+      }),
+    )
+    .expect_err("both dates");
+    assert!(both.contains("exactly one of departure_date or arrival_date"), "{both}");
+  }
+
+  #[test]
+  fn recurrence_occurrence_count_must_be_at_least_one() {
+    let tool = resolve_tool(crate::tools::TOOL_SET_REMINDER_RECURRENCE).expect("tool");
+    let rule = |count: i64| {
+      json!({
+        "calendar_item_identifier": "r1",
+        "recurrence_rules": [{ "frequency": "daily", "interval": 1, "recurrence_end": { "occurrence_count": count } }]
+      })
+    };
+    let zero = validate_tool_arguments(tool, &rule(0)).expect_err("zero");
+    assert!(zero.contains("occurrence_count"), "{zero}");
+    validate_tool_arguments(tool, &rule(3)).expect("three");
   }
 }

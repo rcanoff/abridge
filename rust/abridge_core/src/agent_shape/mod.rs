@@ -23,11 +23,11 @@ use crate::tools::{
   TOOL_FORWARD_GEOCODE, TOOL_GET_CONTACT, TOOL_GET_CURRENT_LOCATION, TOOL_GET_EVENT, TOOL_GET_PLACE, TOOL_GET_REMINDER,
   TOOL_GET_USAGE_LOG, TOOL_LINK_CONTACTS, TOOL_LIST_CALENDARS, TOOL_LIST_CONTACTS, TOOL_LIST_CONTAINERS,
   TOOL_LIST_EVENTS, TOOL_LIST_GROUPS, TOOL_LIST_LISTS, TOOL_LIST_REMINDERS, TOOL_MOVE_EVENT, TOOL_MOVE_REMINDER,
-  TOOL_OPEN_NAVIGATION, TOOL_RECOGNIZE_DOCUMENTS, TOOL_RECOGNIZE_TEXT, TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS,
-  TOOL_SEARCH_EVENTS, TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS,
-  TOOL_SET_EVENT_RECURRENCE, TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION,
-  TOOL_UNCOMPLETE_REMINDER, TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT,
-  TOOL_UPDATE_GROUP, TOOL_UPDATE_REMINDER, ToolDefinition,
+  TOOL_RECOGNIZE_DOCUMENTS, TOOL_RECOGNIZE_TEXT, TOOL_REVERSE_GEOCODE, TOOL_SEARCH_CONTACTS, TOOL_SEARCH_EVENTS,
+  TOOL_SEARCH_NEARBY, TOOL_SEARCH_PLACES, TOOL_SEARCH_REMINDERS, TOOL_SET_EVENT_ALARMS, TOOL_SET_EVENT_RECURRENCE,
+  TOOL_SET_REMINDER_ALARMS, TOOL_SET_REMINDER_RECURRENCE, TOOL_TENTATIVE_INVITATION, TOOL_UNCOMPLETE_REMINDER,
+  TOOL_UNLINK_CONTACTS, TOOL_UPDATE_CALENDAR, TOOL_UPDATE_CONTACT, TOOL_UPDATE_EVENT, TOOL_UPDATE_GROUP,
+  TOOL_UPDATE_REMINDER, ToolDefinition,
 };
 
 use util::{matches_json, slim};
@@ -129,6 +129,35 @@ pub fn shape_usage_log(value: &Value) -> Value {
   slim_keep_bools(value)
 }
 
+/// `mapkit_calculate_route` with waypoints: one MapKit response per leg, in order.
+pub fn route_legs(legs: &[Value], request: &Value) -> Value {
+  mapkit::route_legs_response(legs, request)
+}
+
+/// `mapkit_estimate_travel_time` with waypoints: one MapKit estimate per leg, in order.
+pub fn travel_time_legs(legs: &[Value], request: &Value) -> Value {
+  mapkit::travel_time_legs_response(legs, request)
+}
+
+/// A `mapkit_open_navigation` stop that already has a coordinate.
+pub fn request_endpoint(request: &Value) -> Value {
+  mapkit::request_endpoint(request)
+}
+
+/// A `mapkit_open_navigation` stop resolved through `get_place`.
+pub fn resolved_endpoint(place: &Value, request: &Value) -> Value {
+  mapkit::resolved_endpoint(place, request)
+}
+
+/// Apple Maps directions URL through shaped stops (source, waypoints, destination).
+pub fn navigation_url(stops: &[Value], request: &Value) -> Option<String> {
+  mapkit::navigation_url(stops, request)
+}
+
+pub fn navigation_response(stops: &[Value], maps_url: &str, opened: bool) -> Value {
+  mapkit::navigation_response(stops, maps_url, opened)
+}
+
 fn dispatch(tool_name: &str, prepared: &Prepared, value: &Value) -> (Value, Vec<Value>) {
   let shaped = match tool_name {
     TOOL_LIST_CALENDARS | TOOL_LIST_LISTS => map_items(value, eventkit::calendar_summary),
@@ -169,7 +198,7 @@ fn dispatch(tool_name: &str, prepared: &Prepared, value: &Value) -> (Value, Vec<
     TOOL_GET_PLACE => mapkit::detail(value),
     TOOL_CALCULATE_ROUTE => mapkit::route_response(value, &request_arguments(prepared)),
     TOOL_ESTIMATE_TRAVEL_TIME => mapkit::travel_time(value, &request_arguments(prepared)),
-    TOOL_OPEN_NAVIGATION => mapkit::navigation(value, &request_arguments(prepared)),
+    // mapkit_open_navigation is shaped in mcp::trip, which builds the URL Swift opens.
     TOOL_GET_CURRENT_LOCATION => location::current_location(value),
     TOOL_RECOGNIZE_TEXT => vision::shape_text(value, prepared.include_geometry),
     TOOL_RECOGNIZE_DOCUMENTS => vision::shape_documents(value, prepared.include_geometry),
@@ -215,6 +244,10 @@ fn provider_payload(tool_name: &str, arguments: &Value) -> String {
     }
     if tool_name == TOOL_RECOGNIZE_TEXT || tool_name == TOOL_RECOGNIZE_DOCUMENTS {
       object.remove("include_geometry");
+    }
+    // A non-empty list never reaches here: mcp::trip routes each leg.
+    if tool_name == TOOL_CALCULATE_ROUTE || tool_name == TOOL_ESTIMATE_TRAVEL_TIME {
+      object.remove("waypoints");
     }
   }
   serde_json::to_string(&payload).unwrap_or_else(|_| "{}".into())
@@ -660,6 +693,21 @@ mod tests {
     assert_eq!(listed["map_items"][0]["address"], "1 Main, Town");
     assert!(listed.get("bounding_region").is_none());
     assert!(listed["map_items"][0].get("placemark").is_none());
+    assert_eq!(
+      listed["map_items"][0]["maps_url"],
+      "https://maps.apple.com/place?place-id=place-1"
+    );
+    let unnamed_point = shaped(
+      tools::TOOL_REVERSE_GEOCODE,
+      json!({ "map_items": [{
+        "name": "1 Main & Oak",
+        "location": { "coordinate": { "latitude": 1.5, "longitude": 2.5 } }
+      }] }),
+    );
+    assert_eq!(
+      unnamed_point["map_items"][0]["maps_url"],
+      "https://maps.apple.com/place?coordinate=1.5,2.5&name=1%20Main%20%26%20Oak"
+    );
 
     let route = json!({
       "source": place_stub("A"),
@@ -683,6 +731,35 @@ mod tests {
     assert_eq!(shaped_route["routes"][0]["steps"][0]["instructions"], "Turn left");
     assert_eq!(shaped_route["routes"][0]["has_highways"], true);
     assert!(shaped_route["routes"][0].get("has_tolls").is_none());
+  }
+
+  #[test]
+  fn route_maps_url_carries_place_ids_mode_and_avoid_preferences() {
+    let definition = tool(tools::TOOL_CALCULATE_ROUTE);
+    let prepared = prepare(
+      &definition,
+      &json!({
+        "source": { "coordinate": { "latitude": 28.8028, "longitude": -81.6445 } },
+        "destination": { "identifier": "I5A2B/C", "name": "Tampa" },
+        "transport_type": "walking",
+        "toll_preference": "avoid",
+        "highway_preference": "avoid",
+        "waypoints": []
+      }),
+    );
+    assert!(!prepared.payload_json.contains("waypoints"));
+    let payload = json!({
+      "source": { "name": "Mount Dora", "location": { "coordinate": { "latitude": 28.8028, "longitude": -81.6445 } } },
+      "destination": { "name": "Tampa", "identifier": "I5A2B/C", "location": { "coordinate": { "latitude": 27.9506, "longitude": -82.4572 } } },
+      "routes": [{ "name": "I-4 W", "distance": 130000, "expected_travel_time": 5400 }]
+    });
+    let outcome = shape(tools::TOOL_CALCULATE_ROUTE, &prepared, &payload.to_string());
+    let value: serde_json::Value = serde_json::from_str(&outcome.text).expect("json");
+    assert_eq!(
+      value["maps_url"],
+      "https://maps.apple.com/directions?source=28.8028,-81.6445&destination=27.9506,-82.4572\
+       &destination-place-id=I5A2B%2FC&mode=walking&avoid=tolls,highways"
+    );
   }
 
   #[test]
@@ -717,7 +794,9 @@ mod tests {
     let value: serde_json::Value = serde_json::from_str(&outcome.text).unwrap();
     assert_eq!(value["source"]["name"], "Humberto Delgado Airport");
     assert!(value["destination"].get("name").is_none());
-    assert_eq!(value["destination"]["identifier"], "place-tower");
+    // Swift returned no identifier: its lookup failed and it used the coordinate.
+    assert!(value["destination"].get("identifier").is_none());
+    assert!(!value["maps_url"].as_str().expect("maps_url").contains("place-id"));
     assert_eq!(value["expected_travel_time"], 1080);
   }
 

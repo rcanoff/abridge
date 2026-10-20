@@ -3,6 +3,7 @@
 mod cross_search;
 mod notes_content;
 mod protocol;
+mod trip;
 
 use std::sync::Arc;
 use std::time::Instant;
@@ -223,6 +224,40 @@ fn handle_tools_call(id: Option<Value>, params: Value, state: &McpState) -> Resp
         tool_error_response(id, "invalid_arguments", &message)
       }
     };
+  }
+
+  let has_waypoints = arguments
+    .get("waypoints")
+    .and_then(Value::as_array)
+    .is_some_and(|waypoints| !waypoints.is_empty());
+  let trip_outcome = match tool.name {
+    tools::TOOL_CALCULATE_ROUTE if has_waypoints => {
+      Some(trip::legs(trip::LegKind::Route, &arguments, state.provider.as_ref()))
+    }
+    tools::TOOL_ESTIMATE_TRAVEL_TIME if has_waypoints => Some(trip::legs(
+      trip::LegKind::TravelTime,
+      &arguments,
+      state.provider.as_ref(),
+    )),
+    tools::TOOL_OPEN_NAVIGATION => Some(trip::open_navigation(&arguments, state.provider.as_ref())),
+    _ => None,
+  };
+  if let Some(outcome) = trip_outcome {
+    record_tool_call(tool.name, outcome.is_ok());
+    let (is_error, text) = match outcome {
+      Ok(payload) => (false, payload.to_string()),
+      Err(error_json) => (true, error_json),
+    };
+    return json_response(
+      StatusCode::OK,
+      json_rpc_result(
+        id,
+        serde_json::json!({
+          "content": [{ "type": "text", "text": text }],
+          "isError": is_error
+        }),
+      ),
+    );
   }
 
   if tool.provider == "notes" {

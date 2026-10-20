@@ -1,3 +1,4 @@
+import AppKit
 import CoreLocation
 import Foundation
 @preconcurrency import MapKit
@@ -235,25 +236,40 @@ struct LiveMapKitStore: MapKitStoreing, @unchecked Sendable {
         return try result.get()
     }
 
-    func openNavigation(request: MapKitOpenNavigationRequest) throws -> MapKitOpenNavigationResult {
-        let source = try mapItem(for: request.source)
-        let destination = try mapItem(for: request.destination)
-        let launchOptions = Self.launchOptions(for: request.transportType)
-        let opened = MKMapItem.openMaps(
-            with: [source, destination],
-            launchOptions: launchOptions
-        )
-        guard opened else {
-            throw MapKitProviderError.mapkitError("Failed to open Apple Maps navigation")
+    func openNavigation(url: URL) throws {
+        let result = MapKitSearchFetch.AsyncBridgeResult<Bool>()
+
+        try MapKitSearchFetch.waitForCompletion(operation: "Apple Maps") { complete in
+            MainActor.assumeIsolated {
+                guard let applicationURL = NSWorkspace.shared.urlForApplication(
+                    withBundleIdentifier: "com.apple.Maps"
+                ) else {
+                    result.setError(MapKitProviderError.mapkitError("Failed to open Apple Maps"))
+                    complete()
+                    return
+                }
+
+                let configuration = NSWorkspace.OpenConfiguration()
+                NSWorkspace.shared.open(
+                    [url],
+                    withApplicationAt: applicationURL,
+                    configuration: configuration
+                ) { _, error in
+                    if let error {
+                        result.setError(
+                            MapKitProviderError.mapkitError(
+                                "Failed to open Apple Maps: \(error.localizedDescription)"
+                            )
+                        )
+                    } else {
+                        result.setValue(true)
+                    }
+                    complete()
+                }
+            }
         }
 
-        return MapKitOpenNavigationResult(
-            source: source,
-            destination: destination,
-            transportType: request.transportType,
-            directionsMode: Self.directionsModeValue(for: request.transportType),
-            opened: true
-        )
+        _ = try result.get()
     }
 
     private func mapItem(for endpoint: MapKitRouteEndpoint) throws -> MKMapItem {

@@ -1,5 +1,6 @@
 @testable import ABridge
 import CoreLocation
+import Foundation
 import MapKit
 
 final class MockMapKitStore: MapKitStoreing, @unchecked Sendable {
@@ -10,7 +11,6 @@ final class MockMapKitStore: MapKitStoreing, @unchecked Sendable {
     var calculateRouteResults: [MapKitCalculateRouteResult] = []
     var estimateTravelTimeResults: [MapKitEstimateTravelTimeResult] = []
     var getPlaceResults: [MKMapItem] = []
-    var openNavigationResults: [MapKitOpenNavigationResult] = []
     private(set) var lastRequest: MapKitSearchRequest?
     private(set) var lastNearbyRequest: MapKitSearchNearbyRequest?
     private(set) var lastReverseGeocodeRequest: MapKitReverseGeocodeRequest?
@@ -18,7 +18,7 @@ final class MockMapKitStore: MapKitStoreing, @unchecked Sendable {
     private(set) var lastCalculateRouteRequest: MapKitCalculateRouteRequest?
     private(set) var lastEstimateTravelTimeRequest: MapKitEstimateTravelTimeRequest?
     private(set) var lastGetPlaceRequest: MapKitGetPlaceRequest?
-    private(set) var lastOpenNavigationRequest: MapKitOpenNavigationRequest?
+    private(set) var lastOpenNavigationURL: URL?
 
     func searchPlaces(request: MapKitSearchRequest) throws -> MapKitSearchResult {
         lastRequest = request; return results.first ?? MapKitSearchResult(mapItems: [], boundingRegion: nil)
@@ -75,19 +75,8 @@ final class MockMapKitStore: MapKitStoreing, @unchecked Sendable {
         return MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(latitude: 0, longitude: 0))
     }
 
-    func openNavigation(request: MapKitOpenNavigationRequest) throws -> MapKitOpenNavigationResult {
-        lastOpenNavigationRequest = request
-        if let first = openNavigationResults.first {
-            return first
-        }
-
-        return MapKitOpenNavigationResult(
-            source: MapKitTestFixtures.mapItem(coordinate: coordinate(of: request.source)),
-            destination: MapKitTestFixtures.mapItem(coordinate: coordinate(of: request.destination)),
-            transportType: request.transportType,
-            directionsMode: nil,
-            opened: true
-        )
+    func openNavigation(url: URL) throws {
+        lastOpenNavigationURL = url
     }
 
     private func coordinate(of endpoint: MapKitRouteEndpoint) -> CLLocationCoordinate2D {

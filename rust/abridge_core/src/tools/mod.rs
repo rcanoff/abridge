@@ -518,24 +518,27 @@ const ALL_TOOLS: [ToolDefinition; 69] = [
     provider: "mapkit",
     operation: "search_places",
     description: "Search places with MapKit's natural-language query. For a landmark, pass region and set \
-                  region_priority to required. Omitting region biases results near this server Mac, not near the \
-                  caller. A street address belongs in mapkit_forward_geocode. Each place has name, identifier, and \
-                  coordinate for routing.",
+                  region_priority to required. region needs only center; span in degrees is optional, and an omitted \
+                  or 0 delta is 0.1 (about 11 km north to south). Pass span for strict bounds. Omitting region biases \
+                  results near this server Mac, not near the caller. A street address belongs in \
+                  mapkit_forward_geocode. Each place has name, identifier, coordinate for routing, and maps_url (its \
+                  Apple Maps place link).",
   },
   ToolDefinition {
     name: TOOL_SEARCH_NEARBY,
     capability: capabilities::MAPKIT_SEARCH,
     provider: "mapkit",
     operation: "search_nearby",
-    description: "Search for points of interest near the coordinate or region you pass. It is not the caller's location. \
-                  Each place matches mapkit_search_places.",
+    description: "Search for points of interest near the coordinate or region you pass, exactly one of them. It is not \
+                  the caller's location. radius_meters is the distance from coordinate. Each place matches \
+                  mapkit_search_places.",
   },
   ToolDefinition {
     name: TOOL_REVERSE_GEOCODE,
     capability: capabilities::MAPKIT_GEOCODE,
     provider: "mapkit",
     operation: "reverse_geocode",
-    description: "Get places for a coordinate. Each has name, coordinate, and address.",
+    description: "Get places for a coordinate. Each has name, coordinate, address, and maps_url.",
   },
   ToolDefinition {
     name: TOOL_FORWARD_GEOCODE,
@@ -544,7 +547,7 @@ const ALL_TOOLS: [ToolDefinition; 69] = [
     operation: "forward_geocode",
     description: "Get places for a street address. An optional region biases results toward that region. It is not the \
                   caller's location unless you pass coordinates. For a landmark, use mapkit_search_places with a \
-                  region bias.",
+                  region bias. Each place matches mapkit_search_places.",
   },
   ToolDefinition {
     name: TOOL_CALCULATE_ROUTE,
@@ -554,8 +557,14 @@ const ALL_TOOLS: [ToolDefinition; 69] = [
     description: "Calculate routes between source and destination. Each endpoint is a MapKit identifier from \
                   mapkit_search_places, or a coordinate. name is a label and does not geocode. A coordinate alone is \
                   reverse-geocoded, and the name is omitted when that fails. Polyline coordinates are omitted. Omitting \
-                  departure_date and arrival_date uses the server Mac's current time. A returned time's offset is the \
-                  place's time zone, or the server Mac's when the place has none (not the caller's).",
+                  departure_date and arrival_date uses the server Mac's current time. MapKit cannot avoid one named \
+                  road. A route's name is its main road, and steps can skip roads it stays on, so a road missing from \
+                  a route's name and steps may still be used. To keep a trip off a road, pass waypoints away from it. \
+                  toll_preference and highway_preference avoid are preferences MapKit may not fully meet; has_tolls \
+                  and has_highways say what a route uses. waypoints are stops in order; routes then has one route \
+                  whose legs run source, each \
+                  waypoint, destination, using MapKit's first route per leg (requests_alternate_routes applies only \
+                  without waypoints). maps_url opens the trip in Apple Maps, which picks the roads between stops.",
   },
   ToolDefinition {
     name: TOOL_ESTIMATE_TRAVEL_TIME,
@@ -566,7 +575,8 @@ const ALL_TOOLS: [ToolDefinition; 69] = [
                   mapkit_search_places, or a coordinate. name is a label and does not geocode. Provide exactly one of \
                   departure_date or arrival_date, or neither (neither uses this Mac's clock). A returned arrival or \
                   departure is local wall time with a numeric offset from the place's time zone, or the server Mac's time \
-                  zone when the place has none (not the caller's).",
+                  zone when the place has none (not the caller's). waypoints are stops in order: the totals add each \
+                  leg, and legs lists each leg's time and distance. maps_url opens the trip in Apple Maps.",
   },
   ToolDefinition {
     name: TOOL_GET_CURRENT_LOCATION,
@@ -584,15 +594,18 @@ const ALL_TOOLS: [ToolDefinition; 69] = [
     capability: capabilities::MAPKIT_READ,
     provider: "mapkit",
     operation: "get_place",
-    description: "Get a place by MapKit identifier: name, coordinate, phone, url, time zone, category, and address.",
+    description: "Get a place by MapKit identifier: name, coordinate, phone, url (its website), time zone, category, \
+                  address, and maps_url (its Apple Maps place link).",
   },
   ToolDefinition {
     name: TOOL_OPEN_NAVIGATION,
     capability: capabilities::MAPKIT_NAVIGATION,
     provider: "mapkit",
     operation: "open_navigation",
-    description: "Open Apple Maps navigation between source and destination. Endpoints match mapkit_calculate_route. \
-                  opened is present when Maps opened.",
+    description: "Open the trip in Apple Maps on this server Mac, not on the caller's device. Endpoints and waypoints \
+                  match mapkit_calculate_route; toll_preference and highway_preference avoid set Maps' avoid options. \
+                  Returns maps_url, the link it opened, which works on any Apple device. opened is present when Maps \
+                  opened.",
   },
   ToolDefinition {
     name: TOOL_GET_USAGE_LOG,
@@ -914,6 +927,39 @@ fn route_endpoint_schema() -> serde_json::Value {
   })
 }
 
+/// `mcp::trip` routes each leg; at most 8 stops keeps a trip within MapKit's request rate.
+fn waypoints_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": "array",
+    "items": route_endpoint_schema(),
+    "maxItems": 8,
+    "description": "Stops between source and destination, in order. Each is a coordinate or a MapKit identifier, like source."
+  })
+}
+
+fn route_preference_schema() -> serde_json::Value {
+  serde_json::json!({ "type": "string", "enum": ["any", "avoid"] })
+}
+
+/// `span` is optional and a delta may be 0: `typed_args` fills either with the default span.
+fn map_region_schema() -> serde_json::Value {
+  serde_json::json!({
+    "type": "object",
+    "properties": {
+      "center": coordinate_schema(),
+      "span": {
+        "type": "object",
+        "description": "Size in degrees. Omit span, or pass 0 for a delta, to use 0.1 (about 11 km north to south).",
+        "properties": {
+          "latitude_delta": { "type": "number", "minimum": 0, "maximum": 180 },
+          "longitude_delta": { "type": "number", "minimum": 0, "maximum": 360 }
+        }
+      }
+    },
+    "required": ["center"]
+  })
+}
+
 /// Optional `transport_type`; Swift treats omitted or null as `.automobile`.
 fn nullable_transport_type_schema() -> serde_json::Value {
   serde_json::json!({
@@ -1033,7 +1079,7 @@ fn recurrence_rule_entry_schema() -> serde_json::Value {
             nullable_string_date_time(),
             absolute_instant!()
           ),
-          "occurrence_count": nullable_integer()
+          "occurrence_count": { "type": ["integer", "null"], "minimum": 1 }
         }
       },
       "days_of_the_week": {
@@ -1816,28 +1862,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "type": "object",
       "properties": {
         "query": { "type": "string", "minLength": 1 },
-        "region": {
-          "type": "object",
-          "properties": {
-            "center": {
-              "type": "object",
-              "properties": {
-                "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
-                "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
-              },
-              "required": ["latitude", "longitude"]
-            },
-            "span": {
-              "type": "object",
-              "properties": {
-                "latitude_delta": { "type": "number", "exclusiveMinimum": 0 },
-                "longitude_delta": { "type": "number", "exclusiveMinimum": 0 }
-              },
-              "required": ["latitude_delta", "longitude_delta"]
-            }
-          },
-          "required": ["center", "span"]
-        },
+        "region": map_region_schema(),
         "region_priority": {
           "type": "string",
           "enum": ["default", "required"]
@@ -1859,28 +1884,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
     TOOL_SEARCH_NEARBY => serde_json::json!({
       "type": "object",
       "properties": {
-        "region": {
-          "type": "object",
-          "properties": {
-            "center": {
-              "type": "object",
-              "properties": {
-                "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
-                "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
-              },
-              "required": ["latitude", "longitude"]
-            },
-            "span": {
-              "type": "object",
-              "properties": {
-                "latitude_delta": { "type": "number", "exclusiveMinimum": 0 },
-                "longitude_delta": { "type": "number", "exclusiveMinimum": 0 }
-              },
-              "required": ["latitude_delta", "longitude_delta"]
-            }
-          },
-          "required": ["center", "span"]
-        },
+        "region": map_region_schema(),
         "coordinate": {
           "type": "object",
           "properties": {
@@ -1889,7 +1893,11 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
           },
           "required": ["latitude", "longitude"]
         },
-        "radius_meters": { "type": "number", "exclusiveMinimum": 0 },
+        "radius_meters": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Radius in meters around coordinate. Omit it, or pass 0, to use 1000."
+        },
         "including_categories": {
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
@@ -1918,28 +1926,7 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "type": "object",
       "properties": {
         "address": { "type": "string", "minLength": 1 },
-        "region": {
-          "type": "object",
-          "properties": {
-            "center": {
-              "type": "object",
-              "properties": {
-                "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
-                "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
-              },
-              "required": ["latitude", "longitude"]
-            },
-            "span": {
-              "type": "object",
-              "properties": {
-                "latitude_delta": { "type": "number", "exclusiveMinimum": 0 },
-                "longitude_delta": { "type": "number", "exclusiveMinimum": 0 }
-              },
-              "required": ["latitude_delta", "longitude_delta"]
-            }
-          },
-          "required": ["center", "span"]
-        },
+        "region": map_region_schema(),
         "preferred_locale": { "type": "string", "minLength": 1 }
       },
       "required": ["address"]
@@ -1957,16 +1944,11 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
           "enum": ["automobile", "walking", "transit", "cycling", "any"]
         },
         "requests_alternate_routes": { "type": "boolean" },
+        "waypoints": waypoints_schema(),
         "departure_date": offset_date_time_schema(),
         "arrival_date": offset_date_time_schema(),
-        "toll_preference": {
-          "type": "string",
-          "enum": ["any", "avoid"]
-        },
-        "highway_preference": {
-          "type": "string",
-          "enum": ["any", "avoid"]
-        }
+        "toll_preference": route_preference_schema(),
+        "highway_preference": route_preference_schema()
       },
       "required": ["source", "destination"]
     }),
@@ -1988,7 +1970,8 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
           "type": "string",
           "format": "date-time",
           "description": "Provide exactly one of departure_date or arrival_date, or neither."
-        }
+        },
+        "waypoints": waypoints_schema()
       },
       "required": ["source", "destination"]
     }),
@@ -2004,7 +1987,10 @@ pub fn input_schema(tool: &ToolDefinition) -> serde_json::Value {
       "properties": {
         "source": route_endpoint_schema(),
         "destination": route_endpoint_schema(),
-        "transport_type": nullable_transport_type_schema()
+        "transport_type": nullable_transport_type_schema(),
+        "waypoints": waypoints_schema(),
+        "toll_preference": route_preference_schema(),
+        "highway_preference": route_preference_schema()
       },
       "required": ["source", "destination"]
     }),

@@ -2105,8 +2105,11 @@ fn tools_call_dispatches_open_navigation() {
   let recorded = mock.last_request.lock().expect("lock").clone().expect("request");
   assert_eq!(recorded.provider, "mapkit");
   assert_eq!(recorded.operation, "open_navigation");
-  assert!(recorded.payload_json.contains("37.3346"));
-  assert!(recorded.payload_json.contains("37.7749"));
+  assert_eq!(
+    recorded.payload_json,
+    r#"{"url":"https://maps.apple.com/directions?source=37.3346,-122.009&destination=37.7749,-122.4194&mode=driving"}"#
+  );
+  assert!(resp.contains("maps_url"));
 }
 
 #[test]
