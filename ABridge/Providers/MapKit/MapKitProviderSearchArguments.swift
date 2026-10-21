@@ -88,8 +88,7 @@ extension MapKitProvider {
         let hasCoordinate = dictionary.keys.contains("coordinate") && !(dictionary["coordinate"] is NSNull)
 
         guard hasRegion || hasCoordinate else {
-            // Schema oneOf; offline path uses zero region (MapKit may fail at runtime).
-            return MKCoordinateRegion()
+            throw MapKitProviderError.invalidArguments("provide coordinate or region")
         }
         guard !(hasRegion && hasCoordinate) else {
             throw MapKitProviderError.invalidArguments("provide region or coordinate, not both")
@@ -100,7 +99,7 @@ extension MapKitProvider {
         }
 
         let coordinate = try requiredCoordinateArgument(in: dictionary)
-        let radiusMeters = try optionalRadiusMetersArgument(in: dictionary)
+        let radiusMeters = try requiredRadiusMetersArgument(in: dictionary)
         return coordinateRegion(from: coordinate, radiusMeters: radiusMeters)
     }
 
@@ -147,14 +146,16 @@ extension MapKitProvider {
         return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
 
+    /// `latitudinalMeters` and `longitudinalMeters` are the full region spans, so a radius is doubled.
     func coordinateRegion(
         from coordinate: CLLocationCoordinate2D,
-        radiusMeters: Double = 1000
+        radiusMeters: Double
     ) -> MKCoordinateRegion {
-        MKCoordinateRegion(
+        let diameterMeters = radiusMeters * 2
+        return MKCoordinateRegion(
             center: coordinate,
-            latitudinalMeters: radiusMeters,
-            longitudinalMeters: radiusMeters
+            latitudinalMeters: diameterMeters,
+            longitudinalMeters: diameterMeters
         )
     }
 
@@ -183,15 +184,8 @@ extension MapKitProvider {
         return nil
     }
 
-    private func optionalRadiusMetersArgument(in dictionary: [String: Any]) throws -> Double {
-        guard dictionary.keys.contains("radius_meters") else {
-            return 1000
-        }
-
-        if dictionary["radius_meters"] is NSNull {
-            return 1000
-        }
-
+    /// Rust fills an omitted or 0 `radius_meters` with its default before dispatch.
+    private func requiredRadiusMetersArgument(in dictionary: [String: Any]) throws -> Double {
         guard let value = dictionary["radius_meters"] as? Double else {
             throw MapKitProviderError.invalidArguments("radius_meters must be a number")
         }

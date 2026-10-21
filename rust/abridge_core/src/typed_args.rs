@@ -28,8 +28,62 @@ pub fn normalize_tool_arguments(tool: &ToolDefinition, arguments: Value) -> Resu
     tools::TOOL_CREATE_CONTACT => normalize_typed::<CreateContactArgs>(arguments, "create_contact"),
     tools::TOOL_UPDATE_CONTACT => normalize_typed::<UpdateContactArgs>(arguments, "update_contact"),
     tools::TOOL_CALCULATE_ROUTE => normalize_typed::<CalculateRouteArgs>(arguments, "calculate_route"),
-    tools::TOOL_FORWARD_GEOCODE => normalize_typed::<ForwardGeocodeArgs>(arguments, "forward_geocode"),
+    tools::TOOL_FORWARD_GEOCODE => {
+      let mut value = normalize_typed::<ForwardGeocodeArgs>(arguments, "forward_geocode")?;
+      fill_region_span(&mut value);
+      Ok(value)
+    }
+    tools::TOOL_SEARCH_PLACES => {
+      let mut value = arguments;
+      fill_region_span(&mut value);
+      Ok(value)
+    }
+    tools::TOOL_SEARCH_NEARBY => {
+      let mut value = arguments;
+      fill_region_span(&mut value);
+      fill_nearby_radius(&mut value);
+      Ok(value)
+    }
     _ => Ok(arguments),
+  }
+}
+
+/// Span used for an omitted `region.span` or a 0 delta: 0.1° is about 11 km of latitude.
+const DEFAULT_REGION_SPAN_DEGREES: f64 = 0.1;
+
+/// Size around `search_nearby`'s coordinate when `radius_meters` is omitted, null, or 0.
+const DEFAULT_NEARBY_RADIUS_METERS: f64 = 1000.0;
+
+fn fill_nearby_radius(value: &mut Value) {
+  let Some(object) = value.as_object_mut() else {
+    return;
+  };
+  if object.get("coordinate").is_none_or(Value::is_null) {
+    return;
+  }
+  let radius = object.get("radius_meters").and_then(Value::as_f64);
+  if radius.is_none_or(|radius| radius == 0.0) {
+    object.insert("radius_meters".into(), Value::from(DEFAULT_NEARBY_RADIUS_METERS));
+  }
+}
+
+/// MapKit needs a positive span. Clients often send only a center, or a 0 span, so fill each
+/// missing or 0 delta with the default before Swift.
+fn fill_region_span(value: &mut Value) {
+  let Some(region) = value.get_mut("region").and_then(Value::as_object_mut) else {
+    return;
+  };
+  let span = region
+    .entry("span")
+    .or_insert_with(|| Value::Object(serde_json::Map::new()));
+  let Some(span) = span.as_object_mut() else {
+    return;
+  };
+  for key in ["latitude_delta", "longitude_delta"] {
+    let delta = span.get(key).and_then(Value::as_f64);
+    if delta.is_none_or(|delta| delta == 0.0) {
+      span.insert(key.to_string(), Value::from(DEFAULT_REGION_SPAN_DEGREES));
+    }
   }
 }
 
@@ -167,6 +221,13 @@ struct CalculateRouteArgs {
   departure_date: Option<String>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   arrival_date: Option<String>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
+  toll_preference: Option<String>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
+  highway_preference: Option<String>,
+  /// Rust routes each leg separately; `route_legs` strips this before Swift.
+  #[serde(default, skip_serializing_if = "Option::is_none")]
+  waypoints: Option<Vec<Value>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -283,6 +344,26 @@ mod tests {
     .expect("ok");
     assert!(out.get("source").is_some());
     assert!(out.get("destination").is_some());
+  }
+
+  #[test]
+  fn calculate_route_keeps_route_preferences_and_waypoints() {
+    let tool = resolve_tool(tools::TOOL_CALCULATE_ROUTE).expect("tool");
+    let waypoints = json!([{ "coordinate": { "latitude": 28.9, "longitude": -82.0 } }]);
+    let out = normalize_tool_arguments(
+      tool,
+      json!({
+        "source": { "coordinate": { "latitude": 1.0, "longitude": 2.0 } },
+        "destination": { "coordinate": { "latitude": 3.0, "longitude": 4.0 } },
+        "waypoints": waypoints,
+        "toll_preference": "avoid",
+        "highway_preference": "avoid"
+      }),
+    )
+    .expect("ok");
+    assert_eq!(out["toll_preference"], "avoid");
+    assert_eq!(out["highway_preference"], "avoid");
+    assert_eq!(out["waypoints"], waypoints);
   }
 
   #[test]
@@ -407,5 +488,81 @@ mod tests {
     assert!(out["due_date_components"].get("time_zone").is_none());
     assert_eq!(out["due_date_components"]["hour"], 9);
     assert_eq!(out["time_zone"], "America/New_York");
+  }
+
+  #[test]
+  fn region_zero_or_missing_span_uses_default_and_keeps_a_given_delta() {
+    let center = json!({ "latitude": 28.8, "longitude": -81.6 });
+    for name in [tools::TOOL_SEARCH_PLACES, tools::TOOL_SEARCH_NEARBY] {
+      let tool = resolve_tool(name).expect("tool");
+      let zero = json!({
+        "query": "Publix",
+        "region": { "center": center, "span": { "latitude_delta": 0, "longitude_delta": 0.0 } }
+      });
+      crate::arg_validation::validate_tool_arguments(tool, &zero).expect("zero span is valid");
+      let out = normalize_tool_arguments(tool, zero).expect("ok");
+      assert_eq!(
+        out["region"]["span"],
+        json!({ "latitude_delta": 0.1, "longitude_delta": 0.1 }),
+        "{name}"
+      );
+
+      let partial = json!({ "region": { "center": center, "span": { "latitude_delta": 0.5 } } });
+      let out = normalize_tool_arguments(tool, partial).expect("ok");
+      assert_eq!(
+        out["region"]["span"],
+        json!({ "latitude_delta": 0.5, "longitude_delta": 0.1 }),
+        "{name}"
+      );
+    }
+
+    let geocode = resolve_tool(tools::TOOL_FORWARD_GEOCODE).expect("tool");
+    let center_only = json!({ "address": "1 Main St", "region": { "center": center } });
+    crate::arg_validation::validate_tool_arguments(geocode, &center_only).expect("center only is valid");
+    let out = normalize_tool_arguments(geocode, center_only).expect("ok");
+    assert_eq!(
+      out["region"]["span"],
+      json!({ "latitude_delta": 0.1, "longitude_delta": 0.1 })
+    );
+    assert_eq!(out["region"]["center"], center);
+  }
+
+  #[test]
+  fn region_negative_span_is_rejected() {
+    let tool = resolve_tool(tools::TOOL_SEARCH_PLACES).expect("tool");
+    let err = crate::arg_validation::validate_tool_arguments(
+      tool,
+      &json!({
+        "query": "Publix",
+        "region": {
+          "center": { "latitude": 28.8, "longitude": -81.6 },
+          "span": { "latitude_delta": -1, "longitude_delta": 0.1 }
+        }
+      }),
+    )
+    .expect_err("negative");
+    assert!(err.contains("region.span.latitude_delta"), "{err}");
+  }
+
+  #[test]
+  fn nearby_radius_zero_or_missing_uses_default_and_keeps_a_given_radius() {
+    let tool = resolve_tool(tools::TOOL_SEARCH_NEARBY).expect("tool");
+    let coordinate = json!({ "latitude": 28.8, "longitude": -81.6 });
+    let zero = json!({ "coordinate": coordinate, "radius_meters": 0 });
+    crate::arg_validation::validate_tool_arguments(tool, &zero).expect("zero radius is valid");
+    for input in [zero, json!({ "coordinate": coordinate })] {
+      let out = normalize_tool_arguments(tool, input).expect("ok");
+      assert_eq!(out["radius_meters"], json!(1000.0));
+    }
+    let given = normalize_tool_arguments(tool, json!({ "coordinate": coordinate, "radius_meters": 500 })).expect("ok");
+    assert_eq!(given["radius_meters"], json!(500));
+
+    let region_only = normalize_tool_arguments(tool, json!({ "region": { "center": coordinate } })).expect("ok");
+    assert!(region_only.get("radius_meters").is_none());
+
+    let negative =
+      crate::arg_validation::validate_tool_arguments(tool, &json!({ "coordinate": coordinate, "radius_meters": -5 }))
+        .expect_err("negative");
+    assert!(negative.contains("radius_meters"), "{negative}");
   }
 }

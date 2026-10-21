@@ -7,6 +7,38 @@ import Testing
 struct MapKitProviderSearchNearbyTests {
     @Test
     @MainActor
+    func searchNearbyRejectsMissingGeographicAnchor() {
+        let store = MockMapKitStore()
+        let provider = MapKitProvider(store: store)
+        let response = provider.handle(operation: "search_nearby", payloadJson: "{}")
+        #expect(response.ok == false)
+        #expect(response.errorJson?.contains("invalid_arguments") == true)
+        #expect(response.errorJson?.contains("provide coordinate or region") == true)
+        #expect(store.lastNearbyRequest == nil)
+    }
+
+    @Test
+    @MainActor
+    func searchNearbyRadiusMetersIsTheFullRegionSpan() throws {
+        let store = MockMapKitStore()
+        let provider = MapKitProvider(store: store)
+        let response = provider.handle(
+            operation: "search_nearby",
+            payloadJson: #"{"coordinate":{"latitude":37.0,"longitude":-122.0},"radius_meters":500}"#
+        )
+        #expect(response.ok == true)
+        let request = try #require(store.lastNearbyRequest)
+        let expected = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0),
+            latitudinalMeters: 1000,
+            longitudinalMeters: 1000
+        )
+        #expect(request.region.span.latitudeDelta == expected.span.latitudeDelta)
+        #expect(request.region.span.longitudeDelta == expected.span.longitudeDelta)
+    }
+
+    @Test
+    @MainActor
     func searchNearbyRejectsBothRegionAndCoordinate() {
         let provider = MapKitProvider(store: MockMapKitStore())
         let response = provider.handle(

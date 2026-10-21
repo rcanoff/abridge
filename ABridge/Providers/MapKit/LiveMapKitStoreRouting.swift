@@ -31,35 +31,6 @@ extension LiveMapKitStore {
         )
     }
 
-    static func launchOptions(for transportType: MKDirectionsTransportType) -> [String: Any]? {
-        guard let directionsMode = directionsModeValue(for: transportType) else {
-            return nil
-        }
-
-        return [MKLaunchOptionsDirectionsModeKey: directionsMode]
-    }
-
-    static func directionsModeValue(for transportType: MKDirectionsTransportType) -> String? {
-        if transportType == .any {
-            return nil
-        }
-
-        if transportType.contains(.automobile) {
-            return MKLaunchOptionsDirectionsModeDriving
-        }
-        if transportType.contains(.walking) {
-            return MKLaunchOptionsDirectionsModeWalking
-        }
-        if transportType.contains(.transit) {
-            return MKLaunchOptionsDirectionsModeTransit
-        }
-        if transportType.contains(.cycling) {
-            return MKLaunchOptionsDirectionsModeCycling
-        }
-
-        return MKLaunchOptionsDirectionsModeDriving
-    }
-
     static func coordinates(from polyline: MKPolyline) -> [CLLocationCoordinate2D] {
         guard polyline.pointCount > 0 else { return [] }
 

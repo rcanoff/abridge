@@ -1,4 +1,5 @@
 import CoreLocation
+import Foundation
 import MapKit
 
 struct MapKitSearchResult {
@@ -141,20 +142,6 @@ struct MapKitGetPlaceRequest {
     let identifier: String
 }
 
-struct MapKitOpenNavigationRequest {
-    let source: MapKitRouteEndpoint
-    let destination: MapKitRouteEndpoint
-    let transportType: MKDirectionsTransportType
-}
-
-struct MapKitOpenNavigationResult {
-    let source: MKMapItem
-    let destination: MKMapItem
-    let transportType: MKDirectionsTransportType
-    let directionsMode: String?
-    let opened: Bool
-}
-
 protocol MapKitStoreing {
     func searchPlaces(request: MapKitSearchRequest) throws -> MapKitSearchResult
     func searchNearby(request: MapKitSearchNearbyRequest) throws -> MapKitSearchResult
@@ -163,5 +150,5 @@ protocol MapKitStoreing {
     func calculateRoute(request: MapKitCalculateRouteRequest) throws -> MapKitCalculateRouteResult
     func estimateTravelTime(request: MapKitEstimateTravelTimeRequest) throws -> MapKitEstimateTravelTimeResult
     func getPlace(request: MapKitGetPlaceRequest) throws -> MKMapItem
-    func openNavigation(request: MapKitOpenNavigationRequest) throws -> MapKitOpenNavigationResult
+    func openNavigation(url: URL) throws
 }

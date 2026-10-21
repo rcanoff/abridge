@@ -229,37 +229,14 @@ struct AppleProviderBridgeMapKitTests {
     @Test
     @MainActor
     func callProviderMapKitOpenNavigationSucceedsWithMockStore() throws {
-        let sourceItem = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
-            latitude: 37.3346,
-            longitude: -122.0090
-        ))
-        sourceItem.name = "Navigation Source"
-        let destinationItem = MapKitTestFixtures.mapItem(coordinate: CLLocationCoordinate2D(
-            latitude: 37.7749,
-            longitude: -122.4194
-        ))
-        destinationItem.name = "Navigation Destination"
         let store = MockMapKitStore()
-        store.openNavigationResults = [
-            MapKitOpenNavigationResult(
-                source: sourceItem,
-                destination: destinationItem,
-                transportType: .automobile,
-                directionsMode: MKLaunchOptionsDirectionsModeDriving,
-                opened: true
-            ),
-        ]
         let bridge = AppleProviderBridge(mapKitProvider: MapKitProvider(store: store))
+        let url = "https://maps.apple.com/directions?destination=27.9506,-82.4572&mode=driving"
 
         let request = ProviderRequest(
             provider: "mapkit",
             operation: "open_navigation",
-            payloadJson: navigationPayload(
-                sourceLatitude: 37.3346,
-                sourceLongitude: -122.0090,
-                destinationLatitude: 37.7749,
-                destinationLongitude: -122.4194
-            )
+            payloadJson: #"{"url":"\#(url)"}"#
         )
         let response = bridge.callProvider(request: request)
 
@@ -267,8 +244,8 @@ struct AppleProviderBridgeMapKitTests {
         let data = try #require(response.payloadJson.data(using: .utf8))
         let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         #expect(decoded?["opened"] as? Bool == true)
-        let source = decoded?["source"] as? [String: Any]
-        #expect(source?["name"] as? String == "Navigation Source")
+        #expect(decoded?.count == 1)
+        #expect(store.lastOpenNavigationURL?.absoluteString == url)
     }
 
     @Test
@@ -298,20 +275,6 @@ struct AppleProviderBridgeMapKitTests {
     }
 
     private func estimateTravelTimePayload(
-        sourceLatitude: Double,
-        sourceLongitude: Double,
-        destinationLatitude: Double,
-        destinationLongitude: Double
-    ) -> String {
-        calculateRoutePayload(
-            sourceLatitude: sourceLatitude,
-            sourceLongitude: sourceLongitude,
-            destinationLatitude: destinationLatitude,
-            destinationLongitude: destinationLongitude
-        )
-    }
-
-    private func navigationPayload(
         sourceLatitude: Double,
         sourceLongitude: Double,
         destinationLatitude: Double,
